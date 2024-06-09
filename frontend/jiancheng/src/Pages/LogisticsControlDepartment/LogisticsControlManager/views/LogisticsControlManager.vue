@@ -9,21 +9,21 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    职务-姓名
+                    物控经理-姓名
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
-                    <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
+                    <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
                         <el-menu-item index="1">
-                            <span>Navigator One</span>
+                            <span>任务看板</span>
                         </el-menu-item>
                         <el-menu-item index="2">
-                            <span>Navigator Two</span>
+                            <span>一次采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="3">
-                            <span>Navigator Three</span>
+                            <span>二次采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="4">
-                            <span>Navigator Four</span>
+                            <span>订单查询</span>
                         </el-menu-item>
                         <el-menu-item index="5">
                             <span>个人信息</span>
@@ -35,7 +35,7 @@
                 </div>
             </el-aside>
             <el-main> <!--引用main-->
-                main
+                <Dashboard></Dashboard>
             </el-main>
         </el-container>
     </el-container>
@@ -44,9 +44,11 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue'
+import Dashboard from '../components/LogisticsManagerDashboard.vue'
 export default {
     components: {
         AllHeader,
+        Dashboard
     }
 }
 </script>
