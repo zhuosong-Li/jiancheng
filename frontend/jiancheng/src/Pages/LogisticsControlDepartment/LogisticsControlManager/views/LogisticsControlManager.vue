@@ -9,21 +9,21 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    职务-姓名
+                    物控经理-姓名
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
-                    <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
-                        <el-menu-item index="1">
-                            <span>Navigator One</span>
+                    <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
+                        <el-menu-item index="1" @click="handleMenuClick(1)">
+                            <span>任务看板</span>
                         </el-menu-item>
-                        <el-menu-item index="2">
-                            <span>Navigator Two</span>
+                        <el-menu-item index="2" @click="handleMenuClick(2)">
+                            <span>一次采购订单生成</span>
                         </el-menu-item>
-                        <el-menu-item index="3">
-                            <span>Navigator Three</span>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
+                            <span>二次采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="4">
-                            <span>Navigator Four</span>
+                            <span>订单查询</span>
                         </el-menu-item>
                         <el-menu-item index="5">
                             <span>个人信息</span>
@@ -35,7 +35,7 @@
                 </div>
             </el-aside>
             <el-main> <!--引用main-->
-                main
+                <component :is="currentComponent"></component>
             </el-main>
         </el-container>
     </el-container>
@@ -44,9 +44,37 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue'
+import Dashboard from '../components/LogisticsManagerDashboard.vue'
+import FirstPurchase from '../components/FirstPurchaseListView.vue'
+import SecondPurchase from '../components/SecondPurchaseListView.vue'
+import { UserFilled } from '@element-plus/icons-vue'
 export default {
     components: {
         AllHeader,
+        Dashboard,
+        FirstPurchase,
+        SecondPurchase
+    },
+    data() {
+        return {
+            UserFilled,
+            currentComponent:'Dashboard'
+        }
+    },
+    methods: {
+        handleMenuClick(index){
+            console.log(index)
+            switch(index) {
+                case 1:
+                    this.currentComponent = 'Dashboard'
+                    break
+                case 2:
+                    this.currentComponent = 'FirstPurchase'
+                    break
+                case 3:
+                    this.currentComponent = 'SecondPurchase'
+            }
+        }
     }
 }
 </script>
