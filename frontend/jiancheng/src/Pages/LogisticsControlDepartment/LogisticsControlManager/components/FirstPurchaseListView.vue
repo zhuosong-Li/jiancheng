@@ -1,42 +1,28 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">任务看板</el-col>
+        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次采购订单生成</el-col>
     </el-row>
-
-    <el-row :gutter="0">
-        <el-col :span="4" :offset="20">
-            <el-button-group>
-                <el-button size="large" @click="changeToGrid" :icon="Grid">卡片显示</el-button>
-                <el-button size="large" @click="changeToList" :icon="Memo">列表显示</el-button>
-            </el-button-group>
-
-        </el-col>
-
-
-    </el-row>
-    <component :is="currentDash" :pendingTaskData="textData" :inProgressTaskData="textData2" @backGrid="changeToGrid"
+    <component :is="currentDash" :pendingTaskData="textData" :inProgressTaskData="textData2" @backToList="changeToList"
     @changeToPend="changeToPend" @changeToProgress="changeToProgress">
     </component>
 </template>
 <script>
 import { Grid, Memo } from '@element-plus/icons-vue'
-import DashboardGrid from './Dashboard/DashboardGrid.vue';
-import DashboardList from './Dashboard/DashboardList.vue'
-import DashboardPend from './Dashboard/DashboardListPend.vue'
-import DashboardProgress from './Dashboard/DashboardListProgress.vue'
+import FirstOrderList from './FirstPurchaseOrder/FirstOrderList.vue'
+import FirstOrderPend from './FirstPurchaseOrder/FirstOrderListPend.vue'
+import FirstOrderProgress from './FirstPurchaseOrder/FirstOrderListProgress.vue'
 
 export default {
     components: {
-        DashboardGrid,
-        DashboardList,
-        DashboardPend,
-        DashboardProgress
+        FirstOrderList,
+        FirstOrderPend,
+        FirstOrderProgress
     },
     data() {
         return {
             Grid,
             Memo,
-            currentDash: 'DashboardGrid',
+            currentDash: 'FirstOrderList',
             textData: [{
                 taskName: "一次采购订单生成",
                 orderId: "K24-024 2111620",
@@ -62,7 +48,7 @@ export default {
                 prevUser: "XXX"
             },
             {
-                taskName: "二次采购订单生成",
+                taskName: "一次采购订单生成",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
@@ -78,7 +64,7 @@ export default {
                 prevUser: "XXX"
             },
             {
-                taskName: "二次采购订单生成",
+                taskName: "一次采购订单生成",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
@@ -95,7 +81,7 @@ export default {
                 prevUser: "XXX"
             },
             {
-                taskName: "二次采购订单生成",
+                taskName: "一次采购订单生成",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
@@ -106,18 +92,15 @@ export default {
         }
     },
     methods: {
-        changeToGrid() {
-            this.currentDash = 'DashboardGrid'
-        },
         changeToList() {
-            this.currentDash = 'DashboardList'
+            this.currentDash = 'FirstOrderList'
         },
         changeToPend() {
-            this.currentDash = 'DashboardPend'
+            this.currentDash = 'FirstOrderPend'
         },
         changeToProgress() {
             console.log(this.currentDash)
-            this.currentDash = 'DashboardProgress'
+            this.currentDash = 'FirstOrderProgress'
         }
 
     }

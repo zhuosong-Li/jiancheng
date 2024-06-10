@@ -13,13 +13,13 @@
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
-                        <el-menu-item index="1">
+                        <el-menu-item index="1" @click="handleMenuClick(1)">
                             <span>任务看板</span>
                         </el-menu-item>
-                        <el-menu-item index="2">
+                        <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>一次采购订单生成</span>
                         </el-menu-item>
-                        <el-menu-item index="3">
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>二次采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="4">
@@ -35,7 +35,7 @@
                 </div>
             </el-aside>
             <el-main> <!--引用main-->
-                <Dashboard></Dashboard>
+                <component :is="currentComponent"></component>
             </el-main>
         </el-container>
     </el-container>
@@ -45,10 +45,36 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import Dashboard from '../components/LogisticsManagerDashboard.vue'
+import FirstPurchase from '../components/FirstPurchaseListView.vue'
+import SecondPurchase from '../components/SecondPurchaseListView.vue'
+import { UserFilled } from '@element-plus/icons-vue'
 export default {
     components: {
         AllHeader,
-        Dashboard
+        Dashboard,
+        FirstPurchase,
+        SecondPurchase
+    },
+    data() {
+        return {
+            UserFilled,
+            currentComponent:'Dashboard'
+        }
+    },
+    methods: {
+        handleMenuClick(index){
+            console.log(index)
+            switch(index) {
+                case 1:
+                    this.currentComponent = 'Dashboard'
+                    break
+                case 2:
+                    this.currentComponent = 'FirstPurchase'
+                    break
+                case 3:
+                    this.currentComponent = 'SecondPurchase'
+            }
+        }
     }
 }
 </script>
