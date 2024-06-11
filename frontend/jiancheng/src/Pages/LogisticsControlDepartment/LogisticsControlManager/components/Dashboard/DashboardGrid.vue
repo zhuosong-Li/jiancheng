@@ -6,7 +6,7 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="6" :offset="0" v-for="colIndex in 4">
-            <el-card shadow="always" :body-style="{ padding: '10px' }" v-if="getPendingItem(colIndex)">
+            <el-card shadow="always" :body-style="{ padding: '10px' }" v-if="getPendingItem(colIndex)" @click="openNewWindow(getPendingItem(colIndex))">
                 <template #header>
                     <div style="text-align: center;">
                         {{ getPendingItem(colIndex).taskName }}
@@ -34,7 +34,7 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="6" :offset="0" v-for="colIndex in 4">
-            <el-card shadow="always" :body-style="{ padding: '10px' }" v-if="getinProgressItem(colIndex)">
+            <el-card shadow="always" :body-style="{ padding: '10px' }" v-if="getinProgressItem(colIndex)" @click="openNewWindow(getinProgressItem(colIndex))">
                 <template #header>
                     <div style="text-align: center;">
                         <span>{{ getinProgressItem(colIndex).taskName }}</span>
@@ -72,12 +72,27 @@ export default {
             console.log(this.inProgressTaskData)
             return index < this.inProgressTaskData.length ? this.inProgressTaskData[index] : null
         },
-        displayPending(){
+        displayPending() {
             this.$emit('changeToPend')
         },
-        displayProgress(){
+        displayProgress() {
             this.$emit('changeToProgress')
+        },
+        openNewWindow(task) {
+            let url = ""
+            const orderId = task.orderId.replace(' ','-')
+            switch(task.taskName) {
+                case "一次采购订单生成":
+                    url = `${window.location.origin}/logistics/firstpurchase/orderid=${orderId}`;
+                    break
+                case "二次采购订单生成":
+                    url = `${window.location.origin}/logistics/secondpurchase/orderid=${orderId}`;
+                    break
+            }
+            
+            window.open(url, '_blank');
         }
+        
     }
 }
 </script>
