@@ -59,7 +59,9 @@
 export default {
     props: ['pendingTaskData', 'inProgressTaskData'],
     data() {
-
+        return {
+            
+        }
     },
     methods: {
         getPendingItem(colIndex) {

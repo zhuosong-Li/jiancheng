@@ -5,7 +5,7 @@
         </el-header>
         <el-main height="">
             <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次采购订单生成</el-col>
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">二次采购订单生成</el-col>
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
@@ -38,7 +38,7 @@
                             </template></el-table-column>
                     </el-table></el-col>
             </el-row>
-            <el-dialog title="一次采购订单 K2402121116202024061101F" v-model="createVis" width="90%"
+            <el-dialog title="二次采购订单 K2402121116202024061101F" v-model="createVis" width="90%"
                 @close="handleGenerateClose">
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
@@ -58,20 +58,23 @@
                     <el-table-column prop="approvedUsage" label="核定用量" />
                     <el-table-column label="采购数量">
                         <template #default="scope">
-                            <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" />
+                            <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" v-if="scope.row.Status === 1"/>
+                            <span v-if="scope.row.Status === 0">{{ scope.row.purchaseAmount }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column label="工厂名称">
                         <template #default="scope">
-                            <el-select v-model="scope.row.factoryName" placeholder="选择工厂">
+                            <el-select v-model="scope.row.factoryName" placeholder="选择工厂" v-if="scope.row.Status === 1">
                                 <el-option v-for="factory in getFilteredFactoryOptions(scope.row.materialName)"
                                     :key="factory.factoryName" :label="factory.factoryName"
                                     :value="factory.factoryName" />
                             </el-select>
+                            <span v-if="scope.row.Status === 0">{{ scope.row.factoryName }}</span>
                         </template>
                     </el-table-column>
                     <el-table-column prop="internalModel" label="公司型号" />
                     <el-table-column prop="customerModel" label="客户型号" />
+                    <el-table-column prop="comment" label="备注" />
                 </el-table>
 
                 <template #footer>
@@ -87,23 +90,23 @@
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
                 </el-descriptions>
                 <div style="height: 500px; overflow-y: scroll; overflow-x: hidden">
-                <el-row v-for="factory in purchaseTestData" :key="factory.factoryName" :gutter="20"
-                    style="margin-bottom: 20px;">
-                    <el-col :span="23">
-                        <h3>{{ factory.factoryName }}</h3>
-                        <el-table :data="factory.data" border style="width: 100%">
-                            <el-table-column prop="num" label="编号" />
-                            <el-table-column prop="materialName" label="材料名称" />
-                            <el-table-column prop="unit" label="单位" />
-                            <el-table-column prop="amount" label="数量" />
-                            <el-table-column prop="customerId" label="客户ID" />
-                            <el-table-column prop="internalModel" label="公司型号" />
-                            <el-table-column prop="customerModel" label="客户型号" />
-                            <el-table-column prop="comment" label="备注" />
-                        </el-table>
-                    </el-col>
-                </el-row>
-            </div>
+                    <el-row v-for="factory in filteredPurchaseTestData" :key="factory.factoryName" :gutter="20"
+                        style="margin-bottom: 20px;">
+                        <el-col :span="23">
+                            <h3>{{ factory.factoryName }}</h3>
+                            <el-table :data="factory.data" border style="width: 100%">
+                                <el-table-column prop="num" label="编号" />
+                                <el-table-column prop="materialName" label="材料名称" />
+                                <el-table-column prop="unit" label="单位" />
+                                <el-table-column prop="amount" label="数量" />
+                                <el-table-column prop="customerId" label="客户ID" />
+                                <el-table-column prop="internalModel" label="公司型号" />
+                                <el-table-column prop="customerModel" label="客户型号" />
+                                <el-table-column prop="comment" label="备注" />
+                            </el-table>
+                        </el-col>
+                    </el-row>
+                </div>
                 <template #footer>
                     <span>
                         <el-button type="primary" @click="closePreviewDialog">确认</el-button>
@@ -144,19 +147,19 @@ export default {
             },
             testTableData: [{
                 bomId: "K24021211162020240611180001",
-                bomType: "一次采购BOM",
+                bomType: "二次采购BOM",
                 bomLink: "0E20620,0E20621",
                 Status: "未生成采购订单"
             },
             {
                 bomId: "K24021211162020240611180002",
-                bomType: "一次采购BOM",
+                bomType: "二次采购BOM",
                 bomLink: "0E20620,0E20621",
                 Status: "已生成采购订单"
             },
             {
                 bomId: "K24021211162020240611180001",
-                bomType: "一次采购BOM",
+                bomType: "二次采购BOM",
                 bomLink: "0E20620,0E20621",
                 Status: "已保存采购订单"
             },],
@@ -167,12 +170,28 @@ export default {
                 unit: "米",
                 unitUsage: 10.35,
                 approvedUsage: 186,
+                purchaseAmount: 200,
+                factoryName: "一一鞋材",
+                internalModel: "0E202620",
+                customerModel: "VRA-1020",
+                comment: "",
+                Status: 0,
+            },
+            {
+                partName: "鞋面",
+                color: "黑色",
+                materialName: "黑色超软镜面PU",
+                unit: "米",
+                unitUsage: 10.35,
+                approvedUsage: 186,
                 purchaseAmount: 0,
                 factoryName: "",
                 internalModel: "0E202620",
                 customerModel: "VRA-1020",
-                comment: ""
+                comment: "",
+                Status: 1,
             }],
+            
             originalBomTestData: [],
             factoryOptions: [
                 { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
@@ -182,29 +201,44 @@ export default {
             ],
             purchaseTestData: [
                 {
-                    factoryName: '一一鞋材', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                    factoryName: '一一鞋材', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 1 },
+                    ]
                 },
                 {
-                    factoryName: '深源皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                    factoryName: '深源皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 1 },]
                 },
                 {
-                    factoryName: '嘉泰皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                    factoryName: '嘉泰皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 1 },]
                 },
                 {
-                    factoryName: '一一皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                    factoryName: '一一皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 0 },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "", Status: 1 },]
                 },
             ],
             isPreviewDialogVisible: false,
             selectedFile: null
         }
+    },
+    computed: {
+        filteredPurchaseTestData() {
+            return this.purchaseTestData.map(factory => {
+                return {
+                    factoryName: factory.factoryName,
+                    data: factory.data.filter(item => item.Status !== 0),
+                };
+            });
+        },
     },
     methods: {
         handleGenerate(row) {

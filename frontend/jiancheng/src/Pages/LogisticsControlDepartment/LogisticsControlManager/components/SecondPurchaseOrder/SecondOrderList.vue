@@ -5,7 +5,7 @@
 </el-row>
 <el-row :gutter="20" style="margin-top: 20px;">
     <el-col :span="24">
-        <el-table :data="pendingTaskData" style="height: 200px">
+        <el-table :data="pendingTaskData" style="height: 200px" @row-click="handleRowClick">
             <el-table-column prop="taskName" label="任务名称"></el-table-column>
             <el-table-column prop="orderId" label="订单号"></el-table-column>
             <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
@@ -29,7 +29,7 @@
 </el-row>
 <el-row :gutter="20" style="margin-top: 20px;">
     <el-col :span="24">
-        <el-table :data="inProgressTaskData" style="height: 200px">
+        <el-table :data="inProgressTaskData" style="height: 200px" @row-click="handleRowClick">
             <el-table-column prop="taskName" label="任务名称"></el-table-column>
             <el-table-column prop="orderId" label="订单号"></el-table-column>
             <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
@@ -57,7 +57,17 @@ export default {
         },
         displayProgress(){
             this.$emit('changeToProgress')
-        }
+        },    handleRowClick(row) {
+            let url;
+            if (row.taskName === '一次采购订单生成') {
+                url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+            } else if (row.taskName === '二次采购订单生成') {
+                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            }
+            if (url) {
+                window.open(url, '_blank');
+            }
+        },
     }
 }
 </script>

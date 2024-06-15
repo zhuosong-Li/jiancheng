@@ -12,7 +12,7 @@
                     物控经理-姓名
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
-                    <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
+                    <el-menu default-active="1" class="el-menu-vertical-demo">
                         <el-menu-item index="1" @click="handleMenuClick(1)">
                             <span>任务看板</span>
                         </el-menu-item>
@@ -22,13 +22,19 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>二次采购订单生成</span>
                         </el-menu-item>
-                        <el-menu-item index="4">
-                            <span>订单查询</span>
+                        <el-menu-item index="4" @click="handleMenuClick(4)">
+                            <span>耗材/固定资产采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="5">
-                            <span>个人信息</span>
+                            <span>材料管理</span>
                         </el-menu-item>
                         <el-menu-item index="6">
+                            <span>仓库管理</span>
+                        </el-menu-item>
+                        <el-menu-item index="7">
+                            <span>个人信息</span>
+                        </el-menu-item>
+                        <el-menu-item index="8">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -47,13 +53,15 @@ import AllHeader from '@/components/AllHeader.vue'
 import Dashboard from '../components/LogisticsManagerDashboard.vue'
 import FirstPurchase from '../components/FirstPurchaseListView.vue'
 import SecondPurchase from '../components/SecondPurchaseListView.vue'
+import FixedAssets from '../components/FixedAssetsConsumablesView.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
     components: {
         AllHeader,
         Dashboard,
         FirstPurchase,
-        SecondPurchase
+        SecondPurchase,
+        FixedAssets
     },
     data() {
         return {
@@ -73,6 +81,9 @@ export default {
                     break
                 case 3:
                     this.currentComponent = 'SecondPurchase'
+                    break
+                case 4:
+                    this.currentComponent = 'FixedAssets'
             }
         }
     }
