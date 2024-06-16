@@ -25,16 +25,19 @@
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>耗材/固定资产采购订单生成</span>
                         </el-menu-item>
-                        <el-menu-item index="5">
+                        <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>材料管理</span>
                         </el-menu-item>
-                        <el-menu-item index="6">
+                        <el-menu-item index="6" @click="handleMenuClick(6)">
                             <span>仓库管理</span>
                         </el-menu-item>
-                        <el-menu-item index="7">
-                            <span>个人信息</span>
+                        <el-menu-item index="7" @click="handleMenuClick(7)">
+                            <span>供货商管理</span>
                         </el-menu-item>
                         <el-menu-item index="8">
+                            <span>个人信息</span>
+                        </el-menu-item>
+                        <el-menu-item index="9">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -54,6 +57,9 @@ import Dashboard from '../components/LogisticsManagerDashboard.vue'
 import FirstPurchase from '../components/FirstPurchaseListView.vue'
 import SecondPurchase from '../components/SecondPurchaseListView.vue'
 import FixedAssets from '../components/FixedAssetsConsumablesView.vue'
+import MaterialManagement from '../components/MaterialManagementView.vue'
+import WarehouseManagement from '../components/WarehouseManagementView.vue'
+import SupplierManagement from '../components/SupplierManagementView.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
     components: {
@@ -61,7 +67,10 @@ export default {
         Dashboard,
         FirstPurchase,
         SecondPurchase,
-        FixedAssets
+        FixedAssets,
+        MaterialManagement,
+        WarehouseManagement,
+        SupplierManagement
     },
     data() {
         return {
@@ -84,6 +93,15 @@ export default {
                     break
                 case 4:
                     this.currentComponent = 'FixedAssets'
+                    break
+                case 5:
+                    this.currentComponent = 'MaterialManagement'
+                    break
+                case 6:
+                    this.currentComponent = 'WarehouseManagement'
+                    break
+                case 7:
+                    this.currentComponent = 'SupplierManagement'
             }
         }
     }

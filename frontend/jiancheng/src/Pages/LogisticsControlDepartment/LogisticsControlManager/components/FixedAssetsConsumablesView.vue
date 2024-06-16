@@ -5,11 +5,11 @@
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="12" :offset="0"><el-button-group>
                 <el-button type="primary" size="default" @click="openCreateDialog">新建耗材/固定资产采购订单</el-button>
-                <el-button type="primary" size="default" @click="">以过去订单为模板新建</el-button>
+                <el-button type="primary" size="default" @click="openCreateDialog">以过去订单为模板新建</el-button>
             </el-button-group>
         </el-col>
         <el-col :span="4" :offset="8"><el-button type="warning" size="large" @click="openUnsubmitDialog">待提交订单 {{
-                finishedNum }}</el-button>
+            finishedNum }}</el-button>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
@@ -58,14 +58,15 @@
             <el-col :span="24" :offset="0">
                 <el-table :data="materialPurchaseFilterData" border style="height: 600px;">
                     <el-table-column prop="purchaseId" label="采购订单编号"></el-table-column>
-                    <el-table-column prop="purchaseCreateDate" label="采购下发日期"></el-table-column>
+                    <el-table-column prop="purchaseCreateDate" label="采购下发日期" width="120%"></el-table-column>
                     <el-table-column prop="purchaseType" label="采购物品类型"></el-table-column>
                     <el-table-column prop="isPurchaseOrder" label="随订单采购/独立采购"></el-table-column>
                     <el-table-column prop="purchaseOrderId" label="订单编号"></el-table-column>
                     <el-table-column label="操作"> <template #default="scope">
                             <el-button type="primary" @click="openPreviewDialog(scope.row)">查看</el-button>
                             <el-button type="primary" @click="openEditDialog(scope.row)">编辑</el-button>
-                            <el-button type="primary" @click="">下发</el-button>
+                            <el-button type="success" @click="">下发</el-button>
+                            <el-button type="danger" @click="deleteCurrentRow(scope.$index,materialPurchaseFilterData)">删除</el-button>
                         </template></el-table-column>
                 </el-table>
             </el-col>
@@ -110,6 +111,11 @@
             <el-table-column label="备注">
                 <template #default="scope">
                     <el-input v-model="scope.row.comment" placeholder="" size="default" clearable></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button type="danger" @click="deleteCurrentRow(scope.$index,newAssetPurchaseData)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -170,7 +176,7 @@
                         <el-table-column prop="unit" label="单位" />
                         <el-table-column prop="amount" label="数量" />
                         <el-table-column prop="purchaseOrderId" label="订单编号" />
-                        
+
                         <el-table-column prop="comment" label="备注" />
                     </el-table>
                 </el-col>
@@ -345,6 +351,24 @@ export default {
                 const factoryMatch = task.factoryName.includes(this.factorySearch);
 
                 return materialMatch && factoryMatch;
+            });
+        },
+        deleteCurrentRow(index,datafield) {
+            this.$confirm('确定删除此行吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(() => {
+                datafield.splice(index, 1);
+                this.$message({
+                    type: 'success',
+                    message: '删除成功!'
+                });
+            }).catch(() => {
+                this.$message({
+                    type: 'info',
+                    message: '已取消删除'
+                });
             });
         }
     }

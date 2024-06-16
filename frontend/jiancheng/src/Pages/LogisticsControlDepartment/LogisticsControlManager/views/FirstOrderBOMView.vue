@@ -9,7 +9,10 @@
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="订单信息" :column="2">
+                    <span style="font-weight: bold; font-size: larger;">订单信息：</span>
+                    <Arrow :status="11"></Arrow>
+                    <el-descriptions title="" :column="2">
+                        
                         <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
                         <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
                         <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
@@ -126,10 +129,12 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue';
+import Arrow from '@/components/OrderArrowView.vue'
 export default {
     props: ['orderId'],
     components: {
         AllHeader,
+        Arrow
     },
     data() {
         return {
