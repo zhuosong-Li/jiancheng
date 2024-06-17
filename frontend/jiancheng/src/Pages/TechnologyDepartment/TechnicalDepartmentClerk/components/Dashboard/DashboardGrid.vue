@@ -84,11 +84,11 @@ export default {
             let url = ""
             const orderId = task.orderId.replace(' ','-')
             switch(task.taskName) {
-                case "一次采购订单生成":
-                    url = `${window.location.origin}/logistics/firstpurchase/orderid=${orderId}`;
+                case "一次BOM填写":
+                    url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${orderId}`;
                     break
-                case "二次采购订单生成":
-                    url = `${window.location.origin}/logistics/secondpurchase/orderid=${orderId}`;
+                case "二次BOM填写":
+                    url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${orderId}`;
                     break
             }
             

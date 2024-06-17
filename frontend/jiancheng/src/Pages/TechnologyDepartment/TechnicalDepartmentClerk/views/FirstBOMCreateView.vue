@@ -5,7 +5,7 @@
         </el-header>
         <el-main height="">
             <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次采购订单生成</el-col>
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次BOM填写</el-col>
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">

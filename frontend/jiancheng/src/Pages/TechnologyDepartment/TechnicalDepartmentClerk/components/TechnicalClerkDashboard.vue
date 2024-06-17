@@ -4,7 +4,7 @@
     </el-row>
 
     <el-row :gutter="0">
-        <el-col :span="4" :offset="20">
+        <el-col :span="5" :offset="20">
             <el-button-group>
                 <el-button size="default" @click="changeToGrid" :icon="Grid">卡片显示</el-button>
                 <el-button size="default" @click="changeToList" :icon="Memo">列表显示</el-button>
@@ -38,23 +38,31 @@ export default {
             Memo,
             currentDash: 'DashboardGrid',
             textData: [{
-                taskName: "一次采购订单生成",
+                taskName: "一次BOM填写",
                 orderId: "K24-024 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
+                prevDepart: "开发部",
                 prevUser: "XXX"
             },
             {
-                taskName: "一次采购订单生成",
+                taskName: "一次BOM填写",
                 orderId: "K24-025 2111622",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
+                prevDepart: "开发部",
                 prevUser: "XXX"
             },
             {
-                taskName: "一次采购订单生成",
+                taskName: "一次BOM填写",
+                orderId: "K24-021 2111620",
+                createTime: "2024-06-10",
+                prevTime: "2024-06-10 18:00:00",
+                prevDepart: "开发部",
+                prevUser: "XXX"
+            },
+            {
+                taskName: "二次BOM填写",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
@@ -62,23 +70,15 @@ export default {
                 prevUser: "XXX"
             },
             {
-                taskName: "二次采购订单生成",
+                taskName: "一次BOM填写",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
+                prevDepart: "开发部",
                 prevUser: "XXX"
             },
             {
-                taskName: "一次采购订单生成",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次采购订单生成",
+                taskName: "二次BOM填写",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
@@ -87,15 +87,15 @@ export default {
             },
             ],
             textData2: [{
-                taskName: "一次采购订单生成",
+                taskName: "一次BOM填写",
                 orderId: "K24-021 2111628",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
+                prevDepart: "开发部",
                 prevUser: "XXX"
             },
             {
-                taskName: "二次采购订单生成",
+                taskName: "二次BOM填写",
                 orderId: "K24-021 2111620",
                 createTime: "2024-06-10",
                 prevTime: "2024-06-10 18:00:00",
