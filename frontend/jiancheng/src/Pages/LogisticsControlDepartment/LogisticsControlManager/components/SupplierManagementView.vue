@@ -19,11 +19,7 @@
 </template>
 
 <script>
-import Arrow from '@/components/OrderArrowView.vue'
 export default {
-    components: {
-        Arrow,
-    },
     data() {
         return {
             supplierData: [],

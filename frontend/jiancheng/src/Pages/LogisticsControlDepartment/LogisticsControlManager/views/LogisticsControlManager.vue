@@ -40,6 +40,9 @@
                         <el-menu-item index="9">
                             <span>退出系统</span>
                         </el-menu-item>
+                        <el-menu-item index="10" @click="handleMenuClick(10)">
+                            <span>测试页面</span>
+                        </el-menu-item>
                     </el-menu>
                 </div>
             </el-aside>
@@ -60,6 +63,7 @@ import FixedAssets from '../components/FixedAssetsConsumablesView.vue'
 import MaterialManagement from '../components/MaterialManagementView.vue'
 import WarehouseManagement from '../components/WarehouseManagementView.vue'
 import SupplierManagement from '../components/SupplierManagementView.vue'
+import TestPage from '../components/TestPage.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
     components: {
@@ -70,7 +74,8 @@ export default {
         FixedAssets,
         MaterialManagement,
         WarehouseManagement,
-        SupplierManagement
+        SupplierManagement,
+        TestPage
     },
     data() {
         return {
@@ -102,6 +107,9 @@ export default {
                     break
                 case 7:
                     this.currentComponent = 'SupplierManagement'
+                    break
+                case 10:
+                    this.currentComponent = 'TestPage' 
             }
         }
     }
