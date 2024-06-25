@@ -19,10 +19,11 @@
         startOnLoad: true,
         theme: 'forest',
         flowchart: {
-          useMaxWidth: false,
+          useMaxWidth: true,
           htmlLabels: true,
         },
-        fontSize: 10
+        fontSize: 10,
+        securityLevel: 'loose'
         
         
       });
