@@ -16,12 +16,11 @@
 
 <script setup>
 import Cookies from 'js-cookie';
-
 const props = defineProps(['taskData'])
 const handleView = (row) => {
     let url = ""
     Cookies.set("currentOrderData",JSON.stringify(row))
-    url = `${window.location.origin}/fabriccutting/shoetypelist`;
+    url = `${window.location.origin}/sewingmachine/shoetypelist`;
     window.open(url, '_blank');
 }
 </script>

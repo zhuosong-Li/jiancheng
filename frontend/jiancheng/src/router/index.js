@@ -14,8 +14,10 @@ import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSu
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
 import TechenicalDepartmentClerkRoutes from '../Pages/TechnologyDepartment/TechnicalDepartmentClerk/routers/technicalclerk'
-import FabricPriceReportRoute from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricPriceReport'
-import FabricAmountProducedRoute from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricAmountProduced'
+import FabricSupervisorRoutes from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricSupervisorRoutes'
+import SewingSupervisorRoutes from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/routers/sewingSupervisorRoutes'
+import MoldingSupervisorRoutes from '../Pages/ProductionManagementDepartment/MoldingSupervisor/routers/moldingSupervisorRoutes'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -76,8 +78,9 @@ const router = createRouter({
     },
     ...LogisticsRoutes,
     ...TechenicalDepartmentClerkRoutes,
-    ...FabricPriceReportRoute,
-    ...FabricAmountProducedRoute
+    ...FabricSupervisorRoutes,
+    ...SewingSupervisorRoutes,
+    ...MoldingSupervisorRoutes
   ]
 })
 

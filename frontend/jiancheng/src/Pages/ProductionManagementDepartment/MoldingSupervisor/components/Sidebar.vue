@@ -4,7 +4,7 @@
             <el-avatar :icon="UserFilled" :size="100" />
         </div>
         <div style="font-size: x-large;">
-            裁断主任-姓名
+            成型主任-姓名
         </div>
         <div class="aside-menu" style="width: 100%; margin-top: 50px;">
             <el-menu default-active="1" class="el-menu-vertical-demo">

@@ -38,31 +38,6 @@
 
 <script setup>
 import { ref, onMounted, nextTick, watch } from 'vue';
-/**
- * pass the column names like below to <EditTable> 
- * const columnList = [
-        {
-            prop: "material",
-            label: "种类"
-        },
-        {
-            prop: "productNumber",
-            label: "货号"
-        },
-        {
-            prop: "procedure",
-            label: "工序名称"
-        },
-        {
-            prop: "unitPrice",
-            label: "计件单位"
-        },
-        {
-            prop: "note",
-            label: "备注"
-        },
-    ]
- */
 
 const props = defineProps(
     {
