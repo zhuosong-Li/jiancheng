@@ -3,7 +3,7 @@
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>
-        <el-main height="">
+        <el-main style="overflow-x: hidden;">
             <el-row :gutter="20" style="text-align: center;">
                 <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次BOM填写</el-col>
             </el-row>
@@ -129,6 +129,11 @@
                             <el-table-column prop="approvedUsage" label="核定用量">
                                 <template #default="scope">
                                     <el-input v-model="scope.row.approvedAmount" type="number" size="default" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="useDepart" label="使用工段">
+                                <template #default="scope">
+                                    <el-input v-model="scope.row.useDepart" size="default" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="备注">
@@ -433,6 +438,7 @@ export default {
                 materialName: '',
                 unit: '',
                 unitAmount: 0,
+                useDepart: '',
                 approvedAmount: 0,
                 comment: ''
             });
