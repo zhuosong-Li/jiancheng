@@ -14,7 +14,8 @@
                       <el-descriptions-item label="订单编号">{{ testOrderData.orderId}}</el-descriptions-item>
                       <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
                       <el-descriptions-item label="订单出货日期">{{testOrderData.deadLineTime}}</el-descriptions-item>
-                      <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
+                      <el-descriptions-item label="订单总数量">{{ testOrderData.orderTotalQuantity }}</el-descriptions-item>
+                      <el-descriptions-item label="订单总完成度百分比">{{ testOrderData.orderPercentageText }}</el-descriptions-item>                      <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                       <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
                       <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item>
                       <el-descriptions-item label="订单状态">{{ testOrderData.orderrStatus }}</el-descriptions-item> -->
@@ -40,7 +41,7 @@
                             <el-table-column label="楦型" prop="lasttypeLogistics" />
                             <el-table-column label="成型进度" prop="moldingProgress" />
                             <el-table-column label="出货日期" prop="shippingDate" />
-                            <el-table-column label="出库状态" prop="deliveryStatus" />
+                            <el-table-column label="完成状态" prop="productionStatus" />
 
                         </el-table>
                       </template>
@@ -57,16 +58,17 @@
                       <el-table-column prop="foreignProductId" label="客户型号"></el-table-column>
                       <el-table-column prop="color" label="颜色"></el-table-column>
                       <el-table-column prop="status" label="状态"></el-table-column>
+                      <el-table-column prop="percentageText" label="生产状态百分比"</el-table-column>
                       <el-table-column prop="totalQuantity" label="当前鞋型订单总数"></el-table-column>
                       <el-table-column label="操作"> <template #default="scope">
-                              <el-button v-if="scope.row.status === '未生成采购订单'" type="primary"
-                                  @click="handleGenerate(scope.row)">生成</el-button>
-                              <el-button v-else-if="scope.row.status === '已生成采购订单'" type="primary"
-                                  @click="handleView(scope.row)">查看</el-button>
-                              <div v-else-if="scope.row.status === '已保存采购订单'">
-                                  <el-button type="primary" @click="handleGenerate(scope.row)">编辑</el-button>
-                                  <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
-                                  <el-button type="warning" @click="handleConfirm(scope.row)">确认下发</el-button>
+                              <el-button v-if="scope.row.status === '生产中'" type="primary"
+                                  @click="handleGenerate(scope.row)">审批进度</el-button>
+                              <el-button v-else-if="scope.row.status === '物料到齐'" type="primary"
+                                  @click="handleView(scope.row)">开始生产</el-button>
+                              <div v-else-if="scope.row.status === '物料采购中'">
+                                  <el-button type="primary" @click="handleGenerate(scope.row)">查询物料</el-button>
+                                  <el-button type="success" @click="openPreviewDialog(scope.row)">查看物料详情</el-button>
+                                  <el-button type="warning" @click="handleConfirm(scope.row)">开始生产</el-button>
                               </div>
                           </template></el-table-column>
                   </el-table></el-col>
@@ -154,18 +156,21 @@ export default {
           createVis: false,
           testOrderData: {
               orderId: "2111620",
-              customerId:"K24-020（1）客人37 ",
+              customerId:"K24-019 客人37 ",
               createTime: "2024-02-27",
               deadLineTime: "2024-05-05",
-              prevTime: "2024-06-11 12:00:00",
-              prevDepart: "技术部",
-              prevUser: "XXX",
+              orderTotalQuantity:'13296',
+              orderPercentageText:'(成型32%:针车36%:裁断40%)',
+            //   prevTime: "2024-06-11 12:00:00",
+            //   prevDepart: "技术部",
+            //   prevUser: "XXX",
               orderStatus: '生产中',
               productDataList: [{
                 localProductId: "0E21922",
                 foreignProductId: "170995",
                 color: "黑色 BLACK",
-                status: "生产中(成型60%：针车80%：裁断100%)",
+                status: "生产中",
+                percentageText:"(成型60%：针车80%：裁断100%)",
                 totalQuantity:'1800',
                 imageurl:"../assets/2111620/0E21922.png",
                 grouping:[
@@ -173,112 +178,112 @@ export default {
                     totalQuant:"768",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"200/768",
+                    fabricCuttingProgress:"768/768",
                     preproductionProgress:"768/768",
                     sewingProgress:"700/768",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"768/768",
+                    moldingProgress:"0/768",
                     shippingDate:"4/30",
-                    deliveryStatus:"准备出库"
+                    productionStatus:"0%"
                     },
                     {
                     sizeQuant:"S12B",
                     totalQuant:"168",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
+                    fabricCuttingProgress:"150/168",
                     preproductionProgress:"150/168",
                     sewingProgress:"150/168",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"150/168",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"92%"
                     },
                     {
                     sizeQuant:"S6A1",
                     totalQuant:"84",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
-                    preproductionProgress:"150/168",
-                    sewingProgress:"150/168",
+                    fabricCuttingProgress:"84/84",
+                    preproductionProgress:"84/84",
+                    sewingProgress:"84/84",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"84/84",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"100%"
                     },
                     {
                     sizeQuant:"S6A2",
                     totalQuant:"60",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
-                    preproductionProgress:"150/168",
-                    sewingProgress:"150/168",
+                    fabricCuttingProgress:"60/60",
+                    preproductionProgress:"60/60",
+                    sewingProgress:"60/60",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"60/60",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"100%"
                     },
                     {
                     sizeQuant:"S6B1",
                     totalQuant:"12",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
-                    preproductionProgress:"150/168",
-                    sewingProgress:"150/168",
+                    fabricCuttingProgress:"12/12",
+                    preproductionProgress:"12/12",
+                    sewingProgress:"12/12",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"12/12",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"100%"
                     },
                     {
                     sizeQuant:"S6B2",
                     totalQuant:"36",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
-                    preproductionProgress:"150/168",
-                    sewingProgress:"150/168",
+                    fabricCuttingProgress:"36/36",
+                    preproductionProgress:"36/36",
+                    sewingProgress:"36/36",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"36/36",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"100%"
                     },
                     {
                     sizeQuant:"S8A1",
                     totalQuant:"384",
                     materialLogistics:"3/11已定/已到",
                     metalmaterialLogistics:"3/12已定",
-                    fabricCuttingProgress:"100/168",
-                    preproductionProgress:"150/168",
-                    sewingProgress:"150/168",
+                    fabricCuttingProgress:"200/384",
+                    preproductionProgress:"180/384",
+                    sewingProgress:"150/384",
                     soleLogistics:"已到",
                     insoleLogistics:"3/13已定",
                     packagingMaterialLogistics:"已到",
                     lasttypeLogistics:"已到",
-                    moldingProgress:"168/168",
+                    moldingProgress:"100/384",
                     shippingDate:"4/30",
-                    deliveryStatus:"已经出库"
+                    productionStatus:"25%"
                     },
 
                 ]
@@ -287,19 +292,47 @@ export default {
                   localProductId: "0E21922",
                   foreignProductId: "170995",
                   color: "褐色 TAUPE",
-                  status: "生产中(成型70%：针车100%：裁断100%)"
+                  status: "生产中",
+                  percentageText:"(成型70%：针车100%：裁断100%)",
+                  totalQuantity:600,
                 },
                 {
                   localProductId: "0E19550",
-                  foreignProductId: "171975",
+                  foreignProductId: "171977",
                   color: "黑色 BLACK",
-                  status: "未开始生产(成型物料到齐：针车物料未到齐：裁断物料到齐)"
+                  status: "物料到齐",
+                  percentageText:"(成型物料到齐：针车物料到齐：裁断物料到齐)",
+                  totalQuantity:3000
                 },
                 {
                   localProductId: "0E19550",
-                  foreignProductId: "171975",
+                  foreignProductId: "171977",
                   color: "褐色 TAUPE",
-                  status: "未开始生产(成型物料采购中:针车物料采购中：裁断物料到齐)"
+                  status: "物料采购中",
+                  percentageText:"(成型物料采购中:针车物料采购中：裁断物料到齐)",
+                  totalQuantity:2700
+                },
+                {
+                  localProductId: "0E21928",
+                  foreignProductId: "171993",
+                  color: "黑色 BLACK",
+                  status: "物料采购中",
+                  percentageText:"(成型物料采购中:针车物料采购中：裁断物料到齐)",
+                  totalQuantity:2376
+                },
+                {
+                  localProductId: "0E21928",
+                  foreignProductId: "171993",
+                  color: "棕色 BROWN",
+                  status: "已完成",
+                  totalQuantity:'1800'
+                },
+                {
+                  localProductId: "0E21928",
+                  foreignProductId: "171993",
+                  color: "褐色 TAUPE",
+                  status: "已完成",
+                  totalQuantity:'1020'
                 },]
           },
           testTableData: [{
