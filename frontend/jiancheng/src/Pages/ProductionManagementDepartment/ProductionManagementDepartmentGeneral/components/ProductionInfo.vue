@@ -15,8 +15,8 @@
         <el-table-column prop="remainingQuantity" label="剩余数量" sortable/> 
         <el-table-column prop="deliverDate" label="截止日期" sortable />
         <el-table-column label="操作">
-            <template #default>
-            <el-button link type="primary" size="small" @click="openNewWindow(getinProgressItem(colIndex))">
+            <template #default="scope">
+            <el-button link type="primary" size="small" @click="openNewWindow(scope.row)">
             订单详情
             </el-button>
             </template>
@@ -42,7 +42,7 @@
         <el-table-column prop="deliverDate" label="截止日期" sortable />
         <el-table-column label="操作" sortable >
             <template #default>
-            <el-button link type="primary" size="small" @click="openNewWindow(getinProgressItem(colIndex))">
+            <el-button link type="primary" size="small" @click="openNewWindow(current-row-key)">
             排产
             </el-button>
             </template>
@@ -201,6 +201,13 @@ export default {
         changeToProgress() {
             console.log(this.currentDash)
             this.currentDash = 'DashboardProgress'
+        },
+        openNewWindow(rowkey)
+        {
+            let url = ""
+            const orderId = rowkey.customerId.replace(' ','-')
+            url = `${window.location.origin}/productiongeneral/productiondetail/customerid=${orderId}`;
+            window.open(url, '_blank');
         }
 
     }
