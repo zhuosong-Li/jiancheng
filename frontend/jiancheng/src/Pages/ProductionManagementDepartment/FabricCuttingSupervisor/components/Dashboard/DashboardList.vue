@@ -60,11 +60,12 @@ const displayProgress = () => {
     emit('changeToProgress')
 }
 const handleRowClick = (row) => {
-    let url;
-    if (row.taskName === '一次采购订单生成') {
-        url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
-    } else if (row.taskName === '二次采购订单生成') {
-        url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+    let url = ""
+    const queryString = new URLSearchParams(row).toString();
+    if (row.taskName === '工价填报') {
+        url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
+    } else if (row.taskName === '数量填写') {
+        url = `${window.location.origin}/fabriccutting/shoetypelist?${queryString}`;
     }
     if (url) {
         window.open(url, '_blank');

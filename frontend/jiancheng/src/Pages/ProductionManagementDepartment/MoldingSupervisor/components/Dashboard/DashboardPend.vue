@@ -46,9 +46,9 @@ const handleRowClick = (row) => {
     let url = ""
     const queryString = new URLSearchParams(row).toString();
     if (row.taskName === '工价填报') {
-        url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
+        url = `${window.location.origin}/molding/pricereport?${queryString}`;
     } else if (row.taskName === '数量填写') {
-        url = `${window.location.origin}/fabriccutting/amountproduced?${queryString}`;
+        url = `${window.location.origin}/molding/shoetypelist?${queryString}`;
     }
     if (url) {
         window.open(url, '_blank');

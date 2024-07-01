@@ -70,7 +70,7 @@ for (let i = 2; i < 4; i++) {
 }
 const handleClick = (rowData) => {
     Cookies.set("currentAmountReportList", JSON.stringify(rowData))
-    router.push({ name: 'fabriccutting-shoetypelist-amountreportlist'})
+    router.push({ name: 'molding-shoetypelist-amountreportlist'})
 }
 </script>
 <style scoped>

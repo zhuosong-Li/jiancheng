@@ -48,7 +48,7 @@ const handleRowClick = (row) => {
     if (row.taskName === '工价填报') {
         url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
     } else if (row.taskName === '数量填写') {
-        url = `${window.location.origin}/fabriccutting/amountproduced?${queryString}`;
+        url = `${window.location.origin}/fabriccutting/shoetypelist?${queryString}`;
     }
     if (url) {
         window.open(url, '_blank');

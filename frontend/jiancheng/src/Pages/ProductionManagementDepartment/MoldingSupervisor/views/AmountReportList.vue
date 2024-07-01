@@ -221,7 +221,7 @@ const handleDelete = (index) => {
     });
 }
 const handleGoBack = () => {
-    router.push({ name: 'fabriccutting-shoetypelist' })
+    router.push({ name: 'molding-shoetypelist' })
 }
 const handleClose = (option) => {
     if (option === 0) createVis.value = false
