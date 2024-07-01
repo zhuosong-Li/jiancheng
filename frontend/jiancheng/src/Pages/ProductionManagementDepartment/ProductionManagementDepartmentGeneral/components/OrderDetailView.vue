@@ -45,6 +45,14 @@
                         </el-table>
                       </template>
                     </el-table-column>
+                        
+                        <!-- <el-table-column prop="imageurl" label="预览图">
+                            <template slot-scope="scope">
+                                <img :src="scope.row.imageurl"/>
+                            </template>
+                        </el-table-column> -->
+                      <el-table-column label="预览图">
+                      </el-table-column>
                       <el-table-column prop="localProductId" label="公司编号"></el-table-column>
                       <el-table-column prop="foreignProductId" label="客户型号"></el-table-column>
                       <el-table-column prop="color" label="颜色"></el-table-column>
@@ -154,11 +162,12 @@ export default {
               prevUser: "XXX",
               orderStatus: '生产中',
               productDataList: [{
-                localProductId: "2F3589",
-                foreignProductId: "171975",
+                localProductId: "0E21922",
+                foreignProductId: "170995",
                 color: "黑色 BLACK",
-                status: "生产中",
+                status: "生产中(成型60%：针车80%：裁断100%)",
                 totalQuantity:'1800',
+                imageurl:"../assets/2111620/0E21922.png",
                 grouping:[
                     {sizeQuant:"S12A",
                     totalQuant:"768",
@@ -275,22 +284,22 @@ export default {
                 ]
                 },
                 {
-                  localProductId: "2F3589",
+                  localProductId: "0E21922",
+                  foreignProductId: "170995",
+                  color: "褐色 TAUPE",
+                  status: "生产中(成型70%：针车100%：裁断100%)"
+                },
+                {
+                  localProductId: "0E19550",
+                  foreignProductId: "171975",
+                  color: "黑色 BLACK",
+                  status: "未开始生产(成型物料到齐：针车物料未到齐：裁断物料到齐)"
+                },
+                {
+                  localProductId: "0E19550",
                   foreignProductId: "171975",
                   color: "褐色 TAUPE",
-                  status: "生产中"
-                },
-                {
-                  localProductId: "2F3588",
-                  foreignProductId: "171976",
-                  color: "黑色 BLACK",
-                  status: "生产中"
-                },
-                {
-                  localProductId: "2F3588",
-                  foreignProductId: "171976",
-                  color: "褐色 TAUPE",
-                  status: "生产中"
+                  status: "未开始生产(成型物料采购中:针车物料采购中：裁断物料到齐)"
                 },]
           },
           testTableData: [{
