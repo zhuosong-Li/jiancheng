@@ -20,7 +20,7 @@ const handleView = (row) => {
     let url = ""
     // const orderId = row.orderId.replace(' ','-')
     const queryString = new URLSearchParams(row).toString();
-    url = `${window.location.origin}/fabriccutting/priceReport?${queryString}`;
+    url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
     window.open(url, '_blank');
 }
 </script>

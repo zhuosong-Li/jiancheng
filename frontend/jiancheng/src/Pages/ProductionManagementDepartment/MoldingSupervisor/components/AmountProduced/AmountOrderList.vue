@@ -21,7 +21,7 @@ const props = defineProps(['taskData'])
 const handleView = (row) => {
     let url = ""
     Cookies.set("currentOrderData",JSON.stringify(row))
-    url = `${window.location.origin}/fabriccutting/shoetypelist`;
+    url = `${window.location.origin}/molding/shoetypelist`;
     window.open(url, '_blank');
 }
 </script>

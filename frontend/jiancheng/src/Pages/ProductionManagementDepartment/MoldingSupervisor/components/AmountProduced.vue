@@ -1,6 +1,6 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center; color: black">裁断与批皮数量填报</el-col>
+        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center; color: black">成型数量填报</el-col>
     </el-row>
     <component :is="components[currentDash]" :taskData="taskData">
     </component>
@@ -36,13 +36,4 @@ for (let i = 2; i < 4; i++) {
     )
 }
 const currentDash = ref('AmountProducedList')
-// const changeToList = () => {
-//     currentDash.value = 'PriceReportList'
-// }
-// const changeToPend = () => {
-//     currentDash.value = 'PriceReportPend'
-// }
-// const changeToProgress = () => {
-//     currentDash.value = 'PriceReportProgress'
-// }
 </script>

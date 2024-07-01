@@ -1,17 +1,16 @@
 <template>
     <el-container>
-        <AllHeader></AllHeader>
+        <el-header>
+            <AllHeader></AllHeader>
+        </el-header>
+        <el-container>
+            <Sidebar :onEvent="optionFn" />
+            <el-main> <!--引用main-->
+                <component :is="components[currentTab]"></component>
+            </el-main>
+        </el-container>
     </el-container>
-    <el-container>
-        <el-header>健诚ERP-生产部</el-header>
-    </el-container>
-    <el-container>
-        <Sidebar :onEvent="optionFn"/>
-        <el-main> <!--引用main-->
-            <component :is="components[currentTab]"></component>
-        </el-main>
-    </el-container>
-    
+
 </template>
 
 <script setup>

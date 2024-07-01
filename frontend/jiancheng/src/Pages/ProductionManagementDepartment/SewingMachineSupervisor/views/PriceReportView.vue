@@ -5,7 +5,7 @@
         </el-header>
         <el-main>
             <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">裁断与批皮工价填报</el-col>
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">针车工价填报</el-col>
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
@@ -20,7 +20,7 @@
             <el-table :data="taskData">
                 <el-table-column prop="shoeTypeId" label="鞋型号"></el-table-column>
                 <el-table-column prop="date" label="日期"></el-table-column>
-                <el-table-column prop="reportType" label="类型"></el-table-column>
+                <el-table-column prop="reportType" label="工组"></el-table-column>
                 <el-table-column prop="status" label="状态"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
@@ -69,7 +69,7 @@ for (let i = 0; i < 2; i++) {
             shoeTypeId: "G20240601 " + i.toString(),
             date: "2024-06-01",
             status: "未生成工价表",
-            reportType: "裁断"
+            reportType: "线上组"
         }
     )
 }
@@ -79,7 +79,7 @@ for (let i = 2; i < 4; i++) {
             shoeTypeId: "G20240601 " + i.toString(),
             date: "2024-05-24",
             status: "已保存工价表",
-            reportType: "批皮"
+            reportType: "预备组"
         }
     )
 }

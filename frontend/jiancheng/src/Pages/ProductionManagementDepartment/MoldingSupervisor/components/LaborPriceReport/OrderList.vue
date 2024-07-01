@@ -15,13 +15,11 @@
 </template>
 
 <script setup>
-import Cookies from 'js-cookie';
-
 const props = defineProps(['taskData'])
 const handleView = (row) => {
     let url = ""
-    Cookies.set("currentOrderData",JSON.stringify(row))
-    url = `${window.location.origin}/fabriccutting/shoetypelist`;
+    const queryString = new URLSearchParams(row).toString();
+    url = `${window.location.origin}/molding/pricereport?${queryString}`;
     window.open(url, '_blank');
 }
 </script>
