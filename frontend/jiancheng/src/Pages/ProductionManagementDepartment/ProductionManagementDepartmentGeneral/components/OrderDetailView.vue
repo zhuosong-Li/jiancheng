@@ -5,32 +5,57 @@
       </el-header>
       <el-main height="">
           <el-row :gutter="20" style="text-align: center;">
-              <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">一次采购订单生成</el-col>
+              <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">订单生产详情</el-col>
           </el-row>
           <el-row :gutter="20">
               <el-col :span="24" :offset="0">
                   <el-descriptions title="订单信息" :column="2">
-                      <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
+                      <el-descriptions-item label="客人编号">{{ testOrderData.customerId }}</el-descriptions-item>
+                      <el-descriptions-item label="订单编号">{{ testOrderData.orderId}}</el-descriptions-item>
                       <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
-                      <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
+                      <el-descriptions-item label="订单出货日期">{{testOrderData.deadLineTime}}</el-descriptions-item>
+                      <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                       <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
                       <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item>
-                      <el-descriptions-item label="订单状态">{{ testOrderData.orderrStatus }}</el-descriptions-item>
+                      <el-descriptions-item label="订单状态">{{ testOrderData.orderrStatus }}</el-descriptions-item> -->
                   </el-descriptions></el-col>
           </el-row>
           <el-row :gutter="20" style="margin-top: 20px;">
               <el-col :span="24" :offset="0">
-                  <el-table :data="testTableData" border style="height: 400px;">
-                      <el-table-column prop="bomId" label="BOM单编号"></el-table-column>
-                      <el-table-column prop="bomType" label="BOM类型"></el-table-column>
-                      <el-table-column prop="bomType" label="BOM类型"></el-table-column>
-                      <el-table-column prop="Status" label="状态"></el-table-column>
+                  <el-table :data="testOrderData.productDataList" border style="height: 800px;">
+                    <el-table-column type="expand">
+                      <template #default="props">
+                        <h3> 鞋型详情 </h3>
+                        <el-table :data="props.row.grouping" :border="childBorder">
+                            <el-table-column label="配码编号" prop="sizeQuant" />
+                            <el-table-column label="订单总数" prop="totalQuant" />
+                            <el-table-column label="面料辅料" prop="materialLogistics" />
+                            <el-table-column label="扣件拉链鞋带" prop="metalmaterialLogistics" />
+                            <el-table-column label="裁断进度" prop="fabricCuttingProgress" />
+                            <el-table-column label="预备进度" prop="preproductionProgress" />
+                            <el-table-column label="针车进度" prop="sewingProgress" />
+                            <el-table-column label="鞋底物料" prop="soleLogistics" />
+                            <el-table-column label="中底物料" prop="insoleLogistics" />
+                            <el-table-column label="鞋盒物料" prop="packagingMaterialLogistics" />
+                            <el-table-column label="楦型" prop="lasttypeLogistics" />
+                            <el-table-column label="成型进度" prop="moldingProgress" />
+                            <el-table-column label="出货日期" prop="shippingDate" />
+                            <el-table-column label="出库状态" prop="deliveryStatus" />
+
+                        </el-table>
+                      </template>
+                    </el-table-column>
+                      <el-table-column prop="localProductId" label="公司编号"></el-table-column>
+                      <el-table-column prop="foreignProductId" label="客户型号"></el-table-column>
+                      <el-table-column prop="color" label="颜色"></el-table-column>
+                      <el-table-column prop="status" label="状态"></el-table-column>
+                      <el-table-column prop="totalQuantity" label="当前鞋型订单总数"></el-table-column>
                       <el-table-column label="操作"> <template #default="scope">
-                              <el-button v-if="scope.row.Status === '未生成采购订单'" type="primary"
+                              <el-button v-if="scope.row.status === '未生成采购订单'" type="primary"
                                   @click="handleGenerate(scope.row)">生成</el-button>
-                              <el-button v-else-if="scope.row.Status === '已生成采购订单'" type="primary"
+                              <el-button v-else-if="scope.row.status === '已生成采购订单'" type="primary"
                                   @click="handleView(scope.row)">查看</el-button>
-                              <div v-else-if="scope.row.Status === '已保存采购订单'">
+                              <div v-else-if="scope.row.status === '已保存采购订单'">
                                   <el-button type="primary" @click="handleGenerate(scope.row)">编辑</el-button>
                                   <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
                                   <el-button type="warning" @click="handleConfirm(scope.row)">确认下发</el-button>
@@ -41,7 +66,7 @@
           <el-dialog title="采购订单 K2402121116202024061101F" v-model="createVis" width="90%"
               @close="handleGenerateClose">
               <el-descriptions title="订单信息" :column="2">
-                  <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
+                  <el-descriptions-item label="订单编号">{{ testOrderData.orderId }}</el-descriptions-item>
                   <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
                   <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                   <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
@@ -77,7 +102,7 @@
               <template #footer>
                   <span>
                       <el-button @click="handleGenerateClose">取消</el-button>
-                      <el-button type="primary" @click="">保存</el-button>
+                      <el-button type="primary" @click="handleSave">保存</el-button>
                   </span>
               </template>
           </el-dialog>
@@ -95,17 +120,12 @@
               
               <template #footer>
               <span>
-                  <el-button @click="">Cancel</el-button>
-                  <el-button type="primary" @click="">OK</el-button>
+                  <el-button @click="handleCancel">Cancel</el-button>
+                  <el-button type="primary" @click="handleSave">OK</el-button>
               </span>
               </template>
           </el-dialog>
           
-
-
-
-
-
 
           <!-- Main content -->
       </el-main>
@@ -125,12 +145,153 @@ export default {
       return {
           createVis: false,
           testOrderData: {
-              orderId: "123456",
-              createTime: "2024-06-11",
+              orderId: "2111620",
+              customerId:"K24-020（1）客人37 ",
+              createTime: "2024-02-27",
+              deadLineTime: "2024-05-05",
               prevTime: "2024-06-11 12:00:00",
               prevDepart: "技术部",
               prevUser: "XXX",
-              orderrStatus: '未完成'
+              orderStatus: '生产中',
+              productDataList: [{
+                localProductId: "2F3589",
+                foreignProductId: "171975",
+                color: "黑色 BLACK",
+                status: "生产中",
+                totalQuantity:'1800',
+                grouping:[
+                    {sizeQuant:"S12A",
+                    totalQuant:"768",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"200/768",
+                    preproductionProgress:"768/768",
+                    sewingProgress:"700/768",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"768/768",
+                    shippingDate:"4/30",
+                    deliveryStatus:"准备出库"
+                    },
+                    {
+                    sizeQuant:"S12B",
+                    totalQuant:"168",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+                    {
+                    sizeQuant:"S6A1",
+                    totalQuant:"84",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+                    {
+                    sizeQuant:"S6A2",
+                    totalQuant:"60",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+                    {
+                    sizeQuant:"S6B1",
+                    totalQuant:"12",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+                    {
+                    sizeQuant:"S6B2",
+                    totalQuant:"36",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+                    {
+                    sizeQuant:"S8A1",
+                    totalQuant:"384",
+                    materialLogistics:"3/11已定/已到",
+                    metalmaterialLogistics:"3/12已定",
+                    fabricCuttingProgress:"100/168",
+                    preproductionProgress:"150/168",
+                    sewingProgress:"150/168",
+                    soleLogistics:"已到",
+                    insoleLogistics:"3/13已定",
+                    packagingMaterialLogistics:"已到",
+                    lasttypeLogistics:"已到",
+                    moldingProgress:"168/168",
+                    shippingDate:"4/30",
+                    deliveryStatus:"已经出库"
+                    },
+
+                ]
+                },
+                {
+                  localProductId: "2F3589",
+                  foreignProductId: "171975",
+                  color: "褐色 TAUPE",
+                  status: "生产中"
+                },
+                {
+                  localProductId: "2F3588",
+                  foreignProductId: "171976",
+                  color: "黑色 BLACK",
+                  status: "生产中"
+                },
+                {
+                  localProductId: "2F3588",
+                  foreignProductId: "171976",
+                  color: "褐色 TAUPE",
+                  status: "生产中"
+                },]
           },
           testTableData: [{
               bomId: "K24021211162020240611180001",
@@ -177,7 +338,7 @@ export default {
       }
   },
   methods: {
-      handleGenerate(row) {
+      handleGenerate() {
           this.originalBomTestData = JSON.parse(JSON.stringify(this.bomTestData));
           this.createVis = true
       },
@@ -193,6 +354,15 @@ export default {
           // Replace this with the actual logic to get the file
           this.isPreviewDialogVisible = true;
       },
+      handleSave() {
+      },
+      handleCancel() {
+      },
+      handleConfirm() {
+      },
+      handleView(row) {
+        return row.orderStatus
+      }
   }
 }
 </script>
