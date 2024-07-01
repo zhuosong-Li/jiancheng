@@ -1,11 +1,13 @@
 <template>
     <div class="tb-container" ref="tbContainerRef">
-        <el-table :data="tableData" border @row-contextmenu="rightClick" :row-class-name="tableRowClassName">
+        <el-table :data="tableData" border @row-contextmenu="rightClick" @cell-dblclick="updateCurTarget"
+            :row-class-name="tableRowClassName">
             <el-table-column v-for="(col, idx) in columnList" :prop="col.prop" :index="idx" :label="col.label">
                 <template #default="{ row }">
-                    <p v-show="row[col.prop].show" @dblclick="$event => handleEdit(row[col.prop], $event.target)">
+                    <p v-show="row[col.prop].show"
+                        @dblclick="$event => handleEdit(row[col.prop], col.editable, $event.target)">
                         {{ row[col.prop].content }}
-                        <el-icon>
+                        <el-icon v-show="col.editable">
                             <Edit />
                         </el-icon>
                     </p>
@@ -35,94 +37,98 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue';
-/**
- * pass the column names like below to <EditTable> 
- * const columnList = [
-        {
-            prop: "material",
-            label: "种类"
-        },
-        {
-            prop: "productNumber",
-            label: "货号"
-        },
-        {
-            prop: "procedure",
-            label: "工序名称"
-        },
-        {
-            prop: "unitPrice",
-            label: "计件单位"
-        },
-        {
-            prop: "note",
-            label: "备注"
-        },
-    ]
- */
+import { ref, onMounted, nextTick, watch } from 'vue';
 
 const props = defineProps(
     {
-        'columnList': Array
-    });
-
-    const tableData = ref([]);
-const initializeTable = () => {
-    const firstRow = {};
-    for (let i = 0; i < props.columnList.length; i++) {
-        const column = props.columnList[i].prop;
-        firstRow[column] = {
-            content: "",
-            show: true
-        };
+        'columnList': Array,
+        'tableInput': Array,
+        'watchFunctions': Object
     }
-    tableData.value.push(firstRow);
-}
-onMounted(initializeTable);
-
+);
+const tableData = ref([])
 const showMenu = ref(false)
 const curTarget = ref({
     rowIdx: null,
     colIdx: null
 })
-
-const handleEdit = (cell, pEl) => {
-    const editIputEl = Array.from(pEl.nextSibling.childNodes).find(n => ['INPUT', 'TEXTAREA'].includes(n.tagName))
-    cell.show = false
-    editIputEl && nextTick(() => {
-        editIputEl.focus()
-    })
-}
 const tbContainerRef = ref(null)
-const rightClick = (row, column, $event) => {
-    // 阻止浏览器自带的右键菜单弹出
-    $event.preventDefault()
-    if (column.index == null) return
-    // 表格容器的位置
-    const { x: tbX, y: tbY } = tbContainerRef.value.getBoundingClientRect()
-    // 当前鼠标位置
-    const { x: pX, y: pY } = $event
-    // 定位菜单
-    const ele = document.getElementById('contextmenu')
-    ele.style.top = pY - tbY - 6 + 'px'
-    ele.style.left = pX - tbX - 6 + 'px'
-    // 边界调整
-    if (window.innerWidth - 140 < pX - tbX) {
-        ele.style.left = 'unset'
-        ele.style.right = 0
+
+for (let i = 0; i < props.tableInput.length; i++) {
+    let newRow = {}
+    for (let [key, value] of Object.entries(props.tableInput[i])) {
+        newRow[key] = { content: value, show: true }
     }
-    showMenu.value = true
-    // 当前目标
-    curTarget.value = {
-        rowIdx: row ? row.row_index : null,
-        colIdx: column.index
+    tableData.value.push(newRow)
+}
+const initializeTable = () => {
+    if (tableData.value.length === 0) {
+        const firstRow = {};
+        for (let i = 0; i < props.columnList.length; i++) {
+            const column = props.columnList[i].prop;
+            firstRow[column] = {
+                content: "",
+                show: true
+            };
+        }
+        tableData.value.push(firstRow)
+    }
+}
+onMounted(initializeTable)
+
+Object.keys(props.watchFunctions).forEach((propName) => {
+    tableData.value.forEach((row) => {
+        watch(
+            () => row[propName].content,
+            (newVal, oldVal) => {
+                props.watchFunctions[propName](newVal, oldVal, tableData.value[curTarget.value.rowIdx]);
+            }
+        );
+    })
+});
+
+const modifiable = props.columnList.every(item => item.editable)
+const handleEdit = (cell, editable, pEl) => {
+    if (editable) {
+        const editIputEl = Array.from(pEl.nextSibling.childNodes).find(n => ['INPUT', 'TEXTAREA'].includes(n.tagName))
+        cell.show = false
+        editIputEl && nextTick(() => {
+            editIputEl.focus()
+        })
+    }
+}
+
+const updateCurTarget = (row, col) => {
+    curTarget.value.rowIdx = row.rowIdx
+    curTarget.value.colIdx = col.index
+}
+const rightClick = (row, column, $event) => {
+    if (modifiable) {
+        // 阻止浏览器自带的右键菜单弹出
+        $event.preventDefault()
+        if (column.index == null) return
+        // 表格容器的位置
+        const { x: tbX, y: tbY } = tbContainerRef.value.getBoundingClientRect()
+        // 当前鼠标位置
+        const { x: pX, y: pY } = $event
+        // 定位菜单
+        const ele = document.getElementById('contextmenu')
+        ele.style.top = pY - tbY - 6 + 'px'
+        ele.style.left = pX - tbX - 6 + 'px'
+        // 边界调整
+        if (window.innerWidth - 140 < pX - tbX) {
+            ele.style.left = 'unset'
+            ele.style.right = 0
+        }
+        showMenu.value = true
+        // 当前目标
+        updateCurTarget(row, column)
     }
 }
 
 const addRow = (isUnder) => {
     showMenu.value = false
-    if(curTarget.value.rowIdx === null) return
+    if (curTarget.value.rowIdx === null) return
     const idx = isUnder ? curTarget.value.rowIdx + 1 : curTarget.value.rowIdx
     const newRow = {}
     props.columnList.forEach(element => {
@@ -134,14 +140,12 @@ const addRow = (isUnder) => {
 const delRow = () => {
     showMenu.value = false
     curTarget.value.rowIdx !== null && tableData.value.splice(curTarget.value.rowIdx, 1)
-    if (tableData.value.length === 0) {
-        initializeTable()
-    }
+    initializeTable()
 }
 
 // 添加表格行下标
-const tableRowClassName = ({row, rowIndex}) => {
-    row.row_index = rowIndex
+const tableRowClassName = ({ row, rowIndex }) => {
+    row.rowIdx = rowIndex
 }
 
 </script>
