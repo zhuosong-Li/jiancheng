@@ -79,7 +79,7 @@ const router = createRouter({
     },
     ...LogisticsRoutes,
     ...TechenicalDepartmentClerkRoutes,
-    ...HeadOfWarehouseRoutes
+    ...HeadOfWarehouseRoutes,
     
     ...FabricSupervisorRoutes,
     ...SewingSupervisorRoutes,
