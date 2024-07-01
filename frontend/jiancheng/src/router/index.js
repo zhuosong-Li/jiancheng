@@ -13,6 +13,7 @@ import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSu
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
+import ProductionRoutes from '../Pages/ProductionManagementDepartment/ProductionManagementDepartmentGeneral/routers/productionmanagement'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -71,7 +72,8 @@ const router = createRouter({
       name : 'molding',
       component: MoldingSupervisor
     },
-    ...LogisticsRoutes
+    ...LogisticsRoutes,
+    ...ProductionRoutes
     
   ]
 })
