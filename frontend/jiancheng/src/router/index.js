@@ -4,7 +4,7 @@ import GeneralManager from '../Pages/GeneralManager/GeneralManager/views/General
 import Logistics from '../Pages/LogisticsControlDepartment/LogisticsControlManager/views/LogisticsControlManager.vue'
 import ProductionManagementDepartmentGeneral from '../Pages/ProductionManagementDepartment/ProductionManagementDepartmentGeneral/views/ProductionManagementDepartmentGeneral.vue'
 import ProductionManager from '../Pages/ProductionManagementDepartment/ProductionManager/views/ProductionManager.vue'
-import TechenicaDepartmentClerk from '../Pages/TechnologyDepartment/TechnicalDepartmentClerk/views/TechnicalDepartmentClerk.vue'
+import TechenicalDepartmentClerk from '../Pages/TechnologyDepartment/TechnicalDepartmentClerk/views/TechnicalDepartmentClerk.vue'
 import TechnicalManager from '../Pages/TechnologyDepartment/TechnicalManager/views/TechnicalManager.vue'
 import HeadOfWareHouse from '../Pages/TotalWarehouse/HeadOfWarehouse/views/HeadOfWarehouse.vue'
 import FabricCuttingSupervisor from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/views/FabricCuttingSupervisor.vue'
@@ -14,6 +14,12 @@ import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSu
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
 import ProductionRoutes from '../Pages/ProductionManagementDepartment/ProductionManagementDepartmentGeneral/routers/productionmanagement'
+import TechenicalDepartmentClerkRoutes from '../Pages/TechnologyDepartment/TechnicalDepartmentClerk/routers/technicalclerk'
+import HeadOfWarehouseRoutes from '../Pages/TotalWarehouse/HeadOfWarehouse/routers/totalWarehouse'
+import FabricSupervisorRoutes from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricSupervisorRoutes'
+import SewingSupervisorRoutes from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/routers/sewingSupervisorRoutes'
+import MoldingSupervisorRoutes from '../Pages/ProductionManagementDepartment/MoldingSupervisor/routers/moldingSupervisorRoutes'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -45,7 +51,7 @@ const router = createRouter({
     {
       path :'/technicalclerk',
       name : 'technicalclerk',
-      component: TechenicaDepartmentClerk
+      component: TechenicalDepartmentClerk
     },
     {
       path :'/technicalmanager',
@@ -73,8 +79,12 @@ const router = createRouter({
       component: MoldingSupervisor
     },
     ...LogisticsRoutes,
-    ...ProductionRoutes
-    
+    ...ProductionRoutes,
+    ...TechenicalDepartmentClerkRoutes,
+    ...HeadOfWarehouseRoutes,
+    ...FabricSupervisorRoutes,
+    ...SewingSupervisorRoutes,
+    ...MoldingSupervisorRoutes
   ]
 })
 

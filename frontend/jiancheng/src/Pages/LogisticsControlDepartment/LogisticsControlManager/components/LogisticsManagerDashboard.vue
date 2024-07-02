@@ -6,8 +6,8 @@
     <el-row :gutter="0">
         <el-col :span="4" :offset="20">
             <el-button-group>
-                <el-button size="large" @click="changeToGrid" :icon="Grid">卡片显示</el-button>
-                <el-button size="large" @click="changeToList" :icon="Memo">列表显示</el-button>
+                <el-button size="default" @click="changeToGrid" :icon="Grid">卡片显示</el-button>
+                <el-button size="default" @click="changeToList" :icon="Memo">列表显示</el-button>
             </el-button-group>
 
         </el-col>

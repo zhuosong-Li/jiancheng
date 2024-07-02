@@ -9,7 +9,10 @@
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="订单信息" :column="2">
+                    <span style="font-weight: bold; font-size: larger;">订单信息：</span>
+                    <Arrow :status="11"></Arrow>
+                    <el-descriptions title="" :column="2">
+                        
                         <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
                         <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
                         <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
@@ -29,7 +32,7 @@
                                 <el-button v-if="scope.row.Status === '未生成采购订单'" type="primary"
                                     @click="handleGenerate(scope.row)">生成</el-button>
                                 <el-button v-else-if="scope.row.Status === '已生成采购订单'" type="primary"
-                                    @click="handleView(scope.row)">查看</el-button>
+                                    @click="openPreviewDialog(scope.row)">查看</el-button>
                                 <div v-else-if="scope.row.Status === '已保存采购订单'">
                                     <el-button type="primary" @click="handleGenerate(scope.row)">编辑</el-button>
                                     <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
@@ -38,7 +41,7 @@
                             </template></el-table-column>
                     </el-table></el-col>
             </el-row>
-            <el-dialog title="采购订单 K2402121116202024061101F" v-model="createVis" width="90%"
+            <el-dialog title="一次采购订单 K2402121116202024061101F" v-model="createVis" width="90%"
                 @close="handleGenerateClose">
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
@@ -58,7 +61,7 @@
                     <el-table-column prop="approvedUsage" label="核定用量" />
                     <el-table-column label="采购数量">
                         <template #default="scope">
-                            <el-input-number v-model="scope.row.purchaseAmount" :min="0" />
+                            <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" />
                         </template>
                     </el-table-column>
                     <el-table-column label="工厂名称">
@@ -82,25 +85,35 @@
                 </template>
             </el-dialog>
 
-            <el-dialog
-                title="预览采购订单 K2402121116202024061101F"
-                v-model="isPreviewDialogVisible"
-                width="90%">
+            <el-dialog title="预览采购订单 K2402121116202024061101F" v-model="isPreviewDialogVisible" width="90%">
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
                 </el-descriptions>
-                <el-row :gutter="20">
-                    <el-col :span="24" :offset="0"></el-col>
+                <div style="height: 500px; overflow-y: scroll; overflow-x: hidden">
+                <el-row v-for="factory in purchaseTestData" :key="factory.factoryName" :gutter="20"
+                    style="margin-bottom: 20px;">
+                    <el-col :span="23">
+                        <h3>{{ factory.factoryName }}</h3>
+                        <el-table :data="factory.data" border style="width: 100%">
+                            <el-table-column prop="num" label="编号" />
+                            <el-table-column prop="materialName" label="材料名称" />
+                            <el-table-column prop="unit" label="单位" />
+                            <el-table-column prop="amount" label="数量" />
+                            <el-table-column prop="customerId" label="客户ID" />
+                            <el-table-column prop="internalModel" label="公司型号" />
+                            <el-table-column prop="customerModel" label="客户型号" />
+                            <el-table-column prop="comment" label="备注" />
+                        </el-table>
+                    </el-col>
                 </el-row>
-                
+            </div>
                 <template #footer>
-                <span>
-                    <el-button @click="">Cancel</el-button>
-                    <el-button type="primary" @click="">OK</el-button>
-                </span>
+                    <span>
+                        <el-button type="primary" @click="closePreviewDialog">确认</el-button>
+                    </span>
                 </template>
             </el-dialog>
-            
+
 
 
 
@@ -116,10 +129,12 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue';
+import Arrow from '@/components/OrderArrowView.vue'
 export default {
     props: ['orderId'],
     components: {
         AllHeader,
+        Arrow
     },
     data() {
         return {
@@ -160,7 +175,8 @@ export default {
                 purchaseAmount: 0,
                 factoryName: "",
                 internalModel: "0E202620",
-                customerModel: "VRA-1020"
+                customerModel: "VRA-1020",
+                comment: ""
             }],
             originalBomTestData: [],
             factoryOptions: [
@@ -169,9 +185,28 @@ export default {
                 { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' },
                 // Add more options here
             ],
-            purchaseTestData:[{
-                
-            }],
+            purchaseTestData: [
+                {
+                    factoryName: '一一鞋材', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                },
+                {
+                    factoryName: '深源皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                },
+                {
+                    factoryName: '嘉泰皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                },
+                {
+                    factoryName: '一一皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+                },
+            ],
             isPreviewDialogVisible: false,
             selectedFile: null
         }
@@ -192,6 +227,9 @@ export default {
         openPreviewDialog() {
             // Replace this with the actual logic to get the file
             this.isPreviewDialogVisible = true;
+        },
+        closePreviewDialog() {
+            this.isPreviewDialogVisible = false
         },
     }
 }
