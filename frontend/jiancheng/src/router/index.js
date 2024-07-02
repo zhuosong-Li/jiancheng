@@ -13,6 +13,7 @@ import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSu
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
+import ProductionRoutes from '../Pages/ProductionManagementDepartment/ProductionManagementDepartmentGeneral/routers/productionmanagement'
 import TechenicalDepartmentClerkRoutes from '../Pages/TechnologyDepartment/TechnicalDepartmentClerk/routers/technicalclerk'
 import HeadOfWarehouseRoutes from '../Pages/TotalWarehouse/HeadOfWarehouse/routers/totalWarehouse'
 import FabricSupervisorRoutes from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricSupervisorRoutes'
@@ -78,9 +79,9 @@ const router = createRouter({
       component: MoldingSupervisor
     },
     ...LogisticsRoutes,
+    ...ProductionRoutes,
     ...TechenicalDepartmentClerkRoutes,
     ...HeadOfWarehouseRoutes,
-    
     ...FabricSupervisorRoutes,
     ...SewingSupervisorRoutes,
     ...MoldingSupervisorRoutes
