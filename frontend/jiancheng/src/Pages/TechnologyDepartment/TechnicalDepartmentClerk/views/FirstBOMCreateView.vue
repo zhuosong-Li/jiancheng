@@ -381,7 +381,7 @@ export default {
                 40: '128',
                 41: '64',
                 pairAmount: 768,
-                total: 1020
+                total: 768
             },]
         }
     },
