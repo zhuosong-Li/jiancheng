@@ -43,7 +43,11 @@
             <el-table-column type="expand">
               <template #default="props">
                 <h3>鞋型详情</h3>
-                <el-table :data="props.row.grouping" :border="childBorder">
+                <el-table
+                  :data="props.row.grouping"
+                  :border="childBorder"
+                  :cell-style="statusJudge"
+                >
                   <el-table-column label="配码编号" prop="sizeQuant" />
                   <el-table-column label="订单总数" prop="totalQuant" />
                   <el-table-column label="面料辅料" prop="materialLogistics" />
@@ -224,7 +228,7 @@ export default {
               {
                 sizeQuant: 'S12A',
                 totalQuant: '768',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '768/768',
                 preproductionProgress: '768/768',
@@ -240,7 +244,7 @@ export default {
               {
                 sizeQuant: 'S12B',
                 totalQuant: '168',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '150/168',
                 preproductionProgress: '150/168',
@@ -256,7 +260,7 @@ export default {
               {
                 sizeQuant: 'S6A1',
                 totalQuant: '84',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '84/84',
                 preproductionProgress: '84/84',
@@ -272,7 +276,7 @@ export default {
               {
                 sizeQuant: 'S6A2',
                 totalQuant: '60',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '60/60',
                 preproductionProgress: '60/60',
@@ -288,7 +292,7 @@ export default {
               {
                 sizeQuant: 'S6B1',
                 totalQuant: '12',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '12/12',
                 preproductionProgress: '12/12',
@@ -304,7 +308,7 @@ export default {
               {
                 sizeQuant: 'S6B2',
                 totalQuant: '36',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '36/36',
                 preproductionProgress: '36/36',
@@ -320,7 +324,7 @@ export default {
               {
                 sizeQuant: 'S8A1',
                 totalQuant: '384',
-                materialLogistics: '3/11已定/已到',
+                materialLogistics: '3/11已定',
                 metalmaterialLogistics: '3/12已定',
                 fabricCuttingProgress: '200/384',
                 preproductionProgress: '180/384',
@@ -453,6 +457,39 @@ export default {
     handleConfirm() {},
     handleView(row) {
       return row.orderStatus
+    },
+    statusJudge({ row, column, rowIndex, columnIndex }) {
+      const progressColumns = ['fabricCuttingProgress', 'preproductionProgress', 'sewingProgress', 'moldingProgress'];
+      const columnProperty = column.property;
+      let style = {
+        background: '',
+        color: '#fff',
+        opacity: 0.8
+      };
+
+      if (progressColumns.includes(columnProperty)) {
+        const [current, total] = row[columnProperty].split('/').map(Number);
+        if (current === total) {
+          style.background = 'rgba(0, 128, 0, 0.8)'; // Green background for complete progress
+          return style
+        }
+        
+      }
+
+      if (row[columnProperty].includes('已定')) {
+        style.background = 'rgba(255, 255, 0, 0.8)'; // Yellow background for "已定"
+        style.color = '#000'
+        return style
+      } else if (row[columnProperty].includes('已到')) {
+        style.background = 'rgba(0, 128, 0, 0.8)'; // Green background for "已到"
+        return style
+      }
+
+      if (columnProperty === 'productionStatus' && row.productionStatus === '100%') {
+        style.background = 'rgba(0, 128, 0, 0.8)'; // Green background for 100% completion
+        return style
+      }
+
     }
   }
 }
