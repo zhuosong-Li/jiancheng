@@ -66,5 +66,5 @@ a,
 }
 .el-menu-item {
   font-size: larger !important;
-  justify-content: center;
+  justify-content: center !important;
 }
