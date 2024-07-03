@@ -59,3 +59,7 @@
 npm 更改国内源
 $ npm config set registry http://registry.npm.taobao.org
 $ npm get registry
+
+鞋类名词中英文对照
+https://annic159.pixnet.net/blog/post/117310922
+
