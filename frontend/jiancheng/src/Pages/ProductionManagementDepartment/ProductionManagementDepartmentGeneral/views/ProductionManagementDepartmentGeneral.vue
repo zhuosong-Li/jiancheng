@@ -81,7 +81,8 @@ export default {
     AllHeader,
     todotaskDashboard,
     ProductionInfo,
-    SideMenu
+    SideMenu,
+    LogisticInfo
   },
   data() {
     return {
@@ -98,6 +99,9 @@ export default {
           break
         case 2:
           this.currentComponent = ''
+          break
+        case 3:
+          this.currentComponent = 'LogisticInfo'
           break
         case 4:
           this.currentComponent = 'ProductionInfo'
