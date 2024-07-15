@@ -1,0 +1,5 @@
+material_id,material_name,material_unit,supplier_id,warehouse_id,shoe_part_id,material_creation_date
+1,material_name1,uni1,1,1,1,2024-07-01
+2,material_name2,uni2,2,2,2,2024-07-02
+3,material_name3,uni3,2,2,3,2024-07-03
+4,material_name4,uni4,1,2,4,2024-07-04
