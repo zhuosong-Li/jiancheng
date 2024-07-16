@@ -97,10 +97,11 @@
           </template>
         </el-table-column>
         <el-table-column prop="remainAmount" label="成型剩余数量"> </el-table-column>
+        <el-table-column prop="orderStatus" label="订单状态"> </el-table-column>
         <el-table-column prop="shipDate" label="订单出货日期"> </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button type="primary" size="default" @click="">修改排产</el-button>
+            <el-button type="primary" size="default" @click="isShoeScheduleVis = true">修改排产</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -115,6 +116,20 @@
   <el-dialog title="订单号 K24-2111620 鞋型排产详情" v-model="isShoeScheduleVis" width="90%">
     <span>
       <el-table :data="shoeProcess" border stripe>
+        <el-table-column type="expand">
+          <template #default="scope">
+            <el-descriptions title="" column="2">
+              <el-descriptions-item label="裁断完成情况">{{ scope.row.details.cutStatus }}</el-descriptions-item>
+              <el-descriptions-item label="裁断完成数量">{{ scope.row.details.cutAmount }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成情况">{{ scope.row.details.sewPreStatus }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成数量">{{ scope.row.details.sewPreAmount }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成情况">{{ scope.row.details.sewStatus }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成数量">{{ scope.row.details.sewAmount }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成情况">{{ scope.row.details.moldStatus }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成数量">{{ scope.row.details.moldAmount }}</el-descriptions-item>
+            </el-descriptions>
+          </template>
+        </el-table-column>
         <el-table-column prop="inheritId" label="工厂型号"> </el-table-column>
         <el-table-column prop="customerTypeId" label="客户型号"> </el-table-column>
         <el-table-column prop="remainAmount" label="数量"> </el-table-column>
@@ -177,6 +192,8 @@
               </el-date-picker>
             </span>
           </el-col>
+          <el-col :span="12" :offset="0">预计每天生产数量：{{ calculateDailyProduction(tab.dateValue)  }}</el-col>
+          
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24" :offset="0">
@@ -188,12 +205,15 @@
                     <el-table-column label="订单号" prop="orderId" />
                     <el-table-column label="工厂型号" prop="shoeId" />
                     <el-table-column label="鞋型总数量" prop="amount" />
+                    <el-table-column label="生产周期" prop="datePeriod" />
+                    <el-table-column label="平均每天数量" prop="averageAmount" />
                   </el-table>
                 </template>
               </el-table-column>
 
               <el-table-column prop="date" label="日期"> </el-table-column>
               <el-table-column prop="productAmount" label="已排产鞋型数"> </el-table-column>
+              <el-table-column prop="predictAmount" label="预计当日现有生产量"> </el-table-column>
             </el-table>
           </el-col>
         </el-row>
@@ -236,6 +256,7 @@ export default {
           orderId: 'K24-2111620',
           createDate: '2024-07-08',
           logisticsStatus: 0,
+          orderStatus: "已逾期",
           shipDate: '2024-09-10'
         }
       ],
@@ -245,6 +266,7 @@ export default {
           createDate: '2024-07-08',
           logisticsStatus: 0,
           remainAmount: 5000,
+          orderStatus: "已逾期",
           cutDatePeriod: '2024-07-09 至 2024-08-16',
           sewPreDatePeriod: '2024-07-09 至 2024-08-16',
           sewDatePeriod: '2024-07-09 至 2024-08-16',
@@ -265,7 +287,18 @@ export default {
           sewLine: 2,
           sewDatePeriod: '2024-07-09 至 2024-08-16',
           moldLine: 4,
-          moldDatePeriod: '2024-07-09 至 2024-08-16'
+          moldDatePeriod: '2024-07-09 至 2024-08-16',
+          details: {
+            cutStatus: "未完成",
+            cutAmount: "1000/5000",
+            sewPreStatus: "未完成",
+            sewPreAmount: "1000/5000",
+            sewStatus: "未完成",
+            sewAmount: "1000/5000",
+            moldStatus: "未完成",
+            moldAmount: "1000/5000",
+
+          }
         }
       ],
       events: [
@@ -327,16 +360,29 @@ export default {
         {
           date: '2024-07-16',
           productAmount: 10,
+          predictAmount: 2000,
           shoeList: [{
             orderId: 'K24-2111620',
             shoeId: '0E11150',
             amount: 300,
-            datePeriod: "2024-07-16-2024-07-20",
+            datePeriod: "2024-07-16 至 2024-07-20",
             averageAmount: 75
           }]
         }
       ]
     }
+  },
+  methods: {
+    calculateDailyProduction(dateRange) {
+      if (dateRange && dateRange.length === 2) {
+        const startDate = new Date(dateRange[0]);
+        const endDate = new Date(dateRange[1]);
+        const timeDiff = Math.abs(endDate - startDate);
+        const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+        return (5000 / diffDays).toFixed(2);
+      }
+      return 0;
+    },
   }
 }
 </script>

@@ -35,17 +35,11 @@
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
             </el-menu-item>
-            <el-menu-item index="4" @click="handleMenuClick(4)">
-              <span>生产详情</span>
-            </el-menu-item>
             <el-menu-item index="5">
               <span>订单查询</span>
             </el-menu-item>
-            <el-menu-item index="6">
-              <span>发货信息</span>
-            </el-menu-item>
             <el-menu-item index="7">
-              <span>工价审批</span>
+              <span>数量审批</span>
             </el-menu-item>
             <el-menu-item index="8">
               <span>数据总览</span>
