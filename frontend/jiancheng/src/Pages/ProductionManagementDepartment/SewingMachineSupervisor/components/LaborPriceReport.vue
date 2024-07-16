@@ -3,8 +3,18 @@
         <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center; color: black;">针车工价填报</el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-col :span="4" :offset="19"><el-input v-model="searchOrder" placeholder="请输入订单号" size="default"
-                :suffix-icon="Search" clearable @input="filterData"></el-input>
+        <el-col :span="8" :offset="16">
+            <el-input v-model="input3" style="max-width: 600px" placeholder="搜索" clearable @input="filterData">
+                <template #prepend>
+                    <el-select v-model="select" placeholder="选择" style="width: 115px">
+                        <el-option label="订单号" value="1" />
+                        <el-option label="客户号" value="2" />
+                    </el-select>
+                </template>
+                <template #append>
+                    <el-button :icon="Search" />
+                </template>
+            </el-input>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
@@ -16,26 +26,19 @@
 </template>
 <script setup>
 import OrderList from './LaborPriceReport/OrderList.vue'
+import { Search } from '@element-plus/icons-vue'
 import { ref } from 'vue';
 const components = {
     OrderList
 }
 let taskData = []
-for (let i = 0; i < 2; i++) {
+const input3 = ref('')
+const select = ref('')
+for (let i = 0; i < 4; i++) {
     taskData.push(
         {
             orderId: "K24-024 " + i.toString(),
-            createTime: "2024-06-10",
-            prevTime: "2024-06-10 18:00:00",
-            prevDepart: "技术部",
-            prevUser: "XXX"
-        }
-    )
-}
-for (let i = 2; i < 4; i++) {
-    taskData.push(
-        {
-            orderId: "K24-024 " + i.toString(),
+            customerId: "37",
             createTime: "2024-06-10",
             prevTime: "2024-06-10 18:00:00",
             prevDepart: "技术部",
