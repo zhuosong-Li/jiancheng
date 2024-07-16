@@ -13,21 +13,16 @@
                     <SideMenu></SideMenu>
             </el-menu> -->
       <el-aside>
-        <el-radio-group v-model="isCollapse" style="margin-bottom: 20px">
-          <el-radio-button :value="false">expand</el-radio-button>
-          <el-radio-button :value="true">collapse</el-radio-button>
-        </el-radio-group>
 
         <div>
           <el-avatar :icon="UserFilled" :size="100" />
         </div>
         <div style="font-size: x-large">生产经理-姓名</div>
 
-        <div class="aside-menu">
+        <div class="aside-menu" style="width: 100%; margin-top: 50px;">
           <el-menu
             default-active="1"
             class="el-menu-vertical-demo"
-            :collapse="isCollapse"
             @open="handleOpen"
             @close="handleClose"
           >
@@ -71,6 +66,7 @@ import SideMenu from '../components/sideMenu.vue'
 import todotaskDashboard from '../components/TodoTasksView.vue'
 import LogisticInfo from '../components/LogisticInfo.vue'
 import ProductionInfo from '../components/ProductionInfo.vue'
+import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 
@@ -81,7 +77,9 @@ export default {
     AllHeader,
     todotaskDashboard,
     ProductionInfo,
-    SideMenu
+    SideMenu,
+    LogisticInfo,
+    ProductionSchedulingDialogue
   },
   data() {
     return {
@@ -97,13 +95,15 @@ export default {
           this.currentComponent = 'todotaskDashboard'
           break
         case 2:
-          this.currentComponent = ''
+          this.currentComponent = 'ProductionSchedulingDialogue'
+          break
+        case 3:
+          this.currentComponent = 'LogisticInfo'
           break
         case 4:
           this.currentComponent = 'ProductionInfo'
       }
     },
-    open
   }
 }
 </script>
