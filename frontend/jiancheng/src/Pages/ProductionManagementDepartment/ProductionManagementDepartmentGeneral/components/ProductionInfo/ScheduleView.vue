@@ -107,8 +107,8 @@
     </span>
     <template #footer>
       <span>
-        <el-button @click="">Cancel</el-button>
-        <el-button type="primary" @click="">OK</el-button>
+        <el-button @click="">取消</el-button>
+        <el-button type="primary" @click="">确认</el-button>
       </span>
     </template>
   </el-dialog>
@@ -120,21 +120,91 @@
         <el-table-column prop="remainAmount" label="数量"> </el-table-column>
         <el-table-column prop="cutLine" label="裁断线号"> </el-table-column>
         <el-table-column prop="cutDatePeriod" label="裁断周期"> </el-table-column>
+        <el-table-column prop="sewPreLine" label="针车预备线号"> </el-table-column>
+        <el-table-column prop="sewPreDatePeriod" label="针车预备周期"> </el-table-column>
         <el-table-column prop="sewLine" label="针车线号"> </el-table-column>
         <el-table-column prop="sewDatePeriod" label="针车周期"> </el-table-column>
         <el-table-column prop="moldLine" label="成型线号"> </el-table-column>
         <el-table-column prop="moldDatePeriod" label="成型周期"> </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button type="primary" size="default" @click="">修改排期</el-button>
+            <el-button type="primary" size="default" @click="isScheduleModify = true"
+              >修改排期</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
     </span>
     <template #footer>
       <span>
-        <el-button @click="">Cancel</el-button>
-        <el-button type="primary" @click="">OK</el-button>
+        <el-button @click="">取消</el-button>
+        <el-button type="primary" @click="">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
+  <el-dialog title="修改排产信息" v-model="isScheduleModify" width="60%">
+    <el-tabs v-model="activeTab" type="card" tab-position="top" @tab-click="">
+      <el-tab-pane v-for="tab in tabs" :key="tab.name" :label="tab.label" :name="tab.name">
+        <el-row :gutter="20">
+          <el-col :span="10" :offset="0">
+            <span style="white-space: nowrap">
+              {{ tab.lineLabel }}：
+              <el-select v-model="tab.lineValue" placeholder="" clearable filterable @change="">
+                <el-option
+                  v-for="item in cuttingLineOption"
+                  :key="item"
+                  :label="item"
+                  :value="item"
+                >
+                </el-option>
+              </el-select>
+            </span>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="10" :offset="0">
+            <span>
+              {{ tab.dateLabel }}：
+              <el-date-picker
+                v-model="tab.dateValue"
+                type="daterange"
+                size="normal"
+                range-separator="-"
+                start-placeholder=""
+                end-placeholder=""
+              >
+              </el-date-picker>
+            </span>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24" :offset="0">
+            <el-table :data="dateStatusTable" border stripe>
+              <el-table-column type="expand">
+                <template #default="props">
+                  <el-table :data="props.row.shoeList" :border="childBorder">
+                    <el-table-column type="index" />
+                    <el-table-column label="订单号" prop="orderId" />
+                    <el-table-column label="工厂型号" prop="shoeId" />
+                    <el-table-column label="鞋型总数量" prop="amount" />
+                  </el-table>
+                </template>
+              </el-table-column>
+
+              <el-table-column prop="date" label="日期"> </el-table-column>
+              <el-table-column prop="productAmount" label="已排产鞋型数"> </el-table-column>
+            </el-table>
+          </el-col>
+        </el-row>
+      </el-tab-pane>
+    </el-tabs>
+
+    <span> </span>
+    <template #footer>
+      <span>
+        <el-button @click="">取消</el-button>
+        <el-button type="primary" @click="">确认</el-button>
       </span>
     </template>
   </el-dialog>
@@ -150,9 +220,15 @@ export default {
   },
   data() {
     return {
+      activeTab: '裁断排产',
+      cuttingLine: 1,
+      cuttingDatePicker: '',
+      sewPreLine: 1,
+      sewPreDatePicker: '',
       dialogOrderSearch: '',
       isShoeScheduleVis: false,
       isScheduleVis: false,
+      isScheduleModify: false,
       lineType: '0',
       linenum: '',
       unprocessedOrder: [
@@ -170,6 +246,7 @@ export default {
           logisticsStatus: 0,
           remainAmount: 5000,
           cutDatePeriod: '2024-07-09 至 2024-08-16',
+          sewPreDatePeriod: '2024-07-09 至 2024-08-16',
           sewDatePeriod: '2024-07-09 至 2024-08-16',
           moldDatePeriod: '2024-07-09 至 2024-08-16',
           shipDate: '2024-09-10'
@@ -183,6 +260,8 @@ export default {
           remainAmount: 5000,
           cutLine: 1,
           cutDatePeriod: '2024-07-09 至 2024-08-16',
+          sewPreLine: 1,
+          sewPreDatePeriod: '2024-07-09 至 2024-08-16',
           sewLine: 2,
           sewDatePeriod: '2024-07-09 至 2024-08-16',
           moldLine: 4,
@@ -207,6 +286,54 @@ export default {
           content: '0E21922',
           class: 'sport',
           image: 'https://via.placeholder.com/50'
+        }
+      ],
+      cuttingLineOption: [1, 2, 3, 4],
+      tabs: [
+        {
+          name: '裁断排产',
+          label: '裁断排产',
+          lineLabel: '裁断线号选择',
+          dateLabel: '裁断工期选择',
+          lineValue: null,
+          dateValue: null
+        },
+        {
+          name: '针车预备排产',
+          label: '针车预备排产',
+          lineLabel: '针车线号选择',
+          dateLabel: '针车工期选择',
+          lineValue: null,
+          dateValue: null
+        },
+        {
+          name: '针车排产',
+          label: '针车排产',
+          lineLabel: '针车线号选择',
+          dateLabel: '针车工期选择',
+          lineValue: null,
+          dateValue: null
+        },
+        {
+          name: '成型排产',
+          label: '成型排产',
+          lineLabel: '成型线号选择',
+          dateLabel: '成型工期选择',
+          lineValue: null,
+          dateValue: null
+        }
+      ],
+      dateStatusTable: [
+        {
+          date: '2024-07-16',
+          productAmount: 10,
+          shoeList: [{
+            orderId: 'K24-2111620',
+            shoeId: '0E11150',
+            amount: 300,
+            datePeriod: "2024-07-16-2024-07-20",
+            averageAmount: 75
+          }]
         }
       ]
     }
