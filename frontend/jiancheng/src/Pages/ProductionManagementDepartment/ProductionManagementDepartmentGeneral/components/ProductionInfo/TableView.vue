@@ -39,7 +39,6 @@
         <el-table-column prop="customerId" label="客人编号" sortable />
         <el-table-column prop="productionstartDate" label="开始日期" sortable />
         <el-table-column prop="totalQuantity" label="订单总数量" sortable />
-        <el-table-column prop="materialStatus" label="物料状态" sortable />
         <el-table-column prop="deliverDate" label="截止日期" sortable />
         <el-table-column label="操作" sortable>
           <template #default>
