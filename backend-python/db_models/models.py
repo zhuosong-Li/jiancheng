@@ -1,12 +1,5 @@
 from app_config import db
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'your-database-uri'
-db = SQLAlchemy(app)
-
 class BomItem(db.Model):
     __tablename__ = 'bom_item'
     bom_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -38,7 +31,8 @@ class Character(db.Model):
     def __repr__(self):
         return f"<Character(character_id={self.character_id})>"
 
-class Colors(db.Model):
+
+class Color(db.Model):
     __tablename__ = 'colors'
     color_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     color_name = db.Column(db.String(30), nullable=False)
@@ -47,8 +41,9 @@ class Colors(db.Model):
     color_it_name = db.Column(db.String(40), nullable=True)
 
     def __repr__(self):
-        return f"<Colors(color_id={self.color_id})>"
+        return f"<Color(color_id={self.color_id})>"
 
+    
 class Customer(db.Model):
     __tablename__ = 'customer'
     customer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -56,6 +51,7 @@ class Customer(db.Model):
 
     def __repr__(self):
         return f"<Customer(customer_id={self.customer_id})>"
+
 
 class CuttingQuantityReportItem(db.Model):
     __tablename__ = 'cutting_quantity_report_item'
@@ -71,7 +67,7 @@ class CuttingQuantityReport(db.Model):
     report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=True)
     creation_date = db.Column(db.Date, nullable=True)
-    status = db.Column(db.String(1), nullable=True)
+    status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
@@ -124,7 +120,7 @@ class MoldingQuantityReport(db.Model):
     report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), unique=True, nullable=True)
     creation_date = db.Column(db.Date, nullable=True)
-    status = db.Column(db.String(1), nullable=True)
+    status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
@@ -270,7 +266,7 @@ class SewingQuantityReport(db.Model):
     report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), unique=True, nullable=True)
     creation_date = db.Column(db.Date, nullable=True)
-    status = db.Column(db.String(1), nullable=True)
+    status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
@@ -353,7 +349,7 @@ class TransitWarehouseItem(db.Model):
     transit_warehouse_item_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     transit_order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
     transit_instore_amount = db.Column(db.Integer, nullable=False)
-    transit_status = db.Column(db.TinyInteger, nullable=False)
+    transit_status = db.Column(db.SmallInteger, nullable=False)
     transit_instore_time = db.Column(db.DateTime, nullable=False)
 
     def __repr__(self):
@@ -368,7 +364,7 @@ class FinishedWarehouseItem(db.Model):
     finished_warehouse_item_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     finished_order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
     finished_instore_amount = db.Column(db.Integer, nullable=False)
-    finished_status = db.Column(db.TinyInteger, nullable=False)
+    finished_status = db.Column(db.SmallInteger, nullable=False)
     finished_instore_time = db.Column(db.DateTime, nullable=False)
 
     # Define the relationship to OrderShoe

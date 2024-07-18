@@ -1,7 +1,7 @@
 from app_config import app, db
 from flask_cors import CORS
-
-from models import *
+from flask import Flask
+from db_models.models import *
 
 # Import any additional modules you created
 
