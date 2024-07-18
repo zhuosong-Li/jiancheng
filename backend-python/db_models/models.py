@@ -1,5 +1,4 @@
 from app_config import db
-from datetime import datetime
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -14,7 +13,7 @@ class BomItem(db.Model):
     material_id = db.Column(db.BigInteger, db.ForeignKey('material.material_id'), nullable=False)
     unit_usage = db.Column(db.Numeric(10, 5), nullable=False)
     total_usage = db.Column(db.Numeric(10, 5), nullable=False)
-    department = db.Column(db.Integer, db.ForeignKey('departments.department_id'), nullable=True)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.department_id'), nullable=True)
     remark = db.Column(db.String(100), nullable=True)
     bom_id = db.Column(db.BigInteger, db.ForeignKey('bom.bom_id'), nullable=False)
 
@@ -58,29 +57,28 @@ class Customer(db.Model):
     def __repr__(self):
         return f"<Customer(customer_id={self.customer_id})>"
 
-class CuttingQuantityReportInfo(db.Model):
-    __tablename__ = 'cutting_quantity_report_info'
-    report_id = db.Column(db.BigInteger, primary_key=True)
-    procedure_id = db.Column(db.BigInteger, primary_key=True)
-    worker_name = db.Column(db.String(100), nullable=True)
-    salary = db.Column(db.Float, nullable=True)
+class CuttingQuantityReportItem(db.Model):
+    __tablename__ = 'cutting_quantity_report_item'
+    report_id = db.Column(db.BigInteger, db.ForeignKey('cutting_quantity_report.report_id'), primary_key=True, nullable=False)
+    order_shoe_batchinfo_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_batchinfo.order_shoe_batchinfo_id'), primary_key=True, nullable=False)
+    amount = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
-        return f"<CuttingQuantityReportInfo(report_id={self.report_id}, procedure_id={self.procedure_id})>"
+        return f"<CuttingQuantityReportItem(report_id={self.report_id}, order_shoe_batchinfo_id={self.order_shoe_batchinfo_id})>"
 
 class CuttingQuantityReport(db.Model):
     __tablename__ = 'cutting_quantity_report'
-    report_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_shoesize_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_shoesize.order_shoe_shoesize_id'), nullable=True)
-    submission_date = db.Column(db.Date, nullable=True)
-    amount = db.Column(db.Integer, nullable=True)
+    report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=True)
+    creation_date = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(1), nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<CuttingQuantityReport(report_id={self.report_id})>"
 
-class Departments(db.Model):
-    __tablename__ = 'departments'
+class Department(db.Model):
+    __tablename__ = 'department'
     department_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     department_name = db.Column(db.String(20), nullable=True)
 
@@ -92,9 +90,9 @@ class Material(db.Model):
     material_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     material_name = db.Column(db.String(60), nullable=False)
     material_unit = db.Column(db.String(4), nullable=True)
-    material_factory = db.Column(db.Integer, db.ForeignKey('supplier.supplier_id'), nullable=False)
-    material_warehouse = db.Column(db.Integer, db.ForeignKey('warehouse.warehouse_id'), nullable=False)
-    material_part = db.Column(db.Integer, db.ForeignKey('shoe_part.shoe_part_id'), nullable=False)
+    supplier_id = db.Column(db.Integer, db.ForeignKey('supplier.supplier_id'), nullable=False)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey('warehouse.warehouse_id'), nullable=False)
+    shoe_part_id = db.Column(db.Integer, db.ForeignKey('shoe_part.shoe_part_id'), nullable=False)
     material_creation_date = db.Column(db.Date, nullable=True)
 
     def __repr__(self):
@@ -103,7 +101,7 @@ class Material(db.Model):
 class Event(db.Model):
     __tablename__ = 'event'
     event_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    handler = db.Column(db.Integer, db.ForeignKey('staff.staff_id'), nullable=False)
+    staff_id = db.Column(db.Integer, db.ForeignKey('staff.staff_id'), nullable=False)
     handle_time = db.Column(db.DateTime, nullable=False)
     operation_id = db.Column(db.Integer, db.ForeignKey('operation.operation_id'), nullable=False)
     event_order_id = db.Column(db.BigInteger, nullable=True)
@@ -112,22 +110,21 @@ class Event(db.Model):
     def __repr__(self):
         return f"<Event(event_id={self.event_id})>"
 
-class MoldingQuantityReportInfo(db.Model):
-    __tablename__ = 'molding_quantity_report_info'
-    report_id = db.Column(db.BigInteger, primary_key=True)
-    procedure_id = db.Column(db.BigInteger, primary_key=True)
-    worker_name = db.Column(db.String(100), nullable=True)
-    salary = db.Column(db.Float, nullable=True)
+class MoldingQuantityReportItem(db.Model):
+    __tablename__ = 'molding_quantity_report_item'
+    report_id = db.Column(db.BigInteger, db.ForeignKey('molding_quantity_report.report_id'), primary_key=True, nullable=False)
+    order_shoe_batchinfo_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_batchinfo.order_shoe_batchinfo_id'), primary_key=True, nullable=False)
+    amount = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
-        return f"<MoldingQuantityReportInfo(report_id={self.report_id}, procedure_id={self.procedure_id})>"
+        return f"<MoldingQuantityReportItem(report_id={self.report_id}, order_shoe_batchinfo_id={self.order_shoe_batchinfo_id})>"
 
 class MoldingQuantityReport(db.Model):
     __tablename__ = 'molding_quantity_report'
-    report_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_shoesize_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_shoesize.order_shoe_shoesize_id'), nullable=True)
-    submission_date = db.Column(db.Date, nullable=True)
-    amount = db.Column(db.Integer, nullable=True)
+    report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), unique=True, nullable=True)
+    creation_date = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(1), nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
@@ -173,28 +170,28 @@ class OrderShoeStatus(db.Model):
     def __repr__(self):
         return f"<OrderShoeStatus(order_shoe_status_id={self.order_shoe_status_id})>"
 
-class OrderShoeShoesize(db.Model):
-    __tablename__ = 'order_shoe_shoesize'
-    order_shoe_shoesize_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+class OrderShoeBatchInfo(db.Model):
+    __tablename__ = 'order_shoe_batchinfo'
+    order_shoe_batchinfo_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), nullable=False)
-    color = db.Column(db.Integer, db.ForeignKey('colors.color_id'), nullable=False)
+    color_id = db.Column(db.Integer, db.ForeignKey('colors.color_id'), nullable=False)
     total_amount = db.Column(db.Integer, nullable=True)
     cutting_amount = db.Column(db.Integer, nullable=True)
     sewing_amount = db.Column(db.Integer, nullable=True)
-    mold_amount = db.Column(db.Integer, nullable=True)
+    molding_amount = db.Column(db.Integer, nullable=True)
     order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
 
     def __repr__(self):
-        return f"<OrderShoeShoesize(order_shoe_shoesize_id={self.order_shoe_shoesize_id})>"
+        return f"<OrderShoeShoesize(order_shoe_batchinfo_id={self.order_shoe_batchinfo_id})>"
 
 class OrderShoe(db.Model):
     __tablename__ = 'order_shoe'
     order_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     shoe_id = db.Column(db.Integer, db.ForeignKey('shoe.shoe_id'), nullable=False)
     order_id = db.Column(db.BigInteger, db.ForeignKey('order.order_id'), nullable=False)
-    customer_id = db.Column(db.String(30), nullable=False)
-    cutting_id = db.Column(db.Integer, nullable=True)
-    sewing_id = db.Column(db.Integer, nullable=True)
+    customer_product_name = db.Column(db.String(30), nullable=False)
+    cutting_line_number = db.Column(db.Integer, nullable=True)
+    sewing_line_number = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return f"<OrderShoe(order_shoe_id={self.order_shoe_id})>"
@@ -212,7 +209,7 @@ class OrderStatus(db.Model):
     order_status_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     order_current_status = db.Column(db.Integer, db.ForeignKey('order_status_reference.order_status_id'), nullable=False)
     order_status_value = db.Column(db.Integer, nullable=False)
-    order_status_order = db.Column(db.BigInteger, db.ForeignKey('order.order_id'), nullable=False)
+    order_id = db.Column(db.BigInteger, db.ForeignKey('order.order_id'), nullable=False)
 
     def __repr__(self):
         return f"<OrderStatus(order_status_id={self.order_status_id})>"
@@ -250,30 +247,30 @@ class PurchaseDivideOrder(db.Model):
     def __repr__(self):
         return f"<PurchaseDivideOrder(purchase_divide_order_id={self.purchase_divide_order_id})>"
 
-class PurchaseOrders(db.Model):
-    __tablename__ = 'purchase_orders'
+class PurchaseOrder(db.Model):
+    __tablename__ = 'purchase_order'
     purchase_order_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    purchase_order_bom_id = db.Column(db.BigInteger, db.ForeignKey('bom.bom_id'), nullable=True)
+    bom_id = db.Column(db.BigInteger, db.ForeignKey('bom.bom_id'), nullable=True)
+    purchase_order_rid = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
         return f"<PurchaseOrders(purchase_order_id={self.purchase_order_id})>"
 
-class SewingQuantityReportInfo(db.Model):
-    __tablename__ = 'sewing_quantity_report_info'
-    report_id = db.Column(db.BigInteger, primary_key=True)
-    procedure_id = db.Column(db.BigInteger, primary_key=True)
-    worker_name = db.Column(db.String(100), nullable=True)
-    salary = db.Column(db.Float, nullable=True)
+class SewingQuantityReportItem(db.Model):
+    __tablename__ = 'sewing_quantity_report_item'
+    report_id = db.Column(db.BigInteger, db.ForeignKey('sewing_quantity_report.report_id'), primary_key=True, nullable=False)
+    order_shoe_batchinfo_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_batchinfo.order_shoe_batchinfo_id'), primary_key=True, nullable=False)
+    amount = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
-        return f"<SewingQuantityReportInfo(report_id={self.report_id}, procedure_id={self.procedure_id})>"
+        return f"<SewingQuantityReportItem(report_id={self.report_id}, order_shoe_batchinfo_id={self.order_shoe_batchinfo_id})>"
 
 class SewingQuantityReport(db.Model):
     __tablename__ = 'sewing_quantity_report'
-    report_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_shoesize_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe_shoesize.order_shoe_shoesize_id'), nullable=True)
-    submission_date = db.Column(db.Date, nullable=True)
-    amount = db.Column(db.Integer, nullable=True)
+    report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), unique=True, nullable=True)
+    creation_date = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(1), nullable=True)
     team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
@@ -323,21 +320,63 @@ class UnitPrice(db.Model):
     def __repr__(self):
         return f"<UnitPrice(procedure_id={self.procedure_id}, creation_date={self.creation_date})>"
 
+class UnitPriceReportDetail(db.Model):
+    __tablename__ = 'unit_price_report_detail'
+    report_id = db.Column(db.BigInteger, db.ForeignKey('unit_price_report.report_id'), primary_key=True, nullable=False)
+    procedure_id = db.Column(db.BigInteger, db.ForeignKey('procedure_reference.procedure_id'), primary_key=True, nullable=False)
+    note = db.Column(db.String(600), nullable=True)
+    
+    def __repr__(self):
+        return f"<UnitPriceReportDetail(report_id={self.report_id}, procedure_id={self.procedure_id}, note={self.note})>"
+
 class UnitPriceReport(db.Model):
     __tablename__ = 'unit_price_report'
-    report_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
-    procedure_id = db.Column(db.BigInteger, db.ForeignKey('procedure_reference.procedure_id'), nullable=False)
-    note = db.Column(db.String(600), nullable=True)
+    report_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=True)
+    submission_date = db.Column(db.Date, nullable=True)
+    team = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"
 
-class Warehouse(db.Model):
-    __tablename__ = 'warehouse'
-    warehouse_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+class MaterialWarehouse(db.Model):
+    __tablename__ = 'material_warehouse'
+    material_warehouse_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     warehouse_name = db.Column(db.String(20), nullable=False)
     warehouse_creation_date = db.Column(db.Date, nullable=False)
 
     def __repr__(self):
-        return f"<Warehouse(warehouse_id={self.warehouse_id})>"
+        return f"<Warehouse(material_warehouse_id={self.warehouse_id})>"
+    
+class TransitWarehouseItem(db.Model):
+    __tablename__ = 'transit_warehouse_item'
+    transit_warehouse_item_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    transit_order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
+    transit_instore_amount = db.Column(db.Integer, nullable=False)
+    transit_status = db.Column(db.TinyInteger, nullable=False)
+    transit_instore_time = db.Column(db.DateTime, nullable=False)
+
+    def __repr__(self):
+        return (f"<TransitWarehouseItem(transit_warehouse_item_id={self.transit_warehouse_item_id}, "
+                f"transit_order_shoe_id={self.transit_order_shoe_id}, "
+                f"transit_instore_amount={self.transit_instore_amount}, "
+                f"transit_status={self.transit_status}, "
+                f"transit_instore_time={self.transit_instore_time})>")
+    
+class FinishedWarehouseItem(db.Model):
+    __tablename__ = 'finished_warehouse_item'
+    finished_warehouse_item_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    finished_order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'), nullable=False)
+    finished_instore_amount = db.Column(db.Integer, nullable=False)
+    finished_status = db.Column(db.TinyInteger, nullable=False)
+    finished_instore_time = db.Column(db.DateTime, nullable=False)
+
+    # Define the relationship to OrderShoe
+    order_shoe = db.relationship('OrderShoe', backref=db.backref('finished_warehouse_items', lazy=True))
+
+    def __repr__(self):
+        return (f"<FinishedWarehouseItem(finished_warehouse_item_id={self.finished_warehouse_item_id}, "
+                f"finished_order_shoe_id={self.finished_order_shoe_id}, "
+                f"finished_instore_amount={self.finished_instore_amount}, "
+                f"finished_status={self.finished_status}, "
+                f"finished_instore_time={self.finished_instore_time})>")
