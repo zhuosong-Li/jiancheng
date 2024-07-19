@@ -63,3 +63,7 @@ $ npm get registry
 鞋类名词中英文对照
 https://annic159.pixnet.net/blog/post/117310922
 
+
+conda install flask flask_cors cryptography bcrypt pymysql 
+conda install conda-forge::flask-sqlalchemy conda-forge::pycryptodome
+
