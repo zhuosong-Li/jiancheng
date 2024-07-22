@@ -35,7 +35,10 @@
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
             </el-menu-item>
-            <el-menu-item index="5">
+            <el-menu-item index="5" @click="handleMenuClick(5)">
+              <span>外包信息</span>
+            </el-menu-item>
+            <el-menu-item index="6">
               <span>订单查询</span>
             </el-menu-item>
             <el-menu-item index="7">
@@ -60,6 +63,7 @@ import SideMenu from '../components/sideMenu.vue'
 import todotaskDashboard from '../components/TodoTasksView.vue'
 import LogisticInfo from '../components/LogisticInfo.vue'
 import ProductionInfo from '../components/ProductionInfo.vue'
+import OutSourceInfo from '../components/OutSourceInfo.vue'
 import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
@@ -73,7 +77,8 @@ export default {
     ProductionInfo,
     SideMenu,
     LogisticInfo,
-    ProductionSchedulingDialogue
+    ProductionSchedulingDialogue,
+    OutSourceInfo
   },
   data() {
     return {
@@ -96,6 +101,9 @@ export default {
           break
         case 4:
           this.currentComponent = 'ProductionInfo'
+          break
+        case 5:
+          this.currentComponent = 'OutSourceInfo'
       }
     },
   }
