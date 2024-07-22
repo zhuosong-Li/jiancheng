@@ -1,0 +1,34 @@
+constants:
+order_status_list
+order_shoe_status_list
+
+
+
+        Outer                       Middle              Middle 2                   3  
+
+
+    Bom_Item:
+department               }
+   Staff:                }     ------> Staff   }
+character                }                     } --->   Event          ||
+operation                                      }  
+
+    orders:
+constant                                  }                                |-----> order_shoe_batchinfo ||
+                                          }     |--->   Order_status   ||  |
+customers                }   ------> Order}     -                          |         --------> bom_item                                 }
+                                          }                                |         |                                                  }  ---> purchase_order_item ||          
+                                          }  ------>    order_shoe  }   --------->  bom -----> purchase_order ---> purchase_divide_order}   
+    OrderShoe:                            }               |                |                                                             
+shoes                                     }               |                |----->  order_shoe_status ||                                
+constant                                                  |                }                                                             
+colors  ------->                                          |                                                                              
+                                                          |                                                                             
+                                                          |                                                                              
+                                                          |                                                                             
+                                                          |                                                                              
+                                                          |                                                                              
+    Materials:                                            |                                                                              
+warehouse }                                               |                                                                             
+supplier  }    ----------->       material                |
+shoe_part }                                               |----------------------> material_storage ||

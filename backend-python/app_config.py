@@ -9,7 +9,7 @@ CORS(app, supports_credentials=True)
 
 db_username = "jiancheng_dev1"
 db_password = "12345678Ab"
-db_name = "jiancheng_test1"
+db_name = "jiangcheng_test"
 app.config["SQLALCHEMY_DATABASE_URI"] = (
     f"mysql+pymysql://{db_username}:{db_password}@rm-wz9lp07aju9k1c1jrvo.mysql.rds.aliyuncs.com/{db_name}"
 )
