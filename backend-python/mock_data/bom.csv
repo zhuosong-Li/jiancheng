@@ -1,0 +1,7 @@
+bom_id,bom_rid,bom_type,order_shoe_id
+1,test_rid_1,1,1
+2,test_rid_2,2,1
+3,test_rid_3,1,2
+4,test_rid_4,2,2
+5,test_rid_5,1,3
+6,test_rid_6,1,4
