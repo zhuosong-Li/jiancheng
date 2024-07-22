@@ -60,7 +60,7 @@
             </el-table>
             <div v-if="createVis">
                 <AmountReportCreator :tableInput="tableInput[currentId]" :handleSave="handleSave"
-                    :handleClose="handleClose" />
+                    :handleClose="handleClose" :shoesizeNumbers="shoesizeNumbers"/>
             </div>
             <!-- <el-dialog :title="currentTitle" v-model="previewVis" width="90%"
                 @close="handleClose(1)">
@@ -81,8 +81,14 @@ const createVis = ref(false)
 const createReportVis = ref(false)
 const previewVis = ref(false)
 const currentTitle = ref('')
+const shoesizeNumbers = ["S12A","S12B","S6A1","S6A2","S6B1","S6B2","S8A1","S8A2","S8A3","S8B1","S8B2"]
+let shoesizeAmounts = []
+shoesizeNumbers.forEach(number => {
+    shoesizeAmounts.push({title: number, amount: '', remain: 500})    
+});
 const rawData = {
-    shareData: { "amount": 0, "remain": 500 },
+    totalAmount: 0,
+    shoesizeAmounts: shoesizeAmounts,
     uniqueData: [
         {
             "rowId": 1,
