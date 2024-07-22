@@ -191,7 +191,7 @@
                                 <el-table-column prop="unit" label="单位" />
                                 <el-table-column prop="unitAmount" label="单位用量" />
                                 <el-table-column prop="approvedAmount" label="核定用量" />
-                                <el-table-column prop="comment" label="备注" />
+                                <el-table-column prop="comment"     label="备注" />
                             </el-table>
                         </el-col>
                     </el-row>

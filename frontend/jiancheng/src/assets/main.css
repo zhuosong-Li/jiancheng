@@ -68,3 +68,6 @@ a,
   font-size: larger !important;
   justify-content: center !important;
 }
+.el-row {
+  margin-top: 20px;
+}
