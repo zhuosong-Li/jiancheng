@@ -68,7 +68,9 @@
         <el-table-column prop="createDate" label="订单创建日期"> </el-table-column>
         <el-table-column label="物流状态">
           <template #default="scope">
-            <el-button type="primary" size="default" @click="isShoeLogisticVis = true">查看详细状态</el-button>
+            <el-button type="primary" size="default" @click="isShoeLogisticVis = true"
+              >查看详细状态</el-button
+            >
           </template>
         </el-table-column>
         <el-table-column prop="shipDate" label="订单出货日期"> </el-table-column>
@@ -93,7 +95,9 @@
         <el-table-column prop="createDate" label="订单创建日期"> </el-table-column>
         <el-table-column label="物流状态">
           <template #default="scope">
-            <el-button type="primary" size="default" @click="isShoeLogisticVis = true">查看详细状态</el-button>
+            <el-button type="primary" size="default" @click="isShoeLogisticVis = true"
+              >查看详细状态</el-button
+            >
           </template>
         </el-table-column>
         <el-table-column prop="remainAmount" label="成型剩余数量"> </el-table-column>
@@ -101,7 +105,9 @@
         <el-table-column prop="shipDate" label="订单出货日期"> </el-table-column>
         <el-table-column label="操作">
           <template #default="scope">
-            <el-button type="primary" size="default" @click="isShoeScheduleVis = true">修改排产</el-button>
+            <el-button type="primary" size="default" @click="isShoeScheduleVis = true"
+              >修改排产</el-button
+            >
           </template>
         </el-table-column>
       </el-table>
@@ -119,14 +125,30 @@
         <el-table-column type="expand">
           <template #default="scope">
             <el-descriptions title="" column="2">
-              <el-descriptions-item label="裁断完成情况">{{ scope.row.details.cutStatus }}</el-descriptions-item>
-              <el-descriptions-item label="裁断完成数量">{{ scope.row.details.cutAmount }}</el-descriptions-item>
-              <el-descriptions-item label="针车预备完成情况">{{ scope.row.details.sewPreStatus }}</el-descriptions-item>
-              <el-descriptions-item label="针车预备完成数量">{{ scope.row.details.sewPreAmount }}</el-descriptions-item>
-              <el-descriptions-item label="针车完成情况">{{ scope.row.details.sewStatus }}</el-descriptions-item>
-              <el-descriptions-item label="针车完成数量">{{ scope.row.details.sewAmount }}</el-descriptions-item>
-              <el-descriptions-item label="成型完成情况">{{ scope.row.details.moldStatus }}</el-descriptions-item>
-              <el-descriptions-item label="成型完成数量">{{ scope.row.details.moldAmount }}</el-descriptions-item>
+              <el-descriptions-item label="裁断完成情况">{{
+                scope.row.details.cutStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="裁断完成数量">{{
+                scope.row.details.cutAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成情况">{{
+                scope.row.details.sewPreStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成数量">{{
+                scope.row.details.sewPreAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成情况">{{
+                scope.row.details.sewStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成数量">{{
+                scope.row.details.sewAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成情况">{{
+                scope.row.details.moldStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成数量">{{
+                scope.row.details.moldAmount
+              }}</el-descriptions-item>
             </el-descriptions>
           </template>
         </el-table-column>
@@ -176,6 +198,45 @@
               </el-select>
             </span>
           </el-col>
+          <el-col :span="8" :offset="6"
+            ><el-descriptions title="" border>
+              <el-descriptions-item label="外包状态"
+                >未外包
+                <el-button
+                  v-if="tab.isOutSource === 0"
+                  type="primary"
+                  size="default"
+                  @click="startOutSourceFlow()"
+                  style="margin-left: 5px"
+                  >启动外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 1"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 2"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 3"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+              </el-descriptions-item>
+            </el-descriptions></el-col
+          >
         </el-row>
         <el-row :gutter="20">
           <el-col :span="10" :offset="0">
@@ -192,8 +253,9 @@
               </el-date-picker>
             </span>
           </el-col>
-          <el-col :span="12" :offset="0">预计每天生产数量：{{ calculateDailyProduction(tab.dateValue)  }}</el-col>
-          
+          <el-col :span="12" :offset="0"
+            >预计每天生产数量：{{ calculateDailyProduction(tab.dateValue) }}</el-col
+          >
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24" :offset="0">
@@ -265,7 +327,9 @@
       ></el-table-column>
       <el-table-column label="详细信息">
         <template #default="scope">
-          <el-button type="primary" size="default" @click="isMaterialLogisticVis = true">查看所有材料信息</el-button>
+          <el-button type="primary" size="default" @click="isMaterialLogisticVis = true"
+            >查看所有材料信息</el-button
+          >
         </template>
       </el-table-column>
     </el-table>
@@ -277,10 +341,7 @@
       </span>
     </template>
   </el-dialog>
-  <el-dialog
-    title="鞋型所有材料物流信息"
-    v-model="isMaterialLogisticVis"
-    width="80%">
+  <el-dialog title="鞋型所有材料物流信息" v-model="isMaterialLogisticVis" width="80%">
     <el-row :gutter="20">
       <el-col :span="24" :offset="0">
         <el-table :data="logisticsMaterialData" border stripe>
@@ -292,17 +353,15 @@
           <el-table-column prop="factoryName" label="供应商名称"></el-table-column>
           <el-table-column prop="materialType" label="材料类型"></el-table-column>
           <el-table-column prop="materialStatus" label="材料状态"></el-table-column>
-          
         </el-table>
-        
       </el-col>
     </el-row>
-    
+
     <template #footer>
-    <span>
-      <el-button @click="">Cancel</el-button>
-      <el-button type="primary" @click="">OK</el-button>
-    </span>
+      <span>
+        <el-button @click="">Cancel</el-button>
+        <el-button type="primary" @click="">OK</el-button>
+      </span>
     </template>
   </el-dialog>
 </template>
@@ -335,7 +394,7 @@ export default {
           orderId: 'K24-2111620',
           createDate: '2024-07-08',
           logisticsStatus: 0,
-          orderStatus: "已逾期",
+          orderStatus: '已逾期',
           shipDate: '2024-09-10'
         }
       ],
@@ -345,7 +404,7 @@ export default {
           createDate: '2024-07-08',
           logisticsStatus: 0,
           remainAmount: 5000,
-          orderStatus: "已逾期",
+          orderStatus: '已逾期',
           cutDatePeriod: '2024-07-09 至 2024-08-16',
           sewPreDatePeriod: '2024-07-09 至 2024-08-16',
           sewDatePeriod: '2024-07-09 至 2024-08-16',
@@ -368,15 +427,14 @@ export default {
           moldLine: 4,
           moldDatePeriod: '2024-07-09 至 2024-08-16',
           details: {
-            cutStatus: "未完成",
-            cutAmount: "1000/5000",
-            sewPreStatus: "未完成",
-            sewPreAmount: "1000/5000",
-            sewStatus: "未完成",
-            sewAmount: "1000/5000",
-            moldStatus: "未完成",
-            moldAmount: "1000/5000",
-
+            cutStatus: '未完成',
+            cutAmount: '1000/5000',
+            sewPreStatus: '未完成',
+            sewPreAmount: '1000/5000',
+            sewStatus: '未完成',
+            sewAmount: '1000/5000',
+            moldStatus: '未完成',
+            moldAmount: '1000/5000'
           }
         }
       ],
@@ -408,7 +466,8 @@ export default {
           lineLabel: '裁断线号选择',
           dateLabel: '裁断工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         },
         {
           name: '针车预备排产',
@@ -416,7 +475,8 @@ export default {
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 1
         },
         {
           name: '针车排产',
@@ -424,7 +484,8 @@ export default {
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         },
         {
           name: '成型排产',
@@ -432,7 +493,8 @@ export default {
           lineLabel: '成型线号选择',
           dateLabel: '成型工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         }
       ],
       dateStatusTable: [
@@ -440,25 +502,27 @@ export default {
           date: '2024-07-16',
           productAmount: 10,
           predictAmount: 2000,
-          shoeList: [{
-            orderId: 'K24-2111620',
-            shoeId: '0E11150',
-            amount: 300,
-            datePeriod: "2024-07-16 至 2024-07-20",
-            averageAmount: 75
-          }]
+          shoeList: [
+            {
+              orderId: 'K24-2111620',
+              shoeId: '0E11150',
+              amount: 300,
+              datePeriod: '2024-07-16 至 2024-07-20',
+              averageAmount: 75
+            }
+          ]
         }
       ],
       logisticsMaterialData: [
         {
-          partName: "鞋面",
-          materialName: "黑色PU",
-          color: "黑色",
+          partName: '鞋面',
+          materialName: '黑色PU',
+          color: '黑色',
           approvedUsage: 500,
           purchaseAmount: 550,
-          factoryName: "一一鞋材",
-          materialStatus:"未到货",
-          materialType:"面料辅料"
+          factoryName: '一一鞋材',
+          materialStatus: '未到货',
+          materialType: '面料辅料'
         }
       ],
       logisticsShoeData: [
@@ -470,21 +534,25 @@ export default {
           soleStatus: 0,
           insoleStatus: 0,
           lastStatus: 0,
-          packingStatus: 0
+          packingStatus: 0,
+          isCutOutsource: 0,
+          isSewPreOutsource: 0,
+          isSewOutsouce: 0,
+          isMoldOutSouce: 0
         }
-      ],
+      ]
     }
   },
   methods: {
     calculateDailyProduction(dateRange) {
       if (dateRange && dateRange.length === 2) {
-        const startDate = new Date(dateRange[0]);
-        const endDate = new Date(dateRange[1]);
-        const timeDiff = Math.abs(endDate - startDate);
-        const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
-        return (5000 / diffDays).toFixed(2);
+        const startDate = new Date(dateRange[0])
+        const endDate = new Date(dateRange[1])
+        const timeDiff = Math.abs(endDate - startDate)
+        const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1
+        return (5000 / diffDays).toFixed(2)
       }
-      return 0;
+      return 0
     },
     statusFormatter(row, column, cellValue, index) {
       let returnValue = ''
@@ -501,6 +569,13 @@ export default {
       }
       console.log(returnValue)
       return returnValue
+    },
+    startOutSourceFlow() {
+      const orderId = "K24-2111620"
+      const orderShoeId = "0E255530"
+      const url = `${window.location.origin}/productiongeneral/productionoutsource/orderid=${orderId}&ordershoeid=${orderShoeId}`
+      window.open(url, '_blank')
+
     }
   }
 }

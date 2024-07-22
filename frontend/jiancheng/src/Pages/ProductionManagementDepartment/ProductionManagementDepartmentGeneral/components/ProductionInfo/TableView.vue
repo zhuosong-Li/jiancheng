@@ -115,6 +115,67 @@
     </template>
   </el-dialog>
 
+  <el-dialog title="订单号 K24-2111620 鞋型排产详情" v-model="isShoeScheduleVis" width="90%">
+    <span>
+      <el-table :data="shoeProcess" border stripe>
+        <el-table-column type="expand">
+          <template #default="scope">
+            <el-descriptions title="" column="2">
+              <el-descriptions-item label="裁断完成情况">{{
+                scope.row.details.cutStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="裁断完成数量">{{
+                scope.row.details.cutAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成情况">{{
+                scope.row.details.sewPreStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车预备完成数量">{{
+                scope.row.details.sewPreAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成情况">{{
+                scope.row.details.sewStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="针车完成数量">{{
+                scope.row.details.sewAmount
+              }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成情况">{{
+                scope.row.details.moldStatus
+              }}</el-descriptions-item>
+              <el-descriptions-item label="成型完成数量">{{
+                scope.row.details.moldAmount
+              }}</el-descriptions-item>
+            </el-descriptions>
+          </template>
+        </el-table-column>
+        <el-table-column prop="inheritId" label="工厂型号"> </el-table-column>
+        <el-table-column prop="customerTypeId" label="客户型号"> </el-table-column>
+        <el-table-column prop="remainAmount" label="数量"> </el-table-column>
+        <el-table-column prop="cutLine" label="裁断线号"> </el-table-column>
+        <el-table-column prop="cutDatePeriod" label="裁断周期"> </el-table-column>
+        <el-table-column prop="sewPreLine" label="针车预备线号"> </el-table-column>
+        <el-table-column prop="sewPreDatePeriod" label="针车预备周期"> </el-table-column>
+        <el-table-column prop="sewLine" label="针车线号"> </el-table-column>
+        <el-table-column prop="sewDatePeriod" label="针车周期"> </el-table-column>
+        <el-table-column prop="moldLine" label="成型线号"> </el-table-column>
+        <el-table-column prop="moldDatePeriod" label="成型周期"> </el-table-column>
+        <el-table-column label="操作">
+          <template #default="scope">
+            <el-button type="primary" size="default" @click="isScheduleModify = true"
+              >修改排期</el-button
+            >
+          </template>
+        </el-table-column>
+      </el-table>
+    </span>
+    <template #footer>
+      <span>
+        <el-button @click="">取消</el-button>
+        <el-button type="primary" @click="">确认</el-button>
+      </span>
+    </template>
+  </el-dialog>
+
   <el-dialog title="修改排产信息" v-model="isScheduleModify" width="60%">
     <el-tabs v-model="activeTab" type="card" tab-position="top" @tab-click="">
       <el-tab-pane v-for="tab in tabs" :key="tab.name" :label="tab.label" :name="tab.name">
@@ -133,6 +194,45 @@
               </el-select>
             </span>
           </el-col>
+          <el-col :span="8" :offset="6"
+            ><el-descriptions title="" border>
+              <el-descriptions-item label="外包状态"
+                >未外包
+                <el-button
+                  v-if="tab.isOutSource === 0"
+                  type="primary"
+                  size="default"
+                  @click="startOutSourceFlow()"
+                  style="margin-left: 5px"
+                  >启动外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 1"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 2"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+                <el-button
+                  v-else-if="tab.isOutSource === 3"
+                  type="primary"
+                  size="default"
+                  @click=""
+                  style="margin-left: 5px"
+                  >查看外包流程</el-button
+                >
+              </el-descriptions-item>
+            </el-descriptions></el-col
+          >
         </el-row>
         <el-row :gutter="20">
           <el-col :span="10" :offset="0">
@@ -343,7 +443,8 @@ export default {
           lineLabel: '裁断线号选择',
           dateLabel: '裁断工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         },
         {
           name: '针车预备排产',
@@ -351,7 +452,8 @@ export default {
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 1
         },
         {
           name: '针车排产',
@@ -359,7 +461,8 @@ export default {
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         },
         {
           name: '成型排产',
@@ -367,7 +470,8 @@ export default {
           lineLabel: '成型线号选择',
           dateLabel: '成型工期选择',
           lineValue: null,
-          dateValue: null
+          dateValue: null,
+          isOutSource: 0
         }
       ],
       dateStatusTable: [
@@ -403,6 +507,13 @@ export default {
       }
       return 0;
     },
+    startOutSourceFlow() {
+      const orderId = "K24-2111620"
+      const orderShoeId = "0E255530"
+      const url = `${window.location.origin}/productiongeneral/productionoutsource/orderid=${orderId}&ordershoeid=${orderShoeId}`
+      window.open(url, '_blank')
+
+    }
   }
 }
 </script>
