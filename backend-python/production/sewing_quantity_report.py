@@ -1,7 +1,8 @@
-from app_config import app, db
 from flask import Blueprint, jsonify, request
-from models import SewingQuantityReport, SewingQuantityReportItem
 from sqlalchemy import or_, text
+
+from app_config import app, db
+from models import SewingQuantityReport, SewingQuantityReportItem
 
 sewing_quantity_report_bp = Blueprint("sewing_quantity_report_bp", __name__)
 

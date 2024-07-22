@@ -1,8 +1,9 @@
+from flask import Blueprint, jsonify, request
+from sqlalchemy import or_, text
+
 import constants
 from app_config import db
-from flask import Blueprint, jsonify, request
 from models import OrderShoe, OrderShoeStatus, UnitPriceReport, UnitPriceReportDetail
-from sqlalchemy import or_, text
 
 price_report_bp = Blueprint("price_report_bp", __name__)
 
@@ -87,9 +88,7 @@ def get_cutting_price_report():
             OrderShoeStatus,
             OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
         )
-        .filter(
-            OrderShoeStatus.current_status == status
-        )
+        .filter(OrderShoeStatus.current_status == status)
         .all()
     )
     for row in res:

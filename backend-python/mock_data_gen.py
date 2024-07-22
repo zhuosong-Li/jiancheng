@@ -1,24 +1,50 @@
-#from ..app_config import app, db
+# from ..app_config import app, db
 
-from api_utility import *
-from models import *
 import os
+
 import pandas as pd
-from app_config import db
 from sqlalchemy import text
 
+from api_utility import *
+from app_config import db
+from models import *
 
 constant_layer = [ProcedureReference, OrderStatusReference, OrderShoeStatusReference]
-outer_layer = [Department, Character, Operation, Customer, Shoe, Color, MaterialWarehouse, Supplier, ShoePart]
+outer_layer = [
+    Department,
+    Character,
+    Operation,
+    Customer,
+    Shoe,
+    Color,
+    MaterialWarehouse,
+    Supplier,
+    ShoePart,
+]
 middle_first_layer = [Staff, Order, Material]
 middle_second_layer = [Event, OrderStatus, OrderShoe]
-middle_third_layer = [OrderShoeBatchInfo, Bom, OrderShoeStatus, MaterialStorage]
-middle_fourth_layer = [BomItem, PurchaseOrder]
+middle_third_layer = [
+    OrderShoeBatchInfo,
+    Bom,
+    OrderShoeStatus,
+    MaterialStorage,
+    UnitPriceReport,
+]
+middle_fourth_layer = [UnitPriceReportDetail]  # BomItem, PurchaseOrder]
 fifth_layer = [PurchaseDivideOrder]
-Inner_layer = [PurchaseOrderItem]
-structure_list = [constant_layer,outer_layer, middle_first_layer, middle_second_layer,
-                    middle_third_layer, middle_fourth_layer, fifth_layer,
-                    Inner_layer]
+Inner_layer = [PurchaseOrderItem, UnitPriceReport]
+Inner_layer2 = [UnitPriceReportDetail]
+structure_list = [
+    constant_layer,
+    outer_layer,
+    middle_first_layer,
+    middle_second_layer,
+    middle_third_layer,
+    middle_fourth_layer,
+    fifth_layer,
+    Inner_layer,
+    Inner_layer2,
+]
 
 
 def getTypename(obj):
@@ -26,17 +52,17 @@ def getTypename(obj):
 
 
 def toDBname(obj_name):
-    result = ''
-    for i in range (len( obj_name)):
+    result = ""
+    for i in range(len(obj_name)):
         if obj_name[i].isupper():
-            result += ("_" + obj_name[i].lower())
+            result += "_" + obj_name[i].lower()
         else:
             result += obj_name[i]
-    result = result [1:]
+    result = result[1:]
     return result
 
 
-class MockDataGenerator():
+class MockDataGenerator:
 
     def __init__(self, database):
         self.layers = structure_list
@@ -48,7 +74,7 @@ class MockDataGenerator():
         self.constant_layer = structure_list[0]
         self.entity_layers_list = structure_list[0:]
 
-    def initializeEntityDataPath(self, path_to_data = "/mock_data/"):
+    def initializeEntityDataPath(self, path_to_data="/mock_data/"):
         self.path_to_data = os.getcwd() + path_to_data
         layer_num = 0
         print("initializing DB")
@@ -58,11 +84,10 @@ class MockDataGenerator():
             for entity_class in layer:
                 typeName = getTypename(entity_class)
                 entity_path = self.path_to_data + toDBname(typeName) + ".csv"
-                self.entity_to_path[typeName] = entity_path 
+                self.entity_to_path[typeName] = entity_path
             layer_num += 1
-    
 
-    def setupDBLocalData(self, terminating_layer = None):
+    def setupDBLocalData(self, terminating_layer=None):
         print("Inserting into DB")
         if terminating_layer:
             print("Terminating at layer number " + str(terminating_layer))
@@ -82,20 +107,21 @@ class MockDataGenerator():
                     for row in df.itertuples():
                         entity_object = entity_class()
                         for attribute in column_list:
-                            setattr(entity_object, attribute , getattr(row, attribute))
+                            setattr(entity_object, attribute, getattr(row, attribute))
                         self.entity_list_to_push.append(entity_object)
                     self.pushEntityObjectsDB(self.entity_list_to_push)
                     self.total_entity_list.append(self.entity_list_to_push)
                     self.entity_list_to_push = []
             layer_num += 1
-    ### create entity list for all the layers 
+
+    ### create entity list for all the layers
     ### and insert into db
     def cleanAndSetup(self):
         print("layers before reversing")
-        #print(self.layers)
+        # print(self.layers)
         self.layers.reverse()
-        #print("layers after reversing")
-        #print(self.layers)
+        # print("layers after reversing")
+        # print(self.layers)
         for layer in self.layers:
             for entity_class in layer:
                 table_name = toDBname(getTypename(entity_class))
@@ -103,9 +129,9 @@ class MockDataGenerator():
                 db.session.commit()
                 # sql = text('ALTER TABLE `{}` auto_increment=1'.format(entity_class.__tablename__))
                 # db.session.execute(sql)
-        #print("reversing layers back")
+        # print("reversing layers back")
         self.layers.reverse()
-        #print(self.layers)
+        # print(self.layers)
 
     def pushEntityObjectsDB(self, list_to_push):
         print("this is the list to push")
@@ -117,18 +143,20 @@ class MockDataGenerator():
         self.setupDBLocalData(terminating_layer=1)
         for layer in self.entity_layers_list:
             break
-        return 
-        
+        return
+
+
 def TestPopulateEndEntityDB(shoes_rid_for_Shoes, customer_name_for_Customers):
-        ### creating customers and shoes with rid
-        for i in customer_name_for_Customers:
-            if not check_customerName_exists(i):
-                dbcreateCustomer(i)
-                print("customer with name %s added", i)
+    ### creating customers and shoes with rid
+    for i in customer_name_for_Customers:
+        if not check_customerName_exists(i):
+            dbcreateCustomer(i)
+            print("customer with name %s added", i)
 
-        return True
+    return True
 
-def TestPopulateOrdersDB(firstTime = False, reset = False):
+
+def TestPopulateOrdersDB(firstTime=False, reset=False):
     order_starts_with = "K99-"
     test_customer = "Spain Customer 99"
     if firstTime:
@@ -138,17 +166,18 @@ def TestPopulateOrdersDB(firstTime = False, reset = False):
         test_customer_id = get_customerId(test_customer)
         for i in range(42):
             dbcreateOrder("K99-" + str(i), "2024-01-01", test_customer_id)
-            dbcreateOrder("K89-" + str(i) , "2024-01-01", test_customer_id)
-        print("mock orders inserted") 
+            dbcreateOrder("K89-" + str(i), "2024-01-01", test_customer_id)
+        print("mock orders inserted")
     elif reset == True:
         test_customer_id = get_customerId(test_customer)
-        db.session.execute(db.delete(Order).filter_by(order_customer = test_customer_id))
+        db.session.execute(db.delete(Order).filter_by(order_customer=test_customer_id))
         db.session.commit()
         print("mock orders deleted")
     return True
+
+
 def testPopulateOrderDataDB():
     return
-
 
 
 def populateConstantDB():

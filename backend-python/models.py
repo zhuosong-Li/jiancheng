@@ -211,8 +211,8 @@ class Operation(db.Model):
     operation_id = db.Column(db.Integer, primary_key=True)
     operation_name = db.Column(db.String(40), nullable=False)
     operation_type = db.Column(db.Integer, nullable=False, default=0)
-    operation_prev_status = db.Column(db.Integer, nullable=True)
-    operation_next_status = db.Column(db.Integer, nullable=True)
+    operation_modified_status = db.Column(db.Integer, nullable=True)
+    operation_modified_value = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return f"<Operation(operation_id={self.operation_id})>"
