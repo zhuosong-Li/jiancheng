@@ -183,7 +183,7 @@
           <el-col :span="10" :offset="0">
             <span style="white-space: nowrap">
               {{ tab.lineLabel }}：
-              <el-select v-model="tab.lineValue" placeholder="" clearable filterable @change="">
+              <el-select v-model="tab.lineValue" placeholder="" @change="" multiple>
                 <el-option
                   v-for="item in cuttingLineOption"
                   :key="item"
