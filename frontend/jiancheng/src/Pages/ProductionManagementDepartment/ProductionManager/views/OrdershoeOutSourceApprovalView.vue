@@ -6,7 +6,7 @@
     <el-main height="">
       <el-row :gutter="20" style="text-align: center">
         <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-          >订单鞋型外包页面</el-col
+          >订单鞋型外包审批页面</el-col
         >
       </el-row>
       <el-row :gutter="20">
@@ -55,120 +55,15 @@
             </el-table-column>
             <el-table-column prop="shipDate" label="最迟交货日期"></el-table-column>
             <el-table-column label="操作">
-              <el-button type="primary" size="default" @click="isOutSouceCreateVis = true"
-                >编辑</el-button
+              <el-button type="primary" size="default" @click="isOutSourcePreviewVis = true"
+                >查看并审核外包流程</el-button
               >
             </el-table-column>
           </el-table>
         </el-col>
       </el-row>
-
-      <el-row :gutter="20">
-        <el-col :span="6" :offset="0">
-          <el-button type="primary" size="default" @click="isOutSouceCreateVis = true"
-            >新建外包流程</el-button
-          >
-        </el-col>
-      </el-row>
-
-      <el-row :gutter="20">
-        <el-col :span="24" :offset="0"> </el-col>
-      </el-row>
     </el-main>
   </el-container>
-  <el-dialog title="外包流程新建/修改" v-model="isOutSouceCreateVis" width="80%">
-    <el-row :gutter="20">
-      <el-col :span="6" :offset="0">
-        外包类型：
-        <el-select v-model="addOutSource.outSourceType" placeholder="" clearable filterable>
-          <el-option
-            v-for="item in ['裁断', '针车', '成型', '裁断+针车', '全部外包']"
-            :key="item"
-            :label="item"
-            :value="item"
-          >
-          </el-option>
-        </el-select>
-      </el-col>
-      <el-col :span="6" :offset="0">
-        外包工厂选择：
-        <el-select v-model="addOutSource.outSourceFactory" placeholder="" clearable filterable>
-          <el-option v-for="item in factoryOptions" :key="item" :label="item" :value="item">
-          </el-option>
-        </el-select>
-      </el-col>
-      <el-col :span="6" :offset="0">
-        外包周期选择：
-        <el-date-picker
-          v-model="addOutSource.outSourcePeriod"
-          type="daterange"
-          size="normal"
-          range-separator="-"
-          start-placeholder=""
-          end-placeholder=""
-        >
-        </el-date-picker>
-      </el-col>
-      <el-col :span="4" :offset="0">
-        最迟交货日期选择：
-        <el-date-picker
-          v-model="addOutSource.shipDate"
-          type="day"
-          size="normal"
-          placeholder="选择日期时间"
-        >
-        </el-date-picker>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
-      <el-col :span="4" :offset="0">
-        <el-checkbox v-model="addOutSource.isTransitNeed" label="是否需要外发半成品" :indeterminate="false" @change="">是否需要外发半成品</el-checkbox>
-      </el-col>
-      <el-col :span="8" :offset="2">
-        半成品最迟发货日期：
-        <el-date-picker
-          v-model="addOutSource.outSourceTransitShipDate"
-          type="day"
-          size="normal"
-          placeholder="选择日期时间"
-          :disabled="!addOutSource.isTransitNeed"
-        >
-        </el-date-picker>
-      </el-col>
-      <el-col :span="8" :offset="0">
-        材料最迟发货日期：
-        <el-date-picker
-          v-model="addOutSource.outSpirceMaterialShipDate"
-          type="day"
-          size="normal"
-          placeholder="选择日期时间"
-        >
-        </el-date-picker>
-      </el-col>
-    </el-row>
-    <el-row :gutter="20">
-      <el-col :span="24" :offset="0">
-        <el-table :data="materialSelectData" border stripe>
-          <el-table-column type="selection"></el-table-column>
-          <el-table-column prop="partName" label="部件名称" />
-          <el-table-column prop="color" label="颜色" />
-          <el-table-column prop="materialName" label="材料名称" />
-          <el-table-column prop="unit" label="单位" />
-          <el-table-column prop="shipAmount" label="应发货数量" />
-          <el-table-column prop="status" label="状态" />
-          <el-table-column prop="section" label="使用工段" />
-          <el-table-column prop="date" label="到货日期" />
-        </el-table>
-      </el-col>
-    </el-row>
-
-    <template #footer>
-      <span>
-        <el-button @click="">取消</el-button>
-        <el-button type="primary" @click="isOutSourcePreviewVis = true">预览</el-button>
-      </span>
-    </template>
-  </el-dialog>
   <el-dialog title="预览外发信息" v-model="isOutSourcePreviewVis" width="80%">
     <el-row :gutter="20">
       <el-col :span="24" :offset="0">
@@ -212,38 +107,7 @@
     <template #footer>
       <span>
         <el-button @click="">Cancel</el-button>
-        <el-button type="success" @click="">确认下发</el-button>
-      </span>
-    </template>
-  </el-dialog>
-  <el-dialog title="外包物料发货情况查询" v-model="isOutSourceLogistic" width="80%">
-    <el-row :gutter="20">
-      <el-col :span="24" :offset="0"> 半成品发货状态： </el-col>
-      <el-table :data="transitLogisticData" border stripe>
-        <el-table-column prop="inheritId" label="公司型号"></el-table-column>
-        <el-table-column prop="shipAmount" label="发货数量"></el-table-column>
-        <el-table-column prop="status" label="发货状态"></el-table-column>
-        <el-table-column prop="shipDate" label="发货日期"></el-table-column>
-        <el-table-column prop="deadDate" label="最迟发货日期"></el-table-column>
-      </el-table>
-    </el-row>
-    <el-row :gutter="20">
-      <el-col :span="24" :offset="0"> 材料发货状态： </el-col>
-      <el-table :data="materialLogisticData" border stripe>
-        <el-table-column prop="partName" label="部件名称" />
-        <el-table-column prop="color" label="颜色" />
-        <el-table-column prop="materialName" label="材料名称" />
-        <el-table-column prop="unit" label="单位" />
-        <el-table-column prop="shipAmount" label="应发货数量" />
-        <el-table-column prop="status" label="发货状态" />
-        <el-table-column prop="shipDate" label="发货日期"></el-table-column>
-        <el-table-column prop="deadDate" label="最迟发货日期"></el-table-column>
-      </el-table>
-    </el-row>
-
-    <template #footer>
-      <span>
-        <el-button type="primary" @click="isOutSourceLogistic = false">确认</el-button>
+        <el-button type="success" @click="">批准</el-button>
       </span>
     </template>
   </el-dialog>
@@ -251,13 +115,13 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue'
-
 export default {
   components: {
     AllHeader
   },
   data() {
     return {
+      isOutSourcePreviewVis: false,
       outSourceFinData: {
         outSourceType: '',
         outSourceFactory: '',
@@ -278,89 +142,6 @@ export default {
           }
         ]
       },
-      materialSelectData: [
-        {
-          partName: '鞋面',
-          color: '红色',
-          materialName: '牛皮',
-          unit: '平方米',
-          shipAmount: 10,
-          status: '未到货',
-          date: '2024-07-21'
-        },
-        {
-          partName: '鞋底',
-          color: '黑色',
-          materialName: '橡胶',
-          unit: '千克',
-          shipAmount: 20,
-          status: '已到货',
-          date: '2024-07-20'
-        },
-        {
-          partName: '鞋垫',
-          color: '白色',
-          materialName: '记忆海绵',
-          unit: '平方米',
-          shipAmount: 15,
-          status: '未到货',
-          date: '2024-07-22'
-        },
-        {
-          partName: '鞋带',
-          color: '蓝色',
-          materialName: '尼龙',
-          unit: '米',
-          shipAmount: 100,
-          status: '未到货',
-          date: '2024-07-21'
-        },
-        {
-          partName: '鞋面',
-          color: '绿色',
-          materialName: '绒面革',
-          unit: '平方米',
-          shipAmount: 8,
-          status: '已到货',
-          date: '2024-07-19'
-        }
-      ],
-      addOutSource: {
-        outSourceType: '',
-        outSourceFactory: '',
-        outSourcePeriod: [],
-        outSourceAmount: 0,
-        outSourceTransitShipDate: '',
-        outSpirceMaterialShipDate: '',
-        shipDate: '',
-        isTransitNeed: false
-      },
-      isTransitNeed:false,
-      isOutSourceLogistic: false,
-      isOutSouceCreateVis: false,
-      isOutSourcePreviewVis: false,
-      factoryOptions: ['XX鞋业', 'YY鞋业', 'ZZ鞋业'],
-      transitLogisticData: [
-        {
-          inheritId: '0E11150',
-          shipAmount: 500,
-          status: '未发货',
-          shipDate: '',
-          deadDate: '2024-07-25'
-        }
-      ],
-      materialLogisticData: [
-        {
-          partName: '鞋面',
-          color: '红色',
-          materialName: '牛皮',
-          unit: '平方米',
-          shipAmount: 10,
-          status: '已发货',
-          shipDate: '2024-07-21',
-          deadDate: '2024-07-25'
-        }
-      ],
       outSourceInfo: [
         {
           outSourceType: '裁断',
@@ -368,7 +149,7 @@ export default {
           outSourceAmount: 500,
           outSourcePeriod: '2024-07-05-2024-07-18',
           shipDate: '2024-07-19',
-          approvalStatus: "未审批"
+          approvalStatus: '未审批'
         }
       ],
       shoeInfo: [
@@ -517,7 +298,6 @@ export default {
         }
       ]
     }
-  },
-  methods: {}
+  }
 }
 </script>

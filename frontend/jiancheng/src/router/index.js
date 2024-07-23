@@ -19,7 +19,7 @@ import HeadOfWarehouseRoutes from '../Pages/TotalWarehouse/HeadOfWarehouse/route
 import FabricSupervisorRoutes from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/routers/fabricSupervisorRoutes'
 import SewingSupervisorRoutes from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/routers/sewingSupervisorRoutes'
 import MoldingSupervisorRoutes from '../Pages/ProductionManagementDepartment/MoldingSupervisor/routers/moldingSupervisorRoutes'
-
+import DeputyGeneral from '@/Pages/ProductionManagementDepartment/ProductionManager/routers/DeputyGeneral'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -84,7 +84,8 @@ const router = createRouter({
     ...HeadOfWarehouseRoutes,
     ...FabricSupervisorRoutes,
     ...SewingSupervisorRoutes,
-    ...MoldingSupervisorRoutes
+    ...MoldingSupervisorRoutes,
+    ...DeputyGeneral
   ]
 })
 

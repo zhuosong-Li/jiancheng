@@ -56,6 +56,7 @@ import Dashboard from '../components/TodoTasksView.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
 import LogisticInfo from '../components/LogisticInfo.vue'
+import OutSourceApproval from '../components/OutSourceApproval.vue'
 
 export default {
   components: {
@@ -63,7 +64,8 @@ export default {
     AllHeader,
     Dashboard,
     ProductionSchedulingDialogue,
-    LogisticInfo
+    LogisticInfo,
+    OutSourceApproval
   },
   data() {
     return {
@@ -88,7 +90,7 @@ export default {
           this.currentComponent = 'ProductionInfo'
           break
         case 5:
-          this.currentComponent = 'OutSourceInfo'
+          this.currentComponent = 'OutSourceApproval'
           break
         case 6:
           this.currentComponent = 'ApprovalPage'
