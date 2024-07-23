@@ -66,42 +66,20 @@
               </template>
             </el-table-column>
 
-            <el-table-column label="预览图">
+            <el-table-column label="预览图"  width="200">
               <template #default="scope">
                 <el-image :src="scope.row.imageurl" fit="fill"></el-image>
               </template>
             </el-table-column>
             <!-- <el-table-column label="预览图">
                       </el-table-column> -->
-            <el-table-column prop="localProductId" label="公司编号"></el-table-column>
-            <el-table-column prop="foreignProductId" label="客户型号"></el-table-column>
-            <el-table-column prop="color" label="颜色"></el-table-column>
-            <el-table-column prop="status" label="状态"></el-table-column>
+            <el-table-column prop="localProductId" label="公司编号"  width="100"></el-table-column>
+            <el-table-column prop="foreignProductId" label="客户型号"  width="100"></el-table-column>
+            <el-table-column prop="color" label="颜色" width="100"></el-table-column>
+            <el-table-column prop="status" label="状态" width="100"></el-table-column>
             <el-table-column prop="percentageText" label="生产状态百分比"></el-table-column>
             <el-table-column prop="totalQuantity" label="当前鞋型订单总数"></el-table-column>
-            <el-table-column label="操作">
-              <template #default="scope">
-                <el-button
-                  v-if="scope.row.status === '生产中'"
-                  type="primary"
-                  @click="handleGenerate(scope.row)"
-                  >审批进度</el-button
-                >
-                <el-button
-                  v-else-if="scope.row.status === '物料到齐'"
-                  type="primary"
-                  @click="handleView(scope.row)"
-                  >开始生产</el-button
-                >
-                <div v-else-if="scope.row.status === '物料采购中'">
-                  <el-button type="primary" @click="handleGenerate(scope.row)">查询物料</el-button>
-                  <el-button type="success" @click="openPreviewDialog(scope.row)"
-                    >查看物料详情</el-button
-                  >
-                  <el-button type="warning" @click="handleConfirm(scope.row)">开始生产</el-button>
-                </div>
-              </template></el-table-column
-            >
+
           </el-table></el-col
         >
       </el-row>

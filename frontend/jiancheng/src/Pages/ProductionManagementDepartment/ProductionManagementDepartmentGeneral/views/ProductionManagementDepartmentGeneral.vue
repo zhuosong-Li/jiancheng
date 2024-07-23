@@ -35,15 +35,19 @@
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
             </el-menu-item>
+            <el-menu-item index="4" @click="handleMenuClick(4)">
+              <span>生产管理</span>
+            </el-menu-item>
             <el-menu-item index="5" @click="handleMenuClick(5)">
               <span>外包信息</span>
             </el-menu-item>
-            <el-menu-item index="6">
-              <span>订单查询</span>
-            </el-menu-item>
-            <el-menu-item index="7">
+            <el-menu-item index="6" @click="handleMenuClick(6)">
               <span>数量审批</span>
             </el-menu-item>
+            <el-menu-item index="7">
+              <span>订单查询</span>
+            </el-menu-item>
+
             <el-menu-item index="8">
               <span>数据总览</span>
             </el-menu-item>
@@ -65,10 +69,11 @@ import LogisticInfo from '../components/LogisticInfo.vue'
 import ProductionInfo from '../components/ProductionInfo.vue'
 import OutSourceInfo from '../components/OutSourceInfo.vue'
 import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
+import ApprovalPage from '../components/ApprovalPage.vue'
+import ProductionManagement from '../components/ProductionManagement.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 
-const isCollapse = ref(false)
 
 export default {
   components: {
@@ -78,7 +83,9 @@ export default {
     SideMenu,
     LogisticInfo,
     ProductionSchedulingDialogue,
-    OutSourceInfo
+    OutSourceInfo,
+    ApprovalPage,
+    ProductionManagement
   },
   data() {
     return {
@@ -100,10 +107,13 @@ export default {
           this.currentComponent = 'LogisticInfo'
           break
         case 4:
-          this.currentComponent = 'ProductionInfo'
+          this.currentComponent = 'ProductionManagement'
           break
         case 5:
           this.currentComponent = 'OutSourceInfo'
+          break
+        case 6:
+          this.currentComponent = 'ApprovalPage'
       }
     },
   }

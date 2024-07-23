@@ -187,7 +187,7 @@
           <el-col :span="10" :offset="0">
             <span style="white-space: nowrap">
               {{ tab.lineLabel }}：
-              <el-select v-model="tab.lineValue" placeholder="" clearable filterable @change="">
+              <el-select v-model="tab.lineValue" placeholder="" @change="" multiple>
                 <el-option
                   v-for="item in cuttingLineOption"
                   :key="item"
@@ -465,7 +465,7 @@ export default {
           label: '裁断排产',
           lineLabel: '裁断线号选择',
           dateLabel: '裁断工期选择',
-          lineValue: null,
+          lineValue: [],
           dateValue: null,
           isOutSource: 0
         },
@@ -474,7 +474,7 @@ export default {
           label: '针车预备排产',
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
-          lineValue: null,
+          lineValue: [],
           dateValue: null,
           isOutSource: 1
         },
@@ -483,7 +483,7 @@ export default {
           label: '针车排产',
           lineLabel: '针车线号选择',
           dateLabel: '针车工期选择',
-          lineValue: null,
+          lineValue: [],
           dateValue: null,
           isOutSource: 0
         },
@@ -492,7 +492,7 @@ export default {
           label: '成型排产',
           lineLabel: '成型线号选择',
           dateLabel: '成型工期选择',
-          lineValue: null,
+          lineValue: [],
           dateValue: null,
           isOutSource: 0
         }

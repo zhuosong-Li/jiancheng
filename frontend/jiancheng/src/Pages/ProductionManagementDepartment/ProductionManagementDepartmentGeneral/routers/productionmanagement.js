@@ -1,6 +1,6 @@
-
 import OrderDetails from '../components/OrderDetailView.vue'
-import ProrductionOutsourcePage from '../views/ProrductionOutsourcePage.vue'
+import ProductionOutsourcePage from '../views/ProductionOutsourcePage.vue'
+import ProductionAmountApprovalPage from '../views/ProductionAmountApprovalPage.vue'
 export default [
   {
     path: '/productiongeneral/productiondetail/customerid=:customerId',
@@ -11,8 +11,13 @@ export default [
   {
     path: '/productiongeneral/productionoutsource/orderid=:orderId&ordershoeid=:orderShoeId',
     name: 'outsource-page',
-    component: ProrductionOutsourcePage,
+    component: ProductionOutsourcePage,
+    props: true
+  },
+  {
+    path: '/productiongeneral/productionamountapproval/orderid=:orderId&ordershoeid=:orderShoeId',
+    name: 'amount-approval',
+    component: ProductionAmountApprovalPage,
     props: true
   }
-  
 ]
