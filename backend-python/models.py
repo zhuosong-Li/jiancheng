@@ -93,6 +93,7 @@ class CuttingQuantityReport(db.Model):
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
+    rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
         return f"<CuttingQuantityReport(report_id={self.report_id})>"
@@ -181,6 +182,7 @@ class MoldingQuantityReport(db.Model):
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
+    rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
         return f"<MoldingQuantityReport(report_id={self.report_id})>"
@@ -431,6 +433,7 @@ class SewingQuantityReport(db.Model):
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
     team = db.Column(db.String(10), nullable=True)
+    rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
         return f"<SewingQuantityReport(report_id={self.report_id})>"
@@ -539,6 +542,8 @@ class UnitPriceReport(db.Model):
     )
     submission_date = db.Column(db.Date, nullable=True)
     team = db.Column(db.String(10), nullable=True)
+    status = db.Column(db.SmallInteger, nullable=False)
+    rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"

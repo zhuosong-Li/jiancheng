@@ -15,9 +15,7 @@
                 </template>
                 <div>订单号：{{ getPendingItem(colIndex).orderId }}</div>
                 <div>订单创建时间：{{ getPendingItem(colIndex).createTime }}</div>
-                <div>前序流程下发时间：{{ getPendingItem(colIndex).prevTime }}</div>
-                <div>前序处理部门：{{ getPendingItem(colIndex).prevDepart }}</div>
-                <div>前序处理人：{{ getPendingItem(colIndex).prevUser }}</div>
+                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
             </el-card>
 
         </el-col>
@@ -42,11 +40,9 @@
                         <span>{{ getinProgressItem(colIndex).taskName }}</span>
                     </div>
                 </template>
-                <div>订单号：{{ getinProgressItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getinProgressItem(colIndex).orderRId }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
-                <div>前序流程下发时间：{{ getinProgressItem(colIndex).prevTime }}</div>
-                <div>前序处理部门：{{ getinProgressItem(colIndex).prevDepart }}</div>
-                <div>前序处理人：{{ getinProgressItem(colIndex).prevUser }}</div>
+                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
             </el-card>
 
         </el-col>
@@ -59,7 +55,7 @@
     </el-row></template>
 <script setup>
 import { ref } from 'vue';
-
+import { handleRowClick } from '@/Pages/ProductionManagementDepartment/utils';
 const props = defineProps({
     'pendingTaskData': Array, 'inProgressTaskData': Array
 })
@@ -82,19 +78,6 @@ const displayPending = () => {
 
 const displayProgress = () => {
     emit('changeToProgress')
-}
-
-const handleRowClick = (row) => {
-    let url = ""
-    const queryString = new URLSearchParams(row).toString();
-    if (row.taskName === '工价填报') {
-        url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
-    } else if (row.taskName === '数量填写') {
-        url = `${window.location.origin}/fabriccutting/shoetypelist?${queryString}`;
-    }
-    if (url) {
-        window.open(url, '_blank');
-    }
 }
 
 </script>

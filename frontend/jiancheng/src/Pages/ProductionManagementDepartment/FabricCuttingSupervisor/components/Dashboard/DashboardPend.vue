@@ -17,9 +17,6 @@
                 <el-table-column prop="taskName" label="任务名称"></el-table-column>
                 <el-table-column prop="orderId" label="订单号"></el-table-column>
                 <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
-                <el-table-column prop="prevTime" label="前序流程下发时间"></el-table-column>
-                <el-table-column prop="prevDepart" label="前序处理部门"></el-table-column>
-                <el-table-column prop="prevUser" label="前序处理人"></el-table-column>
             </el-table>
 
         </el-col>
@@ -29,6 +26,7 @@
 <script setup>
 import { Search } from '@element-plus/icons-vue'
 import { ref } from 'vue'
+import { handleRowClick } from '@/Pages/ProductionManagementDepartment/utils';
 const props = defineProps(['pendingTaskData'])
 const searchOrder = ref('')
 const displayData = ref(props.pendingTaskData)
@@ -41,17 +39,5 @@ const filterData = () => {
         displayData.value = props.pendingTaskData
     }
     displayData.value = props.pendingTaskData.filter(task => task.orderId.includes(searchOrder.value));
-}
-const handleRowClick = (row) => {
-    let url = ""
-    const queryString = new URLSearchParams(row).toString();
-    if (row.taskName === '工价填报') {
-        url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
-    } else if (row.taskName === '数量填写') {
-        url = `${window.location.origin}/fabriccutting/shoetypelist?${queryString}`;
-    }
-    if (url) {
-        window.open(url, '_blank');
-    }
 }
 </script>

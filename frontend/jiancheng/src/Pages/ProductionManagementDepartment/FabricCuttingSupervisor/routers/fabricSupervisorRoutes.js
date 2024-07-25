@@ -10,11 +10,10 @@ export default [
         props: route => (
             {
                 orderId: route.query.orderId,
+                orderRId: route.query.orderRId,
                 createTime: route.query.createTime,
-                prevTime: route.query.prevTime,
-                prevDepart: route.query.prevDepart,
-                prevUser: route.query.prevUser,
-                orderType: route.query.orderType
+                taskName: route.query.taskName,
+                customerName: route.query.customerName
             })
     },
     {
@@ -34,11 +33,10 @@ export default [
         props: route => (
             {
                 orderId: route.query.orderId,
+                orderRId: route.query.orderRId,
                 createTime: route.query.createTime,
-                prevTime: route.query.prevTime,
-                prevDepart: route.query.prevDepart,
-                prevUser: route.query.prevUser,
-                orderType: route.query.orderType
+                taskName: route.query.taskName,
+                customerName: route.query.customerName
             })
     }
 ]

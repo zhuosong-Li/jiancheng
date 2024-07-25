@@ -10,11 +10,11 @@ cutting_quantity_report_bp = Blueprint("cutting_quantity_report_bp", __name__)
 @cutting_quantity_report_bp.route(
     "/production/fabriccutting/createquantityreport", methods=["POST"]
 )
-def create_price_report():
+def create_quantity_report():
     data = request.get_json()
     report = CuttingQuantityReport(
-        order_shoe_id=data["order_shoe_id"],
-        creation_date=data["creation_date"],
+        order_shoe_id=data["orderShoeId"],
+        creation_date=data["creationDate"],
         status=0,
         team=data["team"],
     )
