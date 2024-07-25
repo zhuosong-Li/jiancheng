@@ -29,7 +29,7 @@
         <template #footer>
             <span>
                 <el-button @click="handleGenerateClose">取消</el-button>
-                <el-button type="primary" @click="handleSaveData">保存</el-button>
+                <el-button v-if="currentPage === 2" type="primary" @click="handleSaveData">保存</el-button>
             </span>
         </template>
     </el-dialog>
@@ -38,9 +38,9 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-const props = defineProps(['tableInput', 'handleSave', 'handleClose'])
-
-const tableData = ref(JSON.parse(JSON.stringify(props.tableInput)))
+import axios from 'axios';
+const props = defineProps(['teams', 'handleClose'])
+const tableData = ref([])
 const rowId = ref(tableData.value.length + 1)
 const createVis = ref(true)
 const options = [
@@ -116,6 +116,6 @@ const handleGenerateClose = () => {
     }).then(() => {
         createVis.value = false
         props.handleClose(0)
-    }).catch(() => {})
+    }).catch(() => { })
 }
 </script>

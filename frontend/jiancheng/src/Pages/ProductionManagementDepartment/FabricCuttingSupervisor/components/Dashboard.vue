@@ -16,7 +16,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
 import { Grid, Memo } from '@element-plus/icons-vue'
 import DashboardGrid from './Dashboard/DashboardGrid.vue';
 import DashboardList from './Dashboard/DashboardList.vue'
@@ -29,74 +30,34 @@ const components = {
     DashboardPend,
     DashboardProgress
 }
-const textData = [
-    {
-        taskName: "工价填报",
-        orderId: "K24-024 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "数量填写",
-        orderId: "K24-025 2111622",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "工价填报",
-        orderId: "K24-021 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "数量填写",
-        orderId: "K24-021 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "工价填报",
-        orderId: "K24-021 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "数量填写",
-        orderId: "K24-021 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-]
-const textData2 = [
-    {
-        taskName: "工价填报",
-        orderId: "K24-021 2111628",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-    {
-        taskName: "数量填写",
-        orderId: "K24-021 2111620",
-        createTime: "2024-06-10",
-        prevTime: "2024-06-10 18:00:00",
-        prevDepart: "技术部",
-        prevUser: "XXX"
-    },
-]
+const textData = ref([])
+const textData2 = ref([])
+
+onMounted(() => {
+    let params = { orderstatus: 9, ordershoestatus: 20 };
+    axios.get("http://localhost:8000/order/getcurrentorders", { params }).then(response => {
+        const newOrders = response.data.newOrders
+        const progressOrders = response.data.progressOrders
+        newOrders.forEach(element => {
+            textData.value.push(element)
+        });
+        progressOrders.forEach(element => {
+            textData2.value.push(element)
+        });
+    })
+    params = { orderstatus: 9, ordershoestatus: 23 };
+    axios.get("http://localhost:8000/order/getcurrentorders", { params }).then(response => {
+        const newOrders = response.data.newOrders
+        const progressOrders = response.data.progressOrders
+        newOrders.forEach(element => {
+            textData.value.push(element)
+        });
+        progressOrders.forEach(element => {
+            textData2.value.push(element)
+        });
+    })
+})
+
 const changeToGrid = () => {
     currentDash.value = 'DashboardGrid'
 }
