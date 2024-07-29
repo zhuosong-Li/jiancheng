@@ -1,12 +1,12 @@
-import ShoeTypeList from '../views/ShoeTypeList.vue'
+import OrderShoeList from '../views/OrderShoeList.vue'
 import AmountReportList from '../views/AmountReportList.vue'
 import PriceReport from '../views/PriceReportView.vue'
 
 export default [
     {
-        path: '/molding/shoetypelist',
-        name: 'molding-shoetypelist',
-        component: ShoeTypeList,
+        path: '/molding/ordershoelist',
+        name: 'molding-ordershoelist',
+        component: OrderShoeList,
         props: route => (
             {
                 orderId: route.query.orderId,
@@ -18,8 +18,8 @@ export default [
             })
     },
     {
-        path: '/molding/shoetypelist/amountreportlist',
-        name: 'molding-shoetypelist-amountreportlist',
+        path: '/molding/ordershoelist/amountreportlist',
+        name: 'molding-ordershoelist-amountreportlist',
         component: AmountReportList,
         props: route => (
             {

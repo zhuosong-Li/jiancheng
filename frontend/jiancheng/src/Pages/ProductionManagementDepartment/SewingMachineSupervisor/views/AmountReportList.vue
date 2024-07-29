@@ -227,7 +227,7 @@ const handleDelete = (index) => {
     });
 }
 const handleGoBack = () => {
-    router.push({ name: 'sewingMachine-shoetypelist' })
+    router.push({ name: 'sewingMachine-ordershoelist' })
 }
 const handleClose = (option) => {
     if (option === 0) createVis.value = false

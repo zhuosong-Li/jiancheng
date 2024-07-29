@@ -4,7 +4,7 @@ export const handleRowClick = (row) => {
     if (row.statusId === 20) {
         url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
     } else if (row.statusId === 23) {
-        url = `${window.location.origin}/fabriccutting/shoetypelist?${queryString}`;
+        url = `${window.location.origin}/fabriccutting/ordershoelist?${queryString}`;
     }
     if (url) {
         window.open(url, '_blank');

@@ -1,12 +1,12 @@
-import ShoeTypeList from '../views/ShoeTypeList.vue'
+import OrderShoeList from '../views/OrderShoeList.vue'
 import AmountReportList from '../views/AmountReportList.vue'
 import PriceReport from '../views/PriceReportView.vue'
 
 export default [
     {
-        path: '/sewingmachine/shoetypelist',
-        name: 'sewingMachine-shoetypelist',
-        component: ShoeTypeList,
+        path: '/sewingmachine/ordershoelist',
+        name: 'sewingMachine-ordershoelist',
+        component: OrderShoeList,
         props: route => (
             {
                 orderId: route.query.orderId,
@@ -18,8 +18,8 @@ export default [
             })
     },
     {
-        path: '/sewingmachine/shoetypelist/amountreportlist',
-        name: 'sewingMachine-shoetypelist-amountreportlist',
+        path: '/sewingmachine/ordershoelist/amountreportlist',
+        name: 'sewingMachine-ordershoelist-amountreportlist',
         component: AmountReportList,
         props: route => (
             {
