@@ -227,7 +227,7 @@ const handleDelete = (index) => {
     });
 }
 const handleGoBack = () => {
-    router.push({ name: 'molding-shoetypelist' })
+    router.push({ name: 'molding-ordershoelist' })
 }
 const handleClose = (option) => {
     if (option === 0) createVis.value = false

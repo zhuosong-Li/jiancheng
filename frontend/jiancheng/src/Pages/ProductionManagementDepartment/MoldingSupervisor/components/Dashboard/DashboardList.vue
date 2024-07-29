@@ -65,7 +65,7 @@ const handleRowClick = (row) => {
     if (row.taskName === '工价填报') {
         url = `${window.location.origin}/molding/pricereport?${queryString}`;
     } else if (row.taskName === '数量填写') {
-        url = `${window.location.origin}/molding/shoetypelist?${queryString}`;
+        url = `${window.location.origin}/molding/ordershoelist?${queryString}`;
     }
     if (url) {
         window.open(url, '_blank');

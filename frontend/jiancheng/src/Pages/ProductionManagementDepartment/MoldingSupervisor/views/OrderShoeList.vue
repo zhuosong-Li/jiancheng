@@ -5,7 +5,7 @@
         </el-header>
         <el-main>
             <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">针车数量填报</el-col>
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">成型数量填报</el-col>
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
@@ -70,7 +70,7 @@ for (let i = 2; i < 4; i++) {
 }
 const handleClick = (rowData) => {
     Cookies.set("currentAmountReportList", JSON.stringify(rowData))
-    router.push({ name: 'sewingMachine-shoetypelist-amountreportlist'})
+    router.push({ name: 'molding-ordershoelist-amountreportlist'})
 }
 </script>
 <style scoped>

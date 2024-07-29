@@ -112,6 +112,6 @@ const handleSaveTeam = async () => {
 
 const handleClick = (rowData) => {
     Cookies.set("currentAmountReportList", JSON.stringify(rowData))
-    router.push({ name: 'fabriccutting-shoetypelist-amountreportlist' })
+    router.push({ name: 'fabriccutting-ordershoelist-amountreportlist' })
 }
 </script>
