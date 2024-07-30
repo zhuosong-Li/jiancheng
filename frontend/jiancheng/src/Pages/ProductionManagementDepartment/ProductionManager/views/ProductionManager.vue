@@ -57,6 +57,7 @@ import { UserFilled } from '@element-plus/icons-vue'
 import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
 import LogisticInfo from '../components/LogisticInfo.vue'
 import OutSourceApproval from '../components/OutSourceApproval.vue'
+import WagesApproval from '../components/WagesApproval.vue'
 
 export default {
   components: {
@@ -65,7 +66,8 @@ export default {
     Dashboard,
     ProductionSchedulingDialogue,
     LogisticInfo,
-    OutSourceApproval
+    OutSourceApproval,
+    WagesApproval
   },
   data() {
     return {
@@ -93,7 +95,7 @@ export default {
           this.currentComponent = 'OutSourceApproval'
           break
         case 6:
-          this.currentComponent = 'ApprovalPage'
+          this.currentComponent = 'WagesApproval'
       }
     }
   }
