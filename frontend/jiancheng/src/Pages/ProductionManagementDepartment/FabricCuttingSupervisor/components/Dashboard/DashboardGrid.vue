@@ -42,7 +42,7 @@
                 </template>
                 <div>订单号：{{ getinProgressItem(colIndex).orderRId }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
-                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
+                <div>客户：{{ getinProgressItem(colIndex).customerName }}</div>
             </el-card>
 
         </el-col>
@@ -59,7 +59,7 @@ import { handleRowClick } from '@/Pages/ProductionManagementDepartment/utils';
 const props = defineProps({
     'pendingTaskData': Array, 'inProgressTaskData': Array
 })
-
+console.log(props.inProgressTaskData)
 const emit = defineEmits(['backGrid', 'changeToPend', 'changeToProgress'])
 
 const getPendingItem = (colIndex) => {
