@@ -1,3 +1,14 @@
-CUTTING_PRICE_REPORT_STATUS = 20
-SEWING_PRICE_REPORT_STATUS = 28
-MOLDING_PRICE_REPORT_STATUS = 36
+PRODUCTION_REFERENCE = {
+    "cutting": {
+        "teams": ["裁断"],
+        "status_number": 20
+    },
+    "sewing": {
+        "teams": ["针车预备", "针车"],
+        "status_number": 28
+    },
+    "molding": {
+        "teams": ["成型"],
+        "status_number": 36
+    }
+}

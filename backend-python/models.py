@@ -92,7 +92,6 @@ class CuttingQuantityReport(db.Model):
     )
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
-    team = db.Column(db.String(10), nullable=True)
     rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
@@ -181,7 +180,6 @@ class MoldingQuantityReport(db.Model):
     )
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
-    team = db.Column(db.String(10), nullable=True)
     rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
@@ -341,7 +339,9 @@ class OrderStatusReference(db.Model):
 class ProcedureReference(db.Model):
     __tablename__ = "procedure_reference"
     procedure_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    procedure_name = db.Column(db.String(100), nullable=True)
+    procedure_name = db.Column(db.String(100), nullable=False)
+    team = db.Column(db.String(10), nullable=True)
+    current_price = db.Column(db.Float, nullable=True)
 
     def __repr__(self):
         return f"<ProcedureReference(procedure_id={self.procedure_id})>"
@@ -432,7 +432,6 @@ class SewingQuantityReport(db.Model):
     )
     creation_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
-    team = db.Column(db.String(10), nullable=True)
     rejection_reason = db.Column(db.String(40))
 
     def __repr__(self):
@@ -526,6 +525,7 @@ class UnitPriceReportDetail(db.Model):
         primary_key=True,
         nullable=False,
     )
+    price = db.Column(db.Float, nullable=False)
     note = db.Column(db.String(600), nullable=True)
 
     def __repr__(self):

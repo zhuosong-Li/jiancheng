@@ -44,6 +44,7 @@ onMounted(() => {
         progressOrders.forEach(element => {
             textData2.value.push(element)
         });
+        console.log(textData2)
     })
     params = { orderstatus: 9, ordershoestatus: 23 };
     axios.get("http://localhost:8000/order/getcurrentorders", { params }).then(response => {

@@ -15,11 +15,10 @@ def create_quantity_report():
     report = CuttingQuantityReport(
         order_shoe_id=data["orderShoeId"],
         creation_date=data["creationDate"],
-        status=0,
-        team=data["team"],
+        status=0
     )
-    # db.session.add(report)
-    # db.session.commit()
+    db.session.add(report)
+    db.session.commit()
     return jsonify({"message": "success"})
 
 
@@ -49,8 +48,34 @@ def submit_quantity_report():
     "/production/fabriccutting/getallquantityreport", methods=["GET"]
 )
 def get_all_quantity_report():
-    data = request.get_json()
-    row = CuttingQuantityReport.query.filter_by(
-        order_shoe_id=data["order_shoe_id"]
+    order_shoe_id = request.args.get("orderShoeId")
+    response = CuttingQuantityReport.query.filter_by(
+        order_shoe_id=order_shoe_id
     ).all()
-    return jsonify({"message": "success"})
+    result = []
+    for row in response:
+        result.append({
+            "reportId": row.report_id,
+            "creationDate": row.creation_date.strftime("%Y-%m-%d"),
+            "status": row.status,
+            "rejectionReason": row.rejection_reason
+        })
+    return result
+
+
+@cutting_quantity_report_bp.route(
+    "/production/fabriccutting/getAllBatchInfo", methods=["GET"]
+)
+def get_all_batch_info():
+    order_shoe_id = request.args.get("orderShoeId")
+    response = OrderShoeBatchInfo.query.filter_by(order_shoe_id=order_shoe_id).all()
+    result = []
+    for row in response:
+        result.append(
+            {
+                "name": row.name,
+                "totalAmount": row.total_amount,
+                "cuttingAmount": row.cutting_amount,
+            }
+        )
+    return result
