@@ -15,10 +15,13 @@ def create_price_report():
     reports = []
     try:
         for team in PRODUCTION_REFERENCE[data["line"]]["teams"]:
-            reports.append(UnitPriceReport(
-                order_shoe_id=data["orderShoeId"], team=team, status=0
-            ))
-        order_shoe_status = OrderShoeStatus.query.filter_by(order_shoe_id=data["orderShoeId"], current_status=PRODUCTION_REFERENCE[data["line"]]["status_number"]).first()
+            reports.append(
+                UnitPriceReport(order_shoe_id=data["orderShoeId"], team=team, status=0)
+            )
+        order_shoe_status = OrderShoeStatus.query.filter_by(
+            order_shoe_id=data["orderShoeId"],
+            current_status=PRODUCTION_REFERENCE[data["line"]]["status_number"],
+        ).first()
         order_shoe_status.current_status_value = 1
         db.session.add_all(reports)
         db.session.commit()

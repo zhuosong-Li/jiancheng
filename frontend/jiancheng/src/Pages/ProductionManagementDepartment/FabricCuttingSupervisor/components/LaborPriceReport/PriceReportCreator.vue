@@ -22,13 +22,11 @@
             </el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="danger"
-                        @click="deleteRow(cuttingTableData, scope.$index)">删除</el-button>
+                    <el-button type="danger" @click="deleteRow(cuttingTableData, scope.$index)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
-        <el-button type="primary" size="default"
-            @click="addRow(cuttingTableData)">添加新一行</el-button>
+        <el-button type="primary" size="default" @click="addRow(cuttingTableData)">添加新一行</el-button>
         <template #footer>
             <span>
                 <el-button @click="handleGenerateClose">取消</el-button>
@@ -59,7 +57,7 @@ onMounted(async () => {
             }
         })
         response.data.forEach(row => {
-            cuttingInfo.value[row.procedureName] = {"price": row.price, "id": row.procedureId}
+            cuttingInfo.value[row.procedureName] = { "price": row.price, "id": row.procedureId }
         });
     } catch (error) {
         console.error('There was an error!', error);
