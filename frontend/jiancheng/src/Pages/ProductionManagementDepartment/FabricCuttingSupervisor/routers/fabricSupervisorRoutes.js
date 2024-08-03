@@ -22,8 +22,12 @@ export default [
         component: AmountReportList,
         props: route => (
             {
-                shoeTypeId: route.query.shoeTypeId,
-                groupType: route.query.groupType
+                orderId: route.query.orderId,
+                orderRId: route.query.orderRId,
+                createTime: route.query.createTime,
+                customerName: route.query.customerName,
+                orderShoeId: route.query.orderShoeId,
+                shoeRId: route.query.shoeRId
             })
     },
     {
