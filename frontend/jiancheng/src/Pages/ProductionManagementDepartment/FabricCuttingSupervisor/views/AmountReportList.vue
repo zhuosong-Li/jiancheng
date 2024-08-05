@@ -52,13 +52,12 @@
                 </el-table-column>
             </el-table>
             <div v-if="createVis">
-                <AmountReportCreator :currentReport="currentReport" :orderShoeId="props.orderShoeId" :handleSave="handleSave"
+                <AmountReportCreator :currentReport="currentReport" :orderShoeId="props.orderShoeId"
                     :handleClose="handleClose" />
             </div>
-            <!-- <el-dialog :title="currentTitle" v-model="previewVis" width="90%"
-                @close="handleClose(1)">
-                hello
-            </el-dialog> -->
+            <div v-else-if="previewVis">
+                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport" :handleClose="handleClose"/>
+            </div>
         </el-main>
     </el-container>
 </template>
@@ -66,13 +65,13 @@
 <script setup>
 import { onMounted, ref, watch } from 'vue';
 import AmountReportCreator from '../components/AmountProduced/AmountReportCreator.vue'
+import PreviewQuantityReport from '../components/AmountProduced/PreviewQuantityReport.vue';
 import AllHeader from '@/components/AllHeader.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios'
 const createVis = ref(false)
 const createReportVis = ref(false)
 const previewVis = ref(false)
-const currentTitle = ref('')
 const props = defineProps([
     "orderId", "orderRId", "createTime", 
     "customerName", "orderShoeId", "shoeRId"
@@ -159,7 +158,7 @@ const handleCreateReport = () => {
 }
 
 const openPreviewDialog = (rowData) => {
-    currentTitle.value = "鞋型号 " + rowData.shoeTypeId
+    currentReport.value = rowData
     previewVis.value = true
 }
 const handleConfirm = (e) => {

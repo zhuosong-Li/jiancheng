@@ -38,7 +38,7 @@ const producedAmount = ref(0)
 onMounted(async () => {
     let params = { "orderShoeId": props.orderShoeId, 'team': '裁断' }
     // get price report detail
-    let response = await axios.get("http://localhost:8000/production/getpricereportdetail", { params })
+    let response = await axios.get("http://localhost:8000/production/getpricereportdetailbyordershoeid", { params })
     priceReport.value = response.data
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
