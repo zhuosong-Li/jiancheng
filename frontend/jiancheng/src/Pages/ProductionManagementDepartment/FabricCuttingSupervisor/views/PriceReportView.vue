@@ -35,12 +35,11 @@
                 </el-table-column>
             </el-table>
             <div v-if="createVis">
-                <PriceReportCreator :orderShoeId="orderShoeId" :handleClose="handleClose" />
+                <PriceReportCreator :currentRowData="currentRowData" :handleClose="handleClose" />
             </div>
-            <!-- <el-dialog :title="currentTitle" v-model="previewVis" width="90%"
-                @close="handleClose(1)">
-                hello
-            </el-dialog> -->
+            <div v-else-if="previewVis">
+                <PreviewReportPage :currentRowData="currentRowData" :handleClose="handleClose"/>
+            </div>
         </el-main>
     </el-container>
 </template>
@@ -49,10 +48,12 @@
 import { onMounted, ref } from 'vue';
 import axios from 'axios';
 import PriceReportCreator from '../components/LaborPriceReport/PriceReportCreator.vue'
+import PreviewReportPage from '../components/LaborPriceReport/PreviewReportPage.vue';
 import AllHeader from '@/components/AllHeader.vue';
 const createVis = ref(false)
 const previewVis = ref(false)
 const currentTitle = ref('')
+const currentRowData = ref({})
 const props = defineProps({
     'orderId': Number,
     'orderRId': String,
@@ -61,16 +62,15 @@ const props = defineProps({
     'taskName': String
 })
 const taskData = ref([])
-const orderShoeId = ref('')
 onMounted(async () => {
     const params = {
         "orderId": props.orderId,
         "ordershoestatus": 20
     }
-    const response = await axios.get("http://localhost:8000/production/getallordershoespricereport", { params })
+    const response = await axios.get("http://localhost:8000/production/getallordershoespricereports", { params })
     for (const key in response.data) {
         let value = response.data[key]
-        let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "date": value.date }
+        let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "date": value.date, "reportId": value.reportId }
         if (value.status == -1) {
             obj["statusName"] = "未生成工价单"
         } else if (value.status == 0) {
@@ -86,9 +86,9 @@ onMounted(async () => {
 })
 
 const handleGenerate = async (rowData) => {
-    orderShoeId.value = rowData["orderShoeId"]
+    currentRowData.value = rowData
     const data = {
-        "orderShoeId": orderShoeId.value,
+        "orderShoeId": currentRowData.value.orderShoeId,
         "line": "cutting"
     }
     await axios.post("http://localhost:8000/production/createpricereport", data)
@@ -97,10 +97,10 @@ const handleGenerate = async (rowData) => {
 
 const handleEdit = (rowData) => {
     createVis.value = true
-    orderShoeId.value = rowData["orderShoeId"]
+    currentRowData.value = rowData
 }
 const openPreviewDialog = (rowData) => {
-    currentTitle.value = "鞋型号 " + rowData.shoeTypeId
+    currentRowData.value = rowData
     previewVis.value = true
 }
 const handleConfirm = (e) => {

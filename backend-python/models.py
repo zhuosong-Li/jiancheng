@@ -91,6 +91,7 @@ class CuttingQuantityReport(db.Model):
         db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=True
     )
     creation_date = db.Column(db.Date, nullable=True)
+    submission_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
     rejection_reason = db.Column(db.String(40))
 
@@ -272,7 +273,7 @@ class OrderShoeBatchInfo(db.Model):
     )
 
     def __repr__(self):
-        return f"<OrderShoeShoesize(order_shoe_batch_info_id={self.order_shoe_batch_info_id})>"
+        return f"<OrderShoeBatchInfo(order_shoe_batch_info_id={self.order_shoe_batch_info_id})>"
 
     def __name__(self):
         return "OrderShoeBatchInfo"

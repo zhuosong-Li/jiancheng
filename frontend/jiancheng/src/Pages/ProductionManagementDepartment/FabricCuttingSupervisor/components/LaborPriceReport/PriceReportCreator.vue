@@ -22,13 +22,11 @@
             </el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="danger"
-                        @click="deleteRow(cuttingTableData, scope.$index)">删除</el-button>
+                    <el-button type="danger" @click="deleteRow(cuttingTableData, scope.$index)">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
-        <el-button type="primary" size="default"
-            @click="addRow(cuttingTableData)">添加新一行</el-button>
+        <el-button type="primary" size="default" @click="addRow(cuttingTableData)">添加新一行</el-button>
         <template #footer>
             <span>
                 <el-button @click="handleGenerateClose">取消</el-button>
@@ -42,16 +40,13 @@
 import { onMounted, ref, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
-const props = defineProps(['orderShoeId', 'handleClose'])
+const props = defineProps(['currentRowData', 'handleClose'])
 const cuttingTableData = ref([])
 const createVis = ref(true)
 const cuttingInfo = ref({})
 const cuttingReportId = ref('')
 onMounted(async () => {
-    let response = await axios.get("http://localhost:8000/production/getreportid", { params: { "orderShoeId": props.orderShoeId, "teams": ['裁断'].toString() } })
-    response.data.forEach(row => {
-        cuttingReportId.value = row.reportId
-    })
+    let response = null
     try {
         response = await axios.get("http://localhost:8000/production/getallprocedures", {
             params: {
@@ -59,7 +54,7 @@ onMounted(async () => {
             }
         })
         response.data.forEach(row => {
-            cuttingInfo.value[row.procedureName] = {"price": row.price, "id": row.procedureId}
+            cuttingInfo.value[row.procedureName] = { "price": row.price, "id": row.procedureId }
         });
     } catch (error) {
         console.error('There was an error!', error);
@@ -67,8 +62,7 @@ onMounted(async () => {
     try {
         response = await axios.get("http://localhost:8000/production/getpricereportdetail", {
             params: {
-                orderShoeId: props.orderShoeId,
-                team: "裁断"
+                reportId: props.currentRowData.reportId,
             }
         })
         cuttingTableData.value = response.data

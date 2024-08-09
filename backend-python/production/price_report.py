@@ -15,10 +15,13 @@ def create_price_report():
     reports = []
     try:
         for team in PRODUCTION_REFERENCE[data["line"]]["teams"]:
-            reports.append(UnitPriceReport(
-                order_shoe_id=data["orderShoeId"], team=team, status=0
-            ))
-        order_shoe_status = OrderShoeStatus.query.filter_by(order_shoe_id=data["orderShoeId"], current_status=PRODUCTION_REFERENCE[data["line"]]["status_number"]).first()
+            reports.append(
+                UnitPriceReport(order_shoe_id=data["orderShoeId"], team=team, status=0)
+            )
+        order_shoe_status = OrderShoeStatus.query.filter_by(
+            order_shoe_id=data["orderShoeId"],
+            current_status=PRODUCTION_REFERENCE[data["line"]]["status_number"],
+        ).first()
         order_shoe_status.current_status_value = 1
         db.session.add_all(reports)
         db.session.commit()
@@ -108,8 +111,7 @@ def store_price_report_detail():
 
 @price_report_bp.route("/production/getpricereportdetail", methods=["GET"])
 def get_price_report_detail():
-    order_shoe_id = request.args.get("orderShoeId")
-    team = request.args.get("team")
+    report_id = request.args.get("reportId")
     response = (
         db.session.query(UnitPriceReport, UnitPriceReportDetail, ProcedureReference)
         .join(
@@ -120,9 +122,7 @@ def get_price_report_detail():
             ProcedureReference,
             UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
-        .filter(
-            UnitPriceReport.order_shoe_id == order_shoe_id, UnitPriceReport.team == team
-        )
+        .filter(UnitPriceReport.report_id == report_id)
         .all()
     )
     result = []
@@ -139,7 +139,40 @@ def get_price_report_detail():
     return result
 
 
-@price_report_bp.route("/production/getallordershoespricereport", methods=["GET"])
+@price_report_bp.route("/production/getpricereportdetailbyordershoeid", methods=["GET"])
+def get_price_report_detail_by_order_shoe_id():
+    order_shoe_id = request.args.get("orderShoeId")
+    team = request.args.get("team")
+    response = (
+        db.session.query(UnitPriceReport, UnitPriceReportDetail, OrderShoe, ProcedureReference)
+        .join(
+            UnitPriceReportDetail,
+            UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
+        ).join(
+            OrderShoe,
+            UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id
+        ).join(
+            ProcedureReference,
+            UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
+        )
+        .filter(OrderShoe.order_shoe_id == order_shoe_id, UnitPriceReport.team == team)
+        .all()
+    )
+    result = []
+    for row in response:
+        _, report_detail, _, procedure_ref = row
+        result.append(
+            {
+                "rowId": report_detail.row_id,
+                "procedure": procedure_ref.procedure_name,
+                "price": report_detail.price,
+                "note": report_detail.note,
+            }
+        )
+    return result
+
+
+@price_report_bp.route("/production/getallordershoespricereports", methods=["GET"])
 def get_all_order_shoes_price_report():
     order_id = request.args.get("orderId")
     order_shoe_status_val = request.args.get("ordershoestatus", type=int)
@@ -159,23 +192,22 @@ def get_all_order_shoes_price_report():
     )
     result = {}
     for row in response:
-        _, order_shoe, _, _ = row
+        _, order_shoe, _, shoe = row
         entity = UnitPriceReport.query.filter_by(
             order_shoe_id=order_shoe.order_shoe_id
         ).first()
         if not entity:
             result[order_shoe.order_shoe_id] = {
+                "reportId": "",
                 "status": -1,
                 "date": None,
             }
         else:
             result[order_shoe.order_shoe_id] = {
+                "reportId": entity.report_id,
                 "status": entity.status,
                 "date": entity.submission_date,
             }
-
-    for row in response:
-        _, order_shoe, _, shoe = row
         result[order_shoe.order_shoe_id]["shoeRId"] = shoe.shoe_rid
     return result
 
@@ -195,19 +227,4 @@ def get_all_procedures():
                 "team": row.team,
             }
         )
-    return result
-
-
-@price_report_bp.route("/production/getreportid", methods=["GET"])
-def get_report_id():
-    order_shoe_id = request.args.get("orderShoeId", type=int)
-    teams = request.args.get("teams").split(",")
-    response = (
-        UnitPriceReport.query.filter_by(order_shoe_id=order_shoe_id)
-        .filter(UnitPriceReport.team.in_(teams))
-        .all()
-    )
-    result = []
-    for row in response:
-        result.append({"reportId": row.report_id, "team": row.team})
     return result
