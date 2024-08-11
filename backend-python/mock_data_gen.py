@@ -13,7 +13,7 @@ constant_layer = [ProcedureReference, OrderStatusReference, OrderShoeStatusRefer
 outer_layer = [
     Department,
     Character,
-    Operation,
+    # Operation,
     Customer,
     Shoe,
     Color,
@@ -30,10 +30,10 @@ middle_third_layer = [
     MaterialStorage,
     UnitPriceReport,
 ]
-middle_fourth_layer = [UnitPriceReportDetail]  # BomItem, PurchaseOrder]
+middle_fourth_layer = [UnitPriceReportDetail, PurchaseOrder]  # BomItem, PurchaseOrder]
 fifth_layer = [PurchaseDivideOrder]
-Inner_layer = [PurchaseOrderItem, UnitPriceReport]
-Inner_layer2 = [UnitPriceReportDetail]
+Inner_layer = [PurchaseOrderItem]
+# Inner_layer2 = [UnitPriceReportDetail]
 structure_list = [
     constant_layer,
     outer_layer,
@@ -43,7 +43,7 @@ structure_list = [
     middle_fourth_layer,
     fifth_layer,
     Inner_layer,
-    Inner_layer2,
+    # Inner_layer2,
 ]
 
 
@@ -145,6 +145,53 @@ class MockDataGenerator:
             break
         return
 
+    def insertMockOperations(self):
+        entity_id_counter = 0
+        entity_list = []
+        for i in range(19):
+            entity_list.append(
+                Operation(
+                    operation_id=entity_id_counter,
+                    operation_name=("Type-1-test-" + str(i * 2)),
+                    operation_type=1,
+                    operation_modified_status=i,
+                    operation_modified_value=1,
+                )
+            )
+            entity_id_counter += 1
+            entity_list.append(
+                Operation(
+                    operation_id=entity_id_counter,
+                    operation_name=("Type-1-test-" + str(i * 2 + 1)),
+                    operation_type=1,
+                    operation_modified_status=i,
+                    operation_modified_value=2,
+                )
+            )
+            entity_id_counter += 1
+        for i in range(42):
+            entity_list.append(
+                Operation(
+                    operation_id=entity_id_counter,
+                    operation_name=("Type-2-test-" + str(i * 2)),
+                    operation_type=2,
+                    operation_modified_status=i,
+                    operation_modified_value=1,
+                )
+            )
+            entity_id_counter += 1
+            entity_list.append(
+                Operation(
+                    operation_id=entity_id_counter,
+                    operation_name=("Type-2-test-" + str(i * 2 + 1)),
+                    operation_type=2,
+                    operation_modified_status=i,
+                    operation_modified_value=2,
+                )
+            )
+            entity_id_counter += 1
+        self.pushEntityObjectsDB(entity_list)
+
 
 def TestPopulateEndEntityDB(shoes_rid_for_Shoes, customer_name_for_Customers):
     ### creating customers and shoes with rid
@@ -152,7 +199,6 @@ def TestPopulateEndEntityDB(shoes_rid_for_Shoes, customer_name_for_Customers):
         if not check_customerName_exists(i):
             dbcreateCustomer(i)
             print("customer with name %s added", i)
-
     return True
 
 
