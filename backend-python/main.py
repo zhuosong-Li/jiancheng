@@ -30,9 +30,22 @@ if __name__ == "__main__":
     # TestPopulateEndEntityDB(shoes_rid, customer_name)
     # TestPopulateOrdersDB(firstTime=True, reset = False)
     # with app.app_context():
-        #     # reset all tables increment id
-        # datagen = MockDataGenerator(db)
-        # datagen.cleanAndSetup()
-        # datagen.initializeEntityDataPath()
-        # datagen.setupDBLocalData(terminating_layer=6)
+            
+    #     datagen = MockDataGenerator(db)
+    #     datagen.cleanAndSetup()
+    #     datagen.initializeEntityDataPath()
+    #     datagen.setupDBLocalData(terminating_layer=7)
+    # with app.app_context():
+    #     processorTest = EventProcessor()
+    #             # operation 103 changes status 32 to 2
+    #     mock_event = Event(event_id = 40, staff_id = 1,handle_time = "2024-07-02",
+    #                             operation_id = 39,event_order_id = 4,event_order_shoe_id =11)
+    #     result = processorTest.processEvent(mock_event)
+    #     if result:
+    #         print("Event Processed")
+    #     else:
+    #         print("Event Invalid")
+        # for i in range(38, 58,1 ):
+        #     mock_event.operation_id = i
+        #     processorTest.processEvent(mock_event)
     main()

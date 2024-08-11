@@ -1,6 +1,8 @@
 from models import *
 
+from event_processor import *
 
+processEventEntity = EventProcessor()
 ### check if a shoe exists in DB
 def check_shoe_exists(shoe_rid):
     existance = (
@@ -76,3 +78,6 @@ def dbcreateOrder(order_Rid, order_createTime, order_Customer):
     db.session.add(db_entity)
     db.session.commit()
     return True
+
+def processEvent(event):
+    return
