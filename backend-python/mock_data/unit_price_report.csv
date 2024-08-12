@@ -1,2 +1,2 @@
-report_id,order_shoe_id,submission_date,team
-1,1,2024-09-02,针车
+report_id,order_shoe_id,submission_date,team,status,rejection_reason
+1,1,2024-09-02,针车,0,"123"

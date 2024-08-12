@@ -112,10 +112,9 @@ class Material(db.Model):
     __tablename__ = "material"
     material_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     material_name = db.Column(db.String(60), nullable=False)
+    material_type = db.Column(db.String(20), nullable=False)
     material_unit = db.Column(db.String(4), nullable=True)
-    supplier_id = db.Column(
-        db.Integer, db.ForeignKey("supplier.supplier_id"), nullable=False
-    )
+    material_color = db.Column(db.BigInteger, nullable=True)
     warehouse_id = db.Column(
         db.Integer,
         db.ForeignKey("material_warehouse.material_warehouse_id"),
@@ -128,6 +127,38 @@ class Material(db.Model):
 
     def __repr__(self):
         return f"<Material(material_id={self.material_id})>"
+
+
+class MaterialStorage(db.Model):
+    __tablename__ = "material_storage"
+    material_storage_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    order_shoe_id = db.Column(
+        db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=True
+    )
+    material_id = db.Column(
+        db.BigInteger, db.ForeignKey("material.material_id"), nullable=False
+    )
+    instock_amount = db.Column(
+        db.Numeric(precision = 10, scale = 5),nullable=False
+    )
+    current_amount = db.Column(
+        db.Numeric(precision = 10, scale = 5), nullable=False
+    )
+
+    material_specification = db.Column(db.String(20), nullable = True)
+    material_supplier = db.Column(db.String(20), db.ForeignKey("supplier.supplier_id"), nullable = False)
+    material_outsource_status = db.Column(
+        db.String(1), nullable=True
+        )
+    material_outsource_date = db.Column(
+        db.Date, nullable = True
+    )
+
+    def __repr__(self):
+        return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
+
+    def __name__(self):
+        return "MaterialStorage"
 
 
 class Event(db.Model):
@@ -190,23 +221,6 @@ class MoldingQuantityReport(db.Model):
         return "MoldingQuantityReport"
 
 
-class MaterialStorage(db.Model):
-    __tablename__ = "material_storage"
-    material_storage_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_id = db.Column(
-        db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=True
-    )
-    material_id = db.Column(
-        db.BigInteger, db.ForeignKey("material.material_id"), nullable=False
-    )
-
-    def __repr__(self):
-        return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
-
-    def __name__(self):
-        return "MaterialStorage"
-
-
 class Operation(db.Model):
     __tablename__ = "operation"
     operation_id = db.Column(db.Integer, primary_key=True)
@@ -226,7 +240,8 @@ class Order(db.Model):
     __tablename__ = "order"
     order_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     order_rid = db.Column(db.String(40), nullable=False, unique=True)
-    creation_time = db.Column(db.Date, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
     customer_id = db.Column(
         db.Integer, db.ForeignKey("customer.customer_id"), nullable=False
     )
@@ -285,8 +300,6 @@ class OrderShoe(db.Model):
     shoe_id = db.Column(db.Integer, db.ForeignKey("shoe.shoe_id"), nullable=False)
     order_id = db.Column(db.BigInteger, db.ForeignKey("order.order_id"), nullable=False)
     customer_product_name = db.Column(db.String(30), nullable=False)
-    cutting_line_number = db.Column(db.Integer, nullable=True)
-    sewing_line_number = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return f"<OrderShoe(order_shoe_id={self.order_shoe_id})>"
@@ -294,8 +307,28 @@ class OrderShoe(db.Model):
     def __name__(self):
         return "OrderShoe"
 
+class OrderShoeProductionInfo(db.Model):
+    __tablename__ = "order_shoe_production_info"
+    production_info_id = db.Column(db.BigInteger, primary_key = True, autoincrement=True)
 
-class OrderShoeStatusReference(db.Model):
+    cutting_line_number = db.Column(db.Integer, nullable=True)
+    pre_sewing_line_number = db.Column(db.Integer, nullable = True)
+    sewing_line_number = db.Column(db.Integer, nullable=True)
+    molding_line_number = db.Column(db.Integer, nullable= True)
+    is_cutting_outsourced = db.Column(db.Integer, nullable = True)
+    is_sewing_outsourced = db.Column(db.Integer, nullable = True)
+    is_molding_outsourced = db.Column(db.Integer, nullable = True)
+    cutting_start_date = db.Column(db.Date, nullable=True)
+    molding_start_date = db.Column(db.Date, nullable=True)
+    sewing_start_date = db.Column(db.Date, nullable=True)
+    pre_sewing_start_date = db.Column(db.Date, nullable=True)
+    cutting_end_date = db.Column(db.Date, nullable=True)
+    molding_end_date = db.Column(db.Date, nullable=True)
+    sewing_end_date = db.Column(db.Date, nullable=True)
+    pre_sewing_end_date = db.Column(db.Date, nullable=True)
+    order_shoe_id = db.Column(db.BigInteger, db.ForeignKey('order_shoe.order_shoe_id'),nullable=False)
+
+class OrderShoeStatusReference(db.Model):   
     __tablename__ = "order_shoe_status_reference"
     status_id = db.Column(db.Integer, primary_key=True)
     status_name = db.Column(db.String(40), nullable=False)
@@ -382,7 +415,9 @@ class PurchaseDivideOrder(db.Model):
     purchase_order_id = db.Column(
         db.BigInteger, db.ForeignKey("purchase_order.purchase_order_id"), nullable=False
     )
-
+    purchase_divide_order_rid = db.Column(
+        db.Integer, db.ForeignKey("order.order_rid"),nullable = True
+    )
     def __repr__(self):
         return f"<PurchaseDivideOrder(purchase_divide_order_id={self.purchase_divide_order_id})>"
 
@@ -544,8 +579,7 @@ class UnitPriceReport(db.Model):
     submission_date = db.Column(db.Date, nullable=True)
     team = db.Column(db.String(10), nullable=True)
     status = db.Column(db.SmallInteger, nullable=False)
-    rejection_reason = db.Column(db.String(40))
-
+    rejection_reason = db.Column(db.String(40), nullable=True)
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"
 
