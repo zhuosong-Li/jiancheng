@@ -38,8 +38,31 @@ if __name__ == "__main__":
     # with app.app_context():
     #     processorTest = EventProcessor()
     #             # operation 103 changes status 32 to 2
-    #     mock_event = Event(event_id = 40, staff_id = 1,handle_time = "2024-07-02",
-    #                             operation_id = 39,event_order_id = 4,event_order_shoe_id =11)
+    #     mock_event = Event(event_id = 41, staff_id = 1,handle_time = "2024-07-02",
+    #                             operation_id = 121,event_order_id = 4,event_order_shoe_id =11)
+    #     ops_id_list = [38,39,40,41
+                       
+    #                    ,42,43,44,45,56,57,58,59,
+    #                    72,73
+
+    #                    ,74,75,
+
+    #                    76,77,
+    #                    78,79,80,81,82,83,
+
+    #                    84,85,86,87,
+
+    #                    88,89,90,91,
+    #                    92,93,94,95,96,97,
+
+    #                    98,99,100,101,102,103,104,105,
+
+    #                    106,107,108,109,110,111,
+    #                    112,113,114,115,116,117,
+
+    #                    118,119,120,
+
+    #     ]
     #     result = processorTest.processEvent(mock_event)
     #     if result:
     #         print("Event Processed")
