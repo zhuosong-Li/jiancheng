@@ -318,6 +318,7 @@ class EventProcessor:
         if modifiedStatus in curStat and (
             modifiedValue - curVal[curStat.index(modifiedStatus)] == 1
         ):
+            print("operation is valid")
             if modifiedValue == 1:
                 result = self.dbSetOrderShoeStatus(event, operation)
             else:
@@ -354,13 +355,13 @@ class EventProcessor:
     def dbSetOrderStatus(self, event, operation, next_status=None):
         entity = (
             db.session.query(OrderStatus)
-            .filter(OrderStatus.order_status_id == event.event_orderId)
+            .filter(OrderStatus.order_status_id == event.event_order_id)
             .first()
         )
-        entity.order_currentstatus = operation.operation_modified_status
+        entity.order_current_status = operation.operation_modified_status
         entity.order_status_value = operation.operation_modified_value
         if next_status:
-            entity.order_currentstatus = next_status
+            entity.order_current_status = next_status
             entity.order_status_value = 0
         db.session.commit()
         return True
@@ -421,6 +422,7 @@ class EventProcessor:
                     db.session.add(newEntity)
         ### or only setting value
         else:
+            print("no next value")
             entity = (
                 db.session.query(OrderShoeStatus)
                 .filter(
@@ -430,7 +432,7 @@ class EventProcessor:
                 )
                 .first()
             )
-            entity.currentstatus_value = operation.operation_modified_value
+            entity.current_status_value = operation.operation_modified_value
         db.session.commit()
         return True
 
