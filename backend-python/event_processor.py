@@ -385,8 +385,8 @@ class EventProcessor:
                         db.session.delete(entity)
                     newEntity = OrderShoeStatus(
                         order_shoe_id=event.event_order_shoe_id,
-                        currentstatus=next_status[0],
-                        currentstatus_value=0,
+                        current_status=next_status[0],
+                        current_status_value=0,
                     )
                     db.session.add(newEntity)
                 else:
@@ -394,20 +394,20 @@ class EventProcessor:
                         db.session.query(OrderShoeStatus)
                         .filter(
                             OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
-                            OrderShoeStatus.currentstatus
+                            OrderShoeStatus.current_status
                             == operation.operation_modified_status,
                         )
                         .first()
                     )
-                    entity.currentstatus = next_status[0]
-                    entity.currentstatus_value = 0
+                    entity.current_status = next_status[0]
+                    entity.current_status_value = 0
             else:
                 prevStatus = operation.operation_modified_status
                 entity = (
                     db.session.query(OrderShoeStatus)
                     .filter(
                         OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
-                        OrderShoeStatus.currentstatus == prevStatus,
+                        OrderShoeStatus.current_status == prevStatus,
                     )
                     .first()
                 )
@@ -415,8 +415,8 @@ class EventProcessor:
                 for newStatus in next_status:
                     newEntity = OrderShoeStatus(
                         order_shoe_id=event.event_order_shoe_id,
-                        currentstatus=newStatus,
-                        currentstatus_value=0,
+                        current_status=newStatus,
+                        current_status_value=0,
                     )
                     db.session.add(newEntity)
         ### or only setting value
@@ -425,7 +425,7 @@ class EventProcessor:
                 db.session.query(OrderShoeStatus)
                 .filter(
                     OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
-                    OrderShoeStatus.currentstatus
+                    OrderShoeStatus.current_status
                     == operation.operation_modified_status,
                 )
                 .first()
