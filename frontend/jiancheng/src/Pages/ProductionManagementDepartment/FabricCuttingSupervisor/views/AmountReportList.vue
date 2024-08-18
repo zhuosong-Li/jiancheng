@@ -46,7 +46,7 @@
                             <el-button type="warning" class="block-button"
                                 @click="handleConfirm(scope.row)">提交</el-button>
                             <el-button type="danger" class="block-button"
-                                @click="handleDelete(scope.$index)">删除</el-button>
+                                @click="handleDelete(scope.row, scope.$index)">删除</el-button>
                         </el-button-group>
                     </template>
                 </el-table-column>
@@ -85,9 +85,10 @@ const createdDates = ref(new Set())
 onMounted(async () => {
     // get all quantity report for this order_shoe_id
     let params = {
-        "orderShoeId": props.orderShoeId
+        "orderShoeId": props.orderShoeId,
+        "team": "裁断"
     }
-    const response1 = await axios.get("http://localhost:8000/production/fabriccutting/getallquantityreports", { params })
+    const response1 = await axios.get("http://localhost:8000/production/getallquantityreports", { params })
     taskData.value = response1.data
     taskData.value.forEach(row => {
         if (row.status == 0) {
@@ -100,7 +101,6 @@ onMounted(async () => {
             row.status = "已审核生产数量单"
         }
     })
-    console.log(taskData)
 })
 
 const dateFormatter = (input) => {
@@ -136,10 +136,10 @@ const handleConfirmCreate = async () => {
     }
     let body = {
         "orderShoeId": props.orderShoeId,
-        "creationDate": dateValue.value
+        "creationDate": dateValue.value,
+        "team": "裁断"
     }
-    const response = await axios.post("http://localhost:8000/production/fabriccutting/createquantityreport", body)
-    console.log(response)
+    await axios.post("http://localhost:8000/production/createquantityreport", body)
     ElMessage({ type: 'success', message: '添加成功!' })
     taskData.value.push({
         reportId: response.data.reportId,
@@ -150,7 +150,7 @@ const handleConfirmCreate = async () => {
         reportId: response.data.reportId,
         orderShoeId: props.orderShoeId
     }
-    await axios.post("http://localhost:8000/production/fabriccutting/createquantityreportdetail", body)
+    await axios.post("http://localhost:8000/production/createquantityreportdetail", body)
     window.location.reload()
 }
 const handleCreateReport = () => {
@@ -165,12 +165,14 @@ const handleConfirm = (e) => {
     console.log(e)
 }
 
-const handleDelete = (index) => {
+const handleDelete = (row, index) => {
     ElMessageBox.confirm('确定删除此行吗？', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-    }).then(() => {
+    }).then(async () => {
+        const params = {"reportId": row.reportId}
+        await axios.delete("http://localhost:8000/production/deletequantityreport", {params})
         taskData.value.splice(index, 1)
         ElMessage({
             type: 'success',
