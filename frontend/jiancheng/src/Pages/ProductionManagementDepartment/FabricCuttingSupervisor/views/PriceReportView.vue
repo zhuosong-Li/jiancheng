@@ -5,8 +5,7 @@
         </el-header>
         <el-main>
             <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">{{ props.taskName
-                    }}</el-col>
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">裁断与批皮工价填报</el-col>
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
@@ -22,13 +21,11 @@
                 <el-table-column prop="statusName" label="状态"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button v-if="scope.row.statusName === '未生成工价单'" type="primary"
-                            @click="handleGenerate(scope.row)">生成</el-button>
-                        <el-button-group v-else-if="scope.row.statusName === '已保存工价单'">
-                            <el-button type="primary" class="block-button" @click="handleEdit(scope.row)">编辑</el-button>
-                            <el-button type="success" class="block-button"
+                        <el-button-group v-if="scope.row.statusName === '未提交工价单'">
+                            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+                            <el-button type="success"
                                 @click="openPreviewDialog(scope.row)">预览</el-button>
-                            <el-button type="warning" class="block-button"
+                            <el-button type="warning"
                                 @click="handleConfirm(scope.row)">提交</el-button>
                         </el-button-group>
                     </template>
@@ -38,7 +35,7 @@
                 <PriceReportCreator :currentRowData="currentRowData" :handleClose="handleClose" />
             </div>
             <div v-else-if="previewVis">
-                <PreviewReportPage :currentRowData="currentRowData" :handleClose="handleClose"/>
+                <PreviewReportPage :currentRowData="currentRowData" :handleClose="handleClose" />
             </div>
         </el-main>
     </el-container>
@@ -65,35 +62,33 @@ const taskData = ref([])
 onMounted(async () => {
     const params = {
         "orderId": props.orderId,
-        "ordershoestatus": 20
-    }
-    const response = await axios.get("http://localhost:8000/production/getallordershoespricereports", { params })
-    for (const key in response.data) {
-        let value = response.data[key]
-        let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "date": value.date, "reportId": value.reportId }
-        if (value.status == -1) {
-            obj["statusName"] = "未生成工价单"
-        } else if (value.status == 0) {
-            obj["statusName"] = "已保存工价单"
-        }
-        else if (value.status == 1) {
-            obj["statusName"] = "已提交工价单"
-        } else {
-            obj["statusName"] = "已审核工价单"
-        }
-        taskData.value.push(obj)
-    }
-})
-
-const handleGenerate = async (rowData) => {
-    currentRowData.value = rowData
-    const data = {
-        "orderShoeId": currentRowData.value.orderShoeId,
         "line": "cutting"
     }
-    await axios.post("http://localhost:8000/production/createpricereport", data)
-    window.location.reload()
-}
+    const response = await axios.get("http://localhost:8000/production/getallordershoespricereports", { params })
+    response.data.forEach(element => {
+        {
+            if (element.status == 0) {
+                element["statusName"] = "未提交工价单"
+            }
+            else if (element.status == 1) {
+                element["statusName"] = "已提交工价单"
+            } else {
+                element["statusName"] = "已审核工价单"
+            }
+            taskData.value.push(element)
+        }
+    });
+})
+
+// const handleGenerate = async (rowData) => {
+//     currentRowData.value = rowData
+//     const data = {
+//         "orderShoeId": currentRowData.value.orderShoeId,
+//         "line": "cutting"
+//     }
+//     await axios.post("http://localhost:8000/production/createpricereport", data)
+//     window.location.reload()
+// }
 
 const handleEdit = (rowData) => {
     createVis.value = true

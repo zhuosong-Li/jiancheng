@@ -1,40 +1,37 @@
+from app_config import app, db
+from constants import QUANTTIY_REPORT_REFERENCE
 from flask import Blueprint, jsonify, request
+from models import *
 from sqlalchemy.dialects.mysql import insert
 
-from app_config import app, db
-from models import *
-
-cutting_quantity_report_bp = Blueprint("cutting_quantity_report_bp", __name__)
+quantity_report_bp = Blueprint("quantity_report_bp", __name__)
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/createquantityreport", methods=["POST"]
-)
+@quantity_report_bp.route("/production/createquantityreport", methods=["POST"])
 def create_quantity_report():
     data = request.get_json()
-    report = CuttingQuantityReport(
-        order_shoe_id=data["orderShoeId"], creation_date=data["creationDate"], status=0
+    report = QuantityReport(
+        order_shoe_id=data["orderShoeId"],
+        creation_date=data["creationDate"],
+        status=0,
+        team=data["team"],
     )
-    print(data["orderShoeId"])
     order_shoe_obj = OrderShoeStatus.query.filter_by(
-        order_shoe_id=data["orderShoeId"], current_status=23
+        order_shoe_id=data["orderShoeId"], current_status=QUANTTIY_REPORT_REFERENCE[data["team"]]
     ).first()
-    print(order_shoe_obj)
     order_shoe_obj.current_status_value = 1
     db.session.add(report)
     db.session.commit()
     return {"reportId": report.report_id}
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/editquantityreportdetail", methods=["PUT"]
-)
+@quantity_report_bp.route("/production/editquantityreportdetail", methods=["PUT"])
 def edit_quantity_report_detail():
     data = request.get_json()
     report_id = data["reportId"]
     detail_arr = data["data"]
     for row in detail_arr:
-        item_obj = CuttingQuantityReportItem.query.filter_by(
+        item_obj = QuantityReportItem.query.filter_by(
             report_id=report_id, order_shoe_batch_info_id=row["orderShoeBatchInfoId"]
         ).first()
         item_obj.amount = row["amount"]
@@ -42,23 +39,35 @@ def edit_quantity_report_detail():
     return jsonify({"message": "success"})
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/submitquantityreport", methods=["POST"]
-)
+@quantity_report_bp.route("/production/submitquantityreport", methods=["POST"])
 def submit_quantity_report():
     data = request.get_json()
-    # row = CuttingQuantityReport.query.get(data["report_id"])
+    # row = QuantityReport.query.get(data["report_id"])
     # row.status = 1
     # db.session.commit()
     return jsonify({"message": "success"})
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/getallquantityreports", methods=["GET"]
-)
+@quantity_report_bp.route("/production/deletequantityreport", methods=["DELETE"])
+def delete_quantity_report():
+    report_id = request.args.get("reportId")
+    items = QuantityReportItem.query.filter_by(report_id=report_id).all()
+    print(report_id)
+    for item in items:
+        db.session.delete(item)
+    row = QuantityReport.query.get(report_id)
+    db.session.delete(row)
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@quantity_report_bp.route("/production/getallquantityreports", methods=["GET"])
 def get_all_quantity_report():
     order_shoe_id = request.args.get("orderShoeId")
-    response = CuttingQuantityReport.query.filter_by(order_shoe_id=order_shoe_id).all()
+    team = request.args.get("team")
+    response = QuantityReport.query.filter_by(
+        order_shoe_id=order_shoe_id, team=team
+    ).all()
     result = []
     for row in response:
         result.append(
@@ -72,18 +81,15 @@ def get_all_quantity_report():
     return result
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/createquantityreportdetail", methods=["POST"]
-)
+@quantity_report_bp.route("/production/createquantityreportdetail", methods=["POST"])
 def create_quantity_report_detail():
     data = request.get_json()
-    print(data)
     report_id = data["reportId"]
     order_shoe_id = data["orderShoeId"]
     response = OrderShoeBatchInfo.query.filter_by(order_shoe_id=order_shoe_id).all()
     result = []
     for row in response:
-        item = CuttingQuantityReportItem(
+        item = QuantityReportItem(
             report_id=report_id, order_shoe_batch_info_id=row.order_shoe_batch_info_id
         )
         result.append(item)
@@ -92,19 +98,17 @@ def create_quantity_report_detail():
     return {"message": "success"}
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/getquantityreportdetail", methods=["GET"]
-)
+@quantity_report_bp.route("/production/getquantityreportdetail", methods=["GET"])
 def get_quantity_report_detail():
     report_id = request.args.get("reportId")
     response = (
-        db.session.query(OrderShoeBatchInfo, CuttingQuantityReportItem)
+        db.session.query(OrderShoeBatchInfo, QuantityReportItem)
         .join(
-            CuttingQuantityReportItem,
-            CuttingQuantityReportItem.order_shoe_batch_info_id
+            QuantityReportItem,
+            QuantityReportItem.order_shoe_batch_info_id
             == OrderShoeBatchInfo.order_shoe_batch_info_id,
         )
-        .filter_by(report_id=report_id)
+        .filter(QuantityReportItem.report_id == report_id)
         .all()
     )
     result = []
@@ -122,46 +126,29 @@ def get_quantity_report_detail():
     return result
 
 
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/getallordershoesquantityreports", methods=["GET"]
+@quantity_report_bp.route(
+    "/production/getallordershoesquantityreports", methods=["GET"]
 )
-def get_all_order_shoes_quantity_report():
+def get_all_order_shoes_quantity_reports():
     order_id = request.args.get("orderId")
-    order_shoe_status_val = request.args.get("ordershoestatus", type=int)
+    team = request.args.get("team")
+    status_val = QUANTTIY_REPORT_REFERENCE[team]
     response = (
-        db.session.query(Order, OrderShoe, OrderShoeStatus, Shoe)
-        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        db.session.query(OrderShoe, Shoe)
+        .join(Order, OrderShoe.order_id == Order.order_id)
         .join(
             OrderShoeStatus,
             OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
         )
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .filter(
             Order.order_id == order_id,
-            OrderShoeStatus.current_status == order_shoe_status_val,
+            OrderShoeStatus.current_status == status_val,
         )
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .all()
     )
     result = {}
     for row in response:
-        _, order_shoe, _, shoe = row
-        result[order_shoe.order_shoe_id] = {"shoeRId": shoe.shoe_rid, "status": ""}
-    return result
-
-
-@cutting_quantity_report_bp.route(
-    "/production/fabriccutting/getAllBatchInfo", methods=["GET"]
-)
-def get_all_batch_info():
-    order_shoe_id = request.args.get("orderShoeId")
-    response = OrderShoeBatchInfo.query.filter_by(order_shoe_id=order_shoe_id).all()
-    result = []
-    for row in response:
-        result.append(
-            {
-                "name": row.name,
-                "totalAmount": row.total_amount,
-                "cuttingAmount": row.cutting_amount,
-            }
-        )
+        order_shoe, shoe = row
+        result[order_shoe.order_shoe_id] = {"shoeRId": shoe.shoe_rid, "status": "", }
     return result

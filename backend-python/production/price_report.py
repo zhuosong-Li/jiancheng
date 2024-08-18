@@ -1,10 +1,11 @@
-from flask import Blueprint, jsonify, request
-from sqlalchemy.dialects.mysql import insert
-
-from constants import PRODUCTION_REFERENCE
-from app_config import db
-from models import *
 import traceback
+
+from app_config import db
+from constants import PRICE_REPORT_REFERENCE
+from flask import Blueprint, jsonify, request
+from models import *
+from sqlalchemy import or_
+from sqlalchemy.dialects.mysql import insert
 
 price_report_bp = Blueprint("price_report_bp", __name__)
 
@@ -14,13 +15,13 @@ def create_price_report():
     data = request.get_json()
     reports = []
     try:
-        for team in PRODUCTION_REFERENCE[data["line"]]["teams"]:
+        for team in PRICE_REPORT_REFERENCE[data["line"]]["teams"]:
             reports.append(
                 UnitPriceReport(order_shoe_id=data["orderShoeId"], team=team, status=0)
             )
         order_shoe_status = OrderShoeStatus.query.filter_by(
             order_shoe_id=data["orderShoeId"],
-            current_status=PRODUCTION_REFERENCE[data["line"]]["status_number"],
+            current_status=PRICE_REPORT_REFERENCE[data["line"]]["status_number"],
         ).first()
         order_shoe_status.current_status_value = 1
         db.session.add_all(reports)
@@ -68,9 +69,7 @@ def store_price_report_detail():
             OrderShoeStatus,
             UnitPriceReport.order_shoe_id == OrderShoeStatus.order_shoe_id,
         )
-        .filter(
-            UnitPriceReport.report_id == report_id,
-        )
+        .filter(UnitPriceReport.report_id == report_id)
         .all()
     )
 
@@ -144,14 +143,15 @@ def get_price_report_detail_by_order_shoe_id():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
     response = (
-        db.session.query(UnitPriceReport, UnitPriceReportDetail, OrderShoe, ProcedureReference)
+        db.session.query(
+            UnitPriceReport, UnitPriceReportDetail, OrderShoe, ProcedureReference
+        )
         .join(
             UnitPriceReportDetail,
             UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
-        ).join(
-            OrderShoe,
-            UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id
-        ).join(
+        )
+        .join(OrderShoe, UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
             ProcedureReference,
             UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
@@ -175,40 +175,58 @@ def get_price_report_detail_by_order_shoe_id():
 @price_report_bp.route("/production/getallordershoespricereports", methods=["GET"])
 def get_all_order_shoes_price_report():
     order_id = request.args.get("orderId")
-    order_shoe_status_val = request.args.get("ordershoestatus", type=int)
+    line = request.args.get("line")
+    status_val = PRICE_REPORT_REFERENCE[line]["status_number"]
+    teams = PRICE_REPORT_REFERENCE[line]["teams"]
     response = (
-        db.session.query(Order, OrderShoe, OrderShoeStatus, Shoe)
-        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        db.session.query(OrderShoe, Shoe, OrderShoeStatus, UnitPriceReport)
+        .join(Order, OrderShoe.order_id == Order.order_id)
         .join(
             OrderShoeStatus,
             OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
         )
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(
+            UnitPriceReport,
+            UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id,
+            isouter=True,
+        )
         .filter(
             Order.order_id == order_id,
-            OrderShoeStatus.current_status == order_shoe_status_val,
+            OrderShoeStatus.current_status == status_val,
+            or_(UnitPriceReport.team.in_(teams), UnitPriceReport.team.is_(None)),
         )
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .all()
     )
-    result = {}
+    result = []
     for row in response:
-        _, order_shoe, _, shoe = row
-        entity = UnitPriceReport.query.filter_by(
-            order_shoe_id=order_shoe.order_shoe_id
-        ).first()
-        if not entity:
-            result[order_shoe.order_shoe_id] = {
-                "reportId": "",
-                "status": -1,
-                "date": None,
-            }
-        else:
-            result[order_shoe.order_shoe_id] = {
-                "reportId": entity.report_id,
-                "status": entity.status,
-                "date": entity.submission_date,
-            }
-        result[order_shoe.order_shoe_id]["shoeRId"] = shoe.shoe_rid
+        order_shoe, shoe, status_obj, price_report = row
+        arr = [price_report]
+        if not price_report:
+            arr = []
+            for team in teams:
+                entity = UnitPriceReport(
+                    order_shoe_id=order_shoe.order_shoe_id, team=team, status=0
+                )
+                db.session.add(entity)
+                arr.append(entity)
+            status_obj.current_status_value = 1
+            db.session.flush()
+        for report in arr:
+            formatted_date = ""
+            if report.submission_date:
+                formatted_date = report.submission_date.strftime("%Y-%m-%d")
+            result.append(
+                {
+                    "reportId": report.report_id,
+                    "team": report.team,
+                    "status": report.status,
+                    "date": formatted_date,
+                    "orderShoeId": order_shoe.order_shoe_id,
+                    "shoeRId": shoe.shoe_rid,
+                }
+            )
+    db.session.commit()
     return result
 
 
