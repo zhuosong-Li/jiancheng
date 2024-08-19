@@ -139,32 +139,6 @@ class Material(db.Model):
         return f"<Material(material_id={self.material_id})>"
 
 
-class MaterialStorage(db.Model):
-    __tablename__ = "material_storage"
-    material_storage_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_id = db.Column(
-        db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=True
-    )
-    material_id = db.Column(
-        db.BigInteger, db.ForeignKey("material.material_id"), nullable=False
-    )
-    instock_amount = db.Column(db.Numeric(precision=10, scale=5), nullable=False)
-    current_amount = db.Column(db.Numeric(precision=10, scale=5), nullable=False)
-
-    material_specification = db.Column(db.String(20), nullable=True)
-    material_supplier = db.Column(
-        db.String(20), db.ForeignKey("supplier.supplier_id"), nullable=False
-    )
-    material_outsource_status = db.Column(db.String(1), nullable=True)
-    material_outsource_date = db.Column(db.Date, nullable=True)
-
-    def __repr__(self):
-        return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
-
-    def __name__(self):
-        return "MaterialStorage"
-
-
 class Event(db.Model):
     __tablename__ = "event"
     event_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
