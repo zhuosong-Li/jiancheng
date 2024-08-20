@@ -44,7 +44,7 @@
                             <el-button type="success" class="block-button"
                                 @click="openPreviewDialog(scope.row)">查看</el-button>
                             <el-button type="warning" class="block-button"
-                                @click="handleConfirm(scope.row)">提交</el-button>
+                                @click="handleSubmit(scope.row)">提交</el-button>
                             <el-button type="danger" class="block-button"
                                 @click="handleDelete(scope.row, scope.$index)">删除</el-button>
                         </el-button-group>
@@ -162,8 +162,11 @@ const openPreviewDialog = (rowData) => {
     currentReport.value = {...currentReport.value, ...rowData}
     previewVis.value = true
 }
-const handleConfirm = (e) => {
-    console.log(e)
+
+const handleSubmit = async (rowData) => {
+    console.log(rowData)
+    await axios.patch("http://localhost:8000/production/submitquantityreport", {"reportId": rowData.reportId})
+    window.location.reload()
 }
 
 const handleDelete = (row, index) => {

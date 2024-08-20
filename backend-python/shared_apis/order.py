@@ -20,8 +20,7 @@ order_bp = Blueprint("order_bp", __name__)
 
 @order_bp.route("/order/getordersinproduction", methods=["GET"])
 def get_orders_in_production():
-    status_vals = request.args.get("ordershoestatus")
-    status_arr = [int(number) for number in status_vals.split(",")]
+    status_val = request.args.get("ordershoestatus")
     response = (
         db.session.query(
             Order, func.max(OrderShoeStatus.current_status_value).label('status_value'), Customer
@@ -30,7 +29,8 @@ def get_orders_in_production():
         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
         .filter(
-            OrderShoeStatus.current_status.in_(status_arr)
+            OrderShoeStatus.current_status >= status_val,
+            OrderShoeStatus.current_status < 42
         )
         .group_by(Order.order_id)
         .all()
