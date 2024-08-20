@@ -26,7 +26,10 @@
                             <el-button type="success"
                                 @click="openPreviewDialog(scope.row)">预览</el-button>
                             <el-button type="warning"
-                                @click="handleConfirm(scope.row)">提交</el-button>
+                                @click="handleSubmit(scope.row)">提交</el-button>
+                        </el-button-group>
+                        <el-button-group v-if="scope.row.statusName === '已提交工价单'">
+                            <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
                         </el-button-group>
                     </template>
                 </el-table-column>
@@ -62,7 +65,7 @@ const taskData = ref([])
 onMounted(async () => {
     const params = {
         "orderId": props.orderId,
-        "line": "molding"
+        "teams": "成型"
     }
     const response = await axios.get("http://localhost:8000/production/getallordershoespricereports", { params })
     response.data.forEach(element => {
@@ -88,8 +91,12 @@ const openPreviewDialog = (rowData) => {
     currentRowData.value = rowData
     previewVis.value = true
 }
-const handleConfirm = (e) => {
-    console.log(e)
+const handleSubmit = async (rowData) => {
+    console.log(rowData)
+    const response = await axios.post("http://localhost:8000/production/submitpricereport", 
+    { "orderId": props.orderId, "orderShoeId": rowData.orderShoeId, "reportIdArr": [rowData.reportId] })
+    console.log(response)
+    window.location.reload()
 }
 const handleClose = (option) => {
     if (option === 0) createVis.value = false

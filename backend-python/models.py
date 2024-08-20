@@ -276,11 +276,6 @@ class OrderShoe(db.Model):
         return "OrderShoe"
 
 
-class OrderShoeProductionInfo(db.Model):
-    __tablename__ = "order_shoe_production_info"
-    production_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-
-
 class OutsourceInfo(db.Model):
     __tablename__ = "outsource_info"
 
@@ -504,16 +499,6 @@ class Supplier(db.Model):
 
     def __name__(self):
         return "Supplier"
-
-
-class UnitPrice(db.Model):
-    __tablename__ = "unit_price"
-    procedure_id = db.Column(db.BigInteger, primary_key=True)
-    creation_date = db.Column(db.Date, primary_key=True)
-    price = db.Column(db.Float, nullable=True)
-
-    def __repr__(self):
-        return f"<UnitPrice(procedure_id={self.procedure_id}, creation_date={self.creation_date})>"
 
 
 class UnitPriceReportDetail(db.Model):

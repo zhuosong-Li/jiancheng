@@ -1,8 +1,9 @@
-from app_config import app, db
-from constants import QUANTTIY_REPORT_REFERENCE
+from datetime import datetime
+
+from app_config import db
+from constants import END_OF_PRODUCTION_NUMBER, QUANTTIY_REPORT_REFERENCE
 from flask import Blueprint, jsonify, request
 from models import *
-from sqlalchemy.dialects.mysql import insert
 
 quantity_report_bp = Blueprint("quantity_report_bp", __name__)
 
@@ -39,12 +40,13 @@ def edit_quantity_report_detail():
     return jsonify({"message": "success"})
 
 
-@quantity_report_bp.route("/production/submitquantityreport", methods=["POST"])
+@quantity_report_bp.route("/production/submitquantityreport", methods=["PATCH"])
 def submit_quantity_report():
     data = request.get_json()
-    # row = QuantityReport.query.get(data["report_id"])
-    # row.status = 1
-    # db.session.commit()
+    report = QuantityReport.query.get(data["reportId"])
+    report.status = 1
+    report.submission_date = datetime.now().strftime("%Y-%m-%d")
+    db.session.commit()
     return jsonify({"message": "success"})
 
 
@@ -143,7 +145,8 @@ def get_all_order_shoes_quantity_reports():
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .filter(
             Order.order_id == order_id,
-            OrderShoeStatus.current_status == status_val,
+            OrderShoeStatus.current_status >= status_val,
+            OrderShoeStatus.current_status < END_OF_PRODUCTION_NUMBER
         )
         .all()
     )

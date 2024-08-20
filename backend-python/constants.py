@@ -1,16 +1,20 @@
 PRICE_REPORT_REFERENCE = {
-    "cutting": {
-        "teams": ["裁断"],
-        "status_number": 20
+    "裁断": {
+        "status_number": 20,
+        "operation_id": 79,
     },
-    "sewing": {
-        "teams": ["针车预备", "针车"],
-        "status_number": 27
+    "针车预备": {
+        "status_number": 27,
+        "operation_id": 93,
     },
-    "molding": {
-        "teams": ["成型"],
-        "status_number": 37
-    }
+    "针车": {
+        "status_number": 27,
+        "operation_id": 93,
+    },
+    "成型": {
+        "status_number": 37,
+        "operation_id": 113,
+    },
 }
 
 QUANTTIY_REPORT_REFERENCE = {
@@ -21,3 +25,4 @@ QUANTTIY_REPORT_REFERENCE = {
 }
 
 IN_PRODUCTION_ORDER_NUMBER = 9
+END_OF_PRODUCTION_NUMBER = 42
