@@ -68,13 +68,11 @@
 
           <el-row :gutter="20" style="margin-top: 20px">
             <el-col :span="24" :offset="0">
-              <el-table :data="materialPurchaseFilterData" border style="height: 500px">
+              <el-table :data="materialPurchaseFilterData" border style="height: 500px" v-loading="datafinished">
                 <el-table-column prop="warehouseName" label="仓库名称"></el-table-column>
                 <el-table-column prop="materialType" label="材料类型"></el-table-column>
                 <el-table-column prop="materialName" label="材料名称"></el-table-column>
-
                 <el-table-column prop="unit" label="单位"></el-table-column>
-                <el-table-column prop="factoryName" label="厂家名称"></el-table-column>
                 <el-table-column prop="addDate" label="添加日期"></el-table-column>
                 <el-table-column label="操作">
                   <template #default="scope">
@@ -86,7 +84,12 @@
             </el-col>
           </el-row>
           <el-row style="margin-top: 20px">
-            <el-col :span="3" :offset="18"
+            <el-col :span="6" :offset="0">
+              <el-pagination :total="1000" :page-size="10" @current-change="handleCurrentChange">
+
+              </el-pagination>
+            </el-col>
+            <el-col :span="3" :offset="12"
               ><el-button type="primary" size="default" @click="isAddNewMaterialTypeDialogVisible = true"
                 >添加新材料类型</el-button
               >
@@ -221,6 +224,14 @@
               </el-table>
             </el-col>
           </el-row>
+          <el-row :gutter="20">
+            <el-col :span="12" :offset="10">
+              <el-pagination :total="1000" :page-size="10" @current-change="handleCurrentChange">
+
+              </el-pagination>
+            </el-col>
+          </el-row>
+          
         </el-tab-pane>
       </el-tabs></el-col
     >
@@ -335,9 +346,11 @@
 
 <script>
 import { Search } from '@element-plus/icons-vue'
+import axios from 'axios'
 export default {
   data() {
     return {
+      datafinished: true,
       newMaterialTypeForm: {
         materialType: '',
         warehouseName: ''
@@ -379,7 +392,15 @@ export default {
       ]
     }
   },
+  mounted() {
+    this.getMaterialTypeData()
+  },
   methods: {
+    async getMaterialTypeData() {
+      const response = await axios.get('http://localhost:8000/logistics/allmaterialtypes')
+      this.materialPurchaseFilterData = response.data
+      this.datafinished = false
+    },
     openNewMaterialDialog() {
       this.newMaterialVis = true
     },

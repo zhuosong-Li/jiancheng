@@ -124,6 +124,7 @@ class Material(db.Model):
     material_name = db.Column(db.String(60), nullable=False)
     material_type = db.Column(db.String(30), nullable=False)
     material_unit = db.Column(db.String(4), nullable=True)
+    material_supplier = db.Column(db.Integer, nullable=False)
     warehouse_id = db.Column(
         db.Integer,
         db.ForeignKey("material_warehouse.material_warehouse_id"),
@@ -165,7 +166,6 @@ class MaterialStorage(db.Model):
     inbound_amount = db.Column(db.DECIMAL(10, 5))
     current_amount = db.Column(db.DECIMAL(10, 5), nullable=False)
     material_specification = db.Column(db.String(40), nullable=False)
-    material_supplier = db.Column(db.Integer, nullable=False)
     material_outsource_status = db.Column(db.CHAR(1), default="0", nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
 
@@ -493,6 +493,7 @@ class Supplier(db.Model):
     __tablename__ = "supplier"
     supplier_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     supplier_name = db.Column(db.String(50), nullable=False)
+    supplier_type = db.Column(db.String(1), nullable=False)
 
     def __repr__(self):
         return f"<Supplier(supplier_id={self.supplier_id})>"
