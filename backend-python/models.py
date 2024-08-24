@@ -245,6 +245,7 @@ class OrderShoeBatchInfo(db.Model):
     pre_sewing_amount = db.Column(db.Integer, nullable=True)
     sewing_amount = db.Column(db.Integer, nullable=True)
     molding_amount = db.Column(db.Integer, nullable=True)
+    size_34_amount = db.Column(db.Integer, nullable=True)
     size_35_amount = db.Column(db.Integer, nullable=True)
     size_36_amount = db.Column(db.Integer, nullable=True)
     size_37_amount = db.Column(db.Integer, nullable=True)
@@ -477,6 +478,34 @@ class ShoePart(db.Model):
         return "ShoePart"
 
 
+class ShoeInboundRecord(db.Model):
+    __tablename__ = "shoe_inbound_record"
+    shoe_inbound_record_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
+    shoe_inbound_rid = db.Column(db.String(60))
+    inbound_amount = db.Column(db.Integer)
+    inbound_date = db.Column(db.Date, nullable=False)
+    inbound_type = db.Column(db.CHAR(1), nullable=False, default="P")
+    semifinished_shoe_storage_id = db.Column(db.BigInteger)
+    finished_shoe_storage_id = db.Column(db.BigInteger)
+
+
+class ShoeOutboundRecord(db.Model):
+    __tablename__ = "shoe_outbound_record"
+    shoe_outbound_record_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
+    shoe_outbound_rid = db.Column(db.String(60))
+    outbound_amount = db.Column(db.Integer)
+    outbound_date = db.Column(db.Date, nullable=False)
+    outbound_address = db.Column(db.String(100))
+    outbound_department = db.Column(db.CHAR(1))
+    outbound_type = db.Column(db.CHAR(1), nullable=False, default="P")
+    semifinished_shoe_storage_id = db.Column(db.BigInteger)
+    finished_shoe_storage_id = db.Column(db.BigInteger)
+
+
 class Staff(db.Model):
     __tablename__ = "staff"
     staff_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -506,6 +535,67 @@ class Supplier(db.Model):
 
     def __name__(self):
         return "Supplier"
+
+
+class SizeMaterialStorage(db.Model):
+    __tablename__ = "size_material_storage"
+
+    size_material_storage_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
+    size_material_specification = db.Column(db.String(40), nullable=False)
+
+    # Estimated inbound amounts
+    size_34_estimated_inbound_amount = db.Column(db.Integer)
+    size_35_estimated_inbound_amount = db.Column(db.Integer)
+    size_36_estimated_inbound_amount = db.Column(db.Integer)
+    size_37_estimated_inbound_amount = db.Column(db.Integer)
+    size_38_estimated_inbound_amount = db.Column(db.Integer)
+    size_39_estimated_inbound_amount = db.Column(db.Integer)
+    size_40_estimated_inbound_amount = db.Column(db.Integer)
+    size_41_estimated_inbound_amount = db.Column(db.Integer)
+    size_42_estimated_inbound_amount = db.Column(db.Integer)
+    size_43_estimated_inbound_amount = db.Column(db.Integer)
+    size_44_estimated_inbound_amount = db.Column(db.Integer)
+    size_45_estimated_inbound_amount = db.Column(db.Integer)
+    size_46_estimated_inbound_amount = db.Column(db.Integer)
+
+    # Actual inbound amounts
+    size_34_actual_inbound_amount = db.Column(db.Integer)
+    size_35_actual_inbound_amount = db.Column(db.Integer)
+    size_36_actual_inbound_amount = db.Column(db.Integer)
+    size_37_actual_inbound_amount = db.Column(db.Integer)
+    size_38_actual_inbound_amount = db.Column(db.Integer)
+    size_39_actual_inbound_amount = db.Column(db.Integer)
+    size_40_actual_inbound_amount = db.Column(db.Integer)
+    size_41_actual_inbound_amount = db.Column(db.Integer)
+    size_42_actual_inbound_amount = db.Column(db.Integer)
+    size_43_actual_inbound_amount = db.Column(db.Integer)
+    size_44_actual_inbound_amount = db.Column(db.Integer)
+    size_45_actual_inbound_amount = db.Column(db.Integer)
+    size_46_actual_inbound_amount = db.Column(db.Integer)
+
+    # Current amounts
+    size_34_current_amount = db.Column(db.Integer)
+    size_35_current_amount = db.Column(db.Integer)
+    size_36_current_amount = db.Column(db.Integer)
+    size_37_current_amount = db.Column(db.Integer)
+    size_38_current_amount = db.Column(db.Integer)
+    size_39_current_amount = db.Column(db.Integer)
+    size_40_current_amount = db.Column(db.Integer)
+    size_41_current_amount = db.Column(db.Integer)
+    size_42_current_amount = db.Column(db.Integer)
+    size_43_current_amount = db.Column(db.Integer)
+    size_44_current_amount = db.Column(db.Integer)
+    size_45_current_amount = db.Column(db.Integer)
+    size_46_current_amount = db.Column(db.Integer)
+
+    material_outsource_status = db.Column(db.CHAR(1), default="")
+    material_outsource_date = db.Column(db.Date)
+    material_id = db.Column(db.BigInteger, nullable=False)
+    size_storage_type = db.Column(db.CHAR(1), nullable=False, default="E")
+    size_material_color = db.Column(db.Integer)
+    order_shoe_id = db.Column(db.BigInteger)
 
 
 class UnitPriceReportDetail(db.Model):
