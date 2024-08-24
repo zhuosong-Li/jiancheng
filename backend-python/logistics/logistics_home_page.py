@@ -9,9 +9,9 @@ logistics_home_page_bp = Blueprint("logistics_home_page_bp", __name__)
 
 @logistics_home_page_bp.route("/logistics/task", methods=["GET"])
 def get_task():
-    tastStatus = request.args.get("taskstatus")
-    shoeStatus = request.args.get("shoestatus")
-    taskName = ""
+    task_status = request.args.get("taskstatus")
+    shoe_status = request.args.get("shoestatus")
+    task_name = ""
     
     query = (
         db.session.query(Order, OrderShoe, OrderShoeStatus, OrderShoeStatusReference)
@@ -21,11 +21,11 @@ def get_task():
             OrderShoeStatusReference,
             OrderShoeStatus.current_status == OrderShoeStatusReference.status_id,
         )
-        .filter(OrderShoeStatus.current_status_value == tastStatus)
+        .filter(OrderShoeStatus.current_status_value == task_status)
     )
 
-    if shoeStatus != "all":
-        query = query.filter(OrderShoeStatus.current_status == int(shoeStatus))
+    if shoe_status != "all":
+        query = query.filter(OrderShoeStatus.current_status == int(shoe_status))
     else:
         # If "all", we need to check for statuses 6 or 13
         query = query.filter(OrderShoeStatus.current_status.in_([6, 13]))
@@ -40,14 +40,14 @@ def get_task():
         # Determine taskName based on current_status if not already set for this order
         if order_id not in unique_orders:
             if row.OrderShoeStatus.current_status == 6:
-                taskName = "一次采购订单生成"
+                task_name = "一次采购订单生成"
             elif row.OrderShoeStatus.current_status == 13:
-                taskName = "二次采购订单生成"
+                task_name = "二次采购订单生成"
             else:
-                taskName = ""  # Default or any other logic
+                task_name = ""  # Default or any other logic
             
             unique_orders[order_id] = {
-                "taskName": taskName,
+                "taskName": task_name,
                 "orderId": row.Order.order_rid,
                 "createTime": row.Order.start_date.isoformat(),
             }

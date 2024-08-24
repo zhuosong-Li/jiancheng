@@ -23,6 +23,7 @@ class BomItem(db.Model):
     )
     remark = db.Column(db.String(100), nullable=True)
     bom_id = db.Column(db.BigInteger, db.ForeignKey("bom.bom_id"), nullable=False)
+    bom_item_color = db.Column(db.Integer, db.ForeignKey("color.color_id"), nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -122,23 +123,27 @@ class Material(db.Model):
     __tablename__ = "material"
     material_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     material_name = db.Column(db.String(60), nullable=False)
-    material_type = db.Column(db.String(30), nullable=False)
+    material_type_id = db.Column(db.BigInteger, nullable=False)
     material_unit = db.Column(db.String(4), nullable=True)
     material_supplier = db.Column(db.Integer, nullable=False)
-    warehouse_id = db.Column(
-        db.Integer,
-        db.ForeignKey("material_warehouse.material_warehouse_id"),
-        nullable=False,
-    )
     shoe_part_id = db.Column(
         db.Integer, db.ForeignKey("shoe_part.shoe_part_id"), nullable=False
     )
     material_creation_date = db.Column(db.Date, nullable=True)
-    material_color = db.Column(db.Integer, db.ForeignKey("color.color_id"))
 
     def __repr__(self):
         return f"<Material(material_id={self.material_id})>"
 
+class MaterialType(db.Model):
+    __tablename__ = "material_type"
+    material_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    material_type_name = db.Column(db.String(50), nullable=False)
+    warehouse_id = db.Column(db.Integer, db.ForeignKey("material_warehouse.material_warehouse_id"), nullable=False)
+    def __repr__(self):
+        return f"<MaterialType(material_type_id={self.material_type_id})>"
+
+    def __name__(self):
+        return "MaterialType"
 
 class Event(db.Model):
     __tablename__ = "event"
@@ -168,6 +173,7 @@ class MaterialStorage(db.Model):
     material_specification = db.Column(db.String(40), nullable=False)
     material_outsource_status = db.Column(db.CHAR(1), default="0", nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
+    material_storage_color = db.Column(db.Integer, db.ForeignKey("color.color_id"))
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
