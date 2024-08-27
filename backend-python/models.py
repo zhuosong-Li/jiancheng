@@ -141,6 +141,7 @@ class MaterialType(db.Model):
     __tablename__ = "material_type"
     material_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     material_type_name = db.Column(db.String(50), nullable=False)
+    material_category = db.Column(db.SmallInteger, nullable=False, default=0)
     warehouse_id = db.Column(
         db.Integer,
         db.ForeignKey("material_warehouse.material_warehouse_id"),
@@ -709,8 +710,8 @@ class FinishedShoeStorage(db.Model):
 class InboundRecord(db.Model):
     __tablename__ = "inbound_record"
     inbound_record_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    inbound_rid = db.Column(db.String(50), nullable=False)
-    inbound_amount = db.Column(db.Integer, nullable=True)
+    inbound_rid = db.Column(db.String(50), nullable=True)
+    inbound_amount = db.Column(db.DECIMAL(10, 5))
     size_34_inbound_amount = db.Column(db.Integer, nullable=True)
     size_35_inbound_amount = db.Column(db.Integer, nullable=True)
     size_36_inbound_amount = db.Column(db.Integer, nullable=True)
@@ -745,7 +746,7 @@ class OutboundRecord(db.Model):
     __tablename__ = "outbound_record"
     outbound_record_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     outbound_rid = db.Column(db.String(60), nullable=False)
-    outbound_amount = db.Column(db.Integer, nullable=True)
+    outbound_amount = db.Column(db.DECIMAL(10, 5))
     size_34_outbound_amount = db.Column(db.Integer, nullable=True)
     size_35_outbound_amount = db.Column(db.Integer, nullable=True)
     size_36_outbound_amount = db.Column(db.Integer, nullable=True)
