@@ -7,7 +7,6 @@ from logistics.supplier_page import supplier_page_bp
 from logistics.warehouse_page import warehouse_page_bp
 from logistics.material_page import material_page_bp
 from production.production_manager import production_manager_bp
-from warehouse.warehouse_manager import warehouse_manager_bp
 from logistics.assets_purchase_page import assets_purchase_page_bp
 from shared_apis.color import color_bp
 from logistics.first_bom import first_bom_bp
@@ -18,6 +17,10 @@ from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
 from development.shoe_manage import shoe_manage_bp
 from development.dev_producion_order import dev_producion_order_bp
+from warehouse.material_storage import material_storage_bp
+from warehouse.semifinished_storage import semifinished_storage_bp
+from warehouse.finished_storage import finished_storage_bp
+from shared_apis.message import message_bp
 
 
 def register_blueprints():
@@ -29,7 +32,6 @@ def register_blueprints():
     app.register_blueprint(warehouse_page_bp)
     app.register_blueprint(material_page_bp)
     app.register_blueprint(production_manager_bp)
-    app.register_blueprint(warehouse_manager_bp)
     app.register_blueprint(assets_purchase_page_bp)
     app.register_blueprint(color_bp)
     app.register_blueprint(department_bp)
@@ -41,3 +43,7 @@ def register_blueprints():
     app.register_blueprint(shoe_manage_bp)
     app.register_blueprint(dev_producion_order_bp)
 
+    app.register_blueprint(material_storage_bp)
+    app.register_blueprint(semifinished_storage_bp)
+    app.register_blueprint(finished_storage_bp)
+    app.register_blueprint(message_bp)

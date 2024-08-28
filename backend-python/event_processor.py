@@ -255,14 +255,14 @@ class EventProcessor:
 
     def validateEvent(self, event):
         ### TODO
-        return event.operation_id < 122 and event.operation_id >= 0 
+        return event.operation_id < 122 and event.operation_id >= 0
 
-    def operationSubjectExists(self, event, operation, current_status = None):
+    def operationSubjectExists(self, event, operation, current_status=None):
         ### check if order/ordershoe id with specified status exists
-        '''
+        """
         when current status isn't None, checks if an entity with specified current
         status exists, otherwise checks with id.
-        '''
+        """
         if operation.operation_type == 1:
             query_db = OrderStatus
             attr_name = "order_id"
@@ -271,12 +271,14 @@ class EventProcessor:
             query_db = OrderShoeStatus
             attr_name = "order_shoe_id"
             attr_query_subject = event.event_order_shoe_id
-        
+
         if current_status:
             entity = (
                 db.session.query(query_db)
-                .filter(getattr(query_db, attr_name) == attr_query_subject,
-                        getattr(query_db, "current_status") == current_status)
+                .filter(
+                    getattr(query_db, attr_name) == attr_query_subject,
+                    getattr(query_db, "current_status") == current_status,
+                )
                 .first()
             )
         else:
@@ -288,26 +290,6 @@ class EventProcessor:
         result = entity != None
         return result
 
-    
-
-    def processEvent(self, event):
-        if self.validateEvent(event):
-            operation = self.dbQueryOperation(event.operation_id)
-            if self.operationSubjectExists(event, operation):
-                operationType = operation.operation_type
-                if operationType == 1:
-                    result = self.processOrderEvent(event, operation)
-                # operation type is 2
-                else:
-                    result = self.processOrderShoeEvent(event, operation)
-            else:
-                print("OrderID or OrderShoeId doesnt Exist")
-                result = False
-        else:
-            print("Event Not valid, Operation ID out of Bound")
-            result = False
-        return result
-    
     def processOrderShoeEvent(self, event, operation):
         orderShoeId = event.event_order_shoe_id
         curStat, curVal = self.dbQueryOrderShoeStatus(orderShoeId)
@@ -330,7 +312,9 @@ class EventProcessor:
                 result = self.dbSetOrderShoeStatus(event, operation)
             else:
                 # modifying existing status
-                nextStatus = self.getNextShoeStatus(curStat, curVal, operation, event.event_order_shoe_id)
+                nextStatus = self.getNextShoeStatus(
+                    curStat, curVal, operation, event.event_order_shoe_id
+                )
                 result = self.dbSetOrderShoeStatus(
                     event, operation, next_status=nextStatus
                 )
@@ -340,13 +324,33 @@ class EventProcessor:
             print("Modifying an non exist status or existing status with a wrong value")
             result = False
         return result
-    
+
+    def processEvent(self, event):
+        if self.validateEvent(event):
+            operation = self.dbQueryOperation(event.operation_id)
+            if self.operationSubjectExists(event, operation):
+                operationType = operation.operation_type
+                if operationType == 1:
+                    result = self.processOrderEvent(event, operation)
+                # operation type is 2
+                else:
+                    result = self.processOrderShoeEvent(event, operation)
+            else:
+                raise Exception("OrderID or OrderShoeId doesnt Exist")
+        else:
+            raise Exception("Event Not valid, Operation ID out of Bound")
+        return result
+
     def processRejectEvent(self, event, current_status):
         if self.validateEvent(event):
             operation = self.dbQueryOperation(event.operation_id)
             if operation.operation_type == 2:
-                if self.operationSubjectExists(event, operation, current_status = current_status):
-                    result = self.setOrderShoeRejectStatus(event, operation, current_status)
+                if self.operationSubjectExists(
+                    event, operation, current_status=current_status
+                ):
+                    result = self.setOrderShoeRejectStatus(
+                        event, operation, current_status
+                    )
                 else:
                     result = False
                     print("OrderShoeStatus with current_status Doesnt exist in DB")
@@ -359,11 +363,14 @@ class EventProcessor:
         return result
 
     def setOrderShoeRejectStatus(event, operation, current_status):
-        entity = (db.session.query(OrderShoeStatus)
-                  .filter(OrderShoeStatus.current_status == current_status,
-                  OrderShoeStatus.order_shoe_id == event.event_order_shoe_id)
-                  .first()
-                  )
+        entity = (
+            db.session.query(OrderShoeStatus)
+            .filter(
+                OrderShoeStatus.current_status == current_status,
+                OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
+            )
+            .first()
+        )
         entity.current_status = operation.operation_modified_status
         entity.current_status_value = operation.operation_modified_value
         db.session.commit()
@@ -378,13 +385,13 @@ class EventProcessor:
                     for prev in self.orderShoeStatusidToNode[next_status[0]].getPrev()
                 ]
                 if self.isMerge(next_status[0]):
-                    print('YES ITS MERGE')
+                    print("YES ITS MERGE")
                     print(prevStatus)
                     entities = (
                         db.session.query(OrderShoeStatus)
                         .filter(
                             OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
-                            OrderShoeStatus.current_status.in_(prevStatus)
+                            OrderShoeStatus.current_status.in_(prevStatus),
                         )
                         .all()
                     )
@@ -416,17 +423,19 @@ class EventProcessor:
                 if prevStatus in next_status:
                     next_status.remove(prevStatus)
                     newEntity = OrderShoeStatus(
-                        order_shoe_id = event.event_order_shoe_id,
-                        current_status = next_status[0],
-                        current_status_value = 0
+                        order_shoe_id=event.event_order_shoe_id,
+                        current_status=next_status[0],
+                        current_status_value=0,
                     )
                     db.session.add(newEntity)
                     prevEntity = (
                         db.session.query(OrderShoeStatus)
                         .filter(
                             OrderShoeStatus.order_shoe_id == event.event_order_shoe_id,
-                            OrderShoeStatus.current_status == prevStatus
-                        ).first())
+                            OrderShoeStatus.current_status == prevStatus,
+                        )
+                        .first()
+                    )
                     prevEntity.current_status_value = operation.operation_modified_value
                 else:
                     entity = (
@@ -471,12 +480,16 @@ class EventProcessor:
             result = []
             for next in next_ids:
                 if self.isMerge(next):
-                    prev_ids  = [prev.getVal().getId() for prev in self.orderShoeStatusidToNode[next].getPrev()]
+                    prev_ids = [
+                        prev.getVal().getId()
+                        for prev in self.orderShoeStatusidToNode[next].getPrev()
+                    ]
                     prev_ids.remove(modified_status)
                     entity = (
-                        db.session.query(OrderShoeStatus)
-                        .filter(OrderShoeStatus.order_shoe_id == order_shoe_id,
-                                OrderShoeStatus.current_status == prev_ids[0])
+                        db.session.query(OrderShoeStatus).filter(
+                            OrderShoeStatus.order_shoe_id == order_shoe_id,
+                            OrderShoeStatus.current_status == prev_ids[0],
+                        )
                     ).first()
                     print(entity)
                     if entity.current_status_value == 2:
@@ -493,12 +506,16 @@ class EventProcessor:
             ### if it's merge
             next_id = cur_node.getNext()[0].getVal().getId()
             if self.isMerge(next_id):
-                prev_ids  = [prev.getVal().getId() for prev in self.orderShoeStatusidToNode[next_id].getPrev()]
+                prev_ids = [
+                    prev.getVal().getId()
+                    for prev in self.orderShoeStatusidToNode[next_id].getPrev()
+                ]
                 prev_ids.remove(modified_status)
                 entity = (
-                    db.session.query(OrderShoeStatus)
-                    .filter(OrderShoeStatus.order_shoe_id == order_shoe_id,
-                            OrderShoeStatus.current_status == prev_ids[0])
+                    db.session.query(OrderShoeStatus).filter(
+                        OrderShoeStatus.order_shoe_id == order_shoe_id,
+                        OrderShoeStatus.current_status == prev_ids[0],
+                    )
                 ).first()
                 if entity.current_status_value == 2:
                     result = [next_id]
@@ -537,38 +554,39 @@ class EventProcessor:
         else:
             idResult = None
         return idResult
-## test
+
+    ## test
 
     def processOrderEvent(self, event, operation):
-            orderId = event.event_order_id
-            modifiedValue = operation.operation_modified_value
-            modifiedStatus = operation.operation_modified_status
-            orderStatus, statusVal = self.dbQueryOrderStatus(orderId)
-            ### check operation valid
-            if orderStatus == modifiedStatus and (modifiedValue - statusVal == 1):
-                if modifiedValue == 2:
-                    ### set status to next ,
-                    curStat = modifiedStatus
-                    nextStatus = self.getNextOrderStatus(curStat)
-                    if nextStatus:
-                        print("next status is " + str(nextStatus))
-                        result = self.dbSetOrderStatus(
-                            event, operation, next_status=nextStatus
-                        )
-                    else:
-                        print("Order Completed, Event not executed")
-                        result = False
+        orderId = event.event_order_id
+        modifiedValue = operation.operation_modified_value
+        modifiedStatus = operation.operation_modified_status
+        orderStatus, statusVal = self.dbQueryOrderStatus(orderId)
+        ### check operation valid
+        if orderStatus == modifiedStatus and (modifiedValue - statusVal == 1):
+            if modifiedValue == 2:
+                ### set status to next ,
+                curStat = modifiedStatus
+                nextStatus = self.getNextOrderStatus(curStat)
+                if nextStatus:
+                    print("next status is " + str(nextStatus))
+                    result = self.dbSetOrderStatus(
+                        event, operation, next_status=nextStatus
+                    )
                 else:
-                    ### set status to operation value
-                    result = self.dbSetOrderStatus(event, operation)
-
-                ### TODO INSERT EVENT INTO DB
-                # self.dbInsertEvent(event)
+                    print("Order Completed, Event not executed")
+                    result = False
             else:
-                print("Order status doesnt match operation status, Event Invalid")
-                result = False
-            return result
-    
+                ### set status to operation value
+                result = self.dbSetOrderStatus(event, operation)
+
+            ### TODO INSERT EVENT INTO DB
+            # self.dbInsertEvent(event)
+        else:
+            print("Order status doesnt match operation status, Event Invalid")
+            result = False
+        return result
+
     def dbSetOrderStatus(self, event, operation, next_status=None):
         entity = (
             db.session.query(OrderStatus)
@@ -582,7 +600,6 @@ class EventProcessor:
             entity.order_status_value = 0
         db.session.commit()
         return True
-    
 
     def getNextOrderStatus(self, currentstatus):
         return self.orderStatusidToNode[currentstatus].getNext().getVal().getId()

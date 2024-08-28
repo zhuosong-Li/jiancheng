@@ -1,7 +1,7 @@
 from app_config import db
 import enum
 from sqlalchemy import Enum
-
+from datetime import datetime
 
 class ProductionTeam(enum.Enum):
     CUTTING = "裁断"
@@ -89,6 +89,19 @@ class Customer(db.Model):
 
     def __repr__(self):
         return f"<Customer(customer_id={self.customer_id})>"
+    
+
+class Message(db.Model):
+    __tablename__ = 'message'
+    message_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    sender_id = db.Column(db.Integer, nullable=False, index=True)
+    receiver_id = db.Column(db.Integer, nullable=False, index=True)
+    content = db.Column(db.String(100), nullable=True)
+    send_datetime = db.Column(db.DateTime)
+    is_viewed = db.Column(db.Boolean, nullable=False, default=False)
+    
+    def __repr__(self):
+        return f'<Message {self.message_id}>'
 
 
 class QuantityReportItem(db.Model):
@@ -525,11 +538,12 @@ class SemifinishedShoeStorage(db.Model):
     semifinished_shoe_id = db.Column(
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
-    semifinished_inbound_date = db.Column(db.Date, nullable=False)
+    semifinished_inbound_datetime = db.Column(db.DateTime)
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
-    semifinished_amount = db.Column(db.Integer)
+    semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
     semifinished_type = db.Column(db.String(1), nullable=False)
-    semifinished_status = db.Column(db.String(1))
+    semifinished_status = db.Column(db.SmallInteger)
+    semifinished_object = db.Column(db.SmallInteger)
 
 
 class Shoe(db.Model):
@@ -554,7 +568,7 @@ class ShoeInboundRecord(db.Model):
     )
     shoe_inbound_rid = db.Column(db.String(60), nullable=True)
     inbound_amount = db.Column(db.Integer, nullable=True)
-    inbound_date = db.Column(db.Date, nullable=False)
+    inbound_datetime = db.Column(db.DateTime, nullable=False)
     inbound_type = db.Column(
         db.CHAR(1), nullable=False, default="P", comment="P: 自产\nO: 外包"
     )
@@ -575,7 +589,7 @@ class ShoeOutboundRecord(db.Model):
     )
     shoe_outbound_rid = db.Column(db.String(60), nullable=True)
     outbound_amount = db.Column(db.Integer, nullable=True)
-    outbound_date = db.Column(db.Date, nullable=False)
+    outbound_datetime = db.Column(db.DateTime, nullable=False)
     outbound_address = db.Column(db.String(100), nullable=True)
     outbound_type = db.Column(
         db.CHAR(1), nullable=False, default="P", comment="P: 自产\nO: 外包"
@@ -748,14 +762,15 @@ class MaterialWarehouse(db.Model):
 class FinishedShoeStorage(db.Model):
     __tablename__ = "finished_shoe_storage"
     finished_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    finished_inbound_date = db.Column(db.Date, nullable=False)
+    finished_inbound_datetime = db.Column(db.DateTime, nullable=False)
     order_shoe_id = db.Column(
         db.BigInteger,
     )
     finished_amount = db.Column(db.Integer, nullable=False)
     finished_type = db.Column(db.CHAR(1), nullable=False)
     finished_status = db.Column(
-        db.CHAR(1), nullable=True, comment="0：未发货\n1：已发货"
+        db.SmallInteger,
+        nullable=True,
     )
 
 
@@ -777,7 +792,7 @@ class InboundRecord(db.Model):
     size_44_inbound_amount = db.Column(db.Integer, nullable=True)
     size_45_inbound_amount = db.Column(db.Integer, nullable=True)
     size_46_inbound_amount = db.Column(db.Integer, nullable=True)
-    inbound_date = db.Column(db.Date, nullable=False)
+    inbound_datetime = db.Column(db.DateTime, nullable=False)
     inbound_type = db.Column(db.String(1), nullable=False)
     material_storage_id = db.Column(
         db.BigInteger,
@@ -795,7 +810,7 @@ class InboundRecord(db.Model):
 class OutboundRecord(db.Model):
     __tablename__ = "outbound_record"
     outbound_record_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    outbound_rid = db.Column(db.String(60), nullable=False)
+    outbound_rid = db.Column(db.String(60))
     outbound_amount = db.Column(db.DECIMAL(10, 5))
     size_34_outbound_amount = db.Column(db.Integer, nullable=True)
     size_35_outbound_amount = db.Column(db.Integer, nullable=True)
@@ -810,7 +825,7 @@ class OutboundRecord(db.Model):
     size_44_outbound_amount = db.Column(db.Integer, nullable=True)
     size_45_outbound_amount = db.Column(db.Integer, nullable=True)
     size_46_outbound_amount = db.Column(db.Integer, nullable=True)
-    outbound_date = db.Column(db.Date, nullable=False)
+    outbound_datetime = db.Column(db.DateTime, nullable=False)
     outbound_type = db.Column(db.String(1), nullable=False)
     outbound_department = db.Column(db.String(1), nullable=True)
     picker = db.Column(db.String(15), nullable=True)
