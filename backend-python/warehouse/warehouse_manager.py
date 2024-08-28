@@ -188,10 +188,10 @@ def get_size_material_info_by_id():
             'internalSize': info["internal_size"],
             'externalSize': info["external_size"],
             "predictQuantity": getattr(
-                response, f"size_{info["shoe_size"]}_estimated_inbound_amount"
+                response, f"size_{info['shoe_size']}_estimated_inbound_amount"
             ),
-            "actualQuantity": getattr(response, f"size_{info["shoe_size"]}_actual_inbound_amount"),
-            "currentQuantity": getattr(response, f"size_{info["shoe_size"]}_current_amount"),
+            "actualQuantity": getattr(response, f"size_{info['shoe_size']}_actual_inbound_amount"),
+            "currentQuantity": getattr(response, f"size_{info['shoe_size']}_current_amount"),
         }
         result.append(obj)
     return result

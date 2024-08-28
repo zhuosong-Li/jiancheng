@@ -8,6 +8,8 @@ from logistics.warehouse_page import warehouse_page_bp
 from logistics.material_page import material_page_bp
 from production.production_manager import production_manager_bp
 from warehouse.warehouse_manager import warehouse_manager_bp
+from logistics.assets_purchase_page import assets_purchase_page_bp
+from shared_apis.color import color_bp
 
 
 def register_blueprints():
@@ -20,3 +22,6 @@ def register_blueprints():
     app.register_blueprint(material_page_bp)
     app.register_blueprint(production_manager_bp)
     app.register_blueprint(warehouse_manager_bp)
+    app.register_blueprint(assets_purchase_page_bp)
+    app.register_blueprint(color_bp)
+
