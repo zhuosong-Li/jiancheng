@@ -10,3 +10,10 @@ order_shoe_id,shoe_id,order_id,customer_product_name
 9,2,4,order_4_test_2
 10,3,4,order_4_test_3
 11,4,4,order_4_test_4
+16,1,8,VRA
+17,1,8,VRA-2
+18,1,10,TEST-1-SCRUM51
+19,2,10,TEST-2-SCRUM51
+20,3,10,TEST-3-SCRUM51
+21,3,10,TEST-4-SCRUM51
+22,4,10,TEST-5-SCRUM51

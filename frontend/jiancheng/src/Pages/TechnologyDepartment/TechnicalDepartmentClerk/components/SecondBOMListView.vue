@@ -2,108 +2,63 @@
     <el-row :gutter="20">
         <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">二次BOM填写</el-col>
     </el-row>
-    <component :is="currentDash" :pendingTaskData="textData" :inProgressTaskData="textData2" @backToList="changeToList"
+    <component :is="components[currentDash]" :pendingTaskData="pendingData" :inProgressTaskData="inProgressData" @backToList="changeToList"
     @changeToPend="changeToPend" @changeToProgress="changeToProgress">
     </component>
 </template>
-<script>
+<script setup>
+import {onMounted, ref} from 'vue';
+import axios from 'axios';
+
 import { Grid, Memo } from '@element-plus/icons-vue'
 import SecondBOMList from './SecondBOMCreate/SecondBOMList.vue'
 import SecondOrderPend from './SecondBOMCreate/SecondBOMListPend.vue'
 import SecondOrderProgress from './SecondBOMCreate/SecondBOMListProgress.vue'
 
-export default {
-    components: {
-        SecondBOMList,
-        SecondOrderPend,
-        SecondOrderProgress
-    },
-    data() {
-        return {
-            Grid,
-            Memo,
-            currentDash: 'SecondBOMList',
-            textData: [{
-                taskName: "二次BOM填写",
-                orderId: "K24-024 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-025 2111622",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            ],
-            textData2: [{
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111628",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            ],
-        }
-    },
-    methods: {
-        changeToList() {
-            this.currentDash = 'SecondBOMList'
-        },
-        changeToPend() {
-            this.currentDash = 'SecondOrderPend'
-        },
-        changeToProgress() {
-            console.log(this.currentDash)
-            this.currentDash = 'SecondOrderProgress'
-        }
 
-    }
+const components = {
+    SecondBOMList,
+    SecondOrderPend,
+    SecondOrderProgress
 }
+const pendingData = ref([])
+const inProgressData = ref([])
+onMounted(()=> {
+    const params = {
+        orderstatus: 9,
+        ordershoestatus: 11
+    };
+    axios.get("http://localhost:8000/order/getorderbystatus", { params }).then(response => {
+        const fetchPending = response.data.pendingOrders
+        const fetchInProgress = response.data.inProgressOrders
+        console.log("fetchPending is ")
+        console.log(response.data.pendingData)
+        fetchPending.forEach(element => {
+            element['taskName'] = "一次BOM填写"
+            pendingData.value.push(element)
+        });
+        console.log(pendingData.value)
+        console.log(5)
+        fetchInProgress.forEach(element => {
+            element['taskName'] = "一次BOM填写"
+            inProgressData.value.push(element)
+        });
+    })
+
+})
+
+const currentDash = ref('SecondBOMList')
+
+const changeToList = () => {
+    currentDash.value = 'SecondBOMList'
+}
+const changeToPend = () => {
+    currentDash.value = 'SecondOrderPend'
+}
+const changeToProgress = ()=> {
+    currentDash.value = 'SecondOrderProgress'
+}
+
 </script>
+
 <style></style>

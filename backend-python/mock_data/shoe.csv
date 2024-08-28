@@ -3,3 +3,12 @@ shoe_id,shoe_rid,shoe_image_url
 2,2_rid,test_url_2
 3,3_rid,test_url_3
 4,4_rid,test_url_4
+5,5_rid,test_url_5
+6,6_rid,test_url_6
+7,7_rid,test_url_7
+8,"8_rid
+",test_url_8
+9,9_rid,test_url_9
+10,10_rid,test_url_10
+11,11_rid,test_url_10
+12,12_rid,test_url_11

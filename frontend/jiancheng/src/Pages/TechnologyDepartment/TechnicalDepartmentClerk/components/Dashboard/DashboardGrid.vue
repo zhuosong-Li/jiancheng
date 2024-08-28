@@ -12,11 +12,11 @@
                         {{ getPendingItem(colIndex).taskName }}
                     </div>
                 </template>
-                <div>订单号：{{ getPendingItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getPendingItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getPendingItem(colIndex).createTime }}</div>
-                <div>前序流程下发时间：{{ getPendingItem(colIndex).prevTime }}</div>
-                <div>前序处理部门：{{ getPendingItem(colIndex).prevDepart }}</div>
-                <div>前序处理人：{{ getPendingItem(colIndex).prevUser }}</div>
+                <div>订单截止时间：{{ getPendingItem(colIndex).createTime }}</div>
+                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
+                <div>鞋型数量：{{ getPendingItem(colIndex).orderShoeCount }}</div>
             </el-card>
 
         </el-col>
@@ -40,11 +40,11 @@
                         <span>{{ getinProgressItem(colIndex).taskName }}</span>
                     </div>
                 </template>
-                <div>订单号：{{ getinProgressItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getinProgressItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
-                <div>前序流程下发时间：{{ getinProgressItem(colIndex).prevTime }}</div>
-                <div>前序处理部门：{{ getinProgressItem(colIndex).prevDepart }}</div>
-                <div>前序处理人：{{ getinProgressItem(colIndex).prevUser }}</div>
+                <div>订单截止时间：{{ getPendingItem(colIndex).createTime }}</div>
+                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
+                <div>鞋型数量：{{ getPendingItem(colIndex).orderShoeCount }}</div>
             </el-card>
 
         </el-col>
@@ -82,7 +82,7 @@ export default {
         },
         openNewWindow(task) {
             let url = ""
-            const orderId = task.orderId.replace(' ','-')
+            const orderId = task.orderId.toString().replace(' ','-')
             switch(task.taskName) {
                 case "一次BOM填写":
                     url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${orderId}`;
