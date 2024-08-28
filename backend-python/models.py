@@ -147,6 +147,7 @@ class MaterialType(db.Model):
         db.ForeignKey("material_warehouse.material_warehouse_id"),
         nullable=False,
     )
+    material_category = db.Column(db.SmallInteger, nullable=False)
 
     def __repr__(self):
         return f"<MaterialType(material_type_id={self.material_type_id})>"
@@ -425,6 +426,33 @@ class PurchaseOrderItem(db.Model):
     def __name__(self):
         return "PurchaseOrderItem"
 
+class AssetsPurchaseOrderItem(db.Model):
+    __tablename__ = "assets_purchase_order_item"
+
+    assets_purchase_order_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    material_id = db.Column(db.BigInteger, db.ForeignKey("material.material_id"), nullable=False)
+    remark = db.Column(db.String(50), nullable=True)
+    purchase_divide_order_id = db.Column(db.BigInteger, db.ForeignKey("purchase_divide_order.purchase_divide_order_id"), nullable=True)
+    purchase_amount = db.Column(db.Numeric(10, 5), nullable=True)
+    material_specification = db.Column(db.String(50), nullable=True)
+    color = db.Column(db.Integer, nullable=True)
+    size_34_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_35_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_36_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_37_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_38_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_39_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_40_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_41_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_42_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_43_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_44_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_45_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_46_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_type = db.Column(db.String(1), nullable=False, default="E")
+
+    def __repr__(self):
+        return f"<AssetsPurchaseOrderItem(assets_purchase_order_item_id={self.assets_purchase_order_item_id})>"
 
 class PurchaseDivideOrder(db.Model):
     __tablename__ = "purchase_divide_order"
@@ -437,6 +465,11 @@ class PurchaseDivideOrder(db.Model):
     purchase_divide_order_rid = db.Column(
         db.Integer, db.ForeignKey("order.order_rid"), nullable=True
     )
+    purchase_divide_order_type = db.Column(db.String(1), nullable=False)
+    purchase_order_remark = db.Column(db.String(100), nullable=True)
+    purchase_order_environmental_request = db.Column(db.String(100), nullable=True)
+    shipment_address = db.Column(db.String(100), nullable=True)
+    shipment_deadline = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"<PurchaseDivideOrder(purchase_divide_order_id={self.purchase_divide_order_id})>"
@@ -447,6 +480,10 @@ class PurchaseOrder(db.Model):
     purchase_order_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     bom_id = db.Column(db.BigInteger, db.ForeignKey("bom.bom_id"), nullable=True)
     purchase_order_rid = db.Column(db.String(50), nullable=False)
+    purchase_order_type = db.Column(db.String(1), nullable=False)
+    purchase_order_issue_date = db.Column(db.Date, nullable=False)
+    order_id = db.Column(db.BigInteger, db.ForeignKey("order.order_id"), nullable=True)
+    purchase_order_status = db.Column(db.String(1), nullable=True)
 
     def __repr__(self):
         return f"<PurchaseOrder(purchase_order_id={self.purchase_order_id})>"

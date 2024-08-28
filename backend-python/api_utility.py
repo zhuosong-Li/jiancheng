@@ -1,6 +1,8 @@
 from models import *
 
 from event_processor import *
+import random
+import string
 
 processEventEntity = EventProcessor()
 ### check if a shoe exists in DB
@@ -81,3 +83,7 @@ def dbcreateOrder(order_Rid, order_createTime, order_Customer):
 
 def processEvent(event):
     return
+
+def randomIdGenerater(digit):
+    random_str = ''.join(random.choices(string.digits, k=digit))
+    return random_str
