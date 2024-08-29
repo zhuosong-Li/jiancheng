@@ -113,7 +113,6 @@
         v-model="unsubmitVis"
         width="90%"
         :close-on-click-modal="false"
-
     >
         <el-row :gutter="20" style="margin-top: 20px">
             <el-col :span="24" :offset="0">
@@ -137,7 +136,7 @@
                             >
                             <el-button
                                 type="danger"
-                                @click="deleteCurrentRow(scope.$index, materialPurchaseFilterData)"
+                                @click="deleteUnsubmitPurchaseOrder(scope.row)"
                                 >删除</el-button
                             >
                         </template></el-table-column
@@ -147,8 +146,7 @@
         </el-row>
         <template #footer>
             <span>
-                <el-button @click="">Cancel</el-button>
-                <el-button type="primary" @click="">OK</el-button>
+                <el-button type="primary" @click="unsubmitVis = false">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -250,7 +248,7 @@
 
         <template #footer>
             <span>
-                <el-button @click="handleGenerateClose">取消</el-button>
+                <el-button @click="createVis = false">取消</el-button>
                 <el-button type="primary" @click="newPurchaseOrderSave">保存</el-button>
             </span>
         </template>
@@ -271,7 +269,7 @@
                         size="default"
                         :suffix-icon="Search"
                         clearable
-                        @change="getMaterialFilterData"
+                        @change="getMaterialFilterData(currentCreateViewId)"
                     ></el-input>
                 </div>
             </el-col>
@@ -283,7 +281,7 @@
                         size="default"
                         :suffix-icon="Search"
                         clearable
-                        @change="getMaterialFilterData"
+                        @change="getMaterialFilterData(currentCreateViewId)"
                     ></el-input>
                 </div>
             </el-col>
@@ -295,7 +293,7 @@
                         size="default"
                         :suffix-icon="Search"
                         clearable
-                        @change="getMaterialFilterData"
+                        @change="getMaterialFilterData(currentCreateViewId)"
                     ></el-input>
                 </div>
             </el-col>
@@ -325,7 +323,9 @@
                     @click="confirmNewMaterialAdd"
                     >保存</el-button
                 >
-                <el-button v-else type="primary" @click="confirmNewSizeMaterialAdd">保存</el-button>
+                <el-button v-else-if="currentCreateViewId == 1" type="primary" @click="confirmNewSizeMaterialAdd">保存</el-button>
+                <el-button v-else-if="currentCreateViewId == 2" type="primary" @click="confirmEditNewMaterialAdd">保存</el-button>
+                <el-button v-else-if="currentCreateViewId == 3" type="primary" @click="confirmEditSizeNewMaterialAdd">保存</el-button>
             </span>
         </template>
     </el-dialog>
@@ -338,7 +338,7 @@
         :key="currentViewPurchaseOrderId"
     >
         <div style="height: 500px; overflow-y: scroll; overflow-x: hidden">
-            <el-row 
+            <el-row
                 v-for="purchaseDivideOrder in purchaseTestData"
                 :key="purchaseDivideOrder"
                 :gutter="20"
@@ -347,6 +347,30 @@
                 <el-col :span="23">
                     <h3>分采购订单编号 {{ purchaseDivideOrder.purchaseDivideOrderId }}</h3>
                     <h3>工厂名称: {{ purchaseDivideOrder.supplierName }}</h3>
+                    <el-row :gutter="20">
+                        <el-col :span="12" :offset="0"
+                            ><span
+                                >订单备注：
+                                {{ purchaseDivideOrder.remark }}
+                            </span></el-col
+                        >
+                        <el-col :span="12" :offset="0">
+                            <span
+                                >环境要求：
+                                {{ purchaseDivideOrder.evironmentalRequest }}
+                            </span>
+                        </el-col>
+                    </el-row>
+                    <el-row :gutter="20">
+                        <el-col :span="12" :offset="0"
+                            ><span
+                                >发货地址: {{ purchaseDivideOrder.shipmentAddress }}
+                            </span></el-col
+                        >
+                        <el-col :span="12" :offset="0">
+                            <span>交货周期: {{ purchaseDivideOrder.shipmentDeadline }} </span>
+                        </el-col>
+                    </el-row>
                     <div v-if="factoryFieldJudge(purchaseDivideOrder.purchaseDivideOrderType)">
                         <el-table
                             :data="purchaseDivideOrder.assetsItems"
@@ -362,7 +386,7 @@
                             ></el-table-column>
                             <el-table-column prop="unit" label="单位" />
 
-                            <el-table-column prop="amount" label="采购数量" />
+                            <el-table-column prop="purchaseAmount" label="采购数量" />
                             <el-table-column label="分码数量（中国/美标内码/美标外显）">
                                 <el-table-column label="35" width="50">
                                     <el-table-column label="7" width="50">
@@ -480,6 +504,7 @@
                                 prop="materialSpecification"
                                 label="材料规格"
                             ></el-table-column>
+                            <el-table-column prop="color" label="颜色" />
                             <el-table-column prop="unit" label="单位" />
                             <el-table-column prop="purchaseAmount" label="采购数量" />
                             <el-table-column prop="remark" label="备注" />
@@ -490,8 +515,7 @@
         </div>
         <template #footer>
             <span>
-                <el-button @click="">Cancel</el-button>
-                <el-button type="primary" @click="">OK</el-button>
+                <el-button type="primary" @click="purchaseOrderVis = false">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -514,13 +538,26 @@
                     ></el-input>
                 </template>
             </el-table-column>
+            <el-table-column label="颜色">
+                <template #default="scope">
+                    <el-select v-model="scope.row.color" placeholder="" filterable>
+                        <el-option
+                            v-for="item in colorOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                        >
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
             <el-table-column prop="warehouseName" label="所属仓库" />
             <el-table-column prop="unit" label="单位" />
             <el-table-column prop="supplierName" label="工厂名称"> </el-table-column>
             <el-table-column label="型号填写">
                 <template #default="scope">
                     {{ scope.row.sizeStatus }}
-                    <el-button type="primary" size="default" @click="openSizeDialog(scope.row)"
+                    <el-button type="primary" size="default" @click="openSizeDialog(scope.row, scope.$index, 0)"
                         >尺码信息</el-button
                     >
                 </template>
@@ -539,7 +576,7 @@
                 <template #default="scope">
                     <el-button
                         type="danger"
-                        @click="deleteCurrentRow(scope.$index, newAssetPurchaseData)"
+                        @click="deleteCurrentRow(scope.$index, lastData)"
                         >删除</el-button
                     >
                 </template>
@@ -550,8 +587,8 @@
         >
         <template #footer>
             <span>
-                <el-button @click="">Cancel</el-button>
-                <el-button type="primary" @click="">OK</el-button>
+                <el-button @click="isLastPurchaseOrderDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="newSizePurchaseOrderSave">保存</el-button>
             </span>
         </template>
     </el-dialog>
@@ -563,6 +600,8 @@
     >
         <el-table :data="sizeData" border stripe>
             <el-table-column prop="size" label="尺码"></el-table-column>
+            <el-table-column prop="innerSize" label="内码"></el-table-column>
+            <el-table-column prop="outterSize" label="外显"></el-table-column>
             <el-table-column label="采购数量">
                 <template #default="scope">
                     <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" />
@@ -572,8 +611,7 @@
 
         <template #footer>
             <span>
-                <el-button @click="">Cancel</el-button>
-                <el-button type="primary" @click="">OK</el-button>
+                <el-button type="primary" @click="confirmSizeAmount(currentSizeData)">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -583,7 +621,7 @@
         width="80%"
         :close-on-click-modal="false"
     >
-        <el-tabs v-model="activeTab" type="card" tab-position="top" @tab-click="">
+        <el-tabs v-model="activeTab" type="card" tab-position="top">
             <el-tab-pane
                 v-for="item in tabPlaneData"
                 :key="item.purchaseDivideOrderId"
@@ -596,26 +634,24 @@
                         ><span
                             >订单备注：
                             <el-input
-                                v-model="item.unifiedRemark"
+                                v-model="item.remark"
                                 placeholder=""
                                 type="textarea"
                                 resize="none"
                                 size="normal"
                                 clearable
-                                @change=""
                             ></el-input> </span
                     ></el-col>
                     <el-col :span="12" :offset="0">
                         <span
                             >环境要求：
                             <el-input
-                                v-model="item.environmentalRequirements"
+                                v-model="item.evironmentalRequest"
                                 placeholder=""
                                 type="textarea"
                                 resize="none"
                                 size="normal"
                                 clearable
-                                @change=""
                             ></el-input>
                         </span>
                     </el-col>
@@ -625,13 +661,12 @@
                         <span
                             >发货地址：
                             <el-input
-                                v-model="item.shippingAddress"
+                                v-model="item.shipmentAddress"
                                 placeholder=""
                                 type="textarea"
                                 resize="none"
                                 size="normal"
                                 clearable
-                                @change=""
                             ></el-input>
                         </span>
                     </el-col>
@@ -639,22 +674,21 @@
                         <span
                             >交货周期：
                             <el-input
-                                v-model="item.leadTime"
+                                v-model="item.shipmentDeadline"
                                 placeholder=""
                                 type="textarea"
                                 resize="none"
                                 size="normal"
                                 clearable
-                                @change=""
                             ></el-input>
                         </span>
                     </el-col>
                 </el-row>
                 <el-row :gutter="20" style="margin-top: 20px">
                     <el-col :span="24" :offset="0">
-                        <div v-if="factoryFieldJudge(item.factoryField)">
+                        <div v-if="factoryFieldJudge(item.purchaseDivideOrderType)">
                             <el-table
-                                :data="item.materialTableData"
+                                :data="item.assetsItems"
                                 border
                                 style="width: 100%"
                                 height="500"
@@ -777,7 +811,7 @@
                             </el-table>
                         </div>
                         <div v-else>
-                            <el-table :data="item.materialTableData" border stripe height="500">
+                            <el-table :data="item.assetsItems" border stripe height="500">
                                 <el-table-column type="index"></el-table-column>
                                 <el-table-column
                                     prop="materialType"
@@ -788,9 +822,10 @@
                                     prop="materialSpecification"
                                     label="材料规格"
                                 ></el-table-column>
+                                <el-table-column prop="color" label="颜色" />
                                 <el-table-column prop="unit" label="单位" />
-                                <el-table-column prop="amount" label="数量" />
-                                <el-table-column prop="comment" label="备注" />
+                                <el-table-column prop="purchaseAmount" label="数量" />
+                                <el-table-column prop="remark" label="备注" />
                             </el-table>
                         </div>
                     </el-col>
@@ -800,22 +835,204 @@
 
         <template #footer>
             <span>
-                <el-button @click="">取消</el-button>
-                <el-button type="primary" @click="">保存</el-button>
-                <el-button type="success" @click="">提交</el-button>
+                <el-button @click="isPurchaseOrderVis = false">取消</el-button>
+                <el-button type="primary" @click="saveUnsubmitPurchaseOrder">保存</el-button>
+                <el-button type="success" @click="confirmSubmitPurchaseOrder">提交</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <el-dialog
+        :title="`耗材/固定资产采购订单 ${editPurchaseOrderId} 修改`"
+        v-model="editVis"
+        width="95%"
+        @close="handleGenerateClose"
+        :close-on-click-modal="false"
+    >
+        <el-table :data="editAssetPurchaseData" border height="450">
+            <el-table-column prop="materialType" label="材料类型" />
+            <el-table-column prop="materialName" label="材料名称" />
+            <el-table-column label="材料规格">
+                <template #default="scope">
+                    <el-input
+                        v-model="scope.row.materialSpecification"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="颜色">
+                <template #default="scope">
+                    <el-select v-model="scope.row.color" placeholder="" filterable>
+                        <el-option
+                            v-for="item in colorOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                        >
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column prop="warehouseName" label="所属仓库" />
+            <el-table-column prop="unit" label="单位" />
+            <el-table-column label="采购数量">
+                <template #default="scope">
+                    <el-input-number
+                        v-model="scope.row.purchaseAmount"
+                        :min="0"
+                        size="small"
+                        step="0.001"
+                    />
+                </template>
+            </el-table-column>
+            <el-table-column prop="supplierName" label="工厂名称"> </el-table-column>
+            <el-table-column label="随订单采购/独立采购">
+                <template #default="scope">
+                    <el-select v-model="scope.row.isPurchaseOrder" placeholder="" filterable>
+                        <el-option
+                            v-for="item in isPurchaseOrderOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                        >
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column label="订单编号">
+                <template #default="scope">
+                    <el-input
+                        v-model="scope.row.orderId"
+                        placeholder=""
+                        size="default"
+                        clearable
+                        :disabled="scope.row.isPurchaseOrder === 'G'"
+                    ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="备注">
+                <template #default="scope">
+                    <el-input
+                        v-model="scope.row.comment"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button
+                        type="danger"
+                        @click="deleteCurrentRow(scope.$index, editAssetPurchaseData)"
+                        >删除</el-button
+                    >
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-button type="primary" size="default" @click="openNewMaterialDialog(2)"
+            >添加新材料</el-button
+        >
+
+        <template #footer>
+            <span>
+                <el-button @click="editVis = false">取消</el-button>
+                <el-button type="primary" @click="editPurchaseOrderSave">保存</el-button>
+            </span>
+        </template>
+    </el-dialog>
+    <el-dialog
+        :title="`编辑尺码型号采购订单 ${editPurchaseOrderId}`"
+        v-model="editLastPurchaseOrderDialogVisible"
+        :close-on-click-modal="false"
+        width="80%"
+    >
+        <el-table :data="editLastData" border stripe>
+            <el-table-column prop="materialType" label="材料类型" />
+            <el-table-column prop="materialName" label="材料名称" />
+            <el-table-column prop="materialSpecification" label="材料规格">
+                <template #default="scope">
+                    <el-input
+                        v-model="scope.row.materialSpecification"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="颜色">
+                <template #default="scope">
+                    <el-select v-model="scope.row.color" placeholder="" filterable>
+                        <el-option
+                            v-for="item in colorOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                        >
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column prop="warehouseName" label="所属仓库" />
+            <el-table-column prop="unit" label="单位" />
+            <el-table-column prop="supplierName" label="工厂名称"> </el-table-column>
+            <el-table-column label="型号填写">
+                <template #default="scope">
+                    {{ scope.row.sizeStatus }}
+                    <el-button type="primary" size="default" @click="openSizeDialog(scope.row, scope.$index, 1)"
+                        >尺码信息</el-button
+                    >
+                </template>
+            </el-table-column>
+            <el-table-column label="备注">
+                <template #default="scope">
+                    <el-input
+                        v-model="scope.row.comment"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
+                </template>
+            </el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button
+                        type="danger"
+                        @click="deleteCurrentRow(scope.$index, editLastData)"
+                        >删除</el-button
+                    >
+                </template>
+            </el-table-column>
+        </el-table>
+        <el-button type="primary" size="default" @click="openNewMaterialDialog(3)"
+            >添加新材料</el-button
+        >
+        <template #footer>
+            <span>
+                <el-button @click="editLastPurchaseOrderDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="editSizePurchaseOrderSave">保存</el-button>
             </span>
         </template>
     </el-dialog>
 </template>
 <script>
 import { Search } from '@element-plus/icons-vue'
-import { markRaw, VueElement } from 'vue'
+import { markRaw } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import axios from 'axios'
 export default {
     data() {
         return {
+            currentSizeData: 0,
+            editVis: false,
+            editPurchaseOrderId: '',
+            editAssetPurchaseData: [],
+            editLastPurchaseOrderDialogVisible: false,
+            editLastData: [],
+            currentSizeIndex: 0,
             currentViewPurchaseOrderId: '',
+            currentSubmitPurchaseOrderId: '',
             currentCreateViewId: 0,
             unsubmitfinished: true,
             materialAddfinished: true,
@@ -957,7 +1174,7 @@ export default {
                         materialtype: this.materialTypeSearch,
                         materialname: this.materialSearch,
                         suppliername: this.factorySearch,
-                        materialcategory: 0
+                        materialcategory: this.currentCreateViewId
                     }
                 }
             )
@@ -1001,9 +1218,21 @@ export default {
                     })
             }
         },
-        openSizeDialog(row) {
+        openSizeDialog(row,index, type) {
             this.sizeData = row.sizeInfo
             this.isSizeDialogVisible = true
+            this.currentSizeIndex = index
+            this.currentSizeData = type
+        },
+        confirmSizeAmount(type) {
+            if (type === 0) {
+                this.lastData[this.currentSizeIndex].sizeInfo = this.sizeData
+            }
+            if (type === 1) {
+                this.editLastData[this.currentSizeIndex].sizeInfo = this.sizeData
+            }
+
+            this.isSizeDialogVisible = false
         },
         handleSelectionChange(selection) {
             if (selection.length > 1) {
@@ -1059,9 +1288,9 @@ export default {
         async openNewMaterialDialog(type) {
             this.newMaterialVis = true
             this.materialAddfinished = true
-            if (type == 1) {
+            if (type == 1 || type == 3) {
                 await this.getSizeMaterialList()
-            } else {
+            } else if (type == 0 || type == 2) {
                 await this.getMaterialList()
             }
             this.materialAddfinished = false
@@ -1085,7 +1314,6 @@ export default {
             this.purchaseOrderVis = true
         },
         async openSubmitDialog(row) {
-            this.isPurchaseOrderVis = true
             const response = await axios.get(
                 'http://localhost:8000/logistics/getassetspurchasedivideorders',
                 {
@@ -1094,7 +1322,32 @@ export default {
                     }
                 }
             )
+            this.currentSubmitPurchaseOrderId = row.materialPurchaseOrderId
             this.tabPlaneData = response.data
+            this.activeTab = this.tabPlaneData[0].purchaseDivideOrderId
+            this.isPurchaseOrderVis = true
+        },
+        async openEditDialog(row) {
+            this.editPurchaseOrderId = row.materialPurchaseOrderId
+            const response = await axios.get(
+                'http://localhost:8000/logistics/getassetspurchaseorderitems',
+                {
+                    params: {
+                        purchaseOrderId: row.materialPurchaseOrderId
+                    }
+                }
+            )
+            if (response.data.purchaseDivideOrderType === "N") {
+                console.log(response.data)
+                this.editAssetPurchaseData = response.data.data
+                this.editVis = true
+                this.currentCreateViewId = 2
+            } else {
+                this.editLastData = response.data.data
+                this.editLastPurchaseOrderDialogVisible = true
+                this.currentCreateViewId = 3
+            }
+
         },
         confirmNewSizeMaterialAdd() {
             if (this.materialSelectRow === null) {
@@ -1125,46 +1378,271 @@ export default {
                 sizeInfo: [
                     {
                         size: '35',
+                        innerSize: '7',
+                        outterSize: '7',
                         purchaseAmount: 0
                     },
                     {
                         size: '36',
+                        innerSize: '7',
+                        outterSize: '7.5',
                         purchaseAmount: 0
                     },
                     {
                         size: '37',
+                        innerSize: '8',
+                        outterSize: '8',
                         purchaseAmount: 0
                     },
                     {
                         size: '38',
+                        innerSize: '8',
+                        outterSize: '8.5',
                         purchaseAmount: 0
                     },
                     {
                         size: '39',
+                        innerSize: '9',
+                        outterSize: '9',
                         purchaseAmount: 0
                     },
                     {
                         size: '40',
+                        innerSize: '9',
+                        outterSize: '9.5',
                         purchaseAmount: 0
                     },
                     {
                         size: '41',
+                        innerSize: '10',
+                        outterSize: '10',
                         purchaseAmount: 0
                     },
                     {
                         size: '42',
+                        innerSize: '10',
+                        outterSize: '10.5',
                         purchaseAmount: 0
                     },
                     {
                         size: '43',
+                        innerSize: '11',
+                        outterSize: '11',
                         purchaseAmount: 0
                     },
                     {
                         size: '44',
+                        innerSize: '12',
+                        outterSize: '12',
                         purchaseAmount: 0
                     },
                     {
                         size: '45',
+                        innerSize: '13',
+                        outterSize: '13',
+                        purchaseAmount: 0
+                    }
+                ]
+            })
+            this.addAssetName = ''
+            this.newMaterialVis = false
+            this.materialTypeSearch = ''
+            this.materialSearch = ''
+            this.factorySearch = ''
+        },
+        async saveUnsubmitPurchaseOrder() {
+            this.$confirm('确定提交吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
+                .then(async () => {
+                    const response = await axios.post(
+                        'http://localhost:8000/logistics/unsubmitpurchaseordersave',
+                        {
+                            data: this.tabPlaneData
+                        }
+                    )
+                    if (response.status === 200) {
+                        this.$message({
+                            type: 'success',
+                            message: '提交成功'
+                        })
+                        this.isPurchaseOrderVis = false
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: '提交失败'
+                        })
+                    }
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消提交'
+                    })
+                })
+        },
+        async confirmSubmitPurchaseOrder() {
+            this.$confirm('确定提交吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
+                .then(async () => {
+                    const response = await axios.post(
+                        'http://localhost:8000/logistics/submitpurchaseorder',
+                        {
+                            purchaseOrderId: this.currentSubmitPurchaseOrderId,
+                        }
+                    )
+                    if (response.status === 200) {
+                        this.$message({
+                            type: 'success',
+                            message: '提交成功'
+                        })
+                        this.isPurchaseOrderVis = false
+                        this.getUnsubmitPurchaseOrder()
+                        this.getMaterialPurchaseData()
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: '提交失败'
+                        })
+                    }
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消提交'
+                    })
+                })
+        },
+        confirmEditNewMaterialAdd() {
+            if (this.materialSelectRow === null) {
+                ElMessageBox.alert('材料不能为空！', '警告', { confirmButtonText: '确认' })
+                return
+            }
+
+            const isDuplicate = this.editAssetPurchaseData.some(
+                (item) => item.materialName === this.materialSelectRow.materialName
+            )
+
+            if (isDuplicate) {
+                ElMessageBox.alert('材料名称必须唯一！', '警告', { confirmButtonText: '确认' })
+                return
+            }
+
+            this.editAssetPurchaseData.push({
+                materialName: this.materialSelectRow.materialName,
+                materialType: this.materialSelectRow.materialType,
+                warehouseName: this.materialSelectRow.warehouseName,
+                supplierName: this.materialSelectRow.supplierName,
+                materialSpecification: this.materialSelectRow.materialSpecification,
+                color: '',
+                unit: this.materialSelectRow.unit,
+                purchaseAmount: 0,
+                isPurchaseOrder: 'G',
+                orderId: '',
+                comment: ''
+            })
+            this.addAssetName = ''
+            this.newMaterialVis = false
+            this.materialTypeSearch = ''
+            this.materialSearch = ''
+            this.factorySearch = ''
+        },
+        confirmEditSizeNewMaterialAdd() {
+            if (this.materialSelectRow === null) {
+                ElMessageBox.alert('材料不能为空！', '警告', { confirmButtonText: '确认' })
+                return
+            }
+
+            const isDuplicate = this.editLastData.some(
+                (item) => item.materialName === this.materialSelectRow.materialName
+            )
+
+            if (isDuplicate) {
+                ElMessageBox.alert('材料名称必须唯一！', '警告', { confirmButtonText: '确认' })
+                return
+            }
+
+            this.editLastData.push({
+                materialName: this.materialSelectRow.materialName,
+                materialType: this.materialSelectRow.materialType,
+                warehouseName: this.materialSelectRow.warehouseName,
+                supplierName: this.materialSelectRow.supplierName,
+                materialSpecification: this.materialSelectRow.materialSpecification,
+                color: '',
+                unit: this.materialSelectRow.unit,
+                isPurchaseOrder: 'G',
+                orderId: '',
+                comment: '',
+                sizeInfo: [
+                    {
+                        size: '35',
+                        innerSize: '7',
+                        outterSize: '7',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '36',
+                        innerSize: '7',
+                        outterSize: '7.5',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '37',
+                        innerSize: '8',
+                        outterSize: '8',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '38',
+                        innerSize: '8',
+                        outterSize: '8.5',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '39',
+                        innerSize: '9',
+                        outterSize: '9',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '40',
+                        innerSize: '9',
+                        outterSize: '9.5',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '41',
+                        innerSize: '10',
+                        outterSize: '10',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '42',
+                        innerSize: '10',
+                        outterSize: '10.5',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '43',
+                        innerSize: '11',
+                        outterSize: '11',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '44',
+                        innerSize: '12',
+                        outterSize: '12',
+                        purchaseAmount: 0
+                    },
+                    {
+                        size: '45',
+                        innerSize: '13',
+                        outterSize: '13',
                         purchaseAmount: 0
                     }
                 ]
@@ -1235,6 +1713,78 @@ export default {
                     })
                 })
         },
+        async newSizePurchaseOrderSave() {
+            const response = await axios.post(
+                'http://localhost:8000/logistics/newpurchaseordersave',
+                {
+                    data: this.lastData,
+                    purchaseOrderId: this.newSizePurchaseOrderId,
+                    purchaseDivideOrderType: 'S'
+                }
+            )
+            if (response.status === 200) {
+                this.$message({
+                    type: 'success',
+                    message: '保存成功'
+                })
+                this.lastData = []
+                this.isLastPurchaseOrderDialogVisible = false
+                this.newSizePurchaseOrderId = ''
+            } else {
+                this.$message({
+                    type: 'error',
+                    message: '保存失败'
+                })
+            }
+        },
+        async editSizePurchaseOrderSave() {
+            const response = await axios.post(
+                'http://localhost:8000/logistics/editsavedpurchaseorderitems',
+                {
+                    data: this.editLastData,
+                    purchaseOrderId: this.editPurchaseOrderId,
+                    purchaseDivideOrderType: 'S'
+                }
+            )
+            if (response.status === 200) {
+                this.$message({
+                    type: 'success',
+                    message: '保存成功'
+                })
+                this.editLastData = []
+                this.editLastPurchaseOrderDialogVisible = false
+                this.editSizePurchaseOrderId = ''
+            } else {
+                this.$message({
+                    type: 'error',
+                    message: '保存失败'
+                })
+            }
+        },
+        async editPurchaseOrderSave() {
+            const response = await axios.post(
+                'http://localhost:8000/logistics/editsavedpurchaseorderitems',
+                {
+                    data: this.editAssetPurchaseData,
+                    purchaseOrderId: this.editPurchaseOrderId,
+                    purchaseDivideOrderType: 'N'
+                }
+            )
+            if (response.status === 200) {
+                this.$message({
+                    type: 'success',
+                    message: '保存成功'
+                })
+                this.editAssetPurchaseData = []
+                this.editVis = false
+                this.editPurchaseOrderId = ''
+            } else {
+                this.$message({
+                    type: 'error',
+                    message: '保存失败'
+                })
+            }
+        },
         async newPurchaseOrderSave() {
             const response = await axios.post(
                 'http://localhost:8000/logistics/newpurchaseordersave',
@@ -1258,7 +1808,42 @@ export default {
                     message: '保存失败'
                 })
             }
-        }
+        },
+        async deleteUnsubmitPurchaseOrder(row) {
+            this.$confirm('确定删除此订单吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
+                .then(async () => {
+                        const response = await axios.delete(
+                            'http://localhost:8000/logistics/deleteunsubmitpurchaseorder',
+                            {
+                                params: {
+                                    purchaseOrderId: row.materialPurchaseOrderId
+                                }
+                            }
+                        )
+                    if (response.status === 200) {
+                        this.$message({
+                            type: 'success',
+                            message: '删除成功'
+                        })
+                        this.getUnsubmitPurchaseOrder()
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: '删除失败'
+                        })
+                    }
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消删除'
+                    })
+                })
+        },
     }
 }
 </script>

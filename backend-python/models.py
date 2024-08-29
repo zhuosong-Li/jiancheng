@@ -16,6 +16,7 @@ class BomItem(db.Model):
     material_id = db.Column(
         db.BigInteger, db.ForeignKey("material.material_id"), nullable=False
     )
+    material_specification = db.Column(db.String(50), nullable=False)
     unit_usage = db.Column(db.Numeric(10, 5), nullable=False)
     total_usage = db.Column(db.Numeric(10, 5), nullable=False)
     department = db.Column(
@@ -26,6 +27,22 @@ class BomItem(db.Model):
     bom_item_color = db.Column(
         db.Integer, db.ForeignKey("color.color_id"), nullable=True
     )
+    bom_add_type = db.Column(db.String(1), nullable=True)
+    size_34_total_usage = db.Column(db.Integer, nullable=True)
+    size_35_total_usage = db.Column(db.Integer, nullable=True)
+    size_36_total_usage = db.Column(db.Integer, nullable=True)
+    size_37_total_usage = db.Column(db.Integer, nullable=True)
+    size_38_total_usage = db.Column(db.Integer, nullable=True)
+    size_39_total_usage = db.Column(db.Integer, nullable=True)
+    size_40_total_usage = db.Column(db.Integer, nullable=True)
+    size_41_total_usage = db.Column(db.Integer, nullable=True)
+    size_42_total_usage = db.Column(db.Integer, nullable=True)
+    size_43_total_usage = db.Column(db.Integer, nullable=True)
+    size_44_total_usage = db.Column(db.Integer, nullable=True)
+    size_45_total_usage = db.Column(db.Integer, nullable=True)
+    size_46_total_usage = db.Column(db.Integer, nullable=True)
+    size_type = db.Column(db.String(1), nullable=False, default="E")
+
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -183,10 +200,11 @@ class MaterialStorage(db.Model):
     actual_inbound_amount = db.Column(db.DECIMAL(10, 5))
     current_amount = db.Column(db.DECIMAL(10, 5), nullable=False)
     unit_price = db.Column(db.DECIMAL(10, 2))
-    material_specification = db.Column(db.String(40), nullable=False)
+    material_specification = db.Column(db.String(40), nullable=True)
     material_outsource_status = db.Column(db.CHAR(1), default="0", nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
     material_storage_color = db.Column(db.Integer, db.ForeignKey("color.color_id"))
+    purchase_divide_order_id = db.Column(db.BigInteger, db.ForeignKey("purchase_divide_order.purchase_divide_order_id"), nullable=True)
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
@@ -417,6 +435,20 @@ class PurchaseOrderItem(db.Model):
         db.ForeignKey("purchase_divide_order.purchase_divide_order_id"),
         nullable=False,
     )
+    purchase_amount = db.Column(db.Numeric(10, 5), nullable=False)
+    size_34_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_35_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_36_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_37_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_38_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_39_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_40_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_41_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_42_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_43_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_44_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_45_purchase_amount = db.Column(db.Integer, nullable=True)
+    size_46_purchase_amount = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return (
@@ -668,6 +700,7 @@ class SizeMaterialStorage(db.Model):
         db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=True
     )
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
+    purchase_divide_order_id = db.Column(db.BigInteger, db.ForeignKey("purchase_divide_order.purchase_divide_order_id"), nullable=True)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
