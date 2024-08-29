@@ -14,113 +14,84 @@
 
 
     </el-row>
-    <component :is="currentDash" :pendingTaskData="textData" :inProgressTaskData="textData2" @backGrid="changeToGrid"
+    <component :is="components[currentDash]" :pendingTaskData="pendingData" :inProgressTaskData="inProgressData" @backGrid="changeToGrid"
     @changeToPend="changeToPend" @changeToProgress="changeToProgress">
     </component>
 </template>
-<script>
+
+
+<script setup>
+
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
+
 import { Grid, Memo } from '@element-plus/icons-vue'
 import DashboardGrid from './Dashboard/DashboardGrid.vue';
 import DashboardList from './Dashboard/DashboardList.vue'
 import DashboardPend from './Dashboard/DashboardListPend.vue'
 import DashboardProgress from './Dashboard/DashboardListProgress.vue'
 
-export default {
-    components: {
+
+
+const components = {
         DashboardGrid,
         DashboardList,
         DashboardPend,
         DashboardProgress
-    },
-    data() {
-        return {
-            Grid,
-            Memo,
-            currentDash: 'DashboardGrid',
-            textData: [{
-                taskName: "一次BOM填写",
-                orderId: "K24-024 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "开发部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "一次BOM填写",
-                orderId: "K24-025 2111622",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "开发部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "一次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "开发部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "一次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "开发部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            ],
-            textData2: [{
-                taskName: "一次BOM填写",
-                orderId: "K24-021 2111628",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "开发部",
-                prevUser: "XXX"
-            },
-            {
-                taskName: "二次BOM填写",
-                orderId: "K24-021 2111620",
-                createTime: "2024-06-10",
-                prevTime: "2024-06-10 18:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX"
-            },
-            ],
-        }
-    },
-    methods: {
-        changeToGrid() {
-            this.currentDash = 'DashboardGrid'
-        },
-        changeToList() {
-            this.currentDash = 'DashboardList'
-        },
-        changeToPend() {
-            this.currentDash = 'DashboardPend'
-        },
-        changeToProgress() {
-            console.log(this.currentDash)
-            this.currentDash = 'DashboardProgress'
-        }
+}
+const pendingData = ref([])
+const inProgressData = ref([])
 
-    }
+onMounted(()=> {
+    const firstBomStatus = 4
+    const secondBomStatus = 11
+    const params = {
+        ordershoestatus : firstBomStatus
+    };
+
+
+    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+        const firstBomPending = response.data.pendingOrders
+        const firstBomProgress = response.data.inProgressOrders
+        firstBomPending.forEach(element => {
+            element['taskName'] = "一次BOM填写"
+            pendingData.value.push(element)
+        });
+        firstBomProgress.forEach(element => {
+            element['taskName'] = "一次BOM填写"
+            inProgressData.value.push(element)
+        });
+    })
+    params['ordershoestatus']  = secondBomStatus
+    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+        const secondBomPending = response.data.pendingOrders
+        const secondBomProgress = response.data.inProgressOrders
+        secondBomPending.forEach(element => {
+            element['taskName']  = "二次BOM填写"
+            pendingData.value.push(element)
+        });
+        secondBomProgress.forEach(element => {
+            element['taskName'] = "二次BOM填写"
+            inProgressData.value.push(element)
+        });
+    })
+    console.log(inProgressData)
+    console.log(pendingData)
+})
+const currentDash = ref('DashboardGrid')
+const changeToGrid = () => {
+    currentDash.value = 'DashboardGrid'
+}
+const changeToList = () => {
+    currentDash.value = 'DashboardList'
+}
+const changeToPend = () => {
+    currentDash.value = 'DashboardPend'
+}
+const changeToProgress = () => {
+    currentDash.value = 'DashboardProgress'
 }
 </script>
-<style></style>
+
+
+

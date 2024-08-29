@@ -17,12 +17,12 @@
                     </el-row>
                     <el-descriptions title="" :column="2">
 
-                        <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
-                        <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
-                        <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
+                        <el-descriptions-item label="订单编号">{{ orderRid }}</el-descriptions-item>
+                        <el-descriptions-item label="订单创建时间">{{ orderData.createTime }}</el-descriptions-item>
+                        <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                         <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
-                        <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item>
-                        <el-descriptions-item label="订单状态">{{ testOrderData.orderStatus }}</el-descriptions-item>
+                        <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
+                        <el-descriptions-item label="订单状态">{{ orderData.orderStatus }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
@@ -70,11 +70,11 @@
             <el-dialog title="一次BOM填写 0E20620-VRA-1020" v-model="createVis" width="100%" @close="handleGenerateClose">
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
-                    <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
-                    <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
-                    <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
-                    <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item>
-                    <el-descriptions-item label="订单状态">{{ testOrderData.orderStatus }}</el-descriptions-item>
+                    <el-descriptions-item label="订单创建时间">{{ orderData.createTime }}</el-descriptions-item>
+                    <el-descriptions-item label="前序流程下发时间">{{ orderData.prevTime }}</el-descriptions-item>
+                    <el-descriptions-item label="前序处理部门">{{ orderData.prevDepart }}</el-descriptions-item>
+                    <el-descriptions-item label="前序处理人">{{ orderData.prevUser }}</el-descriptions-item>
+                    <el-descriptions-item label="订单状态">{{ orderData.orderStatus }}</el-descriptions-item>
                     <el-descriptions-item label="工艺单"><el-button type="primary" size="default"
                             @click="">查看工艺单</el-button>
                     </el-descriptions-item>
@@ -217,11 +217,11 @@
                 <el-descriptions title="订单信息" :column="2">
 
                     <el-descriptions-item label="订单编号">{{ orderId }}</el-descriptions-item>
-                    <el-descriptions-item label="订单创建时间">{{ testOrderData.createTime }}</el-descriptions-item>
-                    <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
-                    <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
-                    <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item>
-                    <el-descriptions-item label="订单状态">{{ testOrderData.orderStatus }}</el-descriptions-item>
+                    <el-descriptions-item label="订单创建时间">{{ orderData.createTime }}</el-descriptions-item>
+                    <el-descriptions-item label="前序流程下发时间">{{ orderData.prevTime }}</el-descriptions-item>
+                    <el-descriptions-item label="前序处理部门">{{ orderData.prevDepart }}</el-descriptions-item>
+                    <el-descriptions-item label="前序处理人">{{ orderData.prevUser }}</el-descriptions-item>
+                    <el-descriptions-item label="订单状态">{{ orderData.orderStatus }}</el-descriptions-item>
                 </el-descriptions>
                 <div style="height: 400px; overflow-y: scroll; overflow-x: hidden">
                     <el-row :gutter="20" style="margin-bottom: 20px;">
@@ -262,255 +262,278 @@
 
 </template>
 
-<script>
+<script setup>
 import AllHeader from '@/components/AllHeader.vue';
 import Arrow from '@/components/OrderArrowView.vue'
-export default {
-    props: ['orderId'],
-    components: {
-        AllHeader,
-        Arrow
-    },
-    data() {
-        return {
-            createVis: false,
-            testOrderData: {
-                orderId: "123456",
-                createTime: "2024-06-11",
-                prevTime: "2024-06-11 12:00:00",
-                prevDepart: "技术部",
-                prevUser: "XXX",
-                orderStatus: '未完成'
-            },
-            testTableData: [{
-                inheritId: "0E20620",
-                customerId: "VRA-1020",
-                image: "/src/components/images/testShoe1.png",
-                designer: "杨明清",
-                editter: "潘璟",
-                Status: "未填写"
-            },
-            {
-                inheritId: "0E20620",
-                customerId: "VRA-1020",
-                image: "/src/components/images/testShoe1.png",
-                designer: "杨明清",
-                editter: "潘璟",
-                Status: "已保存"
-            },
-            {
-                inheritId: "0E20620",
-                customerId: "VRA-1020",
-                image: "/src/components/images/testShoe1.png",
-                designer: "杨明清",
-                editter: "潘璟",
-                Status: "已提交"
-            },],
-            testTableFilterData: [],
-            bomTestData: [],
-            originalBomTestData: [],
-            factoryOptions: [
-                { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
-                { materialName: '黑色超软镜面PU', factoryName: '深源皮革' },
-                { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' },
-                // Add more options here
-            ],
-            purchaseTestData: [
-                {
-                    factoryName: '一一鞋材', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
-                },
-                {
-                    factoryName: '深源皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
-                },
-                {
-                    factoryName: '嘉泰皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
-                },
-                {
-                    factoryName: '一一皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
-                    { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
-                },
-            ],
-            isPreviewDialogVisible: false,
-            selectedFile: null,
-            inheritIdSearch: "",
-            isFinalBOM: false,
-            orderProduceInfo: [{
-                color: '黑色',
-                size: 'S12A',
-                35: '0',
-                36: '64',
-                37: '128',
-                38: '192',
-                39: '192',
-                40: '128',
-                41: '64',
-                pairAmount: 768,
-                total: 1020
-            },
-            {
-                color: '黑色',
-                size: 'S12B',
-                35: '0',
-                36: '64',
-                37: '128',
-                38: '192',
-                39: '192',
-                40: '128',
-                41: '64',
-                pairAmount: 768,
-                total: 1020
-            },
-            {
-                color: '黑色',
-                size: 'S6A1',
-                35: '0',
-                36: '64',
-                37: '128',
-                38: '192',
-                39: '192',
-                40: '128',
-                41: '64',
-                pairAmount: 768,
-                total: 1020
-            },
-            {
-                color: '驼色',
-                size: 'S6A1',
-                35: '0',
-                36: '64',
-                37: '128',
-                38: '192',
-                39: '192',
-                40: '128',
-                41: '64',
-                pairAmount: 768,
-                total: 768
-            },]
-        }
-    },
-    mounted() {
-        this.tableWholeFilter()
-    },
-    methods: {
-        openBOMCreate() {
-            this.isFinalBOM = true
-        },
-        handleGenerate(row) {
-            this.createVis = true
-        },
-        handleGenerateClose() {
-            this.createVis = false;
-        },
-        getFilteredFactoryOptions(materialName) {
-            const filteredOptions = this.factoryOptions.filter(option => option.materialName === materialName);
-            return [{ factoryName: '询价' }, ...filteredOptions];
-        },
-        openPreviewDialog() {
-            // Replace this with the actual logic to get the file
-            this.isPreviewDialogVisible = true;
-        },
-        closePreviewDialog() {
-            this.isPreviewDialogVisible = false
-        },
-        tableWholeFilter() {
-            if (!this.inheritIdSearch) {
-                this.testTableFilterData = this.testTableData;
-                return;
-            }
 
-            this.testTableFilterData = this.testTableData.filter(task => {
-                const inheritMatch = task.inheritId.includes(this.inheritIdSearch);
-                return inheritMatch
-            });
-        },
-        addNewMaterial() {
-            // Validate that all existing rows have non-empty fields
-            for (const row of this.bomTestData) {
-                if (!row.partName || !row.color || !row.unit || !row.materialName || row.unitAmount == 0 || row.approvedAmount == 0) {
-                    this.$message({
-                        type: 'warning',
-                        message: '请填写所有字段'
-                    });
-                    return;
-                }
-            }
-            // If validation passes, add a new row
-            this.bomTestData.push({
-                partName: '',
-                color: '',
-                materialName: '',
-                unit: '',
-                unitAmount: 0,
-                useDepart: '',
-                approvedAmount: 0,
-                comment: ''
-            });
-        },
-        deleteCurrentRow(index, datafield) {
-            this.$confirm('确定删除此行吗？', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(() => {
-                datafield.splice(index, 1);
-                this.$message({
-                    type: 'success',
-                    message: '删除成功!'
-                });
-            }).catch(() => {
-                this.$message({
-                    type: 'info',
-                    message: '已取消删除'
-                });
-            });
-        },
-        arraySpanMethod({ row, column, rowIndex, columnIndex }) {
-            if (columnIndex === 0) {
-                if (rowIndex > 0 && row.color === this.orderProduceInfo[rowIndex - 1].color) {
-                    return [0, 0];
-                }
-                let rowspan = 1;
-                for (let i = rowIndex + 1; i < this.orderProduceInfo.length; i++) {
-                    if (this.orderProduceInfo[i].color === row.color) {
-                        rowspan++;
-                    } else {
-                        break;
-                    }
-                }
-                return [rowspan, 1];
-            }
-            if (column.property === 'total') {
-                let firstOccurrenceIndex = rowIndex;
-                for (let i = rowIndex - 1; i >= 0; i--) {
-                    if (this.orderProduceInfo[i].color === row.color) {
-                        firstOccurrenceIndex = i;
-                    } else {
-                        break;
-                    }
-                }
-                if (rowIndex !== firstOccurrenceIndex) {
-                    return [0, 0];
-                }
-                let rowspan = 1;
-                for (let i = firstOccurrenceIndex + 1; i < this.orderProduceInfo.length; i++) {
-                    if (this.orderProduceInfo[i].color === row.color) {
-                        rowspan++;
-                    } else {
-                        break;
-                    }
-                }
-                return [rowspan, 1];
-            }
-        }
-    }
+import {useRoute} from 'vue-router'
+
+import {onMounted, ref} from 'vue';
+import axios from 'axios';
+// import { c } from 'vite/dist/node/types.d-aGj9QkWt';
+const components = {
+    AllHeader, 
+    Arrow
 }
+const params = {
+    orderId:'orderId'
+}
+const route = useRoute()
+console.log(route.query)
+const orderData = ref([])
+const orderShoeData = ref([])
+const materialData = ref([])
+const testTableFilterData = ref ([])
+const orderProduceInfo = ref([])
+const bomTestData = ref([])
+
+onMounted(()=> {
+    // const params = {
+    //     orderId:
+    // }
+})
+// export default {
+//     props: ['orderId'],
+//     data() {
+//         return {
+//             createVis: false,
+//             testOrderData: {
+//                 orderId: "123456",
+//                 createTime: "2024-06-11",
+//                 prevTime: "2024-06-11 12:00:00",
+//                 prevDepart: "技术部",
+//                 prevUser: "XXX",
+//                 orderStatus: '未完成'
+//             },
+//             testTableData: [{
+//                 inheritId: "0E20620",
+//                 customerId: "VRA-1020",
+//                 image: "/src/components/images/testShoe1.png",
+//                 designer: "杨明清",
+//                 editter: "潘璟",
+//                 Status: "未填写"
+//             },
+//             {
+//                 inheritId: "0E20620",
+//                 customerId: "VRA-1020",
+//                 image: "/src/components/images/testShoe1.png",
+//                 designer: "杨明清",
+//                 editter: "潘璟",
+//                 Status: "已保存"
+//             },
+//             {
+//                 inheritId: "0E20620",
+//                 customerId: "VRA-1020",
+//                 image: "/src/components/images/testShoe1.png",
+//                 designer: "杨明清",
+//                 editter: "潘璟",
+//                 Status: "已提交"
+//             },],
+//             testTableFilterData: [],
+//             bomTestData: [],
+//             originalBomTestData: [],
+//             factoryOptions: [
+//                 { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
+//                 { materialName: '黑色超软镜面PU', factoryName: '深源皮革' },
+//                 { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' },
+//                 // Add more options here
+//             ],
+//             purchaseTestData: [
+//                 {
+//                     factoryName: '一一鞋材', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+//                 },
+//                 {
+//                     factoryName: '深源皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+//                 },
+//                 {
+//                     factoryName: '嘉泰皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+//                 },
+//                 {
+//                     factoryName: '一一皮革', data: [{ num: 1, materialName: '黑色超软镜面PU', unit: '米', amount: '200', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '白色超软镜面PU', unit: '米', amount: '250', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" },
+//                     { num: 1, materialName: '蓝色超软镜面PU', unit: '米', amount: '140', customerId: 'K24', internalModel: '0E202620', customerModel: "VRA-1020", comment: "" }]
+//                 },
+//             ],
+//             isPreviewDialogVisible: false,
+//             selectedFile: null,
+//             inheritIdSearch: "",
+//             isFinalBOM: false,
+//             orderProduceInfo: [{
+//                 color: '黑色',
+//                 size: 'S12A',
+//                 35: '0',
+//                 36: '64',
+//                 37: '128',
+//                 38: '192',
+//                 39: '192',
+//                 40: '128',
+//                 41: '64',
+//                 pairAmount: 768,
+//                 total: 1020
+//             },
+//             {
+//                 color: '黑色',
+//                 size: 'S12B',
+//                 35: '0',
+//                 36: '64',
+//                 37: '128',
+//                 38: '192',
+//                 39: '192',
+//                 40: '128',
+//                 41: '64',
+//                 pairAmount: 768,
+//                 total: 1020
+//             },
+//             {
+//                 color: '黑色',
+//                 size: 'S6A1',
+//                 35: '0',
+//                 36: '64',
+//                 37: '128',
+//                 38: '192',
+//                 39: '192',
+//                 40: '128',
+//                 41: '64',
+//                 pairAmount: 768,
+//                 total: 1020
+//             },
+//             {
+//                 color: '驼色',
+//                 size: 'S6A1',
+//                 35: '0',
+//                 36: '64',
+//                 37: '128',
+//                 38: '192',
+//                 39: '192',
+//                 40: '128',
+//                 41: '64',
+//                 pairAmount: 768,
+//                 total: 768
+//             },]
+//         }
+//     },
+//     mounted() {
+//         this.tableWholeFilter()
+//     },
+//     methods: {
+//         openBOMCreate() {
+//             this.isFinalBOM = true
+//         },
+//         handleGenerate(row) {
+//             this.createVis = true
+//         },
+//         handleGenerateClose() {
+//             this.createVis = false;
+//         },
+//         getFilteredFactoryOptions(materialName) {
+//             const filteredOptions = this.factoryOptions.filter(option => option.materialName === materialName);
+//             return [{ factoryName: '询价' }, ...filteredOptions];
+//         },
+//         openPreviewDialog() {
+//             // Replace this with the actual logic to get the file
+//             this.isPreviewDialogVisible = true;
+//         },
+//         closePreviewDialog() {
+//             this.isPreviewDialogVisible = false
+//         },
+//         tableWholeFilter() {
+//             if (!this.inheritIdSearch) {
+//                 this.testTableFilterData = this.testTableData;
+//                 return;
+//             }
+
+//             this.testTableFilterData = this.testTableData.filter(task => {
+//                 const inheritMatch = task.inheritId.includes(this.inheritIdSearch);
+//                 return inheritMatch
+//             });
+//         },
+//         addNewMaterial() {
+//             // Validate that all existing rows have non-empty fields
+//             for (const row of this.bomTestData) {
+//                 if (!row.partName || !row.color || !row.unit || !row.materialName || row.unitAmount == 0 || row.approvedAmount == 0) {
+//                     this.$message({
+//                         type: 'warning',
+//                         message: '请填写所有字段'
+//                     });
+//                     return;
+//                 }
+//             }
+//             // If validation passes, add a new row
+//             this.bomTestData.push({
+//                 partName: '',
+//                 color: '',
+//                 materialName: '',
+//                 unit: '',
+//                 unitAmount: 0,
+//                 useDepart: '',
+//                 approvedAmount: 0,
+//                 comment: ''
+//             });
+//         },
+//         deleteCurrentRow(index, datafield) {
+//             this.$confirm('确定删除此行吗？', '提示', {
+//                 confirmButtonText: '确定',
+//                 cancelButtonText: '取消',
+//                 type: 'warning'
+//             }).then(() => {
+//                 datafield.splice(index, 1);
+//                 this.$message({
+//                     type: 'success',
+//                     message: '删除成功!'
+//                 });
+//             }).catch(() => {
+//                 this.$message({
+//                     type: 'info',
+//                     message: '已取消删除'
+//                 });
+//             });
+//         },
+//         arraySpanMethod({ row, column, rowIndex, columnIndex }) {
+//             if (columnIndex === 0) {
+//                 if (rowIndex > 0 && row.color === this.orderProduceInfo[rowIndex - 1].color) {
+//                     return [0, 0];
+//                 }
+//                 let rowspan = 1;
+//                 for (let i = rowIndex + 1; i < this.orderProduceInfo.length; i++) {
+//                     if (this.orderProduceInfo[i].color === row.color) {
+//                         rowspan++;
+//                     } else {
+//                         break;
+//                     }
+//                 }
+//                 return [rowspan, 1];
+//             }
+//             if (column.property === 'total') {
+//                 let firstOccurrenceIndex = rowIndex;
+//                 for (let i = rowIndex - 1; i >= 0; i--) {
+//                     if (this.orderProduceInfo[i].color === row.color) {
+//                         firstOccurrenceIndex = i;
+//                     } else {
+//                         break;
+//                     }
+//                 }
+//                 if (rowIndex !== firstOccurrenceIndex) {
+//                     return [0, 0];
+//                 }
+//                 let rowspan = 1;
+//                 for (let i = firstOccurrenceIndex + 1; i < this.orderProduceInfo.length; i++) {
+//                     if (this.orderProduceInfo[i].color === row.color) {
+//                         rowspan++;
+//                     } else {
+//                         break;
+//                     }
+//                 }
+//                 return [rowspan, 1];
+//             }
+//         }
+//     }
+// }
 </script>
 
 <style scoped>

@@ -1,6 +1,6 @@
 <template>
     <el-table :data="taskData">
-        <el-table-column prop="orderId" label="订单号"></el-table-column>
+        <el-table-column prop="orderRId" label="订单号"></el-table-column>
         <el-table-column prop="customerName" label="客户"></el-table-column>
         <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
         <el-table-column prop="orderStatus" label="状态"></el-table-column>
