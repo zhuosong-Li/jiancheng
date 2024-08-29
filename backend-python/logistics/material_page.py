@@ -292,9 +292,9 @@ def get_all_material_storage():
             MaterialType.warehouse_id == MaterialWarehouse.material_warehouse_id,
         )
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .join(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .join(Order, OrderShoe.order_id == Order.order_id)
+        .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
     query2 = (
         db.session.query(
@@ -319,9 +319,9 @@ def get_all_material_storage():
             MaterialType.warehouse_id == MaterialWarehouse.material_warehouse_id,
         )
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .join(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .join(Order, OrderShoe.order_id == Order.order_id)
+        .outerjoin(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
 
     query = query1.union(query2)
@@ -355,10 +355,10 @@ def get_all_material_storage():
                 "materialSpecification": material_storage.specification,
                 "warehouseName": material_storage.material_warehouse_name,
                 "unit": material_storage.material_unit,
-                "amountRemain": material_storage.material_storage_amount,
-                "valueRemain": material_storage.material_storage_amount
-                * material_storage.unit_price,
-                "unitPrice": material_storage.unit_price,
+                "amountRemain": round(material_storage.material_storage_amount, 3),
+                "valueRemain": round(material_storage.material_storage_amount
+                * material_storage.unit_price, 3),
+                "unitPrice": round(material_storage.unit_price, 3),
                 "factoryName": material_storage.supplier_name,
                 "inheritId": material_storage.shoe_rid,
                 "OrderId": material_storage.order_rid,
