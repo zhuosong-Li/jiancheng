@@ -10,9 +10,11 @@ from models import (
     OrderShoe,
     OrderShoeStatus,
     OrderShoeStatusReference,
+    OrderShoeBatchInfo,
     OrderStatus,
     Customer,
-    Shoe
+    Shoe,
+    Color,
 )
 from sqlalchemy import or_, text
 from datetime import datetime
@@ -119,3 +121,80 @@ def get_orders_in_production():
         "progressOrders": progress_orders
     }
     return result
+
+@order_bp.route("/order/getorderInfo", methods=["GET"])
+def get_order_info():
+    order_id = request.args.get("orderid")
+    entities = (
+        db.session.query(
+            Order, Customer, OrderStatus
+        )
+        .filter(Order.order_id == order_id)
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .first()
+    )
+    print(entities)
+    formatted_start_date = entities.Order.start_date.strftime("%Y-%m-%d")
+    formatted_end_date = entities.Order.end_date.strftime("%Y-%m-%d")
+    result = {
+        "orderId": entities.Order.order_rid,
+        "customerName": entities.Customer.customer_name,
+        "createTime": formatted_start_date,
+        "deadlineTime": formatted_end_date,
+        "status": entities.OrderStatus.order_current_status
+    }
+    return jsonify(result)
+
+@order_bp.route("/order/getordershoesizesinfo", methods=["GET"])
+def get_order_shoe_sizes_info():
+    order_id = request.args.get("orderid")
+    order_shoe_id = request.args.get("ordershoeid")
+    entities = (
+        db.session.query(
+            Order, OrderShoe, Shoe, OrderShoeBatchInfo, Color
+        )
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .outerjoin(OrderShoeBatchInfo, OrderShoeBatchInfo.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(Color, Color.color_id == OrderShoeBatchInfo.color_id)
+        .filter(Order.order_rid == order_id)
+        .filter(Shoe.shoe_rid == order_shoe_id)
+        .all()
+    )
+
+    # Dictionary to accumulate total amounts by color
+    color_totals = {}
+
+    # First loop to accumulate total amounts for each color
+    for entity in entities:
+        order, order_shoe, shoe, order_shoe_batch_info, color = entity
+        if color.color_name not in color_totals:
+            color_totals[color.color_name] = 0
+        color_totals[color.color_name] += order_shoe_batch_info.total_amount
+
+    # Second loop to build the result list and include the color totals
+    result = []
+    for entity in entities:
+        order, order_shoe, shoe, order_shoe_batch_info, color = entity
+        result.append(
+            {
+                "size": order_shoe_batch_info.name,
+                "35": order_shoe_batch_info.size_35_amount,
+                "36": order_shoe_batch_info.size_36_amount,
+                "37": order_shoe_batch_info.size_37_amount,
+                "38": order_shoe_batch_info.size_38_amount,
+                "39": order_shoe_batch_info.size_39_amount,
+                "40": order_shoe_batch_info.size_40_amount,
+                "41": order_shoe_batch_info.size_41_amount,
+                "42": order_shoe_batch_info.size_42_amount,
+                "43": order_shoe_batch_info.size_43_amount,
+                "44": order_shoe_batch_info.size_44_amount,
+                "45": order_shoe_batch_info.size_45_amount,
+                "color": color.color_name,
+                "pairAmount": order_shoe_batch_info.total_amount,
+                "total": color_totals[color.color_name]  # Add total amount for the color
+            }
+        )
+        
+    return jsonify(result)

@@ -28,10 +28,10 @@ ORDERSTATUSNAMELIST = [
 ORDERSHOESTATUSNAMELIST = [
     "投产指令单创建",
     "投产指令单下发",
-    "面料单位用量计算",
-    "面料单位用量下发",
     "一次BOM填写",
     "一次BOM下发",
+    "面料单位用量计算",
+    "面料单位用量下发",
     "一次采购订单创建",
     "一次采购订单下发",
     "一次采购入库",
@@ -166,7 +166,7 @@ class EventProcessor:
             if i == 0:
                 self.orderShoeProductionPath.setSource(node)
             elif i == 9:
-                prevs.append(self.orderShoeStatusidToNode[3])
+                prevs.append(self.orderShoeStatusidToNode[1])
             elif i == 16:
                 prevs = [prev, self.orderShoeStatusidToNode[8]]
             elif i == 17:
@@ -266,7 +266,7 @@ class EventProcessor:
         else:
             query_db = OrderShoeStatus
             attr_name = "order_shoe_id"
-            attr_query_subject = event.event.event_order_shoe_id
+            attr_query_subject = event.event_order_shoe_id
         
         if current_status:
             entity = (

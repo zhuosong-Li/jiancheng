@@ -81,7 +81,6 @@ def get_material_type_and_name():
             MaterialType.warehouse_id == MaterialWarehouse.material_warehouse_id,
         )
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .filter(MaterialType.material_category == material_category)
     )
     if material_type:
         query = query.filter(MaterialType.material_type_name.like(f"%{material_type}%"))
@@ -89,6 +88,8 @@ def get_material_type_and_name():
         query = query.filter(Material.material_name.like(f"%{material_name}%"))
     if supplier_name:
         query = query.filter(Supplier.supplier_name.like(f"%{supplier_name}%"))
+    if material_category:
+        query = query.filter(MaterialType.material_type_category == material_category)
     result = []
     for row in query:
         result.append(
@@ -98,6 +99,7 @@ def get_material_type_and_name():
                 "warehouseName": row.MaterialWarehouse.material_warehouse_name,
                 "unit": row.Material.material_unit,
                 "supplierName": row.Supplier.supplier_name,
+                "materialCategory": row.MaterialType.material_category,
             }
         )
     return jsonify(result)
