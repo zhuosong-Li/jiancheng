@@ -43,8 +43,7 @@ const pendingData = ref([])
 const inProgressData = ref([])
 
 onMounted(()=> {
-    const firstBomStatus = 2
-    const secondBomStatus = 11
+    const firstBomStatus = 4
     const params = {
         ordershoestatus : firstBomStatus
     };
@@ -54,24 +53,11 @@ onMounted(()=> {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {
-            element['taskName'] = "一次BOM填写"
+            element['taskName'] = "面料用量计算"
             pendingData.value.push(element)
         });
         firstBomProgress.forEach(element => {
-            element['taskName'] = "一次BOM填写"
-            inProgressData.value.push(element)
-        });
-    })
-    params['ordershoestatus']  = secondBomStatus
-    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
-        const secondBomPending = response.data.pendingOrders
-        const secondBomProgress = response.data.inProgressOrders
-        secondBomPending.forEach(element => {
-            element['taskName']  = "二次BOM填写"
-            pendingData.value.push(element)
-        });
-        secondBomProgress.forEach(element => {
-            element['taskName'] = "二次BOM填写"
+            element['taskName'] = "面料用量计算"
             inProgressData.value.push(element)
         });
     })

@@ -10,6 +10,8 @@ from production.production_manager import production_manager_bp
 from warehouse.warehouse_manager import warehouse_manager_bp
 from logistics.assets_purchase_page import assets_purchase_page_bp
 from shared_apis.color import color_bp
+from logistics.first_bom import first_bom_bp
+from shared_apis.department import department_bp
 
 
 def register_blueprints():
@@ -24,4 +26,6 @@ def register_blueprints():
     app.register_blueprint(warehouse_manager_bp)
     app.register_blueprint(assets_purchase_page_bp)
     app.register_blueprint(color_bp)
+    app.register_blueprint(department_bp)
+    app.register_blueprint(first_bom_bp)
 

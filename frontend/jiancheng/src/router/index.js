@@ -11,6 +11,7 @@ import HeadOfWareHouse from '../Pages/TotalWarehouse/HeadOfWarehouse/views/HeadO
 import FabricCuttingSupervisor from '../Pages/ProductionManagementDepartment/FabricCuttingSupervisor/views/FabricCuttingSupervisor.vue'
 import SewingMachineSupervisor from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/views/SewingMachineSupervisor.vue'
 import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSupervisor/views/MoldingSupervisor.vue'
+import UsageCalculation from '../Pages/UsageCalculation/views/UsageCalculation.vue'
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
@@ -83,6 +84,11 @@ const router = createRouter({
       path :'/molding',
       name : 'molding',
       component: MoldingSupervisor
+    },
+    {
+      path :'/usagecalculation',
+      name : 'usagecalculation',
+      component: UsageCalculation
     },
     ...LogisticsRoutes,
     ...ProductionRoutes,

@@ -34,8 +34,6 @@
           { stage: '打样单修改', department: '开发部' },
           { stage: '打样单最终确认', department: '业务部' },
           { stage: '生产订单创建', department: '业务部' },
-          { stage: '生产订单下发', department: '业务部' },
-          { stage: '生产订单确认', department: '财务部' },
           { stage: '生产订单总经理确认', department: '总经理' },
           { stage: '生产副总确认', department: '生产部' },
           { stage: '生产流程', department: '生产部' },

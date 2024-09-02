@@ -19,15 +19,15 @@ class BomItem(db.Model):
     material_specification = db.Column(db.String(50), nullable=False)
     unit_usage = db.Column(db.Numeric(10, 5), nullable=False)
     total_usage = db.Column(db.Numeric(10, 5), nullable=False)
-    department = db.Column(
+    department_id = db.Column(
         db.Integer, db.ForeignKey("department.department_id"), nullable=True
     )
+    bom_item_add_type = db.Column(db.String(1), nullable=False)
     remark = db.Column(db.String(100), nullable=True)
     bom_id = db.Column(db.BigInteger, db.ForeignKey("bom.bom_id"), nullable=False)
     bom_item_color = db.Column(
         db.Integer, db.ForeignKey("color.color_id"), nullable=True
     )
-    bom_add_type = db.Column(db.String(1), nullable=True)
     size_34_total_usage = db.Column(db.Integer, nullable=True)
     size_35_total_usage = db.Column(db.Integer, nullable=True)
     size_36_total_usage = db.Column(db.Integer, nullable=True)
@@ -56,7 +56,7 @@ class Bom(db.Model):
     order_shoe_id = db.Column(
         db.BigInteger, db.ForeignKey("order_shoe.order_shoe_id"), nullable=False
     )
-
+    bom_status = db.Column(db.String(1), nullable=True)
     def __repr__(self):
         return f"<Bom(bom_id={self.bom_id})>"
 
@@ -539,6 +539,8 @@ class Shoe(db.Model):
     shoe_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     shoe_rid = db.Column(db.String(20), nullable=False)
     shoe_image_url = db.Column(db.String(100), nullable=True)
+    shoe_designer = db.Column(db.String(10), nullable=True)
+    shoe_adjuster = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<Shoe(shoe_id={self.shoe_id})>"
