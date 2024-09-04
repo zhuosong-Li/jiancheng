@@ -37,6 +37,9 @@ if __name__ == "__main__":
     #     datagen.setupDBLocalData(terminating_layer=7)
     # with app.app_context():
     #     processorTest = EventProcessor()
+    #     processorTest.testPaths()
+    #     processorTest.processEvent(Event(event_id = 10,staff_id = 1, handle_time = "2024-07-30",
+    #                                      operation_id = 43,event_order_id = 0,event_order_shoe_id = 1))
     #             # operation 103 changes status 32 to 2
     #     mock_event = Event(event_id = 41, staff_id = 1,handle_time = "2024-07-02",
     #                             operation_id = 121,event_order_id = 4,event_order_shoe_id =11)
