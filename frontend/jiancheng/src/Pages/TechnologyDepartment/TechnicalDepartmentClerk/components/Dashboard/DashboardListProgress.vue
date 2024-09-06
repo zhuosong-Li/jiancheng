@@ -49,7 +49,7 @@ export default {
         handleRowClick(row) {
             let url;
             if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
             } else if (row.taskName === '二次BOM填写') {
                 url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
             }

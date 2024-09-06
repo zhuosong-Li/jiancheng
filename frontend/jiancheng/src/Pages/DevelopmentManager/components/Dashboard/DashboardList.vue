@@ -69,10 +69,8 @@ export default {
         handleRowClick(row) {
             console.log("123123123")
             let url;
-            if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次BOM填写') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            if (row.taskName === '投产指令单创建') {
+                url = `${window.location.origin}/developmentmanager/productionorder/create/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

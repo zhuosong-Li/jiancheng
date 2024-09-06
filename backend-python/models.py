@@ -86,6 +86,7 @@ class Customer(db.Model):
     __tablename__ = "customer"
     customer_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     customer_name = db.Column(db.String(50), nullable=False)
+    customer_brand = db.Column(db.String(25), nullable=True)
 
     def __repr__(self):
         return f"<Customer(customer_id={self.customer_id})>"
@@ -237,6 +238,9 @@ class Order(db.Model):
     customer_id = db.Column(
         db.Integer, db.ForeignKey("customer.customer_id"), nullable=False
     )
+    salesman = db.Column(db.String(10), nullable=False)
+    production_list_upload_status = db.Column(db.String(1), nullable=True)
+    amount_list_upload_status = db.Column(db.String(1), nullable=True)
 
     def __repr__(self):
         return f"<Order(order_id={self.order_id})>"
@@ -306,6 +310,7 @@ class OrderShoe(db.Model):
     shoe_id = db.Column(db.Integer, db.ForeignKey("shoe.shoe_id"), nullable=False)
     order_id = db.Column(db.BigInteger, db.ForeignKey("order.order_id"), nullable=False)
     customer_product_name = db.Column(db.String(30), nullable=False)
+    production_order_upload_status = db.Column(db.String(1), nullable=True)
 
     def __repr__(self):
         return f"<OrderShoe(order_shoe_id={self.order_shoe_id})>"

@@ -12,6 +12,8 @@ import FabricCuttingSupervisor from '../Pages/ProductionManagementDepartment/Fab
 import SewingMachineSupervisor from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/views/SewingMachineSupervisor.vue'
 import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSupervisor/views/MoldingSupervisor.vue'
 import UsageCalculation from '../Pages/UsageCalculation/views/UsageCalculation.vue'
+import BussinessManager from '@/Pages/BussinessManager/views/BussinessManager.vue'
+import DevelopmentManager from '@/Pages/DevelopmentManager/views/DevelopmentManager.vue'
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
@@ -22,6 +24,8 @@ import FabricSupervisorRoutes from '../Pages/ProductionManagementDepartment/Fabr
 import SewingSupervisorRoutes from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/routers/sewingSupervisorRoutes'
 import MoldingSupervisorRoutes from '../Pages/ProductionManagementDepartment/MoldingSupervisor/routers/moldingSupervisorRoutes'
 import DeputyGeneral from '@/Pages/ProductionManagementDepartment/ProductionManager/routers/DeputyGeneral'
+import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalculation'
+import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -90,6 +94,16 @@ const router = createRouter({
       name : 'usagecalculation',
       component: UsageCalculation
     },
+    {
+      path :'/bussinessmanager',
+      name : 'bussinessmanager',
+      component: BussinessManager
+    },
+    {
+      path :'/developmentmanager',
+      name : 'developmentmanager',
+      component: DevelopmentManager
+    },
     ...LogisticsRoutes,
     ...ProductionRoutes,
     ...TechenicalDepartmentClerkRoutes,
@@ -97,7 +111,9 @@ const router = createRouter({
     ...FabricSupervisorRoutes,
     ...SewingSupervisorRoutes,
     ...MoldingSupervisorRoutes,
-    ...DeputyGeneral
+    ...DeputyGeneral,
+    ...UsageCalculationRoutes,
+    ...DevelopmentManagerRoutes
   ]
 })
 

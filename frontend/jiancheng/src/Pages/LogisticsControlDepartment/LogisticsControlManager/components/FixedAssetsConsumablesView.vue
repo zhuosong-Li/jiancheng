@@ -1218,7 +1218,7 @@ export default {
                     })
             }
         },
-        openSizeDialog(row,index, type) {
+        openSizeDialog(row, index, type) {
             this.sizeData = row.sizeInfo
             this.isSizeDialogVisible = true
             this.currentSizeIndex = index

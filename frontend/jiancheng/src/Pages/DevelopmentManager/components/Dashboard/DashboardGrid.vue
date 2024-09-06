@@ -84,8 +84,8 @@ export default {
             let url = ""
             const orderId = task.orderId.toString().replace(' ','-')
             switch(task.taskName) {
-                case "面料用量计算":
-                    url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${orderId}`;
+                case "投产指令单创建":
+                    url = `${window.location.origin}/developmentmanager/productionorder/create/orderid=${orderId}`;
                     break
             }
             
