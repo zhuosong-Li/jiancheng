@@ -5,6 +5,7 @@ from app_config import app, db
 from models import *
 from api_utility import randomIdGenerater
 from event_processor import EventProcessor
+from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 
 first_bom_bp = Blueprint("first_bom_bp", __name__)
 
@@ -47,6 +48,12 @@ def get_order_first_bom():
             status = "已提交"
         elif status == "3":
             status = "已下发"
+        elif status == "4":
+            status = "等待用量填写"
+        elif status == "5":
+            status = "已用量填写"
+        elif status == "6":
+            status = "BOM完成"
         result.append(
             {
                 "orderId": order.order_rid,
@@ -55,6 +62,7 @@ def get_order_first_bom():
                 "customerId": order_shoe.customer_product_name,
                 "designer": shoe.shoe_designer,
                 "editter": shoe.shoe_adjuster,
+                "image" : IMAGE_STORAGE_PATH+shoe.shoe_image_url if shoe.shoe_image_url is not None else None,
                 "status": status,
             }
         )
@@ -208,19 +216,7 @@ def submit_bom():
     )
     bom.Bom.bom_status = 2
     db.session.commit()
-    processor = EventProcessor()
-    event = Event(
-        staff_id=1,
-        handle_time=datetime.datetime.now(),
-        operation_id=43,
-        event_order_id=bom.Order.order_id,
-        event_order_shoe_id=bom.OrderShoe.order_shoe_id,
-    )
-    result = processor.processEvent(event)
-    if not result:
-        return jsonify({"message": "failed"}), 400
-    db.session.add(event)
-    db.session.commit()
+    
     return jsonify({"status": "success"})
 
 @first_bom_bp.route("/firstbom/issueboms", methods=["POST"])
@@ -244,6 +240,32 @@ def issue_boms():
         )
         bom.Bom.bom_status = 3
         order_shoe_id = bom.OrderShoe.order_shoe_id
+        db.session.commit()
+        processor = EventProcessor()
+        event = Event(
+            staff_id=1,
+            handle_time=datetime.datetime.now(),
+            operation_id=42,
+            event_order_id=order_id,
+            event_order_shoe_id=order_shoe_id,
+        )
+        result = processor.processEvent(event)
+        if not result:
+            return jsonify({"message": "failed"}), 400
+        db.session.add(event)
+        db.session.commit()
+        processor = EventProcessor()
+        event = Event(
+            staff_id=1,
+            handle_time=datetime.datetime.now(),
+            operation_id=43,
+            event_order_id=order_id,
+            event_order_shoe_id=order_shoe_id,
+        )
+        result = processor.processEvent(event)
+        if not result:
+            return jsonify({"message": "failed"}), 400
+        db.session.add(event)
         db.session.commit()
         processor = EventProcessor()
         event = Event(

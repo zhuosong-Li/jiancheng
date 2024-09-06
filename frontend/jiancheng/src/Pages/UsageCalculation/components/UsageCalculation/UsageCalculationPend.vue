@@ -1,14 +1,16 @@
 <template>
+
     <el-row :gutter="0">
         <el-col :span="12" :offset="0">
-            <h1>全部已处理任务：</h1>
-        </el-col>
+            <h1>全部待处理任务：</h1>
+        </el-col>        
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="4" :offset="0"><el-button size="default" @click="backToAll">返回全部任务</el-button></el-col>    
         <el-col :span="4" :offset="15"><el-input v-model="searchOrder" placeholder="请输入订单号" size="normal" :suffix-icon="Search" clearable @input="filterData"></el-input>
         </el-col>
     </el-row>
+    
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="24">
             <el-table :data="displayData" style="height: 500px" @row-click="handleRowClick">
@@ -30,12 +32,12 @@
 <script>
 import { Search } from '@element-plus/icons-vue'
 export default {
-    props: ['inProgressTaskData'],
+    props: ['pendingTaskData'],
     data() {
         return {
             Search,
-            searchOrder: "",
-            displayData: this.inProgressTaskData
+            searchOrder:"",
+            displayData:this.pendingTaskData
         }
     },
     methods: {
@@ -44,16 +46,14 @@ export default {
         }, 
         filterData() {
             if (!this.searchOrder) {
-                this.displayData = this.inProgressTaskData
+                this.displayData = this.pendingTaskData
             }
-            this.displayData = this.inProgressTaskData.filter(task => task.orderId.includes(this.searchOrder));
+            this.displayData = this.pendingTaskData.filter(task => task.orderId.includes(this.searchOrder));
         },
         handleRowClick(row) {
             let url;
-            if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单生成') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
+            if (row.taskName === '面料用量计算') {
+                url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

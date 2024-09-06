@@ -9,7 +9,7 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    材料用量计算-姓名
+                    开发部经理-姓名
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
@@ -17,7 +17,10 @@
                             <span>任务看板</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
-                            <span>用量计算</span>
+                            <span>投产指令单创建</span>
+                        </el-menu-item>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
+                            <span>鞋型管理</span>
                         </el-menu-item>
                         <el-menu-item index="9">
                             <span>退出系统</span>
@@ -35,12 +38,17 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import { UserFilled } from '@element-plus/icons-vue'
-import Dashboard from '../components/UsageCalculationDashboard.vue';
+import Dashboard from '../components/DevelopmentManagerDashboard.vue'
+import ProductionOrderCreate from '../components/ProductionOrderCreate.vue'
+import ShoeManagement from '../components/ShoeManagement.vue'
+
 
 export default {
     components: {
         AllHeader,
-        Dashboard
+        Dashboard,
+        ProductionOrderCreate,
+        ShoeManagement
     },
     data() {
         return {
@@ -55,7 +63,10 @@ export default {
                     this.currentComponent = 'Dashboard'
                     break
                 case 2:
-                    this.currentComponent = 'UsageCaculation'
+                    this.currentComponent = 'ProductionOrderCreate'
+                    break
+                case 3:
+                    this.currentComponent = 'ShoeManagement'
                     break
                 case 9:
                     this.$router.push('/')

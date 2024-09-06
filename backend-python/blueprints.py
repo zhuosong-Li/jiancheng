@@ -12,6 +12,12 @@ from logistics.assets_purchase_page import assets_purchase_page_bp
 from shared_apis.color import color_bp
 from logistics.first_bom import first_bom_bp
 from shared_apis.department import department_bp
+from usage_calculation.usage_calculation import usage_calculation_bp
+from bussiness.order_import import order_import_bp
+from shared_apis.customer import customer_bp
+from shared_apis.shoe import shoe_bp
+from development.shoe_manage import shoe_manage_bp
+from development.dev_producion_order import dev_producion_order_bp
 
 
 def register_blueprints():
@@ -28,4 +34,10 @@ def register_blueprints():
     app.register_blueprint(color_bp)
     app.register_blueprint(department_bp)
     app.register_blueprint(first_bom_bp)
+    app.register_blueprint(usage_calculation_bp)
+    app.register_blueprint(order_import_bp)
+    app.register_blueprint(customer_bp)
+    app.register_blueprint(shoe_bp)
+    app.register_blueprint(shoe_manage_bp)
+    app.register_blueprint(dev_producion_order_bp)
 

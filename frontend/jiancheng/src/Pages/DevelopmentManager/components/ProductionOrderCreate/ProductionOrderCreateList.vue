@@ -63,19 +63,17 @@ export default {
         },
         displayProgress(){
             this.$emit('changeToProgress')
-        },
-        handleRowClick(row) {
+        }
+    },
+    handleRowClick(row) {
             let url;
-            if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单生成') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            }
+            if (row.taskName === '投产指令单创建') {
+                url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
+            } 
             if (url) {
                 window.open(url, '_blank');
             }
         },
-    },
 
 }
 </script>
