@@ -13,6 +13,8 @@ def get_all_suppliers():
         supplier_type = supplier.supplier_type
         if supplier_type == "N":
             supplier_type = "普通供货商"
+        elif supplier_type == "W":
+            supplier_type = "外加工供货商"
         result.append(
             {
                 "supplierId": supplier.supplier_id,

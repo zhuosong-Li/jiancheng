@@ -19,7 +19,6 @@ outer_layer = [
     Color,
     MaterialWarehouse,
     Supplier,
-    ShoePart,
 ]
 middle_first_layer = [Staff, Order, Material]
 middle_second_layer = [Event, OrderStatus, OrderShoe]

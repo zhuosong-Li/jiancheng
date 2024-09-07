@@ -58,6 +58,10 @@ export default {
                     value: 'N',
                     label: '普通供货商'
                 },
+                {
+                    value: 'W',
+                    label: '外加工供货商'
+                }
             ]
         }
     },

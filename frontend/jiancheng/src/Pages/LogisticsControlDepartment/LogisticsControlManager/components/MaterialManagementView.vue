@@ -311,16 +311,6 @@
                     placeholder="请输入材料类型"
                 ></el-input>
             </el-form-item>
-            <el-form-item label="材料分类" required>
-                <el-select v-model="newMaterialTypeForm.materialCategory" placeholder="请选择材料分类">
-                    <el-option
-                        v-for="item in materialCategoryOptions"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    ></el-option>
-                </el-select>
-            </el-form-item>
             <el-form-item label="仓库名称" required>
                 <el-select v-model="newMaterialTypeForm.warehouseName" placeholder="请选择仓库名称">
                     <el-option
@@ -344,7 +334,7 @@
         </template>
     </el-dialog>
 
-    <el-dialog title="批量添加新材料" v-model="newMaterialVis" width="80%">
+    <el-dialog title="批量添加新材料" v-model="newMaterialVis" width="90%">
         <el-table :data="newMaterialData" border>
             <el-table-column prop="warehouseName" label="仓库名称"> </el-table-column>
             <el-table-column label="材料类型">
@@ -396,6 +386,23 @@
                     >
                         <el-option
                             v-for="item in factoryOptions"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value"
+                        >
+                        </el-option>
+                    </el-select>
+                </template>
+            </el-table-column>
+            <el-table-column label="材料分类" width="150">
+                <template #default="scope">
+                    <el-select
+                        v-model="scope.row.materialCategory"
+                        placeholder=""
+                        filterable
+                    >
+                        <el-option
+                            v-for="item in materialCategoryOptions"
                             :key="item.value"
                             :label="item.label"
                             :value="item.value"
@@ -803,6 +810,7 @@ export default {
                 unit: '',
                 factoryName: '询价',
                 existenceStatus: 'unchecked',
+                materialCategory: 0,
                 similiarMaterials: []
             })
         },
@@ -832,6 +840,7 @@ export default {
         },
         async addmaterialSubmit() {
             for (const row of this.newMaterialData) {
+                console.log(row)
                 if (!row.materialName || !row.warehouseName || !row.unit || !row.factoryName) {
                     this.$message({
                         type: 'warning',

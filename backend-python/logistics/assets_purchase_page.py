@@ -89,7 +89,7 @@ def get_material_type_and_name():
     if supplier_name:
         query = query.filter(Supplier.supplier_name.like(f"%{supplier_name}%"))
     if material_category:
-        query = query.filter(MaterialType.material_type_category == material_category)
+        query = query.filter(Material.material_category == material_category)
     result = []
     for row in query:
         result.append(
@@ -99,7 +99,7 @@ def get_material_type_and_name():
                 "warehouseName": row.MaterialWarehouse.material_warehouse_name,
                 "unit": row.Material.material_unit,
                 "supplierName": row.Supplier.supplier_name,
-                "materialCategory": row.MaterialType.material_category,
+                "materialCategory": row.Material.material_category,
             }
         )
     return jsonify(result)

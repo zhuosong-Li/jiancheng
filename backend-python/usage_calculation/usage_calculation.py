@@ -179,11 +179,11 @@ def get_shoe_bom_items():
                 "materialSpecification": bom_item.material_specification,
                 "color": color.color_id if color else "",
                 "unit": material.material_unit,
-                "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material_type.material_category == 0 else None,
+                "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material.material_category == 0 else None,
                 "approvalUsage": bom_item.total_usage if bom_item.total_usage else 0.00,
                 "useDepart": bom_item.department_id,
                 "supplierName": supplier.supplier_name,
-                "materialCategory": material_type.material_category,
+                "materialCategory": material.material_category,
                 "remark": bom_item.remark,
                 "sizeInfo": sizeInfo,
             }
