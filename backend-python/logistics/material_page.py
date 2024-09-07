@@ -79,11 +79,12 @@ def get_all_warehouse_names():
 @material_page_bp.route("/logistics/allmaterialtypes", methods=["GET"])
 def get_all_material_types():
     material_types = (
-        db.session.query(MaterialType, MaterialWarehouse)
+        db.session.query(MaterialType, MaterialWarehouse, Material)
         .join(
             MaterialWarehouse,
             MaterialType.warehouse_id == MaterialWarehouse.material_warehouse_id,
         )
+        .join(Material, Material.material_type_id == MaterialType.material_type_id)
         .all()
     )
     result = []
@@ -91,7 +92,7 @@ def get_all_material_types():
         result.append(
             {
                 "materialType": material_type.MaterialType.material_type_name,
-                'materialCategory': material_type.MaterialType.material_category,
+                'materialCategory': material_type.Material.material_category,
                 "warehouseName": material_type.MaterialWarehouse.material_warehouse_name,
             }
         )
@@ -102,7 +103,6 @@ def get_all_material_types():
 def create_material_type():
     material_type = request.json.get("materialType", None)
     warehouse_name = request.json.get("warehouseName", None)
-    material_category = request.json.get("materialCategory", None)
     print(material_type, warehouse_name, material_category)
     # Get the warehouse based on the warehouse name
     warehouse = (
@@ -134,7 +134,6 @@ def create_material_type():
     material_type = MaterialType(
         material_type_name=material_type,
         warehouse_id=warehouse.material_warehouse_id,
-        material_category=material_category,
     )
     db.session.add(material_type)
     db.session.commit()
@@ -208,6 +207,7 @@ def create_material():
     material_list = request.json.get("materials", None)
     print(material_list)
     for material in material_list:
+        material_category = material.get("materialCategory", None)
         material_name = material.get("materialName", None)
         material_type = material.get("materialType", None)
         unit = material.get("unit", None)
@@ -229,8 +229,9 @@ def create_material():
 
         # Check if the material already exists
         existing_material = (
-            db.session.query(Material)
-            .filter(Material.material_name == material_name)
+            db.session.query(Material, Supplier)
+            .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+            .filter(Material.material_name == material_name, Supplier.supplier_name == factory_name)
             .first()
         )
 
@@ -246,6 +247,7 @@ def create_material():
             material_supplier=factory.supplier_id,
             shoe_part_id=1,
             material_creation_date=datetime.now().strftime("%Y-%m-%d"),
+            material_category=material_category,
         )
         db.session.add(material)
         db.session.commit()
