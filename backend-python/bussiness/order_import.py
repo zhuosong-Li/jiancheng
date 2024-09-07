@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy.dialects.mysql import insert
 import pandas as pd
 import datetime
+import time
 from werkzeug.utils import secure_filename
 import os
 import json
@@ -16,11 +17,14 @@ order_import_bp = Blueprint("order_import_bp", __name__)
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {"xls", "xlsx"}
 
+
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 @order_import_bp.route("/orderimport/getuploadorder", methods=["POST"])
 def upload_order():
+    time_s = time.time()
     # Check if the request has the file part
     if "file" not in request.files:
         return jsonify({"error": "No file part in the request"}), 400
@@ -75,15 +79,17 @@ def upload_order():
             return app.response_class(
                 response=json.dumps(response, ensure_ascii=False),
                 status=200,
-                mimetype='application/json'
+                mimetype="application/json",
             )
 
         except Exception as e:
             if os.path.exists(file_path):
                 os.remove(file_path)
             return jsonify({"error": str(e)}), 500
-
+    time_t = time.time()
+    print("time taken for /getuploadorder is " + str(time_t - time_s))
     return jsonify({"error": "Invalid file type"}), 400
+
 
 def transform_and_filter_data(data_list):
     from collections import defaultdict
@@ -97,24 +103,34 @@ def transform_and_filter_data(data_list):
         filtered_data_dict[key].append(item)
     return filtered_data_dict
 
+
 @order_import_bp.route("/orderimport/deleteuploadtempfile", methods=["DELETE"])
 def delete_temp_file():
+    time_s = time.time()
     file_name = request.args.get("fileName")
     if file_name:
         file_path = os.path.join(FILE_STORAGE_PATH, file_name)
         if os.path.exists(file_path):
             os.remove(file_path)
-            return jsonify({"message": "File deleted successfully"}), 200
-        return jsonify({"error": "File not found"}), 404
-    return jsonify({"error": "Invalid request"}), 400
+
+            result = jsonify({"message": "File deleted successfully"}), 200
+        else:
+            result = jsonify({"error": "File not found"}), 404
+    else:
+        result = jsonify({"error": "Invalid request"}), 400
+    time_t = time.time()
+
+    print("time taken for /deleteuploadtempfile is " + str(time_t - time_s))
+    return result
+
 
 @order_import_bp.route("/orderimport/confirmimportorder", methods=["POST"])
 def confirm_import_order():
+    time_s = time.time()
     file_name = request.json.get("fileName")
     order_info = request.json.get("orderInfo")
     if not file_name or not order_info:
         return jsonify({"error": "Invalid request"}), 400
-    print(file_name, order_info)
     order_rid = order_info["orderRId"]
     customer_id = order_info["customerId"]
     order_date = order_info["orderStartDate"]
@@ -124,18 +140,18 @@ def confirm_import_order():
     try:
         df = pd.read_excel(os.path.join(FILE_STORAGE_PATH, file_name), header=1)
         df.rename(
-                columns={
-                    "工厂型号": "inheritId",
-                    "客户型号": "customerId",
-                    "中文颜色": "colorCN",
-                    "英文颜色": "colorEN",
-                    "配码编号": "sizeId",
-                    "对/件": "pairEachBox",
-                    "件数": "boxCount",
-                    "双数": "pairCount",
-                },
-                inplace=True,
-            )
+            columns={
+                "工厂型号": "inheritId",
+                "客户型号": "customerId",
+                "中文颜色": "colorCN",
+                "英文颜色": "colorEN",
+                "配码编号": "sizeId",
+                "对/件": "pairEachBox",
+                "件数": "boxCount",
+                "双数": "pairCount",
+            },
+            inplace=True,
+        )
         df.fillna(0, inplace=True)
 
         # Transform the dataframe as needed
@@ -147,30 +163,34 @@ def confirm_import_order():
         if exist_order:
             return jsonify({"error": "Order Name already exists"}), 400
         new_order = Order(
-                order_rid=order_rid,
-                customer_id=customer_id,
-                start_date=order_date,
-                end_date=order_deadline,
-                salesman=order_salesman,
-                production_list_upload_status="0",
-                amount_list_upload_status="1",
+            order_rid=order_rid,
+            customer_id=customer_id,
+            start_date=order_date,
+            end_date=order_deadline,
+            salesman=order_salesman,
+            production_list_upload_status="0",
+            amount_list_upload_status="1",
         )
         db.session.add(new_order)
-        db.session.commit()
+        db.session.flush()
         os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid))
         new_file_name = "生产数量表.xlsx"
-        shutil.copy(os.path.join(FILE_STORAGE_PATH, file_name), os.path.join(FILE_STORAGE_PATH, order_rid, new_file_name))
+        shutil.copy(
+            os.path.join(FILE_STORAGE_PATH, file_name),
+            os.path.join(FILE_STORAGE_PATH, order_rid, new_file_name),
+        )
         print("创建新文件成功")
         new_order_id = Order.query.filter_by(order_rid=order_rid).first().order_id
         new_order_status = OrderStatus(
             order_id=new_order_id,
             order_current_status=order_status,
-            order_status_value = 1,
+            order_status_value=1,
         )
         db.session.add(new_order_status)
-        db.session.commit()
+        db.session.flush()
+        i = 0
         for key, items in filtered_data.items():
-            print(key, items)
+            # print(key, items)
             order_shoe_rid = key[0]
             customer_shoe_id = key[1]
             color_chinese_name = key[2]
@@ -178,42 +198,49 @@ def confirm_import_order():
             testnumber = 1
             if testnumber == 0:
                 return
-            exists_shoe = Shoe.query.filter_by(shoe_rid=order_shoe_rid).first()
-            if not exists_shoe:
-                shoe = Shoe(shoe_rid=order_shoe_rid)
-                db.session.add(shoe)
-                db.session.commit()
-            exits_color = Color.query.filter_by(color_name=color_chinese_name, color_en_name=color_english_name).first()
-            if not exits_color:
-                color = Color(color_name=color_chinese_name, color_en_name=color_english_name)
-                db.session.add(color)
-                db.session.commit()
+            shoe_obj = Shoe.query.filter_by(shoe_rid=order_shoe_rid).first()
+            if not shoe_obj:
+                shoe_obj = Shoe(shoe_rid=order_shoe_rid)
+                db.session.add(shoe_obj)
+                db.session.flush()
+            color_obj = Color.query.filter_by(
+                color_name=color_chinese_name, color_en_name=color_english_name
+            ).first()
+            if not color_obj:
+                color_obj = Color(
+                    color_name=color_chinese_name, color_en_name=color_english_name
+                )
+                db.session.add(color_obj)
+                db.session.flush()
             db.session.add(new_order)
-            db.session.commit()
-            exists_order_shoe = OrderShoe.query.filter_by(order_id=new_order_id, shoe_id=Shoe.query.filter_by(shoe_rid=order_shoe_rid).first().shoe_id).first()
-            if exists_order_shoe:
-                order_shoe_id = exists_order_shoe.order_shoe_id
-            else:
+            db.session.flush()
+            order_shoe = OrderShoe.query.filter_by(
+                order_id=new_order_id, shoe_id=shoe_obj.shoe_id
+            ).first()
+            if not order_shoe:
                 order_shoe = OrderShoe(
                     order_id=new_order_id,
-                    shoe_id=Shoe.query.filter_by(shoe_rid=order_shoe_rid).first().shoe_id,
+                    shoe_id=shoe_obj.shoe_id,
                     customer_product_name=customer_shoe_id,
                     production_order_upload_status="0",
                 )
                 db.session.add(order_shoe)
-                db.session.commit()
+                db.session.flush()
                 os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid))
-                order_shoe_id = OrderShoe.query.filter_by(order_id=new_order_id, shoe_id=Shoe.query.filter_by(shoe_rid=order_shoe_rid).first().shoe_id).first().order_shoe_id
                 order_shoe_status = OrderShoeStatus(
-                    order_shoe_id=order_shoe_id,
+                    order_shoe_id=order_shoe.order_shoe_id,
                     current_status=0,
                     current_status_value=0,
                 )
+            
             db.session.add(order_shoe_status)
-            db.session.commit()
+            db.session.flush()
+            arr = []
+            color_id = color_obj.color_id
+            order_shoe_id = order_shoe.order_shoe_id
             for item in items:
                 order_shoe_batch = OrderShoeBatchInfo(
-                    color_id=Color.query.filter_by(color_name=color_chinese_name, color_en_name=color_english_name).first().color_id,
+                    color_id=color_id,
                     order_shoe_id=order_shoe_id,
                     name=item["sizeId"],
                     total_amount=item["pairCount"],
@@ -234,14 +261,19 @@ def confirm_import_order():
                     size_44_amount=item["12/44"],
                     size_45_amount=item["13/45"],
                 )
-                db.session.add(order_shoe_batch)
-                db.session.commit()
-        return jsonify({"message": "Order imported successfully"}), 200
+                arr.append(order_shoe_batch)
+                i += 1
+            db.session.add_all(arr)
+        db.session.commit()
 
-
+        result = jsonify({"message": "Order imported successfully"}), 200
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        result = jsonify({"error": str(e)}), 500
+    time_t = time.time()
+    print("time taken for /confirmimportorder is " + str(time_t - time_s))
+    return result
+
 
 @order_import_bp.route("/orderimport/submitdoc", methods=["POST"])
 def submit_doc():
@@ -271,21 +303,26 @@ def submit_doc():
         db.session.commit()
     return jsonify({"message": "File submitted successfully"}), 200
 
+
 @order_import_bp.route("/orderimport/downloadorderdoc", methods=["GET"])
 def download_order_doc():
     file_type = request.args.get("filetype")
     order_rid = request.args.get("orderrid")
-    
+
     if not file_type or not order_rid:
         return jsonify({"error": "Invalid request"}), 400
 
     # Define the file path based on file_type
     if file_type == "0":
         file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "生产订单.xlsx")
-        new_filename = f"{order_rid}_生产订单.xlsx"  # New filename to send to the client
+        new_filename = (
+            f"{order_rid}_生产订单.xlsx"  # New filename to send to the client
+        )
     elif file_type == "1":
         file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "生产数量表.xlsx")
-        new_filename = f"{order_rid}_生产数量表.xlsx"  # New filename to send to the client
+        new_filename = (
+            f"{order_rid}_生产数量表.xlsx"  # New filename to send to the client
+        )
     else:
         return jsonify({"error": "Invalid file type"}), 400
 
