@@ -25,9 +25,8 @@ class BomItem(db.Model):
     bom_item_add_type = db.Column(db.String(1), nullable=False)
     remark = db.Column(db.String(100), nullable=True)
     bom_id = db.Column(
-        db.BigInteger,
-        bom_item_color=db.Column(db.Integer),
-    )
+        db.BigInteger)
+    bom_item_color=db.Column(db.Integer)
     size_34_total_usage = db.Column(db.Integer, nullable=True)
     size_35_total_usage = db.Column(db.Integer, nullable=True)
     size_36_total_usage = db.Column(db.Integer, nullable=True)
@@ -513,7 +512,7 @@ class PurchaseOrder(db.Model):
     purchase_order_rid = db.Column(db.String(50), nullable=False)
     purchase_order_type = db.Column(db.String(1), nullable=False)
     purchase_order_issue_date = db.Column(db.Date, nullable=False)
-    order_id = (db.Column(db.BigInteger),)
+    order_id = db.Column(db.BigInteger)
     purchase_order_status = db.Column(db.String(1), nullable=True)
 
     def __repr__(self):
@@ -685,7 +684,7 @@ class SizeMaterialStorage(db.Model):
         db.BigInteger,
     )
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
-    purchase_divide_order_id = (db.Column(db.BigInteger),)
+    purchase_divide_order_id = db.Column(db.BigInteger)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
