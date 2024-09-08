@@ -5,6 +5,7 @@ from app_config import app, db
 from blueprints import register_blueprints
 from mock_data_gen import *
 from models import *
+from event_processor import EventProcessor
 
 
 @app.route("/")
@@ -23,6 +24,8 @@ def main():
 
 
 if __name__ == "__main__":
+    event_processor = EventProcessor()
+    app.config['event_processor'] = event_processor
     # with app.app_context():
     # db.create_all()  # This will create the database tables under the application context.
     # shoes_rid = ["0E21922", "000000", "111111","222222"]
