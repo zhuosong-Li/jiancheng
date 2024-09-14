@@ -86,11 +86,13 @@ def get_all_material_info():
             MaterialStorage.current_amount,
             MaterialStorage.material_specification,
             MaterialStorage.unit_price,
+            MaterialStorage.material_estimated_arrival_date,
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
+            Color
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -98,6 +100,7 @@ def get_all_material_info():
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
+        .join(Color, Color.color_id == MaterialStorage.material_storage_color)
     )
     query2 = (
         db.session.query(
@@ -117,11 +120,13 @@ def get_all_material_info():
                 "material_specification"
             ),
             SizeMaterialStorage.unit_price,
+            SizeMaterialStorage.material_estimated_arrival_date,
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
+            Color
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -132,6 +137,7 @@ def get_all_material_info():
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
+        .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
     )
     # allow inbound operation when the order is in production
     # in case of leftover material needs to be inbounded
@@ -169,11 +175,13 @@ def get_all_material_info():
             current_amount,
             material_specification,
             unit_price,
+            material_estimated_arrival_date,
             material_name,
             material_unit,
             material_type_name,
             material_category,
             supplier_name,
+            color
         ) = row
         if actual_inbound_amount >= estimated_inbound_amount:
             status = "已完成入库"
@@ -197,6 +205,8 @@ def get_all_material_info():
             "shoeRId": shoe_rid,
             "materialStorageId": material_storage_id,
             "status": status,
+            "colorName": color.color_name,
+            "materialArrivalDate": material_estimated_arrival_date.strftime("%Y-%m-%d")
         }
         result.append(obj)
     return {"result": result, "total": count_result}

@@ -80,7 +80,7 @@
 							<el-col :span="10" :offset="0">
 								<span style="white-space: nowrap">
 									{{ tab.lineLabel }}：
-									<el-select v-model="tab.lineValue" placeholder="" @change="" multiple>
+									<el-select v-model="tab.lineValue" placeholder="" @change="" multiple disabled>
 										<el-option v-for="item in productionLines[tab.name]" :key="item" :label="item"
 											:value="item">
 										</el-option>
@@ -97,14 +97,6 @@
 											已设置外包
 										</div>
 									</el-descriptions-item>
-									<el-descriptions-item label="操作">
-										<el-button v-if="tab.isOutSource === false" type="primary" size="default"
-											@click="startOutSourceFlow()">启动外包流程</el-button>
-										<el-button-group v-else>
-											<el-button type="primary" size="default" @click="startOutSourceFlow()">查看外包流程</el-button>
-											<el-button type="warning" size="default" @click="">删除外包流程</el-button>
-										</el-button-group>
-									</el-descriptions-item>
 								</el-descriptions>
 							</el-col>
 						</el-row>
@@ -113,7 +105,7 @@
 								<span>
 									{{ tab.dateLabel }}：
 									<el-date-picker v-model="tab.dateValue" type="daterange" size="default"
-										range-separator="-" start-placeholder="" end-placeholder="">
+										range-separator="-" disabled>
 									</el-date-picker>
 								</span>
 							</el-col>
@@ -148,8 +140,7 @@
 				</el-tabs>
 				<template #footer>
 					<span>
-						<el-button @click="isScheduleModify = false">取消</el-button>
-						<el-button type="primary" @click="">修改</el-button>
+						<el-button @click="isScheduleModify = false">关闭</el-button>
 					</span>
 				</template>
 			</el-dialog>

@@ -44,7 +44,7 @@ onMounted(async () => {
     params = { "reportId": props.currentReport.reportId }
     response = await axios.get("http://localhost:8000/production/getquantityreportdetail", { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })

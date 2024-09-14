@@ -49,7 +49,7 @@
         <el-col :span="12" :offset="14">
             <el-pagination @size-change="handleSizeChange" @current-change="handlePageChange"
                 :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
-                layout="total, sizes, prev, pager, next, jumper" :total="materialTableData.length" />
+                layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
 
@@ -244,7 +244,7 @@ export default {
             this.getMaterialTableData()
         },
         handlePageChange(val) {
-            this.page = val
+            this.currentPage = val
             this.getMaterialTableData()
         },
 

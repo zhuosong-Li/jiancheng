@@ -3,21 +3,49 @@ import ProductionOutsourcePage from '../views/ProductionOutsourcePage.vue'
 import ProductionAmountApprovalPage from '../views/ProductionAmountApprovalPage.vue'
 export default [
   {
-    path: '/productiongeneral/productiondetail/customerid=:customerId',
+    path: '/productiongeneral/productiondetail',
     name: 'inproduction-details',
     component: OrderDetails,
-    props: true
+    props: route => (
+      {
+        orderId: route.query.orderId,
+        orderRId: route.query.orderRId,
+        orderStartDate: route.query.orderStartDate,
+        orderEndDate: route.query.orderEndDate,
+        taskName: route.query.taskName,
+        customerName: route.query.customerName,
+        orderTotalShoes: route.query.orderTotalShoes
+      }
+    )
   },
   {
-    path: '/productiongeneral/productionoutsource/orderid=:orderId&ordershoeid=:orderShoeId',
+    path: '/productiongeneral/productionoutsource',
     name: 'outsource-page',
     component: ProductionOutsourcePage,
-    props: true
+    props: route => (
+      {
+        orderId: route.query.orderId,
+        orderRId: route.query.orderRId,
+        orderShoeId: route.query.orderShoeId,
+        shoeRId: route.query.shoeRId,
+        orderStartDate: route.query.orderStartDate,
+        orderEndDate: route.query.orderEndDate,
+        customerName: route.query.customerName,
+      }
+    )
   },
   {
-    path: '/productiongeneral/productionamountapproval/orderid=:orderId&ordershoeid=:orderShoeId',
+    path: '/productiongeneral/productionamountapproval',
     name: 'amount-approval',
     component: ProductionAmountApprovalPage,
-    props: true
+    props: route => (
+      {
+        orderRId: route.query.orderRId,
+        orderShoeId: route.query.orderShoeId,
+        shoeRId: route.query.shoeRId,
+        orderEndDate: route.query.orderEndDate,
+        customerProductName: route.query.customerProductName,
+      }
+    )
   }
 ]

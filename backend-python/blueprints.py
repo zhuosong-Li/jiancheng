@@ -22,6 +22,7 @@ from warehouse.material_storage import material_storage_bp
 from warehouse.semifinished_storage import semifinished_storage_bp
 from warehouse.finished_storage import finished_storage_bp
 from shared_apis.message import message_bp
+from shared_apis.outsource_factory import outsource_factory_bp
 
 
 def register_blueprints():
@@ -49,3 +50,4 @@ def register_blueprints():
     app.register_blueprint(semifinished_storage_bp)
     app.register_blueprint(finished_storage_bp)
     app.register_blueprint(message_bp)
+    app.register_blueprint(outsource_factory_bp)
