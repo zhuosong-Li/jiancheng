@@ -15,6 +15,7 @@ from usage_calculation.usage_calculation import usage_calculation_bp
 from bussiness.order_import import order_import_bp
 from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
+from technical.second_bom import second_bom_bp
 from development.shoe_manage import shoe_manage_bp
 from development.dev_producion_order import dev_producion_order_bp
 from warehouse.material_storage import material_storage_bp
@@ -36,6 +37,7 @@ def register_blueprints():
     app.register_blueprint(color_bp)
     app.register_blueprint(department_bp)
     app.register_blueprint(first_bom_bp)
+    app.register_blueprint(second_bom_bp)
     app.register_blueprint(usage_calculation_bp)
     app.register_blueprint(order_import_bp)
     app.register_blueprint(customer_bp)

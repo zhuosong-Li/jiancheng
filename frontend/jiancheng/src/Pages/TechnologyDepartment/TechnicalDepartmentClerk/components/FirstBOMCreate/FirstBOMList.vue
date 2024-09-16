@@ -9,7 +9,6 @@
             <el-table-column prop="taskName" label="任务名称"></el-table-column>
             <el-table-column prop="orderRid" label="订单号"></el-table-column>
             <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
-            <el-table-column prop="deadlineTime" label="订单截止时间"></el-table-column>
             <!-- <el-table-column prop="prevTime" label="前序流程下发时间"></el-table-column>
             <el-table-column prop="prevDepart" label="前序处理部门"></el-table-column>
             <el-table-column prop="prevUser" label="前序处理人"></el-table-column> -->
