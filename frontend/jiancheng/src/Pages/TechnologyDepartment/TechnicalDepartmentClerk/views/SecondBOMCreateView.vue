@@ -386,6 +386,7 @@ export default {
         }
     },
     mounted() {
+        this.$setAxiosToken()
         this.tableWholeFilter()
     },
     methods: {

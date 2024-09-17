@@ -47,6 +47,7 @@
         <el-upload
             ref="upload"
             action="http://localhost:8000/orderimport/getuploadorder"
+            :headers="uploadHeaders"
             :before-upload="beforeUpload"
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
@@ -235,6 +236,7 @@
         <el-upload
             ref="uploadDoc"
             action="http://localhost:8000/orderimport/submitdoc"
+            :headers="uploadHeaders"
             :auto-upload="false"
             accept=".xls,.xlsx"
             :file-list="fileList"
@@ -263,6 +265,7 @@ import { ElMessage } from 'element-plus'
 export default {
     data() {
         return {
+            token: localStorage.getItem('token'),
             submitDocType: 0,
             orderShoePreviewData: [],
             orderData: {},
@@ -291,7 +294,15 @@ export default {
             }
         }
     },
+    computed: {
+    uploadHeaders() {
+      return {
+        Authorization: `Bearer ${this.token}`
+      };
+    }
+  },
     mounted() {
+        this.$setAxiosToken()
         this.getAllOrders()
         this.getAllCutomers()
         this.getAllOrderStatus()
@@ -344,14 +355,21 @@ export default {
         },
         async submitUpload() {
             try {
+                const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
                 // Manually submit the file without reopening the dialog
-                this.$refs.uploadDoc.submit()
+                await this.$refs.uploadDoc.submit()
+                loadingInstance.close()
             }
             catch (error) {
                 console.error('Upload error:', error)
                 ElMessage.error('上传失败')
 
             }
+
         },
 
         handleUploadSuccess(response, file) {
@@ -515,6 +533,11 @@ export default {
                 type: 'warning'
             })
                 .then(async () => {
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
                     const response = await axios.post(
                         'http://localhost:8000/orderimport/confirmimportorder',
                         {
@@ -522,6 +545,7 @@ export default {
                             orderInfo: this.orderForm
                         }
                     )
+                    loadingInstance.close()
                     if (response.status === 200) {
                         this.$message({
                             type: 'success',

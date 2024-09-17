@@ -1,13 +1,23 @@
 from app_config import db
 import enum
 from sqlalchemy import Enum
-from datetime import datetime
+import datetime
 
 class ProductionTeam(enum.Enum):
     CUTTING = "裁断"
     PRE_SEWING = "针车预备"
     SEWING = "针车"
     MOLDING = "成型"
+
+class User(db.Model):
+    __tablename__ = "user"
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_name = db.Column(db.String(50), nullable=False)
+    user_passwd = db.Column(db.String(50), nullable=False)
+    staff_id = db.Column(
+        db.Integer,
+    )
+
 
 
 class BomItem(db.Model):

@@ -10,8 +10,7 @@
 
 
 <script setup>
-import { onMounted, ref} from 'vue';
-import axios from 'axios';
+import { onMounted, ref, getCurrentInstance} from 'vue';
 
 import { Grid, Memo } from '@element-plus/icons-vue'
 import UsageCalculationList from './UsageCalculation/UsageCalculationList.vue';
@@ -28,11 +27,12 @@ const components = {
 const pendingData = ref([])
 const inProgressData = ref([])
 onMounted(()=> {
+    const { proxy } = getCurrentInstance()
     const params = {
         orderstatus: 9,
         ordershoestatus: 4
     };
-    axios.get("http://localhost:8000/order/getorderbystatus", { params }).then(response => {
+    proxy.$axios.get("http://localhost:8000/order/getorderbystatus", { params }).then(response => {
         const fetchPending = response.data.pendingOrders
         const fetchInProgress = response.data.inProgressOrders
         console.log("fetchPending is ")

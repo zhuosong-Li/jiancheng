@@ -22,8 +22,7 @@
 
 <script setup>
 
-import { onMounted, ref } from 'vue';
-import axios from 'axios';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 
 import { Grid, Memo } from '@element-plus/icons-vue'
 import DashboardGrid from './Dashboard/DashboardGrid.vue';
@@ -43,13 +42,14 @@ const pendingData = ref([])
 const inProgressData = ref([])
 
 onMounted(()=> {
+    const { proxy } = getCurrentInstance()
     const firstBomStatus = 4
     const params = {
         ordershoestatus : firstBomStatus
     };
 
 
-    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+    proxy.$axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {

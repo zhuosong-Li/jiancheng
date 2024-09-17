@@ -512,7 +512,6 @@ import Arrow from '@/components/OrderArrowView.vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
-import axios from 'axios'
 export default {
     components: {
         AllHeader,
@@ -565,6 +564,7 @@ export default {
         }
     },
     async mounted() {
+        this.$setAxiosToken()
         this.getOrderInfo()
         this.getAllShoeBomInfo()
         this.getAllColorOptions()
@@ -572,16 +572,16 @@ export default {
     },
     methods: {
         async getAllDepartmentOptions() {
-            const response = await axios.get('http://localhost:8000/general/getalldepartments')
+            const response = await this.$axios.get('http://localhost:8000/general/getalldepartments')
             this.departmentOptions = response.data
         },
         async getAllColorOptions() {
-            const response = await axios.get('http://localhost:8000/general/allcolors')
+            const response = await this.$axios.get('http://localhost:8000/general/allcolors')
             this.colorOptions = response.data
         },
         async getMaterialFilterData() {
             this.materialAddfinished = true
-            const response = await axios.get(
+            const response = await this.$axios.get(
                 'http://localhost:8000/logistics/getmaterialtypeandname',
                 {
                     params: {
@@ -595,14 +595,14 @@ export default {
             this.materialAddfinished = false
         },
         async getAllMaterialList() {
-            const response = await axios.get(
+            const response = await this.$axios.get(
                 'http://localhost:8000/logistics/getmaterialtypeandname'
             )
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
         async getOrderInfo() {
-            const response = await axios.get(
+            const response = await this.$axios.get(
                 `http://localhost:8000/order/getorderInfo?orderid=${this.orderId}`
             )
             this.orderData = response.data
@@ -610,7 +610,7 @@ export default {
             this.updateArrowKey += 1
         },
         async getOrderShoeBatchInfo(orderId, orderShoeId) {
-            const response = await axios.get(`http://localhost:8000/order/getordershoesizesinfo`, {
+            const response = await this.$axios.get(`http://localhost:8000/order/getordershoesizesinfo`, {
                 params: {
                     orderid: orderId,
                     ordershoeid: orderShoeId
@@ -619,14 +619,14 @@ export default {
             this.orderProduceInfo = response.data
         },
         async getAllShoeBomInfo() {
-            const response = await axios.get(
+            const response = await this.$axios.get(
                 `http://localhost:8000/usagecalculation/getallboms?orderid=${this.orderId}`
             )
             this.testTableData = response.data
             this.tableWholeFilter()
         },
         async getBOMDetails(row) {
-            const response = await axios.get(
+            const response = await this.$axios.get(
                 `http://localhost:8000/usagecalculation/getshoebomitems`,
                 {
                     params: {
@@ -656,8 +656,14 @@ export default {
             return [{ factoryName: '询价' }, ...filteredOptions]
         },
         async openEditDialog(row) {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             await this.getBOMDetails(row)
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            loadingInstance.close()
             this.newBomId = row.bomId
             this.createVis = true
             this.currentBomShoeId = row.inheritId
@@ -761,13 +767,19 @@ export default {
                     return
                 }
             }
-            const response = await axios.post(
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+            const response = await this.$axios.post(
                 'http://localhost:8000/usagecalculation/savebomusage',
                 {
                     bomRid: this.newBomId,
                     bomItems: this.bomTestData
                 }
             )
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -789,12 +801,18 @@ export default {
                 type: 'warning'
             })
                 .then(async () => {
-                    const response = await axios.post(
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+                    const response = await this.$axios.post(
                         'http://localhost:8000/usagecalculation/submitbomusage',
                         {
                             bomRid: row.bomId
                         }
                     )
+                    loadingInstance.close()
                     if (response.status !== 200) {
                         this.$message({
                             type: 'error',
@@ -816,10 +834,16 @@ export default {
                 })
         },
         async issueBOMs(selectedShoe) {
-            const response = await axios.post('http://localhost:8000/usagecalculation/issuebomusage', {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+            const response = await this.$axios.post('http://localhost:8000/usagecalculation/issuebomusage', {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',

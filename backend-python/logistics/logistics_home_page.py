@@ -40,9 +40,9 @@ def get_task():
         # Determine taskName based on current_status if not already set for this order
         if order_id not in unique_orders:
             if row.OrderShoeStatus.current_status == 6:
-                task_name = "一次采购订单生成"
+                task_name = "一次采购订单创建"
             elif row.OrderShoeStatus.current_status == 13:
-                task_name = "二次采购订单生成"
+                task_name = "二次采购订单创建"
             else:
                 task_name = ""  # Default or any other logic
             

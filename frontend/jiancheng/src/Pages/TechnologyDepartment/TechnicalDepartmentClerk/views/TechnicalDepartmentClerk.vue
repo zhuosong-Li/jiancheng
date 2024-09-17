@@ -22,11 +22,8 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>二次BOM表填写</span>
                         </el-menu-item>
-                        <el-menu-item index="9">
+                        <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
-                        </el-menu-item>
-                        <el-menu-item index="10" @click="handleMenuClick(10)">
-                            <span>测试页面</span>
                         </el-menu-item>
                     </el-menu>
                 </div>
@@ -58,6 +55,9 @@ export default {
             currentComponent: 'Dashboard'
         }
     },
+    mounted() {
+        this.$setAxiosToken()
+    },
     methods: {
         handleMenuClick(index) {
             console.log(index)
@@ -83,9 +83,13 @@ export default {
                 case 7:
                     this.currentComponent = 'SupplierManagement'
                     break
-                case 10:
-                    this.currentComponent = 'TestPage'
             }
+        },
+        async logout() {
+            await this.$axios.post('http://localhost:8000/logout')
+            localStorage.removeItem('token')
+            localStorage.removeItem('role')
+            this.$router.push('/login')
         }
     }
 }

@@ -797,6 +797,7 @@ export default {
     }
   },
   mounted() {
+    this.$setAxiosToken()
     this.activeTab = this.tabPlaneData[0].purchaseOrderId
   },
   methods: {

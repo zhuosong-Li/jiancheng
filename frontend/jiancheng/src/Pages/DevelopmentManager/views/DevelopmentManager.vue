@@ -56,6 +56,9 @@ export default {
             currentComponent: 'Dashboard'
         }
     },
+    mounted() {
+        this.$setAxiosToken()
+    },
     methods: {
         handleMenuClick(index) {
             switch (index) {

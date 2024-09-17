@@ -19,7 +19,7 @@
                         <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>用量计算</span>
                         </el-menu-item>
-                        <el-menu-item index="9">
+                        <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -51,6 +51,8 @@ export default {
             currentComponent: 'Dashboard'
         }
     },
+    mounted() {
+    },
     methods: {
         handleMenuClick(index) {
             switch (index) {
@@ -64,6 +66,12 @@ export default {
                     this.$router.push('/')
                     break
             }
+        },
+        async logout() {
+            await this.$axios.post('http://localhost:8000/logout')
+            localStorage.removeItem('token')
+            localStorage.removeItem('role')
+            this.$router.push('/login')
         }
     }
 }

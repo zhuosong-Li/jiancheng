@@ -102,9 +102,7 @@
                                     >上传投产指令单</el-button
                                 >
                                 <el-button
-                                    v-else-if="
-                                        scope.row.status === '已下发'
-                                    "
+                                    v-else-if="scope.row.status === '已下发'"
                                     type="primary"
                                     @click="openPreviewDialog(scope.row)"
                                     >查看</el-button
@@ -129,9 +127,6 @@
                     >
                 </el-col>
             </el-row>
-
-
-
 
             <el-dialog title="正式BOM表下发页面" v-model="isFinalBOM" width="90%">
                 <el-descriptions title="订单信息" :column="2" border>
@@ -214,10 +209,7 @@
                     </span>
                 </template>
             </el-dialog>
-            <el-dialog
-                title="上传投产指令单"
-                v-model="UploadVis"
-                width="50%">
+            <el-dialog title="上传投产指令单" v-model="UploadVis" width="50%">
                 <el-descriptions title="订单信息" :column="2" border>
                     <el-descriptions-item label="订单编号" align="center">{{
                         orderData.orderId
@@ -241,6 +233,7 @@
                             action="http://localhost:8000/devproductionorder/upload"
                             :on-success="handleUploadSuccess"
                             :on-error="handleUploadError"
+                            :headers="uploadHeaders"
                             :before-upload="beforeUpload"
                             :file-list="fileList"
                             :auto-upload="false"
@@ -252,20 +245,17 @@
                             ref="productionOrderUpload"
                         >
                             <el-button size="small" type="primary">点击上传</el-button>
-                            <div slot="tip" class="el-upload__tip">
-                                只能上传xls/xlsx文件
-                            </div>
+                            <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>
                         </el-upload>
                     </el-form-item>
                 </el-form>
                 <template #footer>
-                <span>
-                    <el-button @click="UploadVis = false">取消</el-button>
-                    <el-button type="primary" @click="confirmUpload">确认上传</el-button>
-                </span>
+                    <span>
+                        <el-button @click="UploadVis = false">取消</el-button>
+                        <el-button type="primary" @click="confirmUpload">确认上传</el-button>
+                    </span>
                 </template>
             </el-dialog>
-            
         </el-main>
     </el-container>
 </template>
@@ -285,6 +275,7 @@ export default {
     props: ['orderId'],
     data() {
         return {
+            token: localStorage.getItem('token'),
             currentShoeId: '',
             fileList: [],
             UploadVis: false,
@@ -332,10 +323,18 @@ export default {
         }
     },
     async mounted() {
+        this.$setAxiosToken()
         this.getOrderInfo()
         this.getAllShoeListInfo()
         this.getAllColorOptions()
         this.getAllDepartmentOptions()
+    },
+    computed: {
+        uploadHeaders() {
+            return {
+                Authorization: `Bearer ${this.token}`
+            }
+        }
     },
     methods: {
         async getAllMaterialList() {
@@ -384,7 +383,6 @@ export default {
             this.createVis = true
             this.currentBomShoeId = row.inheritId
             this.createEditSymbol = 0
-
         },
         async openPreviewDialog(row) {
             window.open(
@@ -421,8 +419,14 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             })
-                .then(() => {
-                    this.$refs.productionOrderUpload.submit()
+                .then(async () => {
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+                    await this.$refs.productionOrderUpload.submit()
+                    loadingInstance.close()
                 })
                 .catch(() => {
                     this.$message({
@@ -443,10 +447,16 @@ export default {
             this.$message.error('上传失败')
         },
         async issueBOMs(selectedShoe) {
+            const loadingInstance = this.$loading({
+                lock: true,
+                text: '等待中，请稍后...',
+                background: 'rgba(0, 0, 0, 0.7)'
+            })
             const response = await axios.post('http://localhost:8000/devproductionorder/issue', {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',

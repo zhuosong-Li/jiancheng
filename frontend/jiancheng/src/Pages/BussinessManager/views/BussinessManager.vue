@@ -51,6 +51,9 @@ export default {
             currentComponent: 'OrderImport'
         }
     },
+    mounted() {
+        this.$setAxiosToken()
+    },
     methods: {
         handleMenuClick(index) {
             switch (index) {

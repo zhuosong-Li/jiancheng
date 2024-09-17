@@ -220,9 +220,6 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="unit" label="单位">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.unit" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column
@@ -599,9 +596,6 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="unit" label="单位">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.unit" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column
@@ -693,9 +687,6 @@ export default {
             editBomData: [],
             originalBomTestData: [],
             factoryOptions: [
-                { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
-                { materialName: '黑色超软镜面PU', factoryName: '深源皮革' },
-                { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' }
                 // Add more options here
             ],
             isPreviewDialogVisible: false,
@@ -798,8 +789,16 @@ export default {
             return [{ factoryName: '询价' }, ...filteredOptions]
         },
         async openEditDialog(row) {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             await this.getBOMDetails(row)
+
+            this.editBomId = this.previewBomId
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            loadingInstance.close()
             this.editBomId = this.previewBomId
             this.editVis = true
             this.editBomData = this.bomPreviewData
@@ -902,12 +901,18 @@ export default {
                 }
                 uniqueRows.add(rowIdentifier)
             }
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             const response = await axios.post('http://localhost:8000/firstbom/savebom', {
                 orderId: this.orderData.orderId,
                 orderShoeId: this.currentBomShoeId,
                 bomData: this.bomTestData,
                 bomId: this.newBomId
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -950,12 +955,18 @@ export default {
                 }
                 uniqueRows.add(rowIdentifier)
             }
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             const response = await axios.post('http://localhost:8000/firstbom/editbom', {
                 orderId: this.orderData.orderId,
                 orderShoeId: this.currentBomShoeId,
                 bomData: this.editBomData,
                 bomId: this.editBomId
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -977,10 +988,17 @@ export default {
                 type: 'warning'
             })
                 .then(async () => {
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
                     const response = await axios.post('http://localhost:8000/firstbom/submitbom', {
                         orderId: this.orderData.orderId,
                         orderShoeId: row.inheritId
                     })
+                    loadingInstance.close()
+
                     if (response.status !== 200) {
                         this.$message({
                             type: 'error',
@@ -1002,10 +1020,16 @@ export default {
                 })
         },
         async issueBOMs(selectedShoe) {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             const response = await axios.post('http://localhost:8000/firstbom/issueboms', {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
