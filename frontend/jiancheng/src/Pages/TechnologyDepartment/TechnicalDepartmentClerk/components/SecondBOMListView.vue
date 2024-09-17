@@ -6,6 +6,8 @@
     @changeToPend="changeToPend" @changeToProgress="changeToProgress">
     </component>
 </template>
+
+
 <script setup>
 import {onMounted, ref} from 'vue';
 import axios from 'axios';
@@ -34,13 +36,13 @@ onMounted(()=> {
         console.log("fetchPending is ")
         console.log(response.data.pendingData)
         fetchPending.forEach(element => {
-            element['taskName'] = "一次BOM填写"
+            element['taskName'] = "二次BOM填写"
             pendingData.value.push(element)
         });
         console.log(pendingData.value)
         console.log(5)
         fetchInProgress.forEach(element => {
-            element['taskName'] = "一次BOM填写"
+            element['taskName'] = "二次BOM填写"
             inProgressData.value.push(element)
         });
     })

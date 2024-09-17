@@ -7,10 +7,10 @@ from api_utility import randomIdGenerater
 from event_processor import EventProcessor
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 
-first_bom_bp = Blueprint("first_bom_bp", __name__)
+second_bom_bp = Blueprint("second_bom_bp", __name__)
 
 
-@first_bom_bp.route("/firstbom/getnewbomid", methods=["GET"])
+@second_bom_bp.route("/secondbom/getnewbomid", methods=["GET"])
 def get_new_bom_id():
     current_time_stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
     random_string = randomIdGenerater(6)
@@ -18,8 +18,8 @@ def get_new_bom_id():
     return jsonify({"bomId": bom_id})
 
 
-@first_bom_bp.route("/firstbom/getordershoes", methods=["GET"])
-def get_order_first_bom():
+@second_bom_bp.route("/secondbom/getordershoes", methods=["GET"])
+def get_order_second_bom():
     order_id = request.args.get("orderid")
     entities = (
         db.session.query(Order, OrderShoe, Shoe)
@@ -34,7 +34,7 @@ def get_order_first_bom():
         bom = (
             db.session.query(Bom)
             .filter(Bom.order_shoe_id == order_shoe.order_shoe_id,
-                    Bom.bom_type == 0)
+                    Bom.bom_type == 1)
             .first()
         )
         if bom:
@@ -70,7 +70,7 @@ def get_order_first_bom():
     return jsonify(result)
 
 
-@first_bom_bp.route("/firstbom/savebom", methods=["POST"])
+@second_bom_bp.route("/secondbom/savebom", methods=["POST"])
 def save_bom():
     bom_rid = request.json.get("bomId")
     order_id = request.json.get("orderId")
@@ -85,7 +85,7 @@ def save_bom():
         .first()
         .OrderShoe.order_shoe_id
     )
-    bom = Bom(bom_rid=bom_rid, order_shoe_id=order_shoe_id, bom_status=1, bom_type=0)
+    bom = Bom(bom_rid=bom_rid, order_shoe_id=order_shoe_id, bom_status=1, bom_type=1)
     db.session.add(bom)
     db.session.commit()
     bom_id = db.session.query(Bom).filter(Bom.bom_rid == bom_rid).first().bom_id
@@ -107,7 +107,7 @@ def save_bom():
             department_id=item["useDepart"],
             remark=item["comment"],
             material_specification=item["materialSpecification"],
-            bom_item_add_type=0,
+            bom_item_add_type=1,
             bom_item_color=item["color"],
         )
         db.session.add(bom_item)
@@ -116,7 +116,7 @@ def save_bom():
     return jsonify({"status": "success"})
 
 
-@first_bom_bp.route("/firstbom/getbomdetails", methods=["GET"])
+@second_bom_bp.route("/secondbom/getbomdetails", methods=["GET"])
 def get_bom_details():
     order_id = request.args.get("orderid")
     order_shoe_id = request.args.get("ordershoeid")
@@ -125,8 +125,7 @@ def get_bom_details():
         .join(OrderShoe, Bom.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Order, OrderShoe.order_id == Order.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_id,
-                Bom.bom_type == 0)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_id,Bom.bom_type == 1)
         .first()
         .Bom.bom_id
     )
@@ -138,8 +137,7 @@ def get_bom_details():
         .join(MaterialType, Material.material_type_id == MaterialType.material_type_id)
         .join(Department, BomItem.department_id == Department.department_id)
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .filter(BomItem.bom_id == bom_id,
-                Bom.bom_type == 0)
+        .filter(BomItem.bom_id == bom_id)
         .all()
     )
     result = []
@@ -158,9 +156,10 @@ def get_bom_details():
             }
         )
     fin_result = {"bomId": bom_rid, "bomData": result}
+    print(fin_result)
     return jsonify(fin_result)
 
-@first_bom_bp.route("/firstbom/editbom", methods=["POST"])
+@second_bom_bp.route("/secondbom/editbom", methods=["POST"])
 def edit_bom():
     bom_rid = request.json.get("bomId")
     order_id = request.json.get("orderId")
@@ -175,7 +174,7 @@ def edit_bom():
         .first()
         .OrderShoe.order_shoe_id
     )
-    bom_id = Bom.query.filter(Bom.bom_rid == bom_rid).first().bom_id
+    bom_id = Bom.query.filter(Bom.bom_rid == bom_rid,Bom.bom_type == 1).first().bom_id
     db.session.query(BomItem).filter(BomItem.bom_id == bom_id).delete()
     db.session.commit()
 
@@ -197,7 +196,7 @@ def edit_bom():
             department_id=item["useDepart"],
             remark=item["comment"],
             material_specification=item["materialSpecification"],
-            bom_item_add_type=0,
+            bom_item_add_type=1,
             bom_item_color=item["color"],
         )
         db.session.add(bom_item)
@@ -205,7 +204,7 @@ def edit_bom():
 
     return jsonify({"status": "success"})
 
-@first_bom_bp.route("/firstbom/submitbom", methods=["POST"])
+@second_bom_bp.route("/secondbom/submitbom", methods=["POST"])
 def submit_bom():
     order_shoe_rid = request.json.get("orderShoeId")
     order_rid = request.json.get("orderId")
@@ -214,8 +213,7 @@ def submit_bom():
         .join(OrderShoe, Bom.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Order, OrderShoe.order_id == Order.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(Order.order_rid == order_rid, Shoe.shoe_rid == order_shoe_rid,
-                Bom.bom_type == 0)
+        .filter(Order.order_rid == order_rid, Shoe.shoe_rid == order_shoe_rid,Bom.bom_type == 1)
         .first()
     )
     bom.Bom.bom_status = 2
@@ -223,7 +221,7 @@ def submit_bom():
     
     return jsonify({"status": "success"})
 
-@first_bom_bp.route("/firstbom/issueboms", methods=["POST"])
+@second_bom_bp.route("/secondbom/issueboms", methods=["POST"])
 def issue_boms():
     order_rid = request.json.get("orderId")
     order_shoe_rids = request.json.get("orderShoeIds")
@@ -239,8 +237,7 @@ def issue_boms():
             .join(OrderShoe, Bom.order_shoe_id == OrderShoe.order_shoe_id)
             .join(Order, OrderShoe.order_id == Order.order_id)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-            .filter(Order.order_rid == order_rid, Shoe.shoe_rid == order_shoe_rid,
-                    Bom.bom_type == 0)
+            .filter(Order.order_rid == order_rid, Shoe.shoe_rid == order_shoe_rid,Bom.bom_type == 1)
             .first()
         )
         bom.Bom.bom_status = 3
@@ -249,8 +246,8 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
-            operation_id=42,
+            handle_time=datetime.datetime.now(),
+            operation_id=60,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
         )
@@ -262,8 +259,8 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
-            operation_id=43,
+            handle_time=datetime.datetime.now(),
+            operation_id=61,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
         )
@@ -275,8 +272,8 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
-            operation_id=44,
+            handle_time=datetime.datetime.now(),
+            operation_id=62,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
         )
@@ -288,8 +285,8 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
-            operation_id=45,
+            handle_time=datetime.datetime.now(),
+            operation_id=63,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
         )

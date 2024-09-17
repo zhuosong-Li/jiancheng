@@ -9,6 +9,7 @@
             <el-table-column prop="taskName" label="任务名称"></el-table-column>
             <el-table-column prop="orderId" label="订单号"></el-table-column>
             <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
+            <el-table-column prop="deadlineTime" label="订单截止时间"></el-table-column>
             <el-table-column prop="customerName" label="客户"></el-table-column>                
             <el-table-column prop="orderShoeCount" label="鞋型数量"></el-table-column>
             <!-- <el-table-column prop="prevTime" label="前序流程下发时间"></el-table-column>
@@ -62,12 +63,14 @@ export default {
         },
         displayProgress(){
             this.$emit('changeToProgress')
-        },    handleRowClick(row) {
+        },
+        handleRowClick(row) {
+            console.log("Handling row click")
             let url;
-            if (row.taskName === '一次采购订单生成') {
-                url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+            if (row.taskName === '二次BOM填写') {
+                url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${row.orderId}`;
             } else if (row.taskName === '二次采购订单生成') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+                url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');
