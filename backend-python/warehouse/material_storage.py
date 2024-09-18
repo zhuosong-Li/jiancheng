@@ -94,13 +94,13 @@ def get_all_material_info():
             Supplier.supplier_name,
             Color
         )
-        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .join(MaterialStorage, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(Color, Color.color_id == MaterialStorage.material_storage_color)
+        .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
     query2 = (
         db.session.query(
@@ -128,16 +128,13 @@ def get_all_material_info():
             Supplier.supplier_name,
             Color
         )
-        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .join(
-            SizeMaterialStorage,
-            SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id,
-        )
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
+        .outerjoin(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
     # allow inbound operation when the order is in production
     # in case of leftover material needs to be inbounded
@@ -187,6 +184,8 @@ def get_all_material_info():
             status = "已完成入库"
         else:
             status = "未完成入库"
+        if not material_estimated_arrival_date:
+            material_estimated_arrival_date = ''
         obj = {
             "materialType": material_type_name,
             "materialName": material_name,
@@ -206,7 +205,7 @@ def get_all_material_info():
             "materialStorageId": material_storage_id,
             "status": status,
             "colorName": color.color_name,
-            "materialArrivalDate": material_estimated_arrival_date.strftime("%Y-%m-%d")
+            "materialArrivalDate": material_estimated_arrival_date
         }
         result.append(obj)
     return {"result": result, "total": count_result}
