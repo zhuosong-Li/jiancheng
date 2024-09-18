@@ -321,9 +321,9 @@ def get_logistics_overview():
         .filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
     )
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
     response = query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
@@ -360,9 +360,9 @@ def get_finished_nodes():
         )
     )
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     if status_point and ORDER_SHOE_STATUS_REFERENCE[status_point]:
         query = query.filter(
             OrderShoeStatus.current_status == ORDER_SHOE_STATUS_REFERENCE[status_point]
@@ -536,9 +536,9 @@ def get_order_outsource_overview():
         .filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
     )
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
     response = query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
@@ -876,9 +876,9 @@ def get_all_quantity_reports_overview():
         .group_by(Order.order_id, OrderShoe.order_shoe_id, QuantityReport.team)
     )
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
     response = query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
@@ -1021,9 +1021,9 @@ def get_price_report_approval_overview():
         )
     )
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     if team and team != '':
         if team == "裁断":
             query = query.filter(OrderShoeStatus.current_status == 22)
