@@ -26,6 +26,7 @@ from login.login import login_bp
 from human_resources.user_manage import user_manage_bp
 from shared_apis.user import user_bp
 from logistics.first_purchase import first_purchase_bp
+from shared_apis.outsource_factory import outsource_factory_bp
 
 
 def register_blueprints():
@@ -56,3 +57,4 @@ def register_blueprints():
     app.register_blueprint(semifinished_storage_bp)
     app.register_blueprint(finished_storage_bp)
     app.register_blueprint(message_bp)
+    app.register_blueprint(outsource_factory_bp)

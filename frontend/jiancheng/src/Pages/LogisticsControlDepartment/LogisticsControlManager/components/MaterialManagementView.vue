@@ -213,7 +213,7 @@
                         <el-col :span="4" :offset="0">
                             <div style="display: flex; align-items: center; white-space: nowrap">
                                 订单编号查询：<el-input
-                                    v-model="orderIdSearch"
+                                    v-model="orderRIdSearch"
                                     placeholder=""
                                     size="default"
                                     :suffix-icon="Search"
@@ -689,7 +689,7 @@ export default {
                     materialspec: this.specificationNameSearch,
                     warehousename: this.warehouseNameSearch,
                     factoryname: this.factoryNameSearch,
-                    orderid: this.orderIdSearch,
+                    orderid: this.orderRIdSearch,
                     ordershoeid: this.inheritIdSearch
                 }
             })

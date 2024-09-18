@@ -101,3 +101,19 @@ END_OF_PRODUCTION_NUMBER = 42
 FILE_STORAGE_PATH = "D:/temp"
 IMAGE_STORAGE_PATH = "http://localhost:12667/"
 IMAGE_UPLOAD_PATH = "D:/imgtmp"
+
+PRODUCTION_LINES = {
+    "cutting": [1, 2, 3, 4],
+    "pre_sewing": [1, 2, 3, 4],
+    "sewing": [1, 2, 3, 4, 5, 6],
+    "molding": [1, 2, 3, 4]
+}
+
+ORDER_SHOE_STATUS_REFERENCE = {
+    '生产开始': 18,
+    '裁断结束': 24,
+    '针车预备结束': 31,
+    '针车结束': 33,
+    '成型结束': 41,
+    '生产结束': 42
+}
