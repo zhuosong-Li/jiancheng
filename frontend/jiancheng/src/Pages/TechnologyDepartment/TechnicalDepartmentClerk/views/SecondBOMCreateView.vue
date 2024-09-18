@@ -717,7 +717,13 @@ export default {
     },
     methods: {
         // TODO
-        // async openFirstBOM(){}
+        openFirstBOM(){
+            let url;
+            url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${this.orderId}`;
+            if (url) {
+                window.open(url, '_blank');
+            }
+        },
         async getNewBomId() {
             const response = await axios.get('http://localhost:8000/secondbom/getnewbomid')
             this.newBomId = response.data.bomId
