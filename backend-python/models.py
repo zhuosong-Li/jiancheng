@@ -1,14 +1,4 @@
 from app_config import db
-import enum
-from sqlalchemy import Enum
-from datetime import datetime
-
-class ProductionTeam(enum.Enum):
-    CUTTING = "裁断"
-    PRE_SEWING = "针车预备"
-    SEWING = "针车"
-    MOLDING = "成型"
-
 
 class BomItem(db.Model):
     __tablename__ = "bom_item"
@@ -207,10 +197,11 @@ class MaterialStorage(db.Model):
     current_amount = db.Column(db.DECIMAL(10, 5), nullable=False)
     unit_price = db.Column(db.DECIMAL(10, 2))
     material_specification = db.Column(db.String(40), nullable=True)
-    material_outsource_status = db.Column(db.CHAR(1), default="0", nullable=False)
+    material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
     material_storage_color = db.Column(db.Integer)
     purchase_divide_order_id = db.Column(db.BigInteger)
+    material_estimated_arrival_date = db.Column(db.Date)
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
@@ -326,7 +317,7 @@ class OrderShoe(db.Model):
 class OutsourceInfo(db.Model):
     __tablename__ = "outsource_info"
 
-    outsource_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    outsource_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
     outsource_type = db.Column(db.String(20), nullable=False)
     factory_id = db.Column(
         db.BigInteger,
@@ -338,7 +329,7 @@ class OutsourceInfo(db.Model):
     deadline_date = db.Column(db.Date, nullable=True)
     semifinished_estimated_outbound_date = db.Column(db.Date, nullable=True)
     semifinished_required = db.Column(db.Boolean, nullable=True)
-    material_delivery_date = db.Column(db.Date, nullable=True)
+    material_estimated_outbound_date = db.Column(db.Date, nullable=True)
     order_shoe_id = db.Column(
         db.BigInteger,
     )
@@ -671,7 +662,7 @@ class SizeMaterialStorage(db.Model):
     size_45_actual_inbound_amount = db.Column(db.Integer, nullable=True)
     size_46_actual_inbound_amount = db.Column(db.Integer, nullable=True)
     total_actual_inbound_amount = db.Column(db.Integer, nullable=True)
-    material_outsource_status = db.Column(db.String(1), nullable=True, default="N")
+    material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     size_34_current_amount = db.Column(db.Integer, nullable=True)
     size_35_current_amount = db.Column(db.Integer, nullable=True)
     size_36_current_amount = db.Column(db.Integer, nullable=True)
@@ -699,6 +690,7 @@ class SizeMaterialStorage(db.Model):
     )
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
+    material_estimated_arrival_date = db.Column(db.Date)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"

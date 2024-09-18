@@ -123,6 +123,9 @@ def get_quantity_report_detail():
                 "amount": report_item.amount,
                 "totalAmount": batch_info.total_amount,
                 "cuttingAmount": batch_info.cutting_amount,
+                "preSewingAmount": batch_info.pre_sewing_amount,
+                "sewingAmount": batch_info.sewing_amount,
+                "moldingAmount": batch_info.molding_amount,
             }
         )
     return result

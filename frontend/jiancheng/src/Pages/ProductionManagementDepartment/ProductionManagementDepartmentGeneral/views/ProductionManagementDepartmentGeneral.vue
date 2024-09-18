@@ -21,14 +21,11 @@
 
         <div class="aside-menu" style="width: 100%; margin-top: 50px;">
           <el-menu
-            default-active="1"
+            default-active="2"
             class="el-menu-vertical-demo"
             @open="handleOpen"
             @close="handleClose"
           >
-            <el-menu-item index="1" @click="handleMenuClick(1)">
-              <span>任务看板</span>
-            </el-menu-item>
             <el-menu-item index="2" @click="handleMenuClick(2)">
               <span>生产排期表</span>
             </el-menu-item>
@@ -90,16 +87,12 @@ export default {
   data() {
     return {
       UserFilled,
-      currentComponent: 'todotaskDashboard'
+      currentComponent: 'ProductionSchedulingDialogue'
     }
   },
   methods: {
     handleMenuClick(index) {
-      console.log(index)
       switch (index) {
-        case 1:
-          this.currentComponent = 'todotaskDashboard'
-          break
         case 2:
           this.currentComponent = 'ProductionSchedulingDialogue'
           break

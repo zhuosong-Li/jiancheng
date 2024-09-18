@@ -48,9 +48,9 @@ def get_semifinished_in_out_overview():
             SemifinishedShoeStorage.order_shoe_id == OrderShoe.order_shoe_id,
         )
     )
-    if order_rid:
+    if order_rid and order_rid != '':
         query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
-    if shoe_rid:
+    if shoe_rid and shoe_rid != '':
         query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
     if op_type != 0:
         query = (
