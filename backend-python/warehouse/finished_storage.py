@@ -66,9 +66,9 @@ def get_finished_in_out_overview():
         ).filter(FinishedShoeStorage.finished_status.in_([0, 1]))
 
     if order_rid and order_rid != '':
-        query = query.filter(Order.order_rid.ilike(f"{order_rid}%"))
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != '':
-        query = query.filter(Shoe.shoe_rid.ilike(f"{shoe_rid}%"))
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
 
     count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
     response = query.limit(number).offset((page - 1) * number).all()
