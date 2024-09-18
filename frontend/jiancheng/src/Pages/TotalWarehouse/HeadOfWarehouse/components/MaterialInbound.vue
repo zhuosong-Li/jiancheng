@@ -23,12 +23,13 @@
         </el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="materialTableData" border stripe height="500">
+        <el-table :data="materialTableData" border stripe height="500" @sort-change="sortData">
+            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
+            <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
-
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
             <el-table-column prop="actualInboundAmount" label="材料实入库数量" :formatter="formatDecimal"></el-table-column>
             <el-table-column prop="currentAmount" label="材料库存" :formatter="formatDecimal"></el-table-column>
@@ -174,7 +175,7 @@ export default {
             const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallsuppliernames")
             this.materialSupplierOptions = response.data
         },
-        async getMaterialTableData() {
+        async getMaterialTableData(sortColumn, sortOrder) {
             const params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
@@ -184,7 +185,9 @@ export default {
                 "materialSpec": this.materialSpecificationSearch,
                 "supplier": this.materialSupplierSearch,
                 "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch
+                "shoeRId": this.shoeNumberSearch,
+                "sortColumn": sortColumn,
+                "sortOrder": sortOrder
             }
             const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialinfo", { params })
             this.materialTableData = response.data.result
@@ -266,6 +269,9 @@ export default {
                 this.currentRow = row
             }
         },
+        async sortData({prop, order}) {
+            await this.getMaterialTableData(prop, order)
+        }
     }
 }
 </script>

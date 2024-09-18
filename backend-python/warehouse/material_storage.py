@@ -10,7 +10,7 @@ from constants import (
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
-from sqlalchemy import func, or_, and_
+from sqlalchemy import func, or_, and_, asc, desc
 
 material_storage_bp = Blueprint("material_storage_bp", __name__)
 
@@ -50,6 +50,8 @@ def get_all_material_info():
     page = request.args.get("page", type=int)
     number = request.args.get("pageSize", type=int)
     op_type = request.args.get("opType", default=0, type=int)
+    sort_column = request.args.get("sortColumn")
+    sort_order = request.args.get("sortOrder")
     filters = {
         "material_type_name": request.args.get("materialType"),
         "material_name": request.args.get("materialName"),
@@ -93,11 +95,15 @@ def get_all_material_info():
             Material.material_category,
             Supplier.supplier_name,
             Color,
+            PurchaseDivideOrder.purchase_divide_order_rid,
+            PurchaseOrder.purchase_order_issue_date
         )
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(Color, Color.color_id == MaterialStorage.material_storage_color)
+        .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == MaterialStorage.purchase_divide_order_id)
+        .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
         .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
@@ -127,11 +133,15 @@ def get_all_material_info():
             Material.material_category,
             Supplier.supplier_name,
             Color,
+            PurchaseDivideOrder.purchase_divide_order_rid,
+            PurchaseOrder.purchase_order_issue_date
         )
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
+        .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == SizeMaterialStorage.purchase_divide_order_id)
+        .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
         .outerjoin(
             OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id
         )
@@ -164,9 +174,14 @@ def get_all_material_info():
         query2 = query2.filter(SizeMaterialStorage.total_current_amount > 0)
     for key, value in filters.items():
         if value and value != "":
-            query1 = query1.filter(material_filter_map[key].ilike(f"{value}%"))
-            query2 = query2.filter(size_material_filter_map[key].ilike(f"{value}%"))
+            query1 = query1.filter(material_filter_map[key].ilike(f"%{value}%"))
+            query2 = query2.filter(size_material_filter_map[key].ilike(f"%{value}%"))
     union_query = query1.union(query2)
+    if sort_column and sort_column == "purchaseOrderIssueDate":
+        if sort_order == 'ascending':
+            union_query = union_query.order_by(asc(PurchaseOrder.purchase_order_issue_date))
+        elif sort_order == 'descending':
+            union_query = union_query.order_by(desc(PurchaseOrder.purchase_order_issue_date))
     count_result = (
         db.session.query(func.count()).select_from(union_query.subquery()).scalar()
     )
@@ -191,6 +206,8 @@ def get_all_material_info():
             material_category,
             supplier_name,
             color,
+            purchase_divide_order_rid,
+            purchase_order_issue_date,
         ) = row
         if actual_inbound_amount >= estimated_inbound_amount:
             status = "已完成入库"
@@ -220,6 +237,8 @@ def get_all_material_info():
             "status": status,
             "colorName": color.color_name,
             "materialArrivalDate": date_value,
+            "purchaseDivideOrderRId": purchase_divide_order_rid,
+            "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d")
         }
         result.append(obj)
     return {"result": result, "total": count_result}
