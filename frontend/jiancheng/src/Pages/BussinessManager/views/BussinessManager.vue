@@ -19,7 +19,7 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>客户管理</span>
                         </el-menu-item>
-                        <el-menu-item index="9">
+                        <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -70,6 +70,12 @@ export default {
                     this.$router.push('/')
                     break
             }
+        },
+        async logout() {
+            await this.$axios.post(`${this.$apiBaseUrl}/logout`)
+            localStorage.removeItem('token')
+            localStorage.removeItem('role')
+            this.$router.push('/login')
         }
     }
 }

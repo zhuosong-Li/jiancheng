@@ -230,7 +230,7 @@
                 <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
                     <el-form-item label="投产指令单上传">
                         <el-upload
-                            action="http://localhost:8000/devproductionorder/upload"
+                            :action="`${this.$apiBaseUrl}/devproductionorder/upload`"
                             :on-success="handleUploadSuccess"
                             :on-error="handleUploadError"
                             :headers="uploadHeaders"
@@ -339,14 +339,14 @@ export default {
     methods: {
         async getAllMaterialList() {
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname'
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`
             )
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
         async getOrderInfo() {
             const response = await axios.get(
-                `http://localhost:8000/order/getorderInfo?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/order/getorderInfo?orderid=${this.orderId}`
             )
             this.orderData = response.data
             console.log(this.orderData)
@@ -354,7 +354,7 @@ export default {
         },
         async getAllShoeListInfo() {
             const response = await axios.get(
-                `http://localhost:8000/devproductionorder/getordershoelist?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/devproductionorder/getordershoelist?orderid=${this.orderId}`
             )
             this.testTableData = response.data
             this.tableWholeFilter()
@@ -386,7 +386,7 @@ export default {
         },
         async openPreviewDialog(row) {
             window.open(
-                `http://localhost:8000/devproductionorder/download?ordershoerid=${row.inheritId}&orderid=${this.orderData.orderId}`
+                `${this.$apiBaseUrl}/devproductionorder/download?ordershoerid=${row.inheritId}&orderid=${this.orderData.orderId}`
             )
         },
 
@@ -452,7 +452,7 @@ export default {
                 text: '等待中，请稍后...',
                 background: 'rgba(0, 0, 0, 0.7)'
             })
-            const response = await axios.post('http://localhost:8000/devproductionorder/issue', {
+            const response = await axios.post(`${this.$apiBaseUrl}/devproductionorder/issue`, {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })

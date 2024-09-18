@@ -70,7 +70,7 @@ export default {
     },
     methods: {
         async getSupplierData() {
-            const response = await axios.get('http://localhost:8000/logistics/allsuppliers')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allsuppliers`)
             console.log(response)
             this.supplierData = response.data
             this.datafinished = false
@@ -78,7 +78,7 @@ export default {
         },
         async createSupplier() {
             this.datafinished = true
-            const response = await axios.post('http://localhost:8000/logistics/createsupplier', this.addSupplierData)
+            const response = await axios.post(`${this.$apiBaseUrl}/logistics/createsupplier`, this.addSupplierData)
             console.log(response)
             this.isCreateSupplierDialogVisible = false
             this.getSupplierData()

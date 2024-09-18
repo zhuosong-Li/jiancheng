@@ -139,23 +139,23 @@ export default {
             this.addUserDialogVisible = true
         },
         async getUserData() {
-            const response = await axios.get('http://localhost:8000/usermanage/getallusers')
+            const response = await axios.get(`${this.$apiBaseUrl}/usermanage/getallusers`)
             console.log(response)
             this.userData = response.data
             this.datafinished = false
         },
         async getCharacterData() {
-            const response = await axios.get('http://localhost:8000/general/getallcharacters')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getallcharacters`)
             console.log(response)
             this.characterData = response.data
         },
         async getDepartmentData() {
-            const response = await axios.get('http://localhost:8000/general/getalldepartments')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             console.log(response)
             this.departmentData = response.data
         },
         async getStaffData() {
-            const response = await axios.get('http://localhost:8000/general/getallstaffs')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getallstaffs`)
             console.log(response)
             this.staffData = response.data
         },
@@ -166,7 +166,7 @@ export default {
                 type: 'warning'
             }).then(async () => {
                 this.datafinished = true
-                await axios.post('http://localhost:8000/usermanage/createuser', this.addUserData)
+                await axios.post(`${this.$apiBaseUrl}/usermanage/createuser`, this.addUserData)
                     .then(response => {
                         console.log(response)
                         this.addUserDialogVisible = false

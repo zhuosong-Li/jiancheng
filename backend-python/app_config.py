@@ -6,34 +6,52 @@ from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import URLSafeTimedSerializer
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
 import redis
+import os
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Database configuration
-db_username = "jiancheng_dev1"
-db_password = "12345678Ab"
-db_name = "jiangcheng_test"
+config_path = os.path.join(os.path.dirname(__file__), 'backend_config.json')
+
+with open(config_path, 'r') as config_file:
+    config = json.load(config_file)
+
+# Set up database URI
+db_username = config["db_username"]
+db_password = config["db_password"]
+db_name = config["db_name"]
+db_host = config["db_host"]
+
 app.config["SQLALCHEMY_DATABASE_URI"] = (
-    f"mysql+pymysql://{db_username}:{db_password}@rm-wz9lp07aju9k1c1jrvo.mysql.rds.aliyuncs.com/{db_name}"
+    f"mysql+pymysql://{db_username}:{db_password}@{db_host}/{db_name}"
 )
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.secret_key = "EC63AF9BA57B9F20"
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+
+# Set secret keys and other app configurations
+app.secret_key = config["secret_key"]
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=config["session_lifetime_days"])
 
 # Serializer for URL-safe tokens
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 # JWT configuration
-app.config["JWT_SECRET_KEY"] = "EC63AF9BA57B9F20"  # Set your secret key
+app.config["JWT_SECRET_KEY"] = config["jwt_secret_key"]
 jwt = JWTManager(app)
-redis_client = redis.StrictRedis(host='localhost', port=6379, db=0, decode_responses=True)
+
+# Set up Redis client
+redis_client = redis.StrictRedis(
+    host=config["redis_host"], 
+    port=config["redis_port"], 
+    db=config["redis_db"], 
+    decode_responses=True
+)
 
 # Initialize database
 db = SQLAlchemy(app)
 
 # List of public routes that do not require authentication
-open_routes = ['/login',"/devproductionorder/download", '/orderimport/downloadorderdoc']
+open_routes = ['/login',"/devproductionorder/download", '/orderimport/downloadorderdoc','/processsheet/download','/firstbom/download']
 
 @app.before_request
 def authenticate():

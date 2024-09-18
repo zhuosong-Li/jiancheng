@@ -79,13 +79,13 @@ export default {
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getsemifinishedinoutoverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsemifinishedinoutoverview`, { params })
             this.tableData = response.data.result
             this.totalRows = response.data.total
         },
         async viewRecords(row) {
             const params = { "storageId": row.storageId }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getsemifinishedinoutboundrecords", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsemifinishedinoutboundrecords`, { params })
             this.recordData = response.data
             this.isRecordDialogVisible = true
         },

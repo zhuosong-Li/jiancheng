@@ -22,7 +22,7 @@
 
 <script setup>
 
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios';
 
 import { Grid, Memo } from '@element-plus/icons-vue'
@@ -31,7 +31,8 @@ import DashboardList from './Dashboard/DashboardList.vue'
 import DashboardPend from './Dashboard/DashboardListPend.vue'
 import DashboardProgress from './Dashboard/DashboardListProgress.vue'
 
-
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 const components = {
         DashboardGrid,
@@ -50,7 +51,7 @@ onMounted(()=> {
     };
 
 
-    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {
@@ -63,7 +64,7 @@ onMounted(()=> {
         });
     })
     params['ordershoestatus']  = secondBomStatus
-    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
         const secondBomPending = response.data.pendingOrders
         const secondBomProgress = response.data.inProgressOrders
         secondBomPending.forEach(element => {

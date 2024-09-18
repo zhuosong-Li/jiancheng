@@ -27,6 +27,7 @@ import MoldingSupervisorRoutes from '../Pages/ProductionManagementDepartment/Mol
 import DeputyGeneral from '@/Pages/ProductionManagementDepartment/ProductionManager/routers/DeputyGeneral'
 import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalculation'
 import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
+import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -176,6 +177,7 @@ const router = createRouter({
     ...DeputyGeneral,
     ...UsageCalculationRoutes,
     ...DevelopmentManagerRoutes,
+    ...TechnicalManagerRoutes
 
   ]
 })

@@ -3,16 +3,18 @@ from sqlalchemy.dialects.mysql import insert
 import datetime
 from app_config import app, db
 from models import *
+import os
 from api_utility import randomIdGenerater
 from event_processor import EventProcessor
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from general_document.bom import generate_excel_file
 
 second_bom_bp = Blueprint("second_bom_bp", __name__)
 
 
 @second_bom_bp.route("/secondbom/getnewbomid", methods=["GET"])
 def get_new_bom_id():
-    current_time_stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
+    current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
     random_string = randomIdGenerater(6)
     bom_id = current_time_stamp + random_string + "F"
     return jsonify({"bomId": bom_id})
@@ -62,7 +64,7 @@ def get_order_second_bom():
                 "inheritId": shoe.shoe_rid,
                 "customerId": order_shoe.customer_product_name,
                 "designer": shoe.shoe_designer,
-                "editter": shoe.shoe_adjuster,
+                "editter": order_shoe.adjust_staff,
                 "image" : IMAGE_STORAGE_PATH+shoe.shoe_image_url if shoe.shoe_image_url is not None else None,
                 "status": status,
             }
@@ -103,12 +105,24 @@ def save_bom():
         bom_item = BomItem(
             bom_id=bom_id,
             material_id=material_id,
-            total_usage=0,
+            unit_usage=item["unitUsage"],
+            total_usage=item["approvalUsage"],
             department_id=item["useDepart"],
             remark=item["comment"],
             material_specification=item["materialSpecification"],
             bom_item_add_type=1,
             bom_item_color=item["color"],
+            size_35_total_usage=item["sizeInfo"][0]["approvalAmount"],
+            size_36_total_usage=item["sizeInfo"][1]["approvalAmount"],
+            size_37_total_usage=item["sizeInfo"][2]["approvalAmount"],
+            size_38_total_usage=item["sizeInfo"][3]["approvalAmount"],
+            size_39_total_usage=item["sizeInfo"][4]["approvalAmount"],
+            size_40_total_usage=item["sizeInfo"][5]["approvalAmount"],
+            size_41_total_usage=item["sizeInfo"][6]["approvalAmount"],
+            size_42_total_usage=item["sizeInfo"][7]["approvalAmount"],
+            size_43_total_usage=item["sizeInfo"][8]["approvalAmount"],
+            size_44_total_usage=item["sizeInfo"][9]["approvalAmount"],
+            size_45_total_usage=item["sizeInfo"][10]["approvalAmount"],
         )
         db.session.add(bom_item)
     db.session.commit()
@@ -143,6 +157,96 @@ def get_bom_details():
     result = []
     for bom_item in bom_items:
         item, material, material_type, department, supplier = bom_item
+        sizeInfo = [
+            {
+                "size": "35",
+                "innerSize": "7",
+                "outterSize": "7",
+                "approvalAmount": (
+                    item.size_35_total_usage if item.size_35_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "36",
+                "innerSize": "7",
+                "outterSize": "7.5",
+                "approvalAmount": (
+                    item.size_36_total_usage if item.size_36_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "37",
+                "innerSize": "8",
+                "outterSize": "8",
+                "approvalAmount": (
+                    item.size_37_total_usage if item.size_37_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "38",
+                "innerSize": "8",
+                "outterSize": "8.5",
+                "approvalAmount": (
+                    item.size_38_total_usage if item.size_38_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "39",
+                "innerSize": "9",
+                "outterSize": "9",
+                "approvalAmount": (
+                    item.size_39_total_usage if item.size_39_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "40",
+                "innerSize": "9",
+                "outterSize": "9.5",
+                "approvalAmount": (
+                    item.size_40_total_usage if item.size_40_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "41",
+                "innerSize": "10",
+                "outterSize": "10",
+                "approvalAmount": (
+                    item.size_41_total_usage if item.size_41_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "42",
+                "innerSize": "10",
+                "outterSize": "10.5",
+                "approvalAmount": (
+                    item.size_42_total_usage if item.size_42_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "43",
+                "innerSize": "11",
+                "outterSize": "11",
+                "approvalAmount": (
+                    item.size_43_total_usage if item.size_43_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "44",
+                "innerSize": "12",
+                "outterSize": "12",
+                "approvalAmount": (
+                    item.size_44_total_usage if item.size_44_total_usage else 0.00
+                ),
+            },
+            {
+                "size": "45",
+                "innerSize": "13",
+                "outterSize": "13",
+                "approvalAmount": (
+                    item.size_45_total_usage if item.size_45_total_usage else 0.00
+                ),
+            },
+        ]
         result.append(
             {
                 "materialName": material.material_name,
@@ -150,9 +254,13 @@ def get_bom_details():
                 "materialSpecification": item.material_specification,
                 "supplierName": supplier.supplier_name,
                 "useDepart": department.department_id,
+                "unitUsage": item.unit_usage if item.unit_usage else 0.00 if material.material_category == 0 else None,
+                "approvalUsage": item.total_usage if item.total_usage else 0.00,
                 "unit": material.material_unit,
                 "color": item.bom_item_color,
                 "comment": item.remark,
+                "materialCategory": material.material_category,
+                "sizeInfo": sizeInfo,
             }
         )
     fin_result = {"bomId": bom_rid, "bomData": result}
@@ -192,12 +300,24 @@ def edit_bom():
         bom_item = BomItem(
             bom_id=bom_id,
             material_id=material_id,
-            total_usage=0,
+            unit_usage=item["unitUsage"],
+            total_usage=item["approvalUsage"],
             department_id=item["useDepart"],
             remark=item["comment"],
             material_specification=item["materialSpecification"],
             bom_item_add_type=1,
             bom_item_color=item["color"],
+            size_35_total_usage=item["sizeInfo"][0]["approvalAmount"],
+            size_36_total_usage=item["sizeInfo"][1]["approvalAmount"],
+            size_37_total_usage=item["sizeInfo"][2]["approvalAmount"],
+            size_38_total_usage=item["sizeInfo"][3]["approvalAmount"],
+            size_39_total_usage=item["sizeInfo"][4]["approvalAmount"],
+            size_40_total_usage=item["sizeInfo"][5]["approvalAmount"],
+            size_41_total_usage=item["sizeInfo"][6]["approvalAmount"],
+            size_42_total_usage=item["sizeInfo"][7]["approvalAmount"],
+            size_43_total_usage=item["sizeInfo"][8]["approvalAmount"],
+            size_44_total_usage=item["sizeInfo"][9]["approvalAmount"],
+            size_45_total_usage=item["sizeInfo"][10]["approvalAmount"],
         )
         db.session.add(bom_item)
     db.session.commit()
@@ -216,8 +336,60 @@ def submit_bom():
         .filter(Order.order_rid == order_rid, Shoe.shoe_rid == order_shoe_rid,Bom.bom_type == 1)
         .first()
     )
+    order_shoe_id = bom.OrderShoe.order_shoe_id
+    bom_id = bom.Bom.bom_id
     bom.Bom.bom_status = 2
     db.session.commit()
+    bom_items = (
+        db.session.query(BomItem, Material, MaterialType, Supplier, Color, Department)
+        .join(Material, Material.material_id == BomItem.material_id)
+        .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
+        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+        .outerjoin(Color, Color.color_id == BomItem.bom_item_color)
+        .outerjoin(Department, Department.department_id == BomItem.department_id)
+        .filter(BomItem.bom_id == bom_id)
+        .all()
+    )
+    if os.path.exists(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom")) == False:
+        os.mkdir(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom"))
+    series_data = []
+    for bom_item in bom_items:
+        index = 1
+        series_data.append(
+            {
+                "序号": index,
+                "材料类型": bom_item.MaterialType.material_type_name,
+                "材料名称": bom_item.Material.material_name,
+                "材料规格": bom_item.BomItem.material_specification,
+                "颜色": bom_item.Color.color_name if bom_item.Color else "",
+                "单位": bom_item.Material.material_unit,
+                "厂家名称": bom_item.Material.material_supplier,
+                "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
+                "核定用量": bom_item.BomItem.total_usage,
+                "使用工段": bom_item.Department.department_name,
+                "备注": bom_item.BomItem.remark,
+            }
+        )
+        index += 1
+    image_save_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom", "shoe_image.jpg")
+    print(image_save_path)
+    generate_excel_file(
+        FILE_STORAGE_PATH+"/BOM-V1.0-temp.xlsx",
+        os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom", "二次BOM表.xlsx"),
+        {
+            "order_id": order_rid,
+            "last_type": "",
+            "input_person": "",
+            "order_finish_time": db.session.query(Order).filter(Order.order_rid == order_rid).first().end_date,
+            "inherit_id": order_shoe_rid,
+            "customer_id": db.session.query(OrderShoe).filter(OrderShoe.order_shoe_id == order_shoe_id).first().customer_product_name,
+
+
+        },
+        series_data,
+        IMAGE_STORAGE_PATH + "shoe/" + order_shoe_rid+"/shoe_image.jpg",
+        image_save_path,
+    )
     
     return jsonify({"status": "success"})
 

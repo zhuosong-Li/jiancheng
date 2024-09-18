@@ -46,7 +46,7 @@
     >
         <el-upload
             ref="upload"
-            action="http://localhost:8000/orderimport/getuploadorder"
+            :action="`${this.$apiBaseUrl}/orderimport/getuploadorder`"
             :headers="uploadHeaders"
             :before-upload="beforeUpload"
             :on-success="handleUploadSuccess"
@@ -235,7 +235,7 @@
     >
         <el-upload
             ref="uploadDoc"
-            action="http://localhost:8000/orderimport/submitdoc"
+            :action="`${this.$apiBaseUrl}/orderimport/submitdoc`"
             :headers="uploadHeaders"
             :auto-upload="false"
             accept=".xls,.xlsx"
@@ -326,19 +326,19 @@ export default {
             }
         },
         async getAllCutomers() {
-            const response = await axios.get('http://localhost:8000/customer/getallcustomers')
+            const response = await axios.get(`${this.$apiBaseUrl}/customer/getallcustomers`)
             this.customerList = response.data
         },
         async getAllOrders() {
-            const response = await axios.get('http://localhost:8000/order/getallorders')
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
             this.displayData = response.data
         },
         async getAllOrderStatus() {
-            const response = await axios.get('http://localhost:8000/order/getallorderstatus')
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
             this.orderStatusList = response.data
         },
         async getOrderOrderShoe(orderRid) {
-            const response = await axios.get('http://localhost:8000/order/getordershoeinfo', {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoeinfo`, {
                 params: {
                     orderrid: orderRid
                 }
@@ -346,7 +346,7 @@ export default {
             this.orderShoePreviewData = response.data
         },
         async getOrderDocInfo(orderRid) {
-            const response = await axios.get('http://localhost:8000/order/getorderdocinfo', {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderdocinfo`, {
                 params: {
                     orderrid: orderRid
                 }
@@ -402,7 +402,7 @@ export default {
         },
         downloadDoc(type) {
             window.open(
-                `http://localhost:8000/orderimport/downloadorderdoc?orderrid=${this.orderData.orderRid}&filetype=${type}`
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderRid}&filetype=${type}`
             )
         },
         mergeCells({ row, column, rowIndex, columnIndex }) {
@@ -507,7 +507,7 @@ export default {
             this.$refs.upload.clearFiles()
             this.uploadData = []
             this.updatekey++
-            await axios.delete('http://localhost:8000/orderimport/deleteuploadtempfile', {
+            await axios.delete(`${this.$apiBaseUrl}/orderimport/deleteuploadtempfile`, {
                 params: {
                     fileName: this.tempFileName
                 }
@@ -539,7 +539,7 @@ export default {
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
                     const response = await axios.post(
-                        'http://localhost:8000/orderimport/confirmimportorder',
+                        `${this.$apiBaseUrl}/orderimport/confirmimportorder`,
                         {
                             fileName: this.tempFileName,
                             orderInfo: this.orderForm

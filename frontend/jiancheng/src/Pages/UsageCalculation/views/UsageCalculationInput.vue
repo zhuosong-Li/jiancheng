@@ -106,15 +106,25 @@
                                     @click="handleGenerate(scope.row)"
                                     >填写</el-button
                                 >
-                                <el-button
-                                    v-else-if="
+                                <div v-else-if="
                                         scope.row.status === '用量填写已提交' ||
                                         scope.row.status === '用量填写已下发'
-                                    "
+                                    ">
+                                    <el-button
+                                    
                                     type="primary"
                                     @click="openPreviewDialog(scope.row)"
                                     >查看</el-button
                                 >
+                                <el-button
+                                    
+                                    type="success"
+                                    @click="downloadfirstBOM(scope.row)"
+                                    >下载一次BOM表</el-button
+                                >
+
+                                </div>
+
                                 <div v-else-if="scope.row.status === '用量填写已保存'">
                                     <el-button type="primary" @click="openEditDialog(scope.row)"
                                         >编辑</el-button
@@ -162,10 +172,10 @@
                         orderData.deadlineTime
                     }}</el-descriptions-item>
                     <el-descriptions-item label="工艺单"
-                        ><el-button type="primary" size="default" @click="">查看工艺单</el-button>
+                        ><el-button type="primary" size="default" @click="downloadProductionOrderList">查看投产指令单</el-button>
                     </el-descriptions-item>
                     <el-descriptions-item label="生产订单"
-                        ><el-button type="primary" size="default" @click="">查看生产订单</el-button>
+                        ><el-button type="primary" size="default" @click="downloadProductionOrder">查看生产订单</el-button>
                     </el-descriptions-item>
                 </el-descriptions>
 
@@ -572,17 +582,17 @@ export default {
     },
     methods: {
         async getAllDepartmentOptions() {
-            const response = await this.$axios.get('http://localhost:8000/general/getalldepartments')
+            const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data
         },
         async getAllColorOptions() {
-            const response = await this.$axios.get('http://localhost:8000/general/allcolors')
+            const response = await this.$axios.get(`${this.$apiBaseUrl}/general/allcolors`)
             this.colorOptions = response.data
         },
         async getMaterialFilterData() {
             this.materialAddfinished = true
             const response = await this.$axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialtype: this.materialTypeSearch,
@@ -596,21 +606,21 @@ export default {
         },
         async getAllMaterialList() {
             const response = await this.$axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname'
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`
             )
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
         async getOrderInfo() {
             const response = await this.$axios.get(
-                `http://localhost:8000/order/getorderInfo?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/order/getorderInfo?orderid=${this.orderId}`
             )
             this.orderData = response.data
             console.log(this.orderData)
             this.updateArrowKey += 1
         },
         async getOrderShoeBatchInfo(orderId, orderShoeId) {
-            const response = await this.$axios.get(`http://localhost:8000/order/getordershoesizesinfo`, {
+            const response = await this.$axios.get(`${this.$apiBaseUrl}/order/getordershoesizesinfo`, {
                 params: {
                     orderid: orderId,
                     ordershoeid: orderShoeId
@@ -620,14 +630,14 @@ export default {
         },
         async getAllShoeBomInfo() {
             const response = await this.$axios.get(
-                `http://localhost:8000/usagecalculation/getallboms?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/usagecalculation/getallboms?orderid=${this.orderId}`
             )
             this.testTableData = response.data
             this.tableWholeFilter()
         },
         async getBOMDetails(row) {
             const response = await this.$axios.get(
-                `http://localhost:8000/usagecalculation/getshoebomitems`,
+                `${this.$apiBaseUrl}/usagecalculation/getshoebomitems`,
                 {
                     params: {
                         bomrid: row.bomId
@@ -773,7 +783,7 @@ export default {
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
             const response = await this.$axios.post(
-                'http://localhost:8000/usagecalculation/savebomusage',
+                `${this.$apiBaseUrl}/usagecalculation/savebomusage`,
                 {
                     bomRid: this.newBomId,
                     bomItems: this.bomTestData
@@ -807,7 +817,7 @@ export default {
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
                     const response = await this.$axios.post(
-                        'http://localhost:8000/usagecalculation/submitbomusage',
+                        `${this.$apiBaseUrl}/usagecalculation/submitbomusage`,
                         {
                             bomRid: row.bomId
                         }
@@ -839,7 +849,7 @@ export default {
                         text: '等待中，请稍后...',
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
-            const response = await this.$axios.post('http://localhost:8000/usagecalculation/issuebomusage', {
+            const response = await this.$axios.post(`${this.$apiBaseUrl}/usagecalculation/issuebomusage`, {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })
@@ -971,6 +981,21 @@ export default {
             } else {
                 return '有配码'
             }
+        },
+        downloadProductionOrderList() {
+            window.open(
+                `${this.$apiBaseUrl}/devproductionorder/download?ordershoerid=${this.currentBomShoeId}&orderid=${this.orderData.orderId}`
+            )
+        },
+        downloadProductionOrder() {
+            window.open(
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderId}&filetype=0`
+            )
+        },
+        downloadfirstBOM(row) {
+            window.open(
+                `${this.$apiBaseUrl}/firstbom/download?ordershoerid=${row.inheritId}&orderid=${this.orderData.orderId}`
+            )
         }
     }
 }

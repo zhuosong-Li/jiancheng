@@ -15,9 +15,11 @@
     </el-dialog>
 </template>
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios'
 import { exportTableToExcel } from '@/Pages/ProductionManagementDepartment/utils';
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 const props = defineProps(['currentRowData', 'handleClose'])
 const previewVis = ref(true)
 const columns = ref([])
@@ -26,7 +28,7 @@ const currentTitle = ref('')
 onMounted(async () => {
     currentTitle.value = "鞋型号" + props.currentRowData.shoeRId + "工价单"
     let params = { reportId: props.currentRowData.reportId }
-    const response = await axios.get("http://localhost:8000/production/getpricereportdetail", { params })
+    const response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, { params })
     tableData.value = response.data
     let obj = [
         { prop: "rowId", label: "序号" },

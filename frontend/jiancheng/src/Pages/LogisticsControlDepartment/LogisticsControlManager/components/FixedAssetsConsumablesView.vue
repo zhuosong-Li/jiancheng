@@ -1082,7 +1082,7 @@ export default {
     methods: {
         async getPurchaseOrderId() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/getassetsnewpurchaseorderid',
+                `${this.$apiBaseUrl}/logistics/getassetsnewpurchaseorderid`,
                 {
                     department: '01'
                 }
@@ -1091,7 +1091,7 @@ export default {
         },
         async getSizePurchaseOrderId() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/getassetsnewpurchaseorderid',
+                `${this.$apiBaseUrl}/logistics/getassetsnewpurchaseorderid`,
                 {
                     department: '01'
                 }
@@ -1101,7 +1101,7 @@ export default {
         async getMaterialPurchaseData() {
             this.datafinished = true
             const response = await axios.get(
-                'http://localhost:8000/logistics/assetsmaterialpurchaseorder',
+                `${this.$apiBaseUrl}/logistics/assetsmaterialpurchaseorder`,
                 {
                     params: {
                         purchaseorderstatus: '1'
@@ -1115,7 +1115,7 @@ export default {
         async getUnsubmitPurchaseOrder() {
             this.unsubmitfinished = true
             const response = await axios.get(
-                'http://localhost:8000/logistics/assetsmaterialpurchaseorder',
+                `${this.$apiBaseUrl}/logistics/assetsmaterialpurchaseorder`,
                 {
                     params: {
                         purchaseorderstatus: '0'
@@ -1127,7 +1127,7 @@ export default {
         },
         async getSizeMaterialList() {
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialcategory: 1
@@ -1139,7 +1139,7 @@ export default {
         },
         async getMaterialList() {
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialcategory: 0
@@ -1152,7 +1152,7 @@ export default {
         async getSizeMaterialFilterData() {
             this.materialAddfinished = true
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialtype: this.materialTypeSearch,
@@ -1168,7 +1168,7 @@ export default {
         async getMaterialFilterData() {
             this.materialAddfinished = true
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialtype: this.materialTypeSearch,
@@ -1182,7 +1182,7 @@ export default {
             this.materialAddfinished = false
         },
         async getColors() {
-            const response = await axios.get('http://localhost:8000/general/allcolors')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`)
             this.colorOptions = response.data
         },
         factoryFieldJudge(type) {
@@ -1299,7 +1299,7 @@ export default {
             this.currentViewPurchaseOrderId = row.materialPurchaseOrderId
             try {
                 const response = await axios.get(
-                    'http://localhost:8000/logistics/getassetspurchasedivideorders',
+                    `${this.$apiBaseUrl}/logistics/getassetspurchasedivideorders`,
                     {
                         params: {
                             purchaseOrderId: row.materialPurchaseOrderId
@@ -1315,7 +1315,7 @@ export default {
         },
         async openSubmitDialog(row) {
             const response = await axios.get(
-                'http://localhost:8000/logistics/getassetspurchasedivideorders',
+                `${this.$apiBaseUrl}/logistics/getassetspurchasedivideorders`,
                 {
                     params: {
                         purchaseOrderId: row.materialPurchaseOrderId
@@ -1330,7 +1330,7 @@ export default {
         async openEditDialog(row) {
             this.editPurchaseOrderId = row.materialPurchaseOrderId
             const response = await axios.get(
-                'http://localhost:8000/logistics/getassetspurchaseorderitems',
+                `${this.$apiBaseUrl}/logistics/getassetspurchaseorderitems`,
                 {
                     params: {
                         purchaseOrderId: row.materialPurchaseOrderId
@@ -1458,7 +1458,7 @@ export default {
             })
                 .then(async () => {
                     const response = await axios.post(
-                        'http://localhost:8000/logistics/unsubmitpurchaseordersave',
+                        `${this.$apiBaseUrl}/logistics/unsubmitpurchaseordersave`,
                         {
                             data: this.tabPlaneData
                         }
@@ -1491,7 +1491,7 @@ export default {
             })
                 .then(async () => {
                     const response = await axios.post(
-                        'http://localhost:8000/logistics/submitpurchaseorder',
+                        `${this.$apiBaseUrl}/logistics/submitpurchaseorder`,
                         {
                             purchaseOrderId: this.currentSubmitPurchaseOrderId,
                         }
@@ -1715,7 +1715,7 @@ export default {
         },
         async newSizePurchaseOrderSave() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/newpurchaseordersave',
+                `${this.$apiBaseUrl}/logistics/newpurchaseordersave`,
                 {
                     data: this.lastData,
                     purchaseOrderId: this.newSizePurchaseOrderId,
@@ -1739,7 +1739,7 @@ export default {
         },
         async editSizePurchaseOrderSave() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/editsavedpurchaseorderitems',
+                `${this.$apiBaseUrl}/logistics/editsavedpurchaseorderitems`,
                 {
                     data: this.editLastData,
                     purchaseOrderId: this.editPurchaseOrderId,
@@ -1763,7 +1763,7 @@ export default {
         },
         async editPurchaseOrderSave() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/editsavedpurchaseorderitems',
+                `${this.$apiBaseUrl}/logistics/editsavedpurchaseorderitems`,
                 {
                     data: this.editAssetPurchaseData,
                     purchaseOrderId: this.editPurchaseOrderId,
@@ -1787,7 +1787,7 @@ export default {
         },
         async newPurchaseOrderSave() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/newpurchaseordersave',
+                `${this.$apiBaseUrl}/logistics/newpurchaseordersave`,
                 {
                     data: this.newAssetPurchaseData,
                     purchaseOrderId: this.newPurchaseOrderId,
@@ -1817,7 +1817,7 @@ export default {
             })
                 .then(async () => {
                         const response = await axios.delete(
-                            'http://localhost:8000/logistics/deleteunsubmitpurchaseorder',
+                            `${this.$apiBaseUrl}/logistics/deleteunsubmitpurchaseorder`,
                             {
                                 params: {
                                     purchaseOrderId: row.materialPurchaseOrderId

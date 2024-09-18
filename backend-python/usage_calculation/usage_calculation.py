@@ -55,7 +55,7 @@ def get_all_boms():
                 "inheritId": shoe.shoe_rid,
                 "customerId": order_shoe.customer_product_name,
                 "designer": shoe.shoe_designer,
-                "editter": shoe.shoe_adjuster,
+                "editter": order_shoe.adjust_staff,
                 "bomId": bom.bom_rid if bom else "",
                 "status": status,
                 "image" : IMAGE_STORAGE_PATH+shoe.shoe_image_url if shoe.shoe_image_url is not None else None,
@@ -274,7 +274,7 @@ def submit_bom_usage():
                 "材料规格": bom_item.BomItem.material_specification,
                 "颜色": bom_item.Color.color_name if bom_item.Color else "",
                 "单位": bom_item.Material.material_unit,
-                "厂家名称": bom_item.Material.material_supplier,
+                "厂家名称": bom_item.Supplier.supplier_name,
                 "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
                 "核定用量": bom_item.BomItem.total_usage,
                 "使用工段": bom_item.Department.department_name,
@@ -285,7 +285,7 @@ def submit_bom_usage():
     image_save_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom", "shoe_image.jpg")
     print(image_save_path)
     generate_excel_file(
-        "D:/temp/BOM-V1.0-temp.xlsx",
+        FILE_STORAGE_PATH+"/BOM-V1.0-temp.xlsx",
         os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom", "一次BOM表.xlsx"),
         {
             "order_id": order_rid,
@@ -301,11 +301,6 @@ def submit_bom_usage():
         IMAGE_STORAGE_PATH + "shoe/" + order_shoe_rid+"/shoe_image.jpg",
         image_save_path,
     )
-
-
-        
-    
-    
     return jsonify({"status": "success"})
 
 @usage_calculation_bp.route("/usagecalculation/issuebomusage", methods=["POST"])
@@ -333,7 +328,7 @@ def issue_bom_usage():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=46,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -346,7 +341,7 @@ def issue_bom_usage():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=47,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -359,7 +354,7 @@ def issue_bom_usage():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=48,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -372,7 +367,7 @@ def issue_bom_usage():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=49,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,

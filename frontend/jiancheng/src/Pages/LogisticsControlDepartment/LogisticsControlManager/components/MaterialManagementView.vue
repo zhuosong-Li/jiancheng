@@ -594,7 +594,7 @@ export default {
     },
     methods: {
         async checkMaterialName() {
-            const response = await axios.post('http://localhost:8000/logistics/checkmaterial', {
+            const response = await axios.post(`${this.$apiBaseUrl}/logistics/checkmaterial`, {
                 materialname: this.editMaterialForm.materialName,
                 factoryname: this.editMaterialForm.materialFactory,
             })
@@ -640,28 +640,28 @@ export default {
             console.log(this.materialTypeSelectOption)
         },
         async getAllWarehouseName() {
-            const response = await axios.get('http://localhost:8000/logistics/allwarehousenames')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allwarehousenames`)
             this.warehouseOptions = response.data
         },
         async getAllFactoryName() {
-            const response = await axios.get('http://localhost:8000/logistics/allfactorynames')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allfactorynames`)
             this.factoryOptions = response.data
         },
         async getAllMaterialType() {
-            const response = await axios.get('http://localhost:8000/logistics/allmaterialtypes')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterialtypes`)
             this.materialTypeData = response.data
             this.materialTypeDataFinished = false
         },
         async getMaterialTypeData() {
             this.datafinished = true
-            const response = await axios.get('http://localhost:8000/logistics/allmaterial')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterial`)
             this.materialTypeFilterData = response.data.materials
             this.materialTotal = response.data.amount
             this.datafinished = false
         },
         async getMaterialStorageData() {
             this.datafinished = true
-            const response = await axios.get('http://localhost:8000/logistics/allmaterialstorage')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterialstorage`)
             this.materialStorageData = response.data
             this.materialStorageTotal = response.data.length
             this.datafinished = false
@@ -682,7 +682,7 @@ export default {
         },
         async filterMaterialStorage() {
             this.datafinished = true
-            const response = await axios.get('http://localhost:8000/logistics/allmaterialstorage', {
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterialstorage`, {
                 params: {
                     materialtype: this.materialTypeSearch,
                     materialname: this.materialNameSearch,
@@ -699,7 +699,7 @@ export default {
         },
         async filterMaterialType() {
             this.datafinished = true
-            const response = await axios.get('http://localhost:8000/logistics/allmaterial', {
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterial`, {
                 params: {
                     materialname: this.materialNameSearch,
                     warehousename: this.warehouseNameSearch,
@@ -713,7 +713,7 @@ export default {
         },
         async addNewMaterialType() {
             const response = await axios.post(
-                'http://localhost:8000/logistics/addmaterialtype',
+                `${this.$apiBaseUrl}/logistics/addmaterialtype`,
                 this.newMaterialTypeForm
             )
             if (response.status === 200) {
@@ -731,7 +731,7 @@ export default {
             }
         },
         async checkSimilarMaterials(row) {
-            const response = await axios.post('http://localhost:8000/logistics/checkmaterial', {
+            const response = await axios.post(`${this.$apiBaseUrl}/logistics/checkmaterial`, {
                 materialname: row.materialName,
                 factoryname: row.factoryName
             })
@@ -866,7 +866,7 @@ export default {
             })
                 .then(async () => {
                     const response = await axios.post(
-                        'http://localhost:8000/logistics/addmaterial',
+                        `${this.$apiBaseUrl}/logistics/addmaterial`,
                         {
                             materials: this.newMaterialData
                         }
@@ -919,7 +919,7 @@ export default {
             })
                 .then(async () => {
                     const response = await axios.patch(
-                        'http://localhost:8000/logistics/editmaterialtype',
+                        `${this.$apiBaseUrl}/logistics/editmaterialtype`,
                         {
                             materialoldname: this.editMaterialForm.materialOldName,
                             materialname: this.editMaterialForm.materialName,

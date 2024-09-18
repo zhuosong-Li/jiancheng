@@ -118,7 +118,7 @@ export default {
     methods: {
         async getOrderShoeBatchInfo() {
             const params = { "orderShoeId": this.$props.orderShoeId }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getordershoebatchinfo", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
             this.shoeInfo = response.data
             this.shoeInfo.forEach(row => {
                 this.totalShoes += row.totalAmount
@@ -126,13 +126,13 @@ export default {
         },
         async getPriceReportInfo() {
             const params = { "orderShoeId": this.$props.orderShoeId }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getallpricereportsforordershoe", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallpricereportsforordershoe`, { params })
             this.priceReports = response.data
         },
         async getReportDetail(rowData) {
             this.currentRow = rowData
             const params = { "reportId": rowData.reportId }
-            const response = await axios.get("http://localhost:8000/production/getpricereportdetail", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getpricereportdetail`, { params })
             this.reportDetail = response.data
             this.isWagesApprovalVis = true
         },
@@ -142,7 +142,7 @@ export default {
                 '提示',
             ).then(async () => {
                 const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportId": this.currentRow.reportId }
-                await axios.patch("http://localhost:8000/production/productionmanager/approvepricereport", data)
+                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvepricereport`, data)
                 ElMessage.success('审批成功')
                 this.isWagesApprovalVis = false
                 this.getPriceReportInfo()

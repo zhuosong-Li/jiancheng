@@ -14,7 +14,7 @@
     </el-dialog>
 </template>
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios'
 import { exportTableToExcel } from '@/Pages/ProductionManagementDepartment/utils';
 const props = defineProps(['shoeRId', 'currentReport', 'handleClose'])
@@ -22,11 +22,13 @@ const previewVis = ref(true)
 const columns = ref([])
 const tableData = ref([])
 const currentTitle = ref('')
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
     console.log(props.currentReport)
     currentTitle.value = "鞋型号_" + props.shoeRId + "_生产数量单_" + props.currentReport.creationDate
     let params = { reportId: props.currentReport.reportId }
-    const response = await axios.get("http://localhost:8000/production/getquantityreportdetail", { params })
+    const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
         row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
         tableData.value.push(row)

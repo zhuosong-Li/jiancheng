@@ -27,12 +27,13 @@ const components = {
 const pendingData = ref([])
 const inProgressData = ref([])
 onMounted(()=> {
-    const { proxy } = getCurrentInstance()
+    const proxy = getCurrentInstance()
+    const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
     const params = {
         orderstatus: 9,
         ordershoestatus: 4
     };
-    proxy.$axios.get("http://localhost:8000/order/getorderbystatus", { params }).then(response => {
+    proxy.$axios.get(`${apiBaseUrl}/order/getorderbystatus`, { params }).then(response => {
         const fetchPending = response.data.pendingOrders
         const fetchInProgress = response.data.inProgressOrders
         console.log("fetchPending is ")

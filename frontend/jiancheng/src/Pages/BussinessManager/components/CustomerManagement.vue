@@ -107,7 +107,7 @@ export default {
     },
     methods: {
         async getCustomerList() {
-            const response = await axios.get('http://localhost:8000/customer/getcustomerdetails')
+            const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
             this.customerTableData = response.data
         },
         openAddCustomerDialog() {
@@ -125,7 +125,7 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post('http://localhost:8000/customer/addcustomer', this.orderForm)
+                const response = await axios.post(`${this.$apiBaseUrl}/customer/addcustomer`, this.orderForm)
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',
@@ -159,7 +159,7 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post('http://localhost:8000/customer/editcustomer', this.orderForm)
+                const response = await axios.post(`${this.$apiBaseUrl}/customer/editcustomer`, this.orderForm)
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',

@@ -99,12 +99,10 @@ def generate_excel_file(template_path, new_file_path, order_details, series_data
 
     # Insert series data starting from row 9
     insert_series_data(ws, series_data, start_row=9)
-
     # Download the image from the URL
     download_image(image_url, image_save_path)
-
-    # Insert the image into the specified range (N1:P3)
-    insert_image(ws, image_save_path, "N1", "P3")
+    if os.path.exists(image_save_path):
+        insert_image(ws, image_save_path, "N1", "P3")
 
     # Save the modified workbook
     save_workbook(wb, new_file_path)

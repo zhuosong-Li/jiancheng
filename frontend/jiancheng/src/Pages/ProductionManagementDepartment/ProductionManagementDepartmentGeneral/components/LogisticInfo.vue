@@ -98,7 +98,7 @@ export default {
                 "orderRId": this.orderRIdSearch,
                 "shoeRId": this.shoeRIdSearch
             }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getlogisticsoverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getlogisticsoverview`, { params })
             this.logisticsOrderData = response.data.result
             this.totalRows = response.data.totalLength
         },
@@ -125,7 +125,7 @@ export default {
                 "orderRId": rowData.orderRId,
                 "shoeRId": rowData.shoeRId
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialinfo", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.logisticsMaterialData = response.data.result
             this.logisticsRows = response.data.total
             this.isMaterialLogisticVis = true

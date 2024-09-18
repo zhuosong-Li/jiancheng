@@ -237,12 +237,12 @@ export default {
 	},
 	methods: {
 		async getProductionLineOptions() {
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getproductionlines")
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getproductionlines`)
 			this.productionLines = response.data
 		},
 		async getOrderShoeTableData() {
 			const params = { "orderId": this.$props.orderId }
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getorderproductiondetail", { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderproductiondetail`, { params })
 			this.orderShoeDataTable = response.data
 			let totalCuttingAmount = 0, totalSewingAmount = 0, totalMoldingAmount = 0
 			let cuttingAmount = 0, sewingAmount = 0, moldingAmount = 0
@@ -275,7 +275,7 @@ export default {
 			this.isScheduleModify = true
 			this.currentRow = rowData
 			const params = { "orderShoeId": rowData.orderShoeId }
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getordershoescheduleinfo", { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoescheduleinfo`, { params })
 			console.log(response.data)
 			this.tabs[0].lineValue = response.data.cuttingLineNumbers.split(",")
 			this.tabs[0].dateValue = [response.data.cuttingStartDate, response.data.cuttingEndDate]

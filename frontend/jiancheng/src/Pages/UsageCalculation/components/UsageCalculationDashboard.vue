@@ -30,7 +30,8 @@ import DashboardList from './Dashboard/DashboardList.vue'
 import DashboardPend from './Dashboard/DashboardListPend.vue'
 import DashboardProgress from './Dashboard/DashboardListProgress.vue'
 
-
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 const components = {
         DashboardGrid,
@@ -49,7 +50,7 @@ onMounted(()=> {
     };
 
 
-    proxy.$axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+    proxy.$axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {

@@ -86,7 +86,7 @@ export default {
             }
         },
         async logout() {
-            await this.$axios.post('http://localhost:8000/logout')
+            await this.$axios.post(`${this.$apiBaseUrl}/logout`)
             localStorage.removeItem('token')
             localStorage.removeItem('role')
             this.$router.push('/login')

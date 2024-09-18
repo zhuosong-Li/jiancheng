@@ -44,7 +44,7 @@
                         <span>{{ getinProgressItem(colIndex).taskName }}</span>
                     </div>
                 </template>
-                <div>订单号：{{ getinProgressItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getinProgressItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
                 <!-- <div>前序流程下发时间：{{ getinProgressItem(colIndex).prevTime }}</div>
                 <div>前序处理部门：{{ getinProgressItem(colIndex).prevDepart }}</div>

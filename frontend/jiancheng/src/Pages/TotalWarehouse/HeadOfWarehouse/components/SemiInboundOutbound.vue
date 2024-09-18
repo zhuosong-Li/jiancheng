@@ -142,7 +142,7 @@ export default {
                 "shoeRId": this.shoeNumberSearch,
                 "opType": 1
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getsemifinishedinoutoverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsemifinishedinoutoverview`, { params })
             this.tableData = response.data.result
             this.totalRows = response.data.total
         },
@@ -155,7 +155,7 @@ export default {
                 "type": this.inboundType,
                 "amount": this.currentRow.inboundAmount
             }
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/inboundsemifinished", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
             console.log(response)
             this.semiInboundDialogVisible = false
             this.getTableData()
@@ -169,7 +169,7 @@ export default {
                 "outboundType": this.outboundForm.outboundType,
                 "picker": this.outboundForm.receiver
             }
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/outboundsemifinished", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)
             console.log(response)
             this.semiOutboundDialogVisible = false
             this.getTableData()

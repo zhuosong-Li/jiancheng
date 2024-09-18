@@ -15,7 +15,7 @@
         <el-col :span="24">
             <el-table :data="displayData" style="height: 500px" @row-dblclick="handleRowClick">
                 <el-table-column prop="taskName" label="任务名称"></el-table-column>
-                <el-table-column prop="orderId" label="订单号"></el-table-column>
+                <el-table-column prop="orderRid" label="订单号"></el-table-column>
                 <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
                 <el-table-column prop="prevTime" label="前序流程下发时间"></el-table-column>
                 <el-table-column prop="prevDepart" label="前序处理部门"></el-table-column>

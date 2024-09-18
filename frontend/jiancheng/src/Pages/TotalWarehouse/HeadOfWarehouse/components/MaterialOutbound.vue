@@ -215,11 +215,11 @@ export default {
     },
     methods: {
         async getAllMaterialTypes() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialtypes")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialtypes`)
             this.materialTypeOptions = response.data
         },
         async getAllSuppliers() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallsuppliernames")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
         async getMaterialTableData() {
@@ -234,7 +234,7 @@ export default {
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialinfo", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.materialTableData = response.data.result
             this.totalRows = response.data.total
         },
@@ -252,7 +252,7 @@ export default {
                 "outboundAddress": this.outboundForm.address,
                 "picker": this.outboundForm.receiver
             }
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/outboundmaterial", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundmaterial`, data)
             console.log(response)
         },
         async submitSizeOutboundForm() {
@@ -272,7 +272,7 @@ export default {
                 }
 
             })
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/outboundsizematerial", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsizematerial`, data)
             console.log(response)
         },
         handleSizeChange(val) {
@@ -288,12 +288,12 @@ export default {
         },
         async outboundMaterial(row) {
             let params = {"orderShoeId": row.orderShoeId}
-            let response = await axios.get("http://localhost:8000/warehouse/warehousemanager/checkinboundoptions", { params })
+            let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/checkinboundoptions`, { params })
             this.isProductionOutboundDisabled = !response.data[1]
             this.isOutsourceOutboundDisabled = !response.data[3]
             if (row.materialCategory == 1) {
                 params = { "sizeMaterialStorageId": row.materialStorageId }
-                response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getsizematerialbyid", { params })
+                response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
                 this.multipleOutboundForm = response.data
                 this.isMultiOutboundDialogVisible = true
                 this.currentRow = row

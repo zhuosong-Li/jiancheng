@@ -63,7 +63,7 @@ export default {
             }
         },
         async Logout() {
-            await axios.post('http://localhost:8000/logout')
+            await axios.post(`${this.$apiBaseUrl}/logout`)
                 .then(response => {
                     this.$router.push({name: 'login'})
                     localStorage.removeItem('token')
