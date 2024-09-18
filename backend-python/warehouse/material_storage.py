@@ -92,7 +92,7 @@ def get_all_material_info():
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
-            Color
+            Color,
         )
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
@@ -126,25 +126,37 @@ def get_all_material_info():
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
-            Color
+            Color,
         )
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
-        .outerjoin(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(
+            OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id
+        )
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
     # allow inbound operation when the order is in production
     # in case of leftover material needs to be inbounded
     if op_type == 1:
-        query1 = query1.join(
+        query1 = query1.outerjoin(
             OrderStatus, OrderStatus.order_id == Order.order_id
-        ).filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
-        query2 = query2.join(
+        ).filter(
+            or_(
+                OrderShoe.order_shoe_id.is_(None),
+                OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER,
+            )
+        )
+        query2 = query2.outerjoin(
             OrderStatus, OrderStatus.order_id == Order.order_id
-        ).filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
+        ).filter(
+            or_(
+                OrderShoe.order_shoe_id.is_(None),
+                OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER,
+            )
+        )
     # allow outbound operation if material is in stock
     # in case of the material needs to be outbounded as waste
     elif op_type == 2:
@@ -178,14 +190,16 @@ def get_all_material_info():
             material_type_name,
             material_category,
             supplier_name,
-            color
+            color,
         ) = row
         if actual_inbound_amount >= estimated_inbound_amount:
             status = "已完成入库"
         else:
             status = "未完成入库"
         if not material_estimated_arrival_date:
-            material_estimated_arrival_date = ''
+            date_value = ""
+        else:
+            date_value = material_estimated_arrival_date.strftime("%Y-%m-%d")
         obj = {
             "materialType": material_type_name,
             "materialName": material_name,
@@ -205,7 +219,7 @@ def get_all_material_info():
             "materialStorageId": material_storage_id,
             "status": status,
             "colorName": color.color_name,
-            "materialArrivalDate": material_estimated_arrival_date
+            "materialArrivalDate": date_value,
         }
         result.append(obj)
     return {"result": result, "total": count_result}
@@ -220,6 +234,8 @@ def check_inbound_options():
     2: 生产剩余
     """
     order_shoe_id = request.args.get("orderShoeId")
+    if not order_shoe_id:
+        return {1: True, 2: True}
     status_list = (
         db.session.query(OrderShoeStatus)
         .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
@@ -291,7 +307,9 @@ def inbound_material():
 def notify_required_material_arrival():
     order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
-    obj = OrderShoeProductionInfo.query.filter(OrderShoeProductionInfo.order_shoe_id == order_shoe_id).first()
+    obj = OrderShoeProductionInfo.query.filter(
+        OrderShoeProductionInfo.order_shoe_id == order_shoe_id
+    ).first()
     is_material_arrived = obj.is_material_arrived
     if is_material_arrived:
         return jsonify({"message": "no"})
@@ -300,7 +318,9 @@ def notify_required_material_arrival():
         MaterialStorage.estimated_inbound_amount, MaterialStorage.actual_inbound_amount
     ).filter(MaterialStorage.order_shoe_id == order_shoe_id)
     query2 = db.session.query(
-        SizeMaterialStorage.total_estimated_inbound_amount.label("estimated_inbound_amount"),
+        SizeMaterialStorage.total_estimated_inbound_amount.label(
+            "estimated_inbound_amount"
+        ),
         SizeMaterialStorage.total_actual_inbound_amount.label("actual_inbound_amount"),
     ).filter(SizeMaterialStorage.order_shoe_id == order_shoe_id)
     response = query1.union(query2).all()

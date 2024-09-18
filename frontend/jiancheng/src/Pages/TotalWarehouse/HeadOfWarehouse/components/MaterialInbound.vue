@@ -118,7 +118,7 @@
         </el-form-item>
         <el-form-item label="入库类型">
             <el-radio-group v-model="inboundForm.inboundType">
-                <el-radio value="1">采购入库</el-radio>
+                <el-radio :disabled="isPurchaseInboundDisabled" value="1">采购入库</el-radio>
                 <el-radio value="2">生产剩余</el-radio>
             </el-radio-group>
         </el-form-item>
