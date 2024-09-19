@@ -65,7 +65,7 @@ const router = createRouter({
       component: ProductionManagementDepartmentGeneral,
       meta:{
         requiresAuth: true,
-        role: 3
+        role: 6
       }
     },
     {
@@ -74,7 +74,7 @@ const router = createRouter({
       component: ProductionManager,
       meta:{
         requiresAuth: true,
-        role: 6
+        role: 3
       }
     },
     {
