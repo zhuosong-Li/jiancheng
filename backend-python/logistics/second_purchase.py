@@ -8,7 +8,8 @@ from event_processor import EventProcessor
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from itertools import groupby
 from operator import itemgetter
-
+import os
+from general_document.purchase_divide_order import generate_excel_file
 second_purchase_bp = Blueprint("second_purchase_bp", __name__)
 
 
@@ -599,15 +600,18 @@ def save_purchase_divide_orders():
 def submit_purchase_divide_orders():
     purchase_order_id = request.json.get("purchaseOrderId")
     order_info = (
-        db.session.query(PurchaseOrder, Bom, OrderShoe, Order)
+        db.session.query(PurchaseOrder, Bom, OrderShoe, Order, Shoe)
         .join(Bom, Bom.bom_id == PurchaseOrder.bom_id)
         .join(OrderShoe, OrderShoe.order_shoe_id == Bom.order_shoe_id)
         .join(Order, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .filter(PurchaseOrder.purchase_order_rid == purchase_order_id)
         .first()
     )
     order_id = order_info.Order.order_id
     order_shoe_id = order_info.OrderShoe.order_shoe_id
+    order_rid = order_info.Order.order_rid
+    order_shoe_rid = order_info.Shoe.shoe_rid
     query = (
         db.session.query(
             PurchaseDivideOrder,
@@ -744,6 +748,65 @@ def submit_purchase_divide_orders():
         PurchaseOrder.purchase_order_rid == purchase_order_id
     ).update({"purchase_order_status": purchase_order_status})
     db.session.commit()
+
+    purchase_divide_orders = (
+        db.session.query(PurchaseDivideOrder, PurchaseOrderItem, PurchaseOrder, BomItem, Material, Supplier, Color)
+        .join(
+            PurchaseOrderItem,
+            PurchaseDivideOrder.purchase_divide_order_id
+            == PurchaseOrderItem.purchase_divide_order_id,
+        )
+        .join(PurchaseOrder, PurchaseDivideOrder.purchase_order_id == PurchaseOrder.purchase_order_id)
+        .join(BomItem, PurchaseOrderItem.bom_item_id == BomItem.bom_item_id)
+        .join(Material, BomItem.material_id == Material.material_id)
+        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+        .join(Color, BomItem.bom_item_color == Color.color_id)
+        .filter(PurchaseOrder.purchase_order_rid == purchase_order_id)
+        .all()
+    )
+
+    # Dictionary to keep track of processed PurchaseDivideOrders
+    purchase_divide_order_dict = {}
+    if os.path.exists(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "purchase_order")) == False:
+        os.mkdir(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "purchase_order"))
+
+    # Iterate through the query results and group items by PurchaseDivideOrder
+    for purchase_divide_order, purchase_order_item, purchase_order ,bom_item, material, supplier, color in purchase_divide_orders:
+        purchase_order_id = purchase_divide_order.purchase_divide_order_rid
+        print(purchase_order_id)
+        if purchase_divide_order.purchase_divide_order_type == "N":
+            if purchase_order_id not in purchase_divide_order_dict:
+                purchase_divide_order_dict[purchase_order_id] = {
+                    "供应商": supplier.supplier_name,
+                    "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "备注": purchase_divide_order.purchase_order_remark,
+                    "环保要求": purchase_divide_order.purchase_order_environmental_request,
+                    "发货地址": purchase_divide_order.shipment_address,
+                    "交货期限": purchase_divide_order.shipment_deadline,
+                    "订单信息": order_rid + "-" + order_shoe_rid,
+                    "seriesData": []
+                }
+
+            # Append the current PurchaseOrderItem to the 'seriesData' list of the relevant order
+            purchase_divide_order_dict[purchase_order_id]["seriesData"].append({
+                "物品名称": material.material_name + " " + bom_item.material_specification + " " + color.color_name,
+                "数量": purchase_order_item.purchase_amount,
+                "单位": material.material_unit,
+                "备注": bom_item.remark,
+                "用途说明": "",
+
+
+            })
+    
+
+    # Convert the dictionary to a list
+    template_path = os.path.join(FILE_STORAGE_PATH,"标准采购订单.xlsx")
+    for purchase_order_id, data in purchase_divide_order_dict.items():
+        new_file_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "purchase_order", purchase_order_id + "_" + data["供应商"] + ".xlsx")
+        print(new_file_path)
+        print(template_path)
+        generate_excel_file(template_path, new_file_path, data)      
+        print(data)
 
     processor = EventProcessor()
     event = Event(

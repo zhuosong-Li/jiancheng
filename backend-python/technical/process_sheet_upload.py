@@ -13,13 +13,15 @@ process_sheet_upload_bp = Blueprint("process_sheet_upload_bp", __name__)
 def get_order_list():
     order_id = request.args.get("orderid")
     order_shoes = (
-        db.session.query(OrderShoe, Shoe)
+        db.session.query(OrderShoe, Shoe, OrderShoeStatus)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(OrderShoe.order_id == order_id)
+        .filter(OrderShoeStatus.current_status == 9)
         .all()
     )
     result = []
-    for order_shoe, shoe in order_shoes:
+    for order_shoe, shoe, order_shoe_status in order_shoes:
         if order_shoe.process_sheet_upload_status == "0":
             status = "未上传"
         elif order_shoe.process_sheet_upload_status == "1":

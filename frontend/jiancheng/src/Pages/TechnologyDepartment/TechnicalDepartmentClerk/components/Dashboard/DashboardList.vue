@@ -72,7 +72,7 @@ export default {
             if (row.taskName === '一次BOM填写') {
                 url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
             } else if (row.taskName === '二次BOM填写') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+                url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

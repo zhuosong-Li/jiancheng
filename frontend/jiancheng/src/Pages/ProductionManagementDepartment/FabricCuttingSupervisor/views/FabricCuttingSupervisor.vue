@@ -22,7 +22,8 @@ import Setting from '../components/Setting.vue'
 import History from '../components/History.vue'
 import LogOut from '../components/LogOut.vue'
 import Dashboard from '../components/Dashboard.vue'
-import { ref } from 'vue'
+import axios from 'axios'
+import { getCurrentInstance, ref } from 'vue'
 const components = {
     Dashboard,
     LaborPriceReport,

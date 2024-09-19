@@ -101,7 +101,7 @@
                                     @click="handleGenerate(scope.row)"
                                     >填写</el-button
                                 >
-                                <el-button
+                                <div
                                     v-else-if="
                                         scope.row.status === '已下发' ||
                                         scope.row.status === '已提交' ||
@@ -109,10 +109,14 @@
                                         scope.row.status === '已用量填写' ||
                                         scope.row.status === 'BOM完成'
                                     "
-                                    type="primary"
-                                    @click="openPreviewDialog(scope.row)"
-                                    >查看</el-button
                                 >
+                                    <el-button type="primary" @click="openPreviewDialog(scope.row)"
+                                        >查看</el-button
+                                    >
+                                    <el-button type="success" @click="downloadSecondBOM(scope.row)"
+                                        >下载二次BOM表</el-button
+                                    >
+                                </div>
                                 <div v-else-if="scope.row.status === '已保存'">
                                     <el-button type="primary" @click="openEditDialog(scope.row)"
                                         >编辑</el-button
@@ -865,9 +869,7 @@ export default {
             this.materialAddfinished = false
         },
         async getAllMaterialList() {
-            const response = await axios.get(
-                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`
-            )
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/getmaterialtypeandname`)
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
@@ -1317,6 +1319,11 @@ export default {
         downloadProductionOrder() {
             window.open(
                 `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderId}&filetype=0`
+            )
+        },
+        downloadSecondBOM(row) {
+            window.open(
+                `${this.$apiBaseUrl}/secondbom/download?ordershoerid=${row.inheritId}&orderid=${this.orderData.orderId}`
             )
         }
     }
