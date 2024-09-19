@@ -16,7 +16,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios';
 import { Grid, Memo } from '@element-plus/icons-vue'
 import DashboardGrid from './Dashboard/DashboardGrid.vue';
@@ -32,10 +32,12 @@ const components = {
 }
 const textData = ref([])
 const textData2 = ref([])
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 onMounted(() => {
     let params = { ordershoestatus: 20 };
-    axios.get("http://localhost:8000/order/getordersinproduction", { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getordersinproduction`, { params }).then(response => {
         const newOrders = response.data.newOrders
         const progressOrders = response.data.progressOrders
         newOrders.forEach(element => {
@@ -47,7 +49,7 @@ onMounted(() => {
         console.log(textData2)
     })
     params = { ordershoestatus: 23 };
-    axios.get("http://localhost:8000/order/getordersinproduction", { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getordersinproduction`, { params }).then(response => {
         const newOrders = response.data.newOrders
         const progressOrders = response.data.progressOrders
         newOrders.forEach(element => {

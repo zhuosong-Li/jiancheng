@@ -37,17 +37,19 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 const props = defineProps(['currentRowData', 'handleClose'])
 const tableData = ref([])
 const createVis = ref(true)
 const procedureInfo = ref({})
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
     let response = null
     try {
-        response = await axios.get("http://localhost:8000/production/getallprocedures", {
+        response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, {
             params: {
                 teams: ['成型'].toString()
             }
@@ -59,7 +61,7 @@ onMounted(async () => {
         console.error('There was an error!', error);
     }
     try {
-        response = await axios.get("http://localhost:8000/production/getpricereportdetail", {
+        response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, {
             params: {
                 reportId: props.currentRowData.reportId,
             }
@@ -99,7 +101,7 @@ const handleSaveData = () => {
             row["price"] = procedureInfo.value[row.procedure]["price"]
             row["procedureId"] = procedureInfo.value[row.procedure]["id"]
         })
-        await axios.post("http://localhost:8000/production/storepricereportdetail",
+        await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
             { reportId: props.currentRowData.reportId, newData: tableData.value })
         ElMessage({
             type: 'success',

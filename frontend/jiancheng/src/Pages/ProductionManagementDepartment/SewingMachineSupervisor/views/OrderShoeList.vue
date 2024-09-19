@@ -30,7 +30,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import AllHeader from '@/components/AllHeader.vue';
 import axios from 'axios';
 const props = defineProps({
@@ -40,13 +40,15 @@ const props = defineProps({
     'customerName': String,
     'taskName': String
 })
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 const taskData = ref([])
 onMounted(async () => {
     let params = {
         "orderId": props.orderId,
         "team": "针车预备"
     }
-    let response = await axios.get("http://localhost:8000/production/getallordershoesquantityreports", { params })
+    let response = await axios.get(`${apiBaseUrl}/production/getallordershoesquantityreports`, { params })
     for (const key in response.data) {
         let value = response.data[key]
         let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "status": value.status, "team": "针车预备" }
@@ -57,7 +59,7 @@ onMounted(async () => {
         "orderId": props.orderId,
         "team": "针车"
     }
-    response = await axios.get("http://localhost:8000/production/getallordershoesquantityreports", { params })
+    response = await axios.get(`${apiBaseUrl}/production/getallordershoesquantityreports`, { params })
     for (const key in response.data) {
         let value = response.data[key]
         let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "status": value.status, "team": "针车" }

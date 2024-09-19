@@ -37,7 +37,7 @@
                         <el-menu-item index="8">
                             <span>个人信息</span>
                         </el-menu-item>
-                        <el-menu-item index="9">
+                        <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -73,12 +73,16 @@ export default {
         WarehouseManagement,
         SupplierManagement,
         TestPage
+
     },
     data() {
         return {
             UserFilled,
             currentComponent:'Dashboard'
         }
+    },
+    mounted() {
+        this.$setAxiosToken()
     },
     methods: {
         handleMenuClick(index){
@@ -108,7 +112,13 @@ export default {
                 case 10:
                     this.currentComponent = 'TestPage' 
             }
+        },
+        async logout() {
+            await this.$axios.post(`${this.$apiBaseUrl}/logout`)
+            this.$router.push('/login')
+            localStorage.removeItem('token')
+            localStorage.removeItem('role')
         }
-    }
+    },
 }
 </script>

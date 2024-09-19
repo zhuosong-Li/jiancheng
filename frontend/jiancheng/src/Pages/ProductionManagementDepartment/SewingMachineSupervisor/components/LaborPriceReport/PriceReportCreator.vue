@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
@@ -83,12 +83,14 @@ const preSewingProcedures = ref({})
 const sewingProcedures = ref({})
 const createVis = ref(true)
 const activeName = ref('针车预备')
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 onMounted(async () => {
     let response = null
     // 获取工价
     try {
-        response = await axios.get("http://localhost:8000/production/getallprocedures", {
+        response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, {
             params: {
                 teams: ['针车预备', '针车'].toString()
             }
@@ -107,14 +109,14 @@ onMounted(async () => {
     }
     // 获取工价单具体信息
     try {
-        response = await axios.get("http://localhost:8000/production/getpricereportdetail", {
+        response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, {
             params: {
                 reportId: props.currentRowData["针车预备"],
             }
         })
         preSewingTableData.value = response.data
 
-        response = await axios.get("http://localhost:8000/production/getpricereportdetail", {
+        response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, {
             params: {
                 reportId: props.currentRowData["针车"],
             }
@@ -163,14 +165,14 @@ const handleSaveData = () => {
             row["price"] = preSewingProcedures.value[row.procedure]["price"]
             row["procedureId"] = preSewingProcedures.value[row.procedure]["id"]
         })
-        await axios.post("http://localhost:8000/production/storepricereportdetail",
+        await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
             { reportId: props.currentRowData["针车预备"], newData: preSewingTableData.value })
         
         sewingTableData.value.forEach(row => {
             row["price"] = sewingProcedures.value[row.procedure]["price"]
             row["procedureId"] = sewingProcedures.value[row.procedure]["id"]
         })
-        await axios.post("http://localhost:8000/production/storepricereportdetail",
+        await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
             { reportId: props.currentRowData["针车"], newData: sewingTableData.value })
 
         ElMessage({

@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy.dialects.mysql import insert
 import datetime
 from app_config import app, db
@@ -6,13 +6,14 @@ from models import *
 from api_utility import randomIdGenerater
 from event_processor import EventProcessor
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+import os
 
 first_bom_bp = Blueprint("first_bom_bp", __name__)
 
 
 @first_bom_bp.route("/firstbom/getnewbomid", methods=["GET"])
 def get_new_bom_id():
-    current_time_stamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
+    current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
     random_string = randomIdGenerater(6)
     bom_id = current_time_stamp + random_string + "F"
     return jsonify({"bomId": bom_id})
@@ -22,15 +23,19 @@ def get_new_bom_id():
 def get_order_first_bom():
     order_id = request.args.get("orderid")
     entities = (
-        db.session.query(Order, OrderShoe, Shoe)
+        db.session.query(Order, OrderShoe, Shoe, OrderShoeStatus)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
         .filter(Order.order_id == order_id)
+        .filter(OrderShoeStatus.current_status >= 2)
+        .filter(OrderShoeStatus.current_status < 9)
+
         .all()
     )
     result = []
     for entity in entities:
-        order, order_shoe, shoe = entity
+        order, order_shoe, shoe, order_shoe_status = entity
         bom = (
             db.session.query(Bom)
             .filter(Bom.order_shoe_id == order_shoe.order_shoe_id,
@@ -62,7 +67,7 @@ def get_order_first_bom():
                 "inheritId": shoe.shoe_rid,
                 "customerId": order_shoe.customer_product_name,
                 "designer": shoe.shoe_designer,
-                "editter": shoe.shoe_adjuster,
+                "editter": order_shoe.adjust_staff,
                 "image" : IMAGE_STORAGE_PATH+shoe.shoe_image_url if shoe.shoe_image_url is not None else None,
                 "status": status,
             }
@@ -249,7 +254,7 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=42,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -262,7 +267,7 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=43,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -275,7 +280,7 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=44,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -288,7 +293,7 @@ def issue_boms():
         processor = EventProcessor()
         event = Event(
             staff_id=1,
-            handle_time=datetime.now(),
+            handle_time=datetime.datetime.now(),
             operation_id=45,
             event_order_id=order_id,
             event_order_shoe_id=order_shoe_id,
@@ -299,3 +304,19 @@ def issue_boms():
         db.session.add(event)
         db.session.commit()
     return jsonify({"status": "success"})
+
+@first_bom_bp.route("/firstbom/download", methods=["GET"])
+def download_bom():
+    order_shoe_rid = request.args.get("ordershoerid")
+    order_id = request.args.get("orderid")
+    order_shoe = (
+        db.session.query(Order, OrderShoe, Shoe)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
+        .first()
+    )
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
+    file_path = os.path.join(folder_path,'firstbom', "一次BOM表.xlsx")
+    new_name = order_id + "-" + order_shoe_rid + "_一次BOM表.xlsx"
+    return send_file(file_path, as_attachment=True, download_name=new_name)

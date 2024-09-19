@@ -10,7 +10,7 @@
 
 
 <script setup>
-import { onMounted, ref} from 'vue';
+import { onMounted, ref , getCurrentInstance} from 'vue';
 import axios from 'axios';
 
 import { Grid, Memo } from '@element-plus/icons-vue'
@@ -23,6 +23,8 @@ const components = {
     FirstOrderPend,
     FirstOrderProgress
 }
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 const pendingData = ref([])
 const inProgressData = ref([])
@@ -31,7 +33,7 @@ onMounted(()=> {
         orderstatus: 9,
         ordershoestatus: 2
     };
-    axios.get("http://localhost:8000/order/getorderbystatus", { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getorderbystatus`, { params }).then(response => {
         const fetchPending = response.data.pendingOrders
         const fetchInProgress = response.data.inProgressOrders
         console.log("fetchPending is ")

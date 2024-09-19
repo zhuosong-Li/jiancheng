@@ -22,6 +22,12 @@ from warehouse.material_storage import material_storage_bp
 from warehouse.semifinished_storage import semifinished_storage_bp
 from warehouse.finished_storage import finished_storage_bp
 from shared_apis.message import message_bp
+from login.login import login_bp
+from human_resources.user_manage import user_manage_bp
+from shared_apis.user import user_bp
+from logistics.first_purchase import first_purchase_bp
+from logistics.second_purchase import second_purchase_bp
+from technical.process_sheet_upload import process_sheet_upload_bp
 from shared_apis.outsource_factory import outsource_factory_bp
 
 
@@ -45,9 +51,14 @@ def register_blueprints():
     app.register_blueprint(shoe_bp)
     app.register_blueprint(shoe_manage_bp)
     app.register_blueprint(dev_producion_order_bp)
-
+    app.register_blueprint(login_bp)
+    app.register_blueprint(user_manage_bp)
+    app.register_blueprint(user_bp)
+    app.register_blueprint(first_purchase_bp)
+    app.register_blueprint(second_purchase_bp)
     app.register_blueprint(material_storage_bp)
     app.register_blueprint(semifinished_storage_bp)
     app.register_blueprint(finished_storage_bp)
     app.register_blueprint(message_bp)
     app.register_blueprint(outsource_factory_bp)
+    app.register_blueprint(process_sheet_upload_bp)

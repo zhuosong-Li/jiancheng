@@ -1,4 +1,24 @@
 from app_config import db
+import enum
+from sqlalchemy import Enum
+import datetime
+
+class ProductionTeam(enum.Enum):
+    CUTTING = "裁断"
+    PRE_SEWING = "针车预备"
+    SEWING = "针车"
+    MOLDING = "成型"
+
+class User(db.Model):
+    __tablename__ = "user"
+    user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_name = db.Column(db.String(50), nullable=False)
+    user_passwd = db.Column(db.String(50), nullable=False)
+    staff_id = db.Column(
+        db.Integer,
+    )
+
+
 
 class BomItem(db.Model):
     __tablename__ = "bom_item"
@@ -306,6 +326,8 @@ class OrderShoe(db.Model):
     order_id = db.Column(db.BigInteger)
     customer_product_name = db.Column(db.String(30), nullable=False)
     production_order_upload_status = db.Column(db.String(1), nullable=True)
+    process_sheet_upload_status = db.Column(db.String(1), nullable=True)
+    adjust_staff = db.Column(db.String(20), nullable=True)
 
     def __repr__(self):
         return f"<OrderShoe(order_shoe_id={self.order_shoe_id})>"

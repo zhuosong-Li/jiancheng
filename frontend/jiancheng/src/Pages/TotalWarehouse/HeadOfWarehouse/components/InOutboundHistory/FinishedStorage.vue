@@ -76,14 +76,14 @@ export default {
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getfinishedinoutoverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getfinishedinoutoverview`, { params })
             this.tableData = response.data.result
             console.log(response.data)
             this.totalRows = response.data.total
         },
         async viewRecords(row) {
             const params = { "storageId": row.storageId }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getfinishedinoutboundrecords", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getfinishedinoutboundrecords`, { params })
             this.recordData = response.data
             this.isRecordDialogVisible = true
         }

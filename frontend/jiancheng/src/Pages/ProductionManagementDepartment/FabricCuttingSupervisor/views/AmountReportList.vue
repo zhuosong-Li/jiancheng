@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref, watch, getCurrentInstance } from 'vue';
 import AmountReportCreator from '../components/AmountProduced/AmountReportCreator.vue'
 import PreviewQuantityReport from '../components/AmountProduced/PreviewQuantityReport.vue';
 import AllHeader from '@/components/AllHeader.vue';
@@ -80,6 +80,8 @@ const taskData = ref([])
 const currentReport = ref({})
 const dateValue = ref('')
 const createdDates = ref(new Set())
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 
 onMounted(async () => {
@@ -88,7 +90,7 @@ onMounted(async () => {
         "orderShoeId": props.orderShoeId,
         "team": "裁断"
     }
-    const response1 = await axios.get("http://localhost:8000/production/getallquantityreports", { params })
+    const response1 = await axios.get(`${apiBaseUrl}/production/getallquantityreports`, { params })
     taskData.value = response1.data
     taskData.value.forEach(row => {
         if (row.status == 0) {
@@ -139,7 +141,7 @@ const handleConfirmCreate = async () => {
         "creationDate": dateValue.value,
         "team": "裁断"
     }
-    await axios.post("http://localhost:8000/production/createquantityreport", body)
+    await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
     ElMessage({ type: 'success', message: '添加成功!' })
     taskData.value.push({
         reportId: response.data.reportId,
@@ -150,7 +152,7 @@ const handleConfirmCreate = async () => {
         reportId: response.data.reportId,
         orderShoeId: props.orderShoeId
     }
-    await axios.post("http://localhost:8000/production/createquantityreportdetail", body)
+    await axios.post(`${apiBaseUrl}/production/createquantityreportdetail`, body)
     window.location.reload()
 }
 const handleCreateReport = () => {
@@ -163,7 +165,7 @@ const openPreviewDialog = (rowData) => {
 }
 const handleSubmit = async (rowData) => {
     console.log(rowData)
-    await axios.patch("http://localhost:8000/production/submitquantityreport", {"reportId": rowData.reportId})
+    await axios.patch(`${apiBaseUrl}/production/submitquantityreport`, {"reportId": rowData.reportId})
     window.location.reload()
 }
 
@@ -174,7 +176,7 @@ const handleDelete = (row, index) => {
         type: 'warning'
     }).then(async () => {
         const params = {"reportId": row.reportId}
-        await axios.delete("http://localhost:8000/production/deletequantityreport", {params})
+        await axios.delete(`${apiBaseUrl}/production/deletequantityreport`, {params})
         taskData.value.splice(index, 1)
         ElMessage({
             type: 'success',

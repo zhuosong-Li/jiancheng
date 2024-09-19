@@ -13,7 +13,7 @@
                         {{ getPendingItem(colIndex).taskName }}
                     </div>
                 </template>
-                <div>订单号：{{ getPendingItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getPendingItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getPendingItem(colIndex).createTime }}</div>
                 <!-- <div>前序流程下发时间：{{ getPendingItem(colIndex).prevTime }}</div>
                 <div>前序处理部门：{{ getPendingItem(colIndex).prevDepart }}</div>
@@ -44,7 +44,7 @@
                         <span>{{ getinProgressItem(colIndex).taskName }}</span>
                     </div>
                 </template>
-                <div>订单号：{{ getinProgressItem(colIndex).orderId }}</div>
+                <div>订单号：{{ getinProgressItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
                 <!-- <div>前序流程下发时间：{{ getinProgressItem(colIndex).prevTime }}</div>
                 <div>前序处理部门：{{ getinProgressItem(colIndex).prevDepart }}</div>
@@ -90,10 +90,10 @@ export default {
             let url = ""
             const orderId = task.orderId
             switch(task.taskName) {
-                case "一次采购订单生成":
+                case "一次采购订单创建":
                     url = `${window.location.origin}/logistics/firstpurchase/orderid=${orderId}`;
                     break
-                case "二次采购订单生成":
+                case "二次采购订单创建":
                     url = `${window.location.origin}/logistics/secondpurchase/orderid=${orderId}`;
                     break
             }

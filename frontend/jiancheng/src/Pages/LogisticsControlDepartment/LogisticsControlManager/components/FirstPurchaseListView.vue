@@ -49,11 +49,11 @@ export default {
     },
     async getAllData() {
       const res = await axios.get(
-        'http://localhost:8000/logistics/task?taskstatus=0&shoestatus=6'
+        `${this.$apiBaseUrl}/logistics/task?taskstatus=0&shoestatus=6`
       )
       this.textData = res.data
       const res2 = await axios.get(
-        'http://localhost:8000/logistics/task?taskstatus=1&shoestatus=6'
+        `${this.$apiBaseUrl}/logistics/task?taskstatus=1&shoestatus=6`
       )
       this.textData2 = res2.data
       this.datafinished = true

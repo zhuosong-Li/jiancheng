@@ -168,11 +168,11 @@ export default {
     },
     methods: {
         async getAllMaterialTypes() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialtypes")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialtypes`)
             this.materialTypeOptions = response.data
         },
         async getAllSuppliers() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallsuppliernames")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
         async getMaterialTableData(sortColumn, sortOrder) {
@@ -189,7 +189,7 @@ export default {
                 "sortColumn": sortColumn,
                 "sortOrder": sortOrder
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialinfo", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.materialTableData = response.data.result
             this.totalRows = response.data.total
         },
@@ -200,17 +200,17 @@ export default {
                 "amount": this.inboundForm.quantity,
                 "type": this.inboundForm.inboundType
             }
-            let response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/inboundmaterial", data)
+            let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
             console.log(response)
             this.isInboundDialogVisible = false
             this.getMaterialTableData()
 
             let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
-            response = await axios.get("http://localhost:8000/warehouse/warehousemanager/notifyrequiredmaterialarrival", {params})
+            response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
             if (response.data["message"] == "yes") {
                 // notify production manager that material is ready
                 data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
-                await axios.post("http://localhost:8000/message/sendmessage", data)
+                await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
                 this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
             }
         },
@@ -228,17 +228,17 @@ export default {
                 }
 
             })
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/inboundsizematerial", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
             console.log(response)
             this.isMultiInboundDialogVisible = false
             this.getMaterialTableData()
 
             let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
-            response = await axios.get("http://localhost:8000/warehouse/warehousemanager/notifyrequiredmaterialarrival", {params})
+            response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
             if (response.data["message"] == "yes") {
                 // notify production manager that material is ready
                 data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
-                await axios.post("http://localhost:8000/message/sendmessage", data)
+                await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
                 this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
             }
         },
@@ -256,11 +256,11 @@ export default {
         },
         async editMaterial(row) {
             let params = {"orderShoeId": row.orderShoeId}
-            let response = await axios.get("http://localhost:8000/warehouse/warehousemanager/checkinboundoptions", { params })
+            let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/checkinboundoptions`, { params })
             this.isPurchaseInboundDisabled = !response.data[1]
             if (row.materialCategory == 1) {
                 params = { "sizeMaterialStorageId": row.materialStorageId }
-                response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getsizematerialbyid", { params })
+                response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
                 this.multipleInboundForm = response.data
                 this.isMultiInboundDialogVisible = true
                 this.currentRow = row

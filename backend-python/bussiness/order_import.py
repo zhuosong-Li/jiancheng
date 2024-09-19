@@ -223,6 +223,8 @@ def confirm_import_order():
                     shoe_id=shoe_obj.shoe_id,
                     customer_product_name=customer_shoe_id,
                     production_order_upload_status="0",
+                    process_sheet_upload_status="0",
+                    adjust_staff="",
                 )
                 db.session.add(order_shoe)
                 db.session.flush()

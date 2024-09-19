@@ -113,7 +113,7 @@ export default {
                 "shoeRId": this.shoeRIdSearch,
                 "statusPoint": this.statusPointSearch
             }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getfinishednodes", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getfinishednodes`, { params })
             this.orderTableData = response.data.result
             this.totalRows = response.data.totalLength
         },
@@ -128,7 +128,7 @@ export default {
                 cancelButtonText: '取消'
             }).then(async () => {
                 const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId, "statusName": this.currentRow.statusPointSearch }
-                await axios.patch("http://localhost:8000/production/productionmanager/editordershoestatus", data)
+                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editordershoestatus`, data)
                 this.getOrderTableData()
             })
         },

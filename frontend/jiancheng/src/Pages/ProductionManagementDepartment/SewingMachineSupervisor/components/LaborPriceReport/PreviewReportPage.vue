@@ -28,7 +28,7 @@
     </el-dialog>
 </template>
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios'
 import { exportTableToExcel } from '@/Pages/ProductionManagementDepartment/utils';
 const props = defineProps(['currentRowData', 'handleClose'])
@@ -38,13 +38,15 @@ const preSewingTableData = ref([])
 const sewingTableData = ref([])
 const currentTitle = ref('')
 const activeName = ref('针车预备')
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
     currentTitle.value = "鞋型号" + props.currentRowData.shoeRId + "工价单"
     let params = { reportId: props.currentRowData["针车预备"] }
-    let response = await axios.get("http://localhost:8000/production/getpricereportdetail", { params })
+    let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, { params })
     preSewingTableData.value = response.data
     params = { reportId: props.currentRowData["针车"] }
-    response = await axios.get("http://localhost:8000/production/getpricereportdetail", { params })
+    response = await axios.get(`${apiBaseUrl}/production/getpricereportdetail`, { params })
     sewingTableData.value = response.data
     let obj = [
         { prop: "rowId", label: "序号" },

@@ -140,7 +140,7 @@ export default {
                 "searchEndDate": endDate,
                 "team": this.departSelect,
             }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getsubmittedquantityreports", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getsubmittedquantityreports`, { params })
             this.amountListData = response.data.result
             this.totalRows = response.data.totalLength
         },
@@ -155,7 +155,7 @@ export default {
         async openApprovalDialog(rowData) {
             this.currentRow = rowData
             let params = { reportId: rowData.reportId }
-            let response = await axios.get("http://localhost:8000/production/getquantityreportdetail", { params })
+            let response = await axios.get(`${this.$apiBaseUrl}/production/getquantityreportdetail`, { params })
             this.shoeBatchAmountData = response.data
             this.shoeBatchAmountData.forEach(row => {
                 if (rowData.team == "裁断")
@@ -173,7 +173,7 @@ export default {
             try {
                 const data = {"reportId": this.currentRow.reportId,}
                 console.log(data)
-                await axios.patch("http://localhost:8000/production/productionmanager/approvequantityreport", data)
+                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvequantityreport`, data)
                 ElMessage({
                     type: 'success',
                     message: '审批成功!'
@@ -193,7 +193,7 @@ export default {
         },
         async confirmRefusal() {
             const data = { "reportId": this.currentRow.reportId, "rejectionReason": this.refuseReason }
-            await axios.patch("http://localhost:8000/production/productionmanager/rejectquantityreport", data)
+            await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/rejectquantityreport`, data)
             this.isRefuseApprovalVis = false
             this.isAmountApprovalVis = false
             ElMessage({

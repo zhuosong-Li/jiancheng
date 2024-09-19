@@ -46,7 +46,8 @@
     >
         <el-upload
             ref="upload"
-            action="http://localhost:8000/orderimport/getuploadorder"
+            :action="`${this.$apiBaseUrl}/orderimport/getuploadorder`"
+            :headers="uploadHeaders"
             :before-upload="beforeUpload"
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
@@ -234,7 +235,8 @@
     >
         <el-upload
             ref="uploadDoc"
-            action="http://localhost:8000/orderimport/submitdoc"
+            :action="`${this.$apiBaseUrl}/orderimport/submitdoc`"
+            :headers="uploadHeaders"
             :auto-upload="false"
             accept=".xls,.xlsx"
             :file-list="fileList"
@@ -263,6 +265,7 @@ import { ElMessage } from 'element-plus'
 export default {
     data() {
         return {
+            token: localStorage.getItem('token'),
             submitDocType: 0,
             orderShoePreviewData: [],
             orderData: {},
@@ -291,7 +294,15 @@ export default {
             }
         }
     },
+    computed: {
+    uploadHeaders() {
+      return {
+        Authorization: `Bearer ${this.token}`
+      };
+    }
+  },
     mounted() {
+        this.$setAxiosToken()
         this.getAllOrders()
         this.getAllCutomers()
         this.getAllOrderStatus()
@@ -315,19 +326,19 @@ export default {
             }
         },
         async getAllCutomers() {
-            const response = await axios.get('http://localhost:8000/customer/getallcustomers')
+            const response = await axios.get(`${this.$apiBaseUrl}/customer/getallcustomers`)
             this.customerList = response.data
         },
         async getAllOrders() {
-            const response = await axios.get('http://localhost:8000/order/getallorders')
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
             this.displayData = response.data
         },
         async getAllOrderStatus() {
-            const response = await axios.get('http://localhost:8000/order/getallorderstatus')
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
             this.orderStatusList = response.data
         },
         async getOrderOrderShoe(orderRid) {
-            const response = await axios.get('http://localhost:8000/order/getordershoeinfo', {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoeinfo`, {
                 params: {
                     orderrid: orderRid
                 }
@@ -335,7 +346,7 @@ export default {
             this.orderShoePreviewData = response.data
         },
         async getOrderDocInfo(orderRid) {
-            const response = await axios.get('http://localhost:8000/order/getorderdocinfo', {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderdocinfo`, {
                 params: {
                     orderrid: orderRid
                 }
@@ -344,14 +355,21 @@ export default {
         },
         async submitUpload() {
             try {
+                const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
                 // Manually submit the file without reopening the dialog
-                this.$refs.uploadDoc.submit()
+                await this.$refs.uploadDoc.submit()
+                loadingInstance.close()
             }
             catch (error) {
                 console.error('Upload error:', error)
                 ElMessage.error('上传失败')
 
             }
+
         },
 
         handleUploadSuccess(response, file) {
@@ -384,7 +402,7 @@ export default {
         },
         downloadDoc(type) {
             window.open(
-                `http://localhost:8000/orderimport/downloadorderdoc?orderrid=${this.orderData.orderRid}&filetype=${type}`
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderRid}&filetype=${type}`
             )
         },
         mergeCells({ row, column, rowIndex, columnIndex }) {
@@ -489,7 +507,7 @@ export default {
             this.$refs.upload.clearFiles()
             this.uploadData = []
             this.updatekey++
-            await axios.delete('http://localhost:8000/orderimport/deleteuploadtempfile', {
+            await axios.delete(`${this.$apiBaseUrl}/orderimport/deleteuploadtempfile`, {
                 params: {
                     fileName: this.tempFileName
                 }
@@ -515,13 +533,19 @@ export default {
                 type: 'warning'
             })
                 .then(async () => {
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
                     const response = await axios.post(
-                        'http://localhost:8000/orderimport/confirmimportorder',
+                        `${this.$apiBaseUrl}/orderimport/confirmimportorder`,
                         {
                             fileName: this.tempFileName,
                             orderInfo: this.orderForm
                         }
                     )
+                    loadingInstance.close()
                     if (response.status === 200) {
                         this.$message({
                             type: 'success',

@@ -5,6 +5,10 @@ export default [
         path: "/developmentmanager/productionorder/create/orderid=:orderId",
         name: "developmentmanager-productionorder-create",
         component: ProductionOrderCreateView,
-        props: true
+        props: true,
+        meta: {
+            requiresAuth: true,
+            role: 7
+        }
     }
 ];

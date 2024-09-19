@@ -197,17 +197,17 @@ export default {
 			this.outsourceInfo.splice(index, 1)
 		},
 		async getAllOutsourceFactories() {
-			const response = await axios.get("http://localhost:8000/general/getalloutsourcefactories")
+			const response = await axios.get(`${this.$apiBaseUrl}/general/getalloutsourcefactories`)
 			this.factoryOptions = response.data
 			console.log(this.factoryOptions)
 		},
 		async getProductionDepartments() {
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getproductiondepartments")
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getproductiondepartments`)
 			this.productionDepartments = response.data
 		},
 		async getOrderShoeBatchInfo() {
 			const params = { "orderShoeId": this.$props.orderShoeId }
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getordershoebatchinfo", { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
 			this.shoeInfo = response.data
 			this.shoeInfo.forEach(row => {
 				this.totalShoes += row.totalAmount
@@ -215,7 +215,7 @@ export default {
 		},
 		async getOutsourceInfo() {
 			const params = { "orderShoeId": this.$props.orderShoeId }
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getordershoeoutsourceinfo", { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
 			this.outsourceInfo = response.data
 			this.outsourceInfo.forEach(row => {
 				let temp = []
@@ -236,9 +236,9 @@ export default {
 		},
 		async checkOutboundInfo(rowData) {
 			const params = {"outsource_info_id": rowData.outsourceInfoId}
-			let response = await axios.get("http://localhost:8000/production/productionmanager/getoutsourcesemifinishedshipping", {params})
+			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcesemifinishedshipping`, {params})
 			this.semifinishedLogisticData = response.data
-			response = await axios.get("http://localhost:8000/production/productionmanager/getoutsourcematerialshipping", {params})
+			response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcematerialshipping`, {params})
 			this.materialLogisticData = response.data
 			this.isOutsourceLogistic = true
 
@@ -260,12 +260,12 @@ export default {
 				}
 				dataArr.push(element)
 			})
-			const response = await axios.put("http://localhost:8000/production/productionmanager/storeoutsourceforordershoe", dataArr)
+			const response = await axios.put(`${this.$apiBaseUrl}/production/productionmanager/storeoutsourceforordershoe`, dataArr)
 			this.getOutsourceInfo()
 		},
 		async submitOutsouceInfo() {
 			const inputData = {"orderShoeId": this.$props.orderShoeId}
-			await axios.patch("http://localhost:8000/production/productionmanager/submitoutsourceinfo", inputData)
+			await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/submitoutsourceinfo`, inputData)
 			console.log("success")
 		}
 	}

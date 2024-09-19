@@ -29,7 +29,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios';
 import AllHeader from '@/components/AllHeader.vue';
 
@@ -41,13 +41,15 @@ const props = defineProps({
     'customerName': String,
     'taskName': String
 })
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 onMounted(async () => {
     const params = {
         "orderId": props.orderId,
         "team": "裁断"
     }
-    const response = await axios.get("http://localhost:8000/production/getallordershoesquantityreports", { params })
+    const response = await axios.get(`${apiBaseUrl}/production/getallordershoesquantityreports`, { params })
     for (const key in response.data) {
         let value = response.data[key]
         let obj = { "orderShoeId": key, "shoeRId": value.shoeRId, "status": value.status }

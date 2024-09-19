@@ -1,35 +1,47 @@
 @import './base.css';
 
+html, body {
+  height: 100%; /* Make sure html and body take up 100% of the viewport height */
+  margin: 0;
+  padding: 0;
+}
 #app {
   height: 100%;
   width: 100%;
   margin: 0 auto;
   padding: 2rem;
   font-weight: normal;
+  background-color: #f0f4f8; /* Add a subtle background color */
+  color: #333;
+  background-image: url('../assets/background.jpg');
+  background-size: cover;
 }
 
 a,
 .green {
   text-decoration: none;
   color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
+  transition: color 0.4s, background-color 0.4s, box-shadow 0.4s;
   padding: 3px;
+  border-radius: 5px;
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+a:hover,
+.green:hover {
+  background-color: hsla(160, 100%, 37%, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: hsla(160, 100%, 40%, 1);
 }
 
 @media (min-width: 1024px) {
   body {
     display: flex;
     place-items: center;
+    background: #f5f7fa; /* Light background for large screens */
   }
 
   #app {
-    padding: 0 2rem;
+    padding: 0 3rem; /* Increased padding for more breathing space */
   }
 }
 
@@ -37,37 +49,64 @@ a,
   --el-header-height: 80px !important;
   align-items: center;
   justify-content: center !important;
-  background: linear-gradient(145deg, #f5f5f5);
-  border-radius: 10px;
-  box-shadow: 5px 5px 10px #aaa, -5px -5px 10px #fff;
+  background: linear-gradient(145deg, #6dd5ed, #2193b0); /* Updated to a vibrant gradient */
+  border-radius: 15px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
   font-size: 60px;
-  color: #333;
-  margin: 10px;
+  color: #fff; /* White text for better contrast */
+  margin: 20px;
+  padding: 1rem;
   display: flex;
 }
+
 .el-aside {
   min-height: 750px;
-  background: linear-gradient(145deg,#f5f5f5);
-  box-shadow: 5px 5px 10px #aaa, -5px -5px 10px #fff;
-  border-radius: 10px;
+  background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
   margin: 10px;
   display: flex;
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  padding: 2rem;
+  transition: transform 0.3s ease;
 }
+
 .el-main {
   min-height: 750px;
-  background: linear-gradient(145deg, #f5f5f5);
-  box-shadow: 5px 5px 10px #aaa, -5px -5px 10px #fff;
-  border-radius: 10px;
+  background: linear-gradient(145deg, #f5f5f5, #e8e8e8);
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
   margin: 10px;
+  padding: 2rem;
+  transition: transform 0.3s ease;
 }
+
 .el-menu-item {
   font-size: larger !important;
   justify-content: center !important;
+  color: #333;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  transition: background-color 0.3s, color 0.3s;
 }
+
 .el-row {
   margin-top: 20px;
+}
+
+/* Add smooth transitions to interactions */
+button,
+.el-button-group .el-button {
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+}
+
+button:hover,
+.el-button-group .el-button:hover {
+  background-color: #2193b0;
+  color: white;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px); /* A subtle pop effect */
 }

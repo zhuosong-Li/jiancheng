@@ -22,7 +22,7 @@
 
 <script setup>
 
-import { onMounted, ref } from 'vue';
+import { getCurrentInstance, onMounted, ref } from 'vue';
 import axios from 'axios';
 
 import { Grid, Memo } from '@element-plus/icons-vue'
@@ -47,9 +47,11 @@ onMounted(()=> {
     const params = {
         ordershoestatus : firstBomStatus
     };
+    const proxy = getCurrentInstance()
+    const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 
-    axios.get("http://localhost:8000/order/getorderbystatus", {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {

@@ -220,9 +220,6 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="unit" label="单位">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.unit" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column
@@ -599,9 +596,6 @@
                                 </template>
                             </el-table-column>
                             <el-table-column prop="unit" label="单位">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.unit" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column
@@ -693,9 +687,6 @@ export default {
             editBomData: [],
             originalBomTestData: [],
             factoryOptions: [
-                { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
-                { materialName: '黑色超软镜面PU', factoryName: '深源皮革' },
-                { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' }
                 // Add more options here
             ],
             isPreviewDialogVisible: false,
@@ -714,21 +705,21 @@ export default {
     },
     methods: {
         async getNewBomId() {
-            const response = await axios.get('http://localhost:8000/firstbom/getnewbomid')
+            const response = await axios.get(`${this.$apiBaseUrl}/firstbom/getnewbomid`)
             this.newBomId = response.data.bomId
         },
         async getAllDepartmentOptions() {
-            const response = await axios.get('http://localhost:8000/general/getalldepartments')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data
         },
         async getAllColorOptions() {
-            const response = await axios.get('http://localhost:8000/general/allcolors')
+            const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`)
             this.colorOptions = response.data
         },
         async getMaterialFilterData() {
             this.materialAddfinished = true
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname',
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`,
                 {
                     params: {
                         materialtype: this.materialTypeSearch,
@@ -742,21 +733,21 @@ export default {
         },
         async getAllMaterialList() {
             const response = await axios.get(
-                'http://localhost:8000/logistics/getmaterialtypeandname'
+                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`
             )
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
         async getOrderInfo() {
             const response = await axios.get(
-                `http://localhost:8000/order/getorderInfo?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/order/getorderInfo?orderid=${this.orderId}`
             )
             this.orderData = response.data
             console.log(this.orderData)
             this.updateArrowKey += 1
         },
         async getOrderShoeBatchInfo(orderId, orderShoeId) {
-            const response = await axios.get(`http://localhost:8000/order/getordershoesizesinfo`, {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoesizesinfo`, {
                 params: {
                     orderid: orderId,
                     ordershoeid: orderShoeId
@@ -766,13 +757,13 @@ export default {
         },
         async getAllShoeBomInfo() {
             const response = await axios.get(
-                `http://localhost:8000/firstbom/getordershoes?orderid=${this.orderId}`
+                `${this.$apiBaseUrl}/firstbom/getordershoes?orderid=${this.orderId}`
             )
             this.testTableData = response.data
             this.tableWholeFilter()
         },
         async getBOMDetails(row) {
-            const response = await axios.get(`http://localhost:8000/firstbom/getbomdetails`, {
+            const response = await axios.get(`${this.$apiBaseUrl}/firstbom/getbomdetails`, {
                 params: {
                     orderid: this.orderData.orderId,
                     ordershoeid: row.inheritId
@@ -798,8 +789,16 @@ export default {
             return [{ factoryName: '询价' }, ...filteredOptions]
         },
         async openEditDialog(row) {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
             await this.getBOMDetails(row)
+
+            this.editBomId = this.previewBomId
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            loadingInstance.close()
             this.editBomId = this.previewBomId
             this.editVis = true
             this.editBomData = this.bomPreviewData
@@ -902,12 +901,18 @@ export default {
                 }
                 uniqueRows.add(rowIdentifier)
             }
-            const response = await axios.post('http://localhost:8000/firstbom/savebom', {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+            const response = await axios.post(`${this.$apiBaseUrl}/firstbom/savebom`, {
                 orderId: this.orderData.orderId,
                 orderShoeId: this.currentBomShoeId,
                 bomData: this.bomTestData,
                 bomId: this.newBomId
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -950,12 +955,18 @@ export default {
                 }
                 uniqueRows.add(rowIdentifier)
             }
-            const response = await axios.post('http://localhost:8000/firstbom/editbom', {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+            const response = await axios.post(`${this.$apiBaseUrl}/firstbom/editbom`, {
                 orderId: this.orderData.orderId,
                 orderShoeId: this.currentBomShoeId,
                 bomData: this.editBomData,
                 bomId: this.editBomId
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -977,10 +988,17 @@ export default {
                 type: 'warning'
             })
                 .then(async () => {
-                    const response = await axios.post('http://localhost:8000/firstbom/submitbom', {
+                    const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+                    const response = await axios.post(`${this.$apiBaseUrl}/firstbom/submitbom`, {
                         orderId: this.orderData.orderId,
                         orderShoeId: row.inheritId
                     })
+                    loadingInstance.close()
+
                     if (response.status !== 200) {
                         this.$message({
                             type: 'error',
@@ -1002,10 +1020,16 @@ export default {
                 })
         },
         async issueBOMs(selectedShoe) {
-            const response = await axios.post('http://localhost:8000/firstbom/issueboms', {
+            const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+            const response = await axios.post(`${this.$apiBaseUrl}/firstbom/issueboms`, {
                 orderId: this.orderData.orderId,
                 orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
             })
+            loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
                     type: 'error',
@@ -1152,12 +1176,12 @@ export default {
         },
         downloadProductionOrderList() {
             window.open(
-                `http://localhost:8000/devproductionorder/download?ordershoerid=${this.currentBomShoeId}&orderid=${this.orderData.orderId}`
+                `${this.$apiBaseUrl}/devproductionorder/download?ordershoerid=${this.currentBomShoeId}&orderid=${this.orderData.orderId}`
             )
         },
         downloadProductionOrder() {
             window.open(
-                `http://localhost:8000/orderimport/downloadorderdoc?orderrid=${this.orderData.orderId}&filetype=0`
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderId}&filetype=0`
             )
         }
     }

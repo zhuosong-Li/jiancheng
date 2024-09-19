@@ -48,11 +48,13 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref,getCurrentInstance } from 'vue';
 import axios from 'axios';
 import PriceReportCreator from '../components/LaborPriceReport/PriceReportCreator.vue'
 import PreviewReportPage from '../components/LaborPriceReport/PreviewReportPage.vue';
 import AllHeader from '@/components/AllHeader.vue';
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 const createVis = ref(false)
 const previewVis = ref(false)
 const currentRowData = ref({})
@@ -70,7 +72,7 @@ onMounted(async () => {
         "orderId": props.orderId,
         "teams": "针车预备,针车"
     }
-    const response = await axios.get("http://localhost:8000/production/getallordershoespricereports", { params })
+    const response = await axios.get(`${apiBaseUrl}/production/getallordershoespricereports`, { params })
     response.data.forEach(element => {
         if (!(element.orderShoeId in orderShoeReportMapping.value)) {
             if (element.status == 0) element["statusName"] = "未提交工价单"
@@ -93,7 +95,7 @@ onMounted(async () => {
 //         "orderShoeId": currentRowData.value.orderShoeId,
 //         "line": "cutting"
 //     }
-//     await axios.post("http://localhost:8000/production/createpricereport", data)
+//     await axios.post(`${this.$apiBaseUrl}/production/createpricereport`, data)
 //     window.location.reload()
 // }
 
@@ -110,7 +112,7 @@ const openPreviewDialog = (rowData) => {
 const handleSubmit = async (rowData) => {
     console.log(rowData)
     const arr = Object.values(orderShoeReportMapping.value[rowData.orderShoeId])
-    const response = await axios.post("http://localhost:8000/production/submitpricereport", 
+    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
     { "orderId": props.orderId, "orderShoeId": rowData.orderShoeId, "reportIdArr": arr })
     console.log(response)
     window.location.reload()

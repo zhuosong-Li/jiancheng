@@ -34,7 +34,7 @@
     <el-col :span="24">
         <el-table :data="inProgressTaskData" style="height: 200px" @row-click="handleRowClick">
             <el-table-column prop="taskName" label="任务名称"></el-table-column>
-            <el-table-column prop="ordeRid" label="订单号"></el-table-column>
+            <el-table-column prop="orderRid" label="订单号"></el-table-column>
             <el-table-column prop="createTime" label="订单创建时间"></el-table-column>\
             <el-table-column prop="deadlineTime" label="订单截止时间"></el-table-column>
             <el-table-column prop="customerName" label="客户"></el-table-column>                

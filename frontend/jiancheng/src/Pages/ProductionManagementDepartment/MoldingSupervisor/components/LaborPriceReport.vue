@@ -7,8 +7,10 @@
 </template>
 <script setup>
 import OrderList from './LaborPriceReport/OrderList.vue'
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios'
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 const components = {
     OrderList
 }
@@ -17,7 +19,7 @@ onMounted(() => {
     const params = {
         ordershoestatus: 37
     };
-    axios.get("http://localhost:8000/order/getordersinproduction", { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getordersinproduction`, { params }).then(response => {
         const newOrders = response.data.newOrders
         const progressOrders = response.data.progressOrders
         newOrders.forEach(element => {

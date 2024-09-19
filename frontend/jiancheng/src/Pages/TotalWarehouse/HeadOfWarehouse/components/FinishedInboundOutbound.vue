@@ -131,7 +131,7 @@ export default {
                 "shoeRId": this.shoeNumberSearch,
                 "opType": 1
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getfinishedinoutoverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getfinishedinoutoverview`, { params })
             this.tableData = response.data.result
             this.totalRows = response.data.total
         },
@@ -144,7 +144,7 @@ export default {
                 "type": this.inboundType,
                 "amount": this.currentRow.inboundAmount
             }
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/inboundfinished", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
             console.log(response)
             this.inboundDialogVisible = false
             this.getTableData()
@@ -158,7 +158,7 @@ export default {
                 "outboundAddress": this.outboundForm.address,
                 "isOutboundAll": this.outboundForm.isOutboundAll
             }
-            const response = await axios.patch("http://localhost:8000/warehouse/warehousemanager/outboundfinished", data)
+            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundfinished`, data)
             console.log(response)
             this.outboundDialogVisible = false
             this.getTableData()

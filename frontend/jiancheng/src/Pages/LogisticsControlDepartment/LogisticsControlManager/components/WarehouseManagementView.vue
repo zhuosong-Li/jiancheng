@@ -61,13 +61,13 @@ export default {
             this.createVis = true
         },
         async getWarehouseData() {
-            const response = await axios.get('http://localhost:8000/logistics/allwarehouses')
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/allwarehouses`)
             this.warehouseData = response.data
             this.datafinished = false
         },
         async createWarehouse() {
             this.datafinished = true
-            const response = await axios.post('http://localhost:8000/logistics/addwarehouse', {
+            const response = await axios.post(`${this.$apiBaseUrl}/logistics/addwarehouse`, {
                 warehouseName: this.warehouseName
             })
             console.log(response)

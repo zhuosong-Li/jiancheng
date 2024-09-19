@@ -73,7 +73,7 @@ export default {
                 "shoeRId": this.shoeRIdSearch,
                 "team": this.departmentSearch
             }
-            const response = await axios.get("http://localhost:8000/production/productionmanager/getpricereportapprovaloverview", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getpricereportapprovaloverview`, { params })
             this.orderTableData = response.data.result
             this.totalRows = response.data.totalLength
         },

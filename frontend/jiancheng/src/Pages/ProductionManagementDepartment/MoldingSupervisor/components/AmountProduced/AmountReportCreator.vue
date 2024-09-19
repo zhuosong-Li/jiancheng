@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { watch, ref, onMounted } from 'vue';
+import { watch, ref, onMounted,getCurrentInstance } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
 const props = defineProps(['currentReport', 'orderShoeId', 'handleClose'])
@@ -35,15 +35,17 @@ const tableData = ref([])
 const createVis = ref(true)
 const priceReport = ref([])
 const producedAmount = ref(0)
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 onMounted(async () => {
     let params = { "orderShoeId": props.orderShoeId, 'team': '成型' }
     // get price report detail
-    let response = await axios.get("http://localhost:8000/production/getpricereportdetailbyordershoeid", { params })
+    let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
     priceReport.value = response.data
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
-    response = await axios.get("http://localhost:8000/production/getquantityreportdetail", { params })
+    response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
         row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
         tableData.value.push(row)
@@ -82,7 +84,7 @@ const handleSaveData = () => {
             "reportId": props.currentReport.reportId,
             "data": tableData.value
         }
-        await axios.put("http://localhost:8000/production/editquantityreportdetail", data)
+        await axios.put(`${apiBaseUrl}/production/editquantityreportdetail`, data)
         ElMessage({
             type: 'success',
             message: '保存成功!'

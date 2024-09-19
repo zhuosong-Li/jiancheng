@@ -130,11 +130,11 @@ export default {
     },
     methods: {
         async getAllMaterialTypes() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialtypes")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialtypes`)
             this.materialTypeOptions = response.data
         },
         async getAllSuppliers() {
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallsuppliernames")
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
         async getTableData() {
@@ -148,7 +148,7 @@ export default {
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch
             }
-            const response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getallmaterialinfo", { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.tableData = response.data.result
             this.totalRows = response.data.total
         },
@@ -168,12 +168,12 @@ export default {
             let params = null;
             if (row.materialCategory == 1) {
                 params = { "storageId": row.materialStorageId, "storageName": "sizeMaterial" }
-                response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getmaterialinoutboundrecords", { params })
+                response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getmaterialinoutboundrecords`, { params })
                 this.sizeRecordData = response.data
                 this.isSizeRecordDialogVisible = true
             } else {
                 params = { "storageId": row.materialStorageId, "storageName": "material" }
-                response = await axios.get("http://localhost:8000/warehouse/warehousemanager/getmaterialinoutboundrecords", { params })
+                response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getmaterialinoutboundrecords`, { params })
                 this.isRecordDialogVisible = true
                 this.recordData = response.data
             }

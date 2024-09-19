@@ -77,7 +77,7 @@
             </el-form-item>
             <el-form-item label="鞋型图片">
                 <el-upload
-                    action="http://localhost:8000/shoemanage/uploadshoeimage"
+                    :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`"
                     :on-success="handleUploadSuccess"
                     :on-error="handleUploadError"
                     :on-exceed="handleUploadExceed"
@@ -128,7 +128,7 @@
         v-model="reUploadImageDialogVis"
         width="50%">
         <el-upload
-            action="http://localhost:8000/shoemanage/uploadshoeimage"
+            :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`"
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
             :on-exceed="handleUploadExceed"
@@ -180,11 +180,11 @@ export default {
     },
     methods: {
         async getAllShoes() {
-            const response = await axios.get('http://localhost:8000/shoe/getallshoes');
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
             this.shoeTableData = response.data;
         },
         async getFilterShoes() {
-            const response = await axios.get('http://localhost:8000/shoe/getallshoes', 
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, 
                 {params: {shoerid: this.inheritIdSearch}});
             this.shoeTableData = response.data;
         },
@@ -225,7 +225,7 @@ export default {
                 type: 'warning'
             }).then(async () => {
                 this.currentShoeImageId = this.orderForm.shoeRId;
-                const response = await axios.post('http://localhost:8000/shoemanage/addnewshoe', this.orderForm);
+                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/addnewshoe`, this.orderForm);
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',
@@ -250,7 +250,7 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post('http://localhost:8000/shoemanage/editshoe', this.orderForm);
+                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/editshoe`, this.orderForm);
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',
