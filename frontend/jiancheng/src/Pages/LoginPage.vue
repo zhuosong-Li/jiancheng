@@ -92,13 +92,13 @@ const handleSubmit = () => {
                     if (response.data.role === 14) {
                         window.location.href = '/humanresourcesdepartment'
                     } else if (response.data.role === 3) {
-                        window.location.href = 'productiongeneral'
+                        window.location.href = 'productionmanager'
                     } else if (response.data.role === 4) {
                         window.location.href = 'bussinessmanager'
                     } else if (response.data.role === 5) {
                         window.location.href = 'technicalmanager'
                     } else if (response.data.role === 6) {
-                        window.location.href = 'productionmanager'
+                        window.location.href = 'productiongeneral'
                     } else if (response.data.role === 7) {
                         window.location.href = 'developmentmanager'
                     } else if (response.data.role === 8) {
