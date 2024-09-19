@@ -182,9 +182,12 @@ const router = createRouter({
   ]
 })
 import axios from 'axios'
+import { getCurrentInstance } from 'vue'
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.proxy.appContext.config.globalProperties.$apiBaseUrl
 
 const Logout = () => {
-  axios.post('http://localhost:8000/logout')
+  axios.post(`${apiBaseUrl}/logout`)
   localStorage.removeItem('token');
   localStorage.removeItem('role');
 }
