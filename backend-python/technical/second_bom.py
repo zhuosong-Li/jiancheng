@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy.dialects.mysql import insert
 import datetime
 from app_config import app, db
@@ -24,15 +24,17 @@ def get_new_bom_id():
 def get_order_second_bom():
     order_id = request.args.get("orderid")
     entities = (
-        db.session.query(Order, OrderShoe, Shoe)
+        db.session.query(Order, OrderShoe, Shoe, OrderShoeStatus)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(Order.order_id == order_id)
+        .filter(OrderShoeStatus.current_status == 11)
         .all()
     )
     result = []
     for entity in entities:
-        order, order_shoe, shoe = entity
+        order, order_shoe, shoe, order_shoe_status = entity
         bom = (
             db.session.query(Bom)
             .filter(Bom.order_shoe_id == order_shoe.order_shoe_id,
@@ -468,3 +470,19 @@ def issue_boms():
         db.session.add(event)
         db.session.commit()
     return jsonify({"status": "success"})
+
+@second_bom_bp.route("/secondbom/download", methods=["GET"])
+def download_bom():
+    order_shoe_rid = request.args.get("ordershoerid")
+    order_id = request.args.get("orderid")
+    order_shoe = (
+        db.session.query(Order, OrderShoe, Shoe)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
+        .first()
+    )
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
+    file_path = os.path.join(folder_path,'secondbom', "二次BOM表.xlsx")
+    new_name = order_id + "-" + order_shoe_rid + "_二次BOM表.xlsx"
+    return send_file(file_path, as_attachment=True, download_name=new_name)

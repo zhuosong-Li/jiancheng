@@ -9,7 +9,7 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    物控经理-姓名
+                    {{ userName }}
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
@@ -23,7 +23,7 @@
                             <span>二次采购订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="4" @click="handleMenuClick(4)">
-                            <span>耗材/固定资产采购订单生成</span>
+                            <span>耗材/固定资产订单生成</span>
                         </el-menu-item>
                         <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>材料管理</span>
@@ -34,10 +34,13 @@
                         <el-menu-item index="7" @click="handleMenuClick(7)">
                             <span>供货商管理</span>
                         </el-menu-item>
-                        <el-menu-item index="8">
+                        <el-menu-item index="8" @click="handleMenuClick(8)">
+                            <span>订单查询</span>
+                        </el-menu-item>
+                        <el-menu-item index="9">
                             <span>个人信息</span>
                         </el-menu-item>
-                        <el-menu-item index="9" @click="logout">
+                        <el-menu-item index="10" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -60,6 +63,7 @@ import FixedAssets from '../components/FixedAssetsConsumablesView.vue'
 import MaterialManagement from '../components/MaterialManagementView.vue'
 import WarehouseManagement from '../components/WarehouseManagementView.vue'
 import SupplierManagement from '../components/SupplierManagementView.vue'
+import OrderSearch from '../components/OrderSearch.vue'
 import TestPage from '../components/TestPage.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
@@ -72,19 +76,26 @@ export default {
         MaterialManagement,
         WarehouseManagement,
         SupplierManagement,
-        TestPage
+        TestPage,
+        OrderSearch
 
     },
     data() {
         return {
             UserFilled,
-            currentComponent:'Dashboard'
+            currentComponent:'Dashboard',
+            userName: ''
         }
     },
     mounted() {
         this.$setAxiosToken()
+        this.getUserAndCharacter()
     },
     methods: {
+        async getUserAndCharacter() {
+            const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)
+            this.userName = response.data.staffName + '-' + response.data.characterName
+        },
         handleMenuClick(index){
             console.log(index)
             switch(index) {
@@ -108,6 +119,9 @@ export default {
                     break
                 case 7:
                     this.currentComponent = 'SupplierManagement'
+                    break
+                case 8:
+                    this.currentComponent = 'OrderSearch'
                     break
                 case 10:
                     this.currentComponent = 'TestPage' 

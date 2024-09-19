@@ -17,7 +17,7 @@
         <div>
           <el-avatar :icon="UserFilled" :size="100" />
         </div>
-        <div style="font-size: x-large">生产经理-姓名</div>
+        <div style="font-size: x-large">{{ userName }}</div>
 
         <div class="aside-menu" style="width: 100%; margin-top: 50px;">
           <el-menu
@@ -70,6 +70,7 @@ import ApprovalPage from '../components/ApprovalPage.vue'
 import ProductionManagement from '../components/ProductionManagement.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
+import axios from 'axios'
 
 
 export default {
@@ -87,10 +88,19 @@ export default {
   data() {
     return {
       UserFilled,
-      currentComponent: 'ProductionSchedulingDialogue'
+      currentComponent: 'ProductionSchedulingDialogue',
+      userName: ''
     }
   },
+  mounted() {
+    this.$setAxiosToken()
+    this.getUserAndCharacter()
+  },
   methods: {
+    async getUserAndCharacter() {
+      const response = await axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)
+      this.userName = response.data.staffName + '-' + response.data.characterName
+    },
     handleMenuClick(index) {
       switch (index) {
         case 2:

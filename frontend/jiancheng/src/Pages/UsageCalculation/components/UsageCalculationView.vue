@@ -16,7 +16,7 @@ import { Grid, Memo } from '@element-plus/icons-vue'
 import UsageCalculationList from './UsageCalculation/UsageCalculationList.vue';
 import UsageCalculationPend from './UsageCalculation/UsageCalculationPend.vue'
 import UsageCalculationProgress from './UsageCalculation/UsageCalculationProgress.vue'
-
+import axios from 'axios'
 
 const components = {
     UsageCalculationList,
@@ -29,11 +29,12 @@ const inProgressData = ref([])
 onMounted(()=> {
     const proxy = getCurrentInstance()
     const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
+    const setAxiosToken = proxy.appContext.config.globalProperties.$setAxiosToken
     const params = {
         orderstatus: 9,
         ordershoestatus: 4
     };
-    proxy.$axios.get(`${apiBaseUrl}/order/getorderbystatus`, { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getorderbystatus`, { params }).then(response => {
         const fetchPending = response.data.pendingOrders
         const fetchInProgress = response.data.inProgressOrders
         console.log("fetchPending is ")

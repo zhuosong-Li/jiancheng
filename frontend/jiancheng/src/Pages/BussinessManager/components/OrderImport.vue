@@ -26,8 +26,8 @@
             <el-table-column type="index" width="50" />
             <el-table-column prop="orderRid" label="订单号" />
             <el-table-column prop="customerName" label="客户名" />
-            <el-table-column prop="orderStartDate" label="订单开始日期" />
-            <el-table-column prop="orderEndDate" label="订单结束日期" />
+            <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
+            <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
             <el-table-column prop="orderStatus" label="订单状态" />
             <el-table-column label="操作">
                 <template #default="scope">
@@ -308,6 +308,7 @@ export default {
         this.getAllOrderStatus()
     },
     methods: {
+
         openImportDialog() {
             this.isImportVis = true
         },

@@ -9,12 +9,15 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    人事部经理-姓名
+                    {{ userName }}
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="2" class="el-menu-vertical-demo">
                         <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>用户管理</span>
+                        </el-menu-item>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
+                            <span>个人页面</span>
                         </el-menu-item>
                         <el-menu-item index="9" @click="handleMenuClick(9)">
                             <span>退出系统</span>
@@ -33,6 +36,7 @@
 import AllHeader from '@/components/AllHeader.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import UserManagementView from '../components/UserManagementView.vue';
+import PersonalPage from '../components/PersonalPage.vue';
 import axios from 'axios'
 
 
@@ -40,22 +44,32 @@ import axios from 'axios'
 export default {
     components: {
         AllHeader,
-        UserManagementView
+        UserManagementView,
+        PersonalPage
     },
     data() {
         return {
             UserFilled,
-            currentComponent: 'UserManagementView'
+            currentComponent: 'UserManagementView',
+            userName: ''
         }
     },
     mounted() {
+        this.$setAxiosToken()
+        this.getUserAndCharacter()
     },
     methods: {
-        
+        async getUserAndCharacter() {
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)
+            this.userName = response.data.staffName + '-' + response.data.characterName
+        },
         handleMenuClick(index) {
             switch (index) {
                 case 2:
                     this.currentComponent = 'UserManagementView'
+                    break
+                case 3:
+                    this.currentComponent = 'PersonalPage'
                     break
                 case 9:
                     this.Logout()

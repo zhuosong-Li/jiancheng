@@ -49,11 +49,11 @@ export default {
             this.displayData = this.pendingTaskData.filter(task => task.orderId.includes(this.searchOrder));
         },
         handleRowClick(row) {
+            console.log("123123123")
             let url;
-            if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次BOM填写') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            if (row.taskName === '技术部调版分配') {
+                console.log(row)
+                url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');
