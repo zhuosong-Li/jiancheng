@@ -182,9 +182,7 @@ const router = createRouter({
   ]
 })
 import axios from 'axios'
-import { getCurrentInstance } from 'vue'
-const proxy = getCurrentInstance()
-const apiBaseUrl = proxy.proxy.appContext.config.globalProperties.$apiBaseUrl
+const apiBaseUrl = router.app?.config?.globalProperties?.$apiBaseUrl
 
 const Logout = () => {
   axios.post(`${apiBaseUrl}/logout`)
