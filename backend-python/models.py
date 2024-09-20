@@ -1,13 +1,5 @@
 from app_config import db
-import enum
-from sqlalchemy import Enum
-import datetime
 
-class ProductionTeam(enum.Enum):
-    CUTTING = "裁断"
-    PRE_SEWING = "针车预备"
-    SEWING = "针车"
-    MOLDING = "成型"
 
 class User(db.Model):
     __tablename__ = "user"
@@ -17,7 +9,6 @@ class User(db.Model):
     staff_id = db.Column(
         db.Integer,
     )
-
 
 
 class BomItem(db.Model):
@@ -35,9 +26,8 @@ class BomItem(db.Model):
     )
     bom_item_add_type = db.Column(db.String(1), nullable=False)
     remark = db.Column(db.String(100), nullable=True)
-    bom_id = db.Column(
-        db.BigInteger)
-    bom_item_color=db.Column(db.String(50), nullable=True)
+    bom_id = db.Column(db.BigInteger)
+    bom_item_color = db.Column(db.String(40), nullable=True)
     size_34_total_usage = db.Column(db.Integer, nullable=True)
     size_35_total_usage = db.Column(db.Integer, nullable=True)
     size_36_total_usage = db.Column(db.Integer, nullable=True)
@@ -100,19 +90,19 @@ class Customer(db.Model):
 
     def __repr__(self):
         return f"<Customer(customer_id={self.customer_id})>"
-    
+
 
 class Message(db.Model):
-    __tablename__ = 'message'
+    __tablename__ = "message"
     message_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     sender_id = db.Column(db.Integer, nullable=False, index=True)
     receiver_id = db.Column(db.Integer, nullable=False, index=True)
     content = db.Column(db.String(100), nullable=True)
     send_datetime = db.Column(db.DateTime)
     is_viewed = db.Column(db.Boolean, nullable=False, default=False)
-    
+
     def __repr__(self):
-        return f'<Message {self.message_id}>'
+        return f"<Message {self.message_id}>"
 
 
 class QuantityReportItem(db.Model):
@@ -309,7 +299,7 @@ class OrderShoeBatchInfo(db.Model):
     size_44_amount = db.Column(db.Integer, nullable=True)
     size_45_amount = db.Column(db.Integer, nullable=True)
     size_46_amount = db.Column(db.Integer, nullable=True)
-    order_shoe_id = db.Column(
+    order_shoe_type_id = db.Column(
         db.BigInteger,
     )
 
@@ -323,6 +313,7 @@ class OrderShoeBatchInfo(db.Model):
 class OrderShoe(db.Model):
     __tablename__ = "order_shoe"
     order_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    order_id = db.Column(db.BigInteger, nullable=False)
     shoe_id = db.Column(db.Integer, nullable=False)
     adjust_staff = db.Column(db.String(10), nullable=True)
     process_sheet_upload_status = db.Column(db.String(1), nullable=True)
@@ -339,7 +330,9 @@ class OrderShoe(db.Model):
 class OutsourceInfo(db.Model):
     __tablename__ = "outsource_info"
 
-    outsource_info_id = db.Column(db.BigInteger, primary_key=True, nullable=False, autoincrement=True)
+    outsource_info_id = db.Column(
+        db.BigInteger, primary_key=True, nullable=False, autoincrement=True
+    )
     outsource_type = db.Column(db.String(20), nullable=False)
     factory_id = db.Column(
         db.BigInteger,
@@ -856,6 +849,7 @@ class OutboundRecord(db.Model):
     def __repr__(self):
         return f"<OutboundRecord {self.outbound_rid}>"
 
+
 class DefaultBom(db.Model):
     __tablename__ = "default_bom"
     default_bom_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -867,11 +861,12 @@ class DefaultBom(db.Model):
     def __repr__(self):
         return f"<DefaultBom(default_bom_id={self.default_bom_id})>"
 
+
 class DefaultBomItem(db.Model):
     __tablename__ = "default_bom_item"
     default_bom_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     default_bom_id = db.Column(db.BigInteger, nullable=False)
-    bom_item_color=db.Column(db.String(50), nullable=True)
+    bom_item_color = db.Column(db.String(50), nullable=True)
     department_id = db.Column(db.Integer, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
     material_specification = db.Column(db.String(50), nullable=True)
@@ -881,6 +876,7 @@ class DefaultBomItem(db.Model):
     def __repr__(self):
         return f"<DefaultBomItem(default_bom_item_id={self.default_bom_item_id})>"
 
+
 class ShoeType(db.Model):
     __tablename__ = "shoe_type"
     shoe_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -889,6 +885,7 @@ class ShoeType(db.Model):
 
     def __repr__(self):
         return f"<ShoeType(shoe_type_id={self.shoe_type_id})>"
+
 
 class OrderShoeType(db.Model):
     __tablename__ = "order_shoe_type"
