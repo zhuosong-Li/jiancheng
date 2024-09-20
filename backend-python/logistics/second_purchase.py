@@ -8,6 +8,7 @@ from event_processor import EventProcessor
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from itertools import groupby
 from operator import itemgetter
+import zipfile
 import os
 from general_document.purchase_divide_order import generate_excel_file
 second_purchase_bp = Blueprint("second_purchase_bp", __name__)
@@ -798,7 +799,7 @@ def submit_purchase_divide_orders():
 
             })
     
-
+    generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH,"标准采购订单.xlsx")
     for purchase_order_id, data in purchase_divide_order_dict.items():
