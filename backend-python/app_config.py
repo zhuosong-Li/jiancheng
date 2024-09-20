@@ -51,7 +51,7 @@ redis_client = redis.StrictRedis(
 db = SQLAlchemy(app)
 
 # List of public routes that do not require authentication
-open_routes = ['/login',"/devproductionorder/download", '/orderimport/downloadorderdoc','/processsheet/download','/firstbom/download']
+open_routes = ['/login',"/devproductionorder/download", '/orderimport/downloadorderdoc','/processsheet/download','/firstbom/download','/secondbom/download']
 
 @app.before_request
 def authenticate():

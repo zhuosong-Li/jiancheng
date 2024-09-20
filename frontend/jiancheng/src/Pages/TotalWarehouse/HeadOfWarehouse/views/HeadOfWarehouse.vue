@@ -9,7 +9,7 @@
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
                 <div style="font-size: x-large;">
-                    总仓经理-姓名
+                    {{ userName }}
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
@@ -56,6 +56,7 @@ import SemiInboundOutbound from '../components/SemiInboundOutbound.vue'
 import FinishedInboundOutbound from '../components/FinishedInboundOutbound.vue'
 import MaterialOutbound from '../components/MaterialOutbound.vue'
 import { UserFilled } from '@element-plus/icons-vue'
+import axios from 'axios'
 export default {
     components: {
         AllHeader,
@@ -71,10 +72,15 @@ export default {
     data() {
         return {
             UserFilled,
-            currentComponent:'MaterialInbound'
+            currentComponent:'MaterialInbound',
+            userName: ''
         }
     },
     methods: {
+        async getUserAndCharacter() {
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)
+            this.userName = response.data.staffName + '-' + response.data.characterName
+        },
         handleMenuClick(index){
             switch(index) {
                 case 1:

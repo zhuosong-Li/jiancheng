@@ -9,7 +9,7 @@
         <div>
           <el-avatar :icon="UserFilled" :size="100" />
         </div>
-        <div style="font-size: x-large">生产副总-姓名</div>
+        <div style="font-size: x-large">{{ userName }}</div>
 
         <div class="aside-menu" style="width: 100%; margin-top: 50px">
           <el-menu
@@ -68,11 +68,19 @@ export default {
   },
   data() {
     return {
-
+      userName: '',
       currentComponent: 'ProductionSchedulingDialogue'
     }
   },
+  mounted() {
+    this.$setAxiosToken()
+    this.getUserAndCharacter()
+  },
   methods: {
+    async getUserAndCharacter() {
+      const response = await axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)
+      this.userName = response.data.staffName + '-' + response.data.characterName
+    },
     handleMenuClick(index) {
       console.log(index)
       switch (index) {

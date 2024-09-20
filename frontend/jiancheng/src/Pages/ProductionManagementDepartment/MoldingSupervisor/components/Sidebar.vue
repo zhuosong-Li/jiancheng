@@ -4,7 +4,7 @@
             <el-avatar :icon="UserFilled" :size="100" />
         </div>
         <div style="font-size: x-large;">
-            成型主任-姓名
+            {{ userName }}
         </div>
         <div class="aside-menu" style="width: 100%; margin-top: 50px;">
             <el-menu default-active="2" class="el-menu-vertical-demo">
@@ -32,6 +32,15 @@
 </template>
 
 <script setup>
+import { ref, defineProps, getCurrentInstance } from 'vue'
+const userName = ref('')
+const proxy = getCurrentInstance()
+const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
+const setAxiosToken = proxy.appContext.config.globalProperties.$setAxiosToken
+const getUserAndCharacter = async () => {
+    const response = await axios.get(`${apiBaseUrl}/general/getcurrentstaffandcharacter`)
+    userName.value = response.data.staffName + '-' + response.data.characterName
+}
 const props = defineProps(['onEvent'])
 const handleMenuOption = (option) => {
     props.onEvent(option)
