@@ -205,14 +205,14 @@ export default {
             this.isInboundDialogVisible = false
             this.getMaterialTableData()
 
-            let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
-            response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
-            if (response.data["message"] == "yes") {
-                // notify production manager that material is ready
-                data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
-                await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
-                this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
-            }
+            // let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
+            // response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
+            // if (response.data["message"] == "yes") {
+            //     // notify production manager that material is ready
+            //     data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
+            //     await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
+            //     this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
+            // }
         },
         async submitSizeInboundForm() {
             let data = {
@@ -233,14 +233,14 @@ export default {
             this.isMultiInboundDialogVisible = false
             this.getMaterialTableData()
 
-            let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
-            response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
-            if (response.data["message"] == "yes") {
-                // notify production manager that material is ready
-                data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
-                await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
-                this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
-            }
+            // let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
+            // response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
+            // if (response.data["message"] == "yes") {
+            //     // notify production manager that material is ready
+            //     data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
+            //     await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
+            //     this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
+            // }
         },
         handleSizeChange(val) {
             this.pageSize = val

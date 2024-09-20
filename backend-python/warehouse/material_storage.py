@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from decimal import Decimal
 from app_config import db
 from constants import (
@@ -313,7 +313,7 @@ def inbound_material():
     )
     db.session.add(record)
     db.session.flush()
-    rid = "IR" + datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
+    rid = "IR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
     record.inbound_rid = rid
     db.session.commit()
     return jsonify({"message": "success"})
@@ -326,6 +326,7 @@ def inbound_material():
 def notify_required_material_arrival():
     order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
+    print(order_id, order_shoe_id)
     obj = OrderShoeProductionInfo.query.filter(
         OrderShoeProductionInfo.order_shoe_id == order_shoe_id
     ).first()
@@ -357,7 +358,7 @@ def notify_required_material_arrival():
         try:
             event = Event(
                 staff_id=1,
-                handle_time=datetime.now(),
+                handle_time=datetime.datetime.now(),
                 operation_id=54,
                 event_order_id=order_id,
                 event_order_shoe_id=order_shoe_id,
@@ -365,7 +366,7 @@ def notify_required_material_arrival():
             result = processor.processEvent(event)
             event = Event(
                 staff_id=1,
-                handle_time=datetime.now(),
+                handle_time=datetime.datetime.now(),
                 operation_id=55,
                 event_order_id=order_id,
                 event_order_shoe_id=order_shoe_id,
@@ -374,7 +375,7 @@ def notify_required_material_arrival():
 
             event = Event(
                 staff_id=1,
-                handle_time=datetime.now(),
+                handle_time=datetime.datetime.now(),
                 operation_id=68,
                 event_order_id=order_id,
                 event_order_shoe_id=order_shoe_id,
@@ -382,7 +383,7 @@ def notify_required_material_arrival():
             result = processor.processEvent(event)
             event = Event(
                 staff_id=1,
-                handle_time=datetime.now(),
+                handle_time=datetime.datetime.now(),
                 operation_id=69,
                 event_order_id=order_id,
                 event_order_shoe_id=order_shoe_id,
@@ -429,7 +430,7 @@ def inbound_size_material():
         setattr(record, column_name, int(data[f"size{info['shoe_size']}Amount"]))
     db.session.add(record)
     db.session.flush()
-    rid = "IR" + datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
+    rid = "IR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
     record.inbound_rid = rid
     db.session.commit()
     return jsonify({"message": "success"})
@@ -460,7 +461,7 @@ def outbound_material():
     db.session.add(record)
     db.session.flush()
     rid = (
-        "OR" + datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+        "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
     )
     record.outbound_rid = rid
     db.session.commit()
@@ -533,7 +534,7 @@ def outbound_size_material():
     db.session.add(record)
     db.session.flush()
     rid = (
-        "OR" + datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+        "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
     )
     record.outbound_rid = rid
     db.session.commit()

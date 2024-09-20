@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 from decimal import Decimal
 
 from app_config import db
@@ -129,7 +129,7 @@ def inbound_finished():
     db.session.flush()
     rid = (
         "FIR"
-        + datetime.now().strftime("%Y%m%d%H%M%S")
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         + str(record.shoe_inbound_record_id)
     )
     record.shoe_inbound_rid = rid
@@ -138,7 +138,7 @@ def inbound_finished():
         for op in [120, 121]:
             event = Event(
                 staff_id=1,
-                handle_time=datetime.now(),
+                handle_time=datetime.datetime.now(),
                 operation_id=op,
                 event_order_id=data["orderId"],
                 event_order_shoe_id=data["orderShoeId"],
@@ -187,7 +187,7 @@ def _outbound_helper(storage, data):
     db.session.flush()
     rid = (
         "FOR"
-        + datetime.now().strftime("%Y%m%d%H%M%S")
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
         + str(record.shoe_outbound_record_id)
     )
     record.shoe_outbound_rid = rid
