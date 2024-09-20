@@ -62,7 +62,7 @@ class Bom(db.Model):
     bom_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     bom_rid = db.Column(db.String(80), nullable=False)
     bom_type = db.Column(db.Integer, nullable=False)
-    order_shoe_id = db.Column(
+    order_shoe_type_id = db.Column(
         db.BigInteger,
     )
     bom_status = db.Column(db.String(1), nullable=True)
@@ -138,7 +138,7 @@ class QuantityReport(db.Model):
     report_id = db.Column(
         db.BigInteger, primary_key=True, nullable=False, autoincrement=True
     )
-    order_shoe_type_id = db.Column(
+    order_shoe_id = db.Column(
         db.BigInteger,
     )
     team = db.Column(db.String(10), nullable=False)
@@ -212,7 +212,7 @@ class MaterialStorage(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
     material_model = db.Column(db.String(50), nullable=True)
-    order_shoe_id = db.Column(db.BigInteger)
+    order_shoe_type_id = db.Column(db.BigInteger)
     material_id = db.Column(db.BigInteger, nullable=False)
     estimated_inbound_amount = db.Column(db.DECIMAL(10, 5))
     actual_inbound_amount = db.Column(db.DECIMAL(10, 5))
@@ -323,11 +323,11 @@ class OrderShoeBatchInfo(db.Model):
 class OrderShoe(db.Model):
     __tablename__ = "order_shoe"
     order_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_type_id = db.Column(
-        db.BigInteger,
-        nullable=False,
-    )
     shoe_id = db.Column(db.Integer, nullable=False)
+    adjust_staff = db.Column(db.String(10), nullable=True)
+    process_sheet_upload_status = db.Column(db.String(1), nullable=True)
+    production_order_upload_status = db.Column(db.String(1), nullable=True)
+    customer_product_name = db.Column(db.String(50), nullable=False)
 
     def __repr__(self):
         return f"<OrderShoe(order_shoe_id={self.order_shoe_id})>"
@@ -352,7 +352,7 @@ class OutsourceInfo(db.Model):
     semifinished_estimated_outbound_date = db.Column(db.Date, nullable=True)
     semifinished_required = db.Column(db.Boolean, nullable=True)
     material_estimated_outbound_date = db.Column(db.Date, nullable=True)
-    order_shoe_type_id = db.Column(
+    order_shoe_id = db.Column(
         db.BigInteger,
     )
 
@@ -383,7 +383,7 @@ class OrderShoeProductionInfo(db.Model):
     pre_sewing_start_date = db.Column(db.Date, nullable=True)
     pre_sewing_end_date = db.Column(db.Date, nullable=True)
     is_material_arrived = db.Column(db.Boolean, nullable=False)
-    order_shoe_type_id = db.Column(
+    order_shoe_id = db.Column(
         db.BigInteger,
     )
 
@@ -553,7 +553,7 @@ class SemifinishedShoeStorage(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
     semifinished_inbound_datetime = db.Column(db.DateTime)
-    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    order_shoe_id = db.Column(db.BigInteger, nullable=False)
     semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
     semifinished_type = db.Column(db.String(1), nullable=False)
     semifinished_status = db.Column(db.SmallInteger)
@@ -563,10 +563,8 @@ class SemifinishedShoeStorage(db.Model):
 class Shoe(db.Model):
     __tablename__ = "shoe"
     shoe_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    shoe_image_url = db.Column(db.String(100), nullable=True)
-    shoe_type_id = db.Column(
-        db.BigInteger,
-    )
+    shoe_rid = db.Column(db.String(60), nullable=False)
+    shoe_designer = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<Shoe(shoe_id={self.shoe_id})>"
@@ -709,7 +707,7 @@ class SizeMaterialStorage(db.Model):
     size_material_color = db.Column(
         db.Integer,
     )
-    order_shoe_id = db.Column(
+    order_shoe_type_id = db.Column(
         db.BigInteger,
     )
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
@@ -779,7 +777,7 @@ class FinishedShoeStorage(db.Model):
     __tablename__ = "finished_shoe_storage"
     finished_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     finished_inbound_datetime = db.Column(db.DateTime, nullable=False)
-    order_shoe_type_id = db.Column(
+    order_shoe_id = db.Column(
         db.BigInteger,
     )
     finished_amount = db.Column(db.Integer, nullable=False)
@@ -886,8 +884,8 @@ class DefaultBomItem(db.Model):
 class ShoeType(db.Model):
     __tablename__ = "shoe_type"
     shoe_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    shoe_rid = db.Column(db.String(80), nullable=False)
-    shoe_designer = db.Column(db.String(10), nullable=True)
+    shoe_image_url = db.Column(db.String(100), nullable=True)
+    color_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"<ShoeType(shoe_type_id={self.shoe_type_id})>"
@@ -895,12 +893,8 @@ class ShoeType(db.Model):
 class OrderShoeType(db.Model):
     __tablename__ = "order_shoe_type"
     order_shoe_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_id = db.Column(db.BigInteger, nullable=False)
-    customer_product_name = db.Column(db.String(50), nullable=False)
-    production_order_upload_status = db.Column(db.String(1), nullable=True)
-    process_sheet_upload_status = db.Column(db.String(1), nullable=True)
-    adjust_staff = db.Column(db.String(10), nullable=True)
     shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    order_shoe_id = db.Column(db.BigInteger, nullable=False)
 
     def __repr__(self):
         return f"<OrderShoeType(order_shoe_type_id={self.order_shoe_type_id})>"
