@@ -102,12 +102,15 @@
                                     @click="handleGenerate(scope.row)"
                                     >填写</el-button
                                 >
-                                <el-button
-                                    v-else-if="scope.row.status === '一次采购订单已下发'"
-                                    type="primary"
-                                    @click="openPreviewDialog(scope.row)"
-                                    >查看</el-button
-                                >
+                                <div v-else-if="scope.row.status === '一次采购订单已下发'">
+                                    <el-button type="primary" @click="openPreviewDialog(scope.row)"
+                                        >查看</el-button
+                                    >
+                                    <el-button type="success" @click="downloadPurchaseOrderZip(scope.row)"
+                                        >下载一次采购订单</el-button
+                                    >
+                                </div>
+
                                 <div v-else-if="scope.row.status === '一次采购订单已保存'">
                                     <el-button type="primary" @click="openEditDialog(scope.row)"
                                         >编辑</el-button
@@ -147,10 +150,17 @@
                         orderData.deadlineTime
                     }}</el-descriptions-item>
                     <el-descriptions-item label="工艺单"
-                        ><el-button type="primary" size="default" @click="downloadProductionOrderList">查看投产指令单</el-button>
+                        ><el-button
+                            type="primary"
+                            size="default"
+                            @click="downloadProductionOrderList"
+                            >查看投产指令单</el-button
+                        >
                     </el-descriptions-item>
                     <el-descriptions-item label="生产订单"
-                        ><el-button type="primary" size="default" @click="downloadProductionOrder">查看生产订单</el-button>
+                        ><el-button type="primary" size="default" @click="downloadProductionOrder"
+                            >查看生产订单</el-button
+                        >
                     </el-descriptions-item>
                 </el-descriptions>
 
@@ -481,15 +491,10 @@
             <el-table-column prop="size" label="尺码"></el-table-column>
             <el-table-column prop="innerSize" label="内码"></el-table-column>
             <el-table-column prop="outterSize" label="外显"></el-table-column>
-            <el-table-column prop="approvalAmount" label="核定用量">
-            </el-table-column>
+            <el-table-column prop="approvalAmount" label="核定用量"> </el-table-column>
             <el-table-column prop="purchaseAmount" label="采购数量">
                 <template #default="scope">
-                    <el-input-number
-                        v-model="scope.row.purchaseAmount"
-                        :min="0"
-                        size="small"
-                    />
+                    <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" />
                 </template>
             </el-table-column>
         </el-table>
@@ -779,9 +784,7 @@ export default {
     },
     methods: {
         async getAllDepartmentOptions() {
-            const response = await this.$axios.get(
-                `${this.$apiBaseUrl}/general/getalldepartments`
-            )
+            const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data
         },
         async getAllColorOptions() {
@@ -1135,6 +1138,11 @@ export default {
         downloadProductionOrder() {
             window.open(
                 `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderId}&filetype=0`
+            )
+        },
+        downloadPurchaseOrderZip(row) {
+            window.open(
+                `${this.$apiBaseUrl}/firstpurchase/downloadpurchaseorderzip?orderrid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
             )
         },
     }

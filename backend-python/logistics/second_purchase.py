@@ -807,6 +807,14 @@ def submit_purchase_divide_orders():
         print(template_path)
         generate_excel_file(template_path, new_file_path, data)      
         print(data)
+    zip_file_path = os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "purchase_order", "二次采购订单.zip")
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for file in generated_files:
+            # Extract purchase_order_id from the filename and check if it ends with 'F'
+            filename = os.path.basename(file)
+            purchase_order_id = filename.split("_")[0]  # Get the part before "_供应商"
+            if len(purchase_order_id) >= 5 and purchase_order_id[-5] == "S":
+                zipf.write(file, filename)  # Add the file to the zip
 
     processor = EventProcessor()
     event = Event(

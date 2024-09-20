@@ -16,15 +16,17 @@ usage_calculation_bp = Blueprint("usage_calculation_bp", __name__)
 def get_all_boms():
     order_id = request.args.get("orderid")
     entities = (
-        db.session.query(Order, OrderShoe, Shoe)
+        db.session.query(Order, OrderShoe, Shoe, OrderShoeStatus)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(Order.order_id == order_id)
+        .filter(OrderShoeStatus.current_status == 4)
         .all()
     )
     result = []
     for entity in entities:
-        order, order_shoe, shoe = entity
+        order, order_shoe, shoe, order_shoe_status = entity
         bom = (
             db.session.query(Bom)
             .filter(Bom.order_shoe_id == order_shoe.order_shoe_id)

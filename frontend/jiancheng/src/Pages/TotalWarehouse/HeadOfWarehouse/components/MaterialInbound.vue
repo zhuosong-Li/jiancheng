@@ -228,7 +228,7 @@ export default {
                 }
 
             })
-            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
+            let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
             console.log(response)
             this.isMultiInboundDialogVisible = false
             this.getMaterialTableData()

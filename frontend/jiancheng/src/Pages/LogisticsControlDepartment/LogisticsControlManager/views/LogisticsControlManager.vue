@@ -11,7 +11,7 @@
                 <div style="font-size: x-large;">
                     {{ userName }}
                 </div>
-                <div class="aside-menu" style="width: 100%; margin-top: 50px;">
+                <div class="aside-menu" style="width: 100%; margin-top: 10px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
                         <el-menu-item index="1" @click="handleMenuClick(1)">
                             <span>任务看板</span>
