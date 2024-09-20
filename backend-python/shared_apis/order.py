@@ -143,7 +143,7 @@ def get_order_info():
         "customerName": entities.Customer.customer_name,
         "createTime": formatted_start_date,
         "deadlineTime": formatted_end_date,
-        "status": entities.OrderStatus.order_current_status,
+        "status": entities.OrderStatus.order_current_status if entities.OrderStatus else "N/A",
     }
     return jsonify(result)
 

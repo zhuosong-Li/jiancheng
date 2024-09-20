@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy.dialects.mysql import insert
 import datetime
 from app_config import app, db
@@ -874,3 +874,12 @@ def submit_purchase_divide_orders():
     db.session.commit()
 
     return jsonify({"status": "success"})
+
+@first_purchase_bp.route("/firstpurchase/downloadpurchaseorderzip", methods=["GET"])
+def download_purchase_order_zip():
+    order_rid = request.args.get("orderrid")
+    order_shoe_rid = request.args.get("ordershoerid")
+    zip_file_path = os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "purchase_order", "一次采购订单.zip")
+    new_name = order_rid + "_" + order_shoe_rid + "_一次采购订单.zip"
+    return send_file(zip_file_path, as_attachment=True)
+    
