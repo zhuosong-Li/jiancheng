@@ -34,6 +34,7 @@ def generate_excel_file(template_path, new_file_path, order_data):
     wb, ws = load_template(template_path, new_file_path)
     
     # Insert order details into specific cells
+    ws["D2"] = order_data.get("订单信息", "")
     ws["B2"] = order_data.get("供应商", "")
     ws["H2"] = order_data.get("日期", "")
     ws["B10"] = order_data.get("环保要求", "")

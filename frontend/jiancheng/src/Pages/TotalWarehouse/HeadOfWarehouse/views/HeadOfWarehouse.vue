@@ -76,6 +76,10 @@ export default {
             userName: ''
         }
     },
+    mounted() {
+        this.$setAxiosToken()
+        this.getUserAndCharacter()
+    },
     methods: {
         async getUserAndCharacter() {
             const response = await axios.get(`${this.$apiBaseUrl}/general/getcurrentstaffandcharacter`)

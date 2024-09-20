@@ -799,15 +799,24 @@ def submit_purchase_divide_orders():
 
             })
     
-
+    generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH,"标准采购订单.xlsx")
     for purchase_order_id, data in purchase_divide_order_dict.items():
         new_file_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "purchase_order", purchase_order_id + "_" + data["供应商"] + ".xlsx")
         print(new_file_path)
         print(template_path)
-        generate_excel_file(template_path, new_file_path, data)      
+        generate_excel_file(template_path, new_file_path, data)
+        generated_files.append(new_file_path)    
         print(data)
+    zip_file_path = os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "purchase_order", "一次采购订单.zip")
+    with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        for file in generated_files:
+            # Extract purchase_order_id from the filename and check if it ends with 'F'
+            filename = os.path.basename(file)
+            purchase_order_id = filename.split("_")[0]  # Get the part before "_供应商"
+            if len(purchase_order_id) >= 5 and purchase_order_id[-5] == "F":
+                zipf.write(file, filename)  # Add the file to the zip
 
 
 
