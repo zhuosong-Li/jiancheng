@@ -1,5 +1,12 @@
 <template>
 	<div>
+		<el-row :gutter="20" style="margin-top: 20px">
+			<el-col :span="4" :offset="0" style="white-space: nowrap;">
+				订单号筛选：
+				<el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getInproductionTableData()"
+					@clear="getInproductionTableData()" />
+			</el-col>
+		</el-row>
 		<el-table :data="inProductionTableData" style="width: 100%; margin-bottom: 20px" row-key="id" border
 			default-expand-all>
 			<el-table-column label="订单信息">
@@ -37,6 +44,7 @@ export default {
 			inproductionTotalRows: 0,
 			inProdPage: 1,
 			inProdPageSize: 10,
+			orderRIdSearch: ""
 		}
 	},
 	mounted() {
@@ -46,9 +54,10 @@ export default {
 		async getInproductionTableData() {
 			const params = {
 				"page": this.inProdPage,
-				"pageSize": this.inProdPageSize
+				"pageSize": this.inProdPageSize,
+				"orderRId": this.orderRIdSearch
 			}
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getinprogressorders", {params})
+			const response = await axios.get("http://localhost:8000/production/productionmanager/getinprogressorders", { params })
 			this.inProductionTableData = response.data.result
 			this.inproductionTotalRows = response.data.total
 		},

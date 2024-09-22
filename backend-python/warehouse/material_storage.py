@@ -104,7 +104,8 @@ def get_all_material_info():
         .join(Color, Color.color_id == MaterialStorage.material_storage_color)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == MaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
-        .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(OrderShoeType, MaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
+        .outerjoin(OrderShoe, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
@@ -142,9 +143,8 @@ def get_all_material_info():
         .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == SizeMaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
-        .outerjoin(
-            OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id
-        )
+        .outerjoin(OrderShoeType, SizeMaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
+        .outerjoin(OrderShoe, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
@@ -241,6 +241,7 @@ def get_all_material_info():
             "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d")
         }
         result.append(obj)
+    print(result)
     return {"result": result, "total": count_result}
 
 
@@ -326,7 +327,6 @@ def inbound_material():
 def notify_required_material_arrival():
     order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
-    print(order_id, order_shoe_id)
     obj = OrderShoeProductionInfo.query.filter(
         OrderShoeProductionInfo.order_shoe_id == order_shoe_id
     ).first()
