@@ -5,23 +5,24 @@
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getOrderTableData()" />
+            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getOrderTableData()"
+                @clear="getOrderTableData()" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getOrderTableData()" />
+            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getOrderTableData()"
+                @clear="getOrderTableData()" />
         </el-col>
         <el-col :span="4" :offset="4">
             <span style="white-space: nowrap">状态点查询：
-                <el-select v-model="statusPointSearch" value-key="" placeholder="" clearable filterable
-                    @change="getOrderTableData()">
+                <el-select v-model="nodeNameSearch" clearable filterable
+                    @change="getOrderTableData()" @clear="getOrderTableData()">
                     <el-option v-for="item in [
                         '生产开始',
-                        '裁断结束',
-                        '针车预备结束',
-                        '针车结束',
-                        '成型结束',
+                        '裁断开始',
+                        '针车预备开始',
+                        '针车开始',
+                        '成型开始',
                         '生产结束'
                     ]" :key="item" :label="item" :value="item">
                     </el-option>
@@ -33,7 +34,7 @@
         <el-table :data="orderTableData" border stripe>
             <el-table-column prop="orderRId" label="订单号"></el-table-column>
             <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
-            <el-table-column prop="statusPoint" label="需确认状态点"></el-table-column>
+            <el-table-column prop="nodeName" label="需确认状态点"></el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button type="primary" size="default" @click="handleConfirmation(scope.row)">确认状态完成</el-button>
@@ -52,10 +53,10 @@
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-descriptions title="鞋型信息" border column="2">
-                    <el-descriptions-item label="订单号"></el-descriptions-item>
-                    <el-descriptions-item label="鞋型号"></el-descriptions-item>
-                    <el-descriptions-item label="客户型号"></el-descriptions-item>
-                    <el-descriptions-item label="目前工段"></el-descriptions-item>
+                    <el-descriptions-item label="订单号">{{ currentRow.orderRId }}</el-descriptions-item>
+                    <el-descriptions-item label="鞋型号">{{ currentRow.shoeRId }}</el-descriptions-item>
+                    <el-descriptions-item label="客户型号">{{ currentRow.customerProductName }}</el-descriptions-item>
+                    <el-descriptions-item label="目前工段">{{ currentRow.currentStage }}</el-descriptions-item>
                 </el-descriptions>
             </el-col>
         </el-row>
@@ -64,15 +65,15 @@
                 鞋型配码信息
                 <el-table :data="shoeInfo" border stripe :max-height="200">
                     <el-table-column prop="color" label="颜色"></el-table-column>
-                    <el-table-column prop="shoeSize" label="配码编号"></el-table-column>
-                    <el-table-column prop="pairAmount" label="双数"></el-table-column>
+                    <el-table-column prop="batchInfoName" label="配码编号"></el-table-column>
+                    <el-table-column prop="totalAmount" label="双数"></el-table-column>
                     <el-table-column prop="finishedAmount" label="完成数"></el-table-column>
                 </el-table>
             </el-col>
         </el-row>
         <template #footer>
             <el-button @click="isProductionConfirmVis = false">取消</el-button>
-            <el-button type="success" @click="confirmNode(scope.row)">确认推进流程</el-button>
+            <el-button type="success" @click="confirmNode">确认推进流程</el-button>
         </template>
     </el-dialog>
 </template>
@@ -88,9 +89,10 @@ export default {
             isProductionConfirmVis: false,
             orderRIdSearch: '',
             shoeRIdSearch: '',
-            statusPointSearch: '',
+            nodeNameSearch: '',
             orderTableData: [],
             currentRow: {},
+            shoeInfo: [],
         }
     },
     mounted() {
@@ -111,14 +113,35 @@ export default {
                 "pageSize": this.pageSize,
                 "orderRId": this.orderRIdSearch,
                 "shoeRId": this.shoeRIdSearch,
-                "statusPoint": this.statusPointSearch
+                "nodeName": this.nodeNameSearch
             }
             const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getfinishednodes`, { params })
             this.orderTableData = response.data.result
             this.totalRows = response.data.totalLength
         },
-        handleConfirmation(rowData) {
+        async handleConfirmation(rowData) {
             this.currentRow = rowData
+            if (this.currentRow.nodeName === '生产开始') {
+                this.currentRow.currentStage = '生产前'
+            }
+            else if (this.currentRow.nodeName === '裁断开始') {
+                this.currentRow.currentStage = '裁断'
+            }
+            else if (this.currentRow.nodeName === '针车预备开始') {
+                this.currentRow.currentStage = '针车预备'
+            }
+            else if (this.currentRow.nodeName === '针车开始') {
+                this.currentRow.currentStage = '针车'
+            }
+            else if (this.currentRow.nodeName === '成型开始') {
+                this.currentRow.currentStage = '成型'
+            }
+            else if (this.currentRow.nodeName === '生产结束') {
+                this.currentRow.currentStage = '生产结束'
+            }
+            const params = {"orderShoeId": rowData.orderShoeId, "nodeName": rowData.nodeName}
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfoforproduction`, { params })
+            this.shoeInfo = response.data
             this.isProductionConfirmVis = true
         },
         confirmNode() {
@@ -127,8 +150,14 @@ export default {
                 showCancelButton: true,
                 cancelButtonText: '取消'
             }).then(async () => {
-                const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId, "statusName": this.currentRow.statusPointSearch }
-                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editordershoestatus`, data)
+                const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId, "nodeName": this.currentRow.nodeName }
+                const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editordershoestatus`, data)
+                if (response.status == 200) {
+                    ElMessage.success("推进流程成功")
+                }
+                else {
+                    ElMessage.error("推进流程失败")
+                }
                 this.getOrderTableData()
             })
         },

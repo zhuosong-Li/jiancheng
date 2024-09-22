@@ -6,12 +6,12 @@
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getlogisticsOrderData()" />
+                @keypress.enter="getOrderTableData()" @clear="getOrderTableData()"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getlogisticsOrderData()" />
+                @keypress.enter="getOrderTableData()" @clear="getOrderTableData()"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -26,9 +26,9 @@
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
-                <el-table-column prop="yesterdayCuttingAmount" label="昨日裁断数量上报"></el-table-column>
-                <el-table-column prop="yesterdaySewingAmount" label="昨日针车数量上报"></el-table-column>
-                <el-table-column prop="yesterdayMoldingAmount" label="昨日成型数量上报"></el-table-column>
+                <el-table-column prop="cuttingAmount" label="昨日裁断数量上报"></el-table-column>
+                <el-table-column prop="sewingAmount" label="昨日针车数量上报"></el-table-column>
+                <el-table-column prop="moldingAmount" label="昨日成型数量上报"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default"
@@ -76,11 +76,11 @@ export default {
         },
         handleSizeChange(val) {
             this.pageSize = val
-            this.getlogisticsOrderData()
+            this.getOrderTableData()
         },
         handlePageChange(val) {
             this.currentPage = val
-            this.getlogisticsOrderData()
+            this.getOrderTableData()
         },
         cellStyle(cell) {
             if (cell.row.isCuttingApproval == false && cell.column.label === '昨日裁断数量上报') {

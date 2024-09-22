@@ -8,3 +8,4 @@ isort==5.13.2
 xlrd==2.0.1
 flask-jwt-extended==4.4.4
 redis==3.5.3
+pycryptodome==3.20.0
