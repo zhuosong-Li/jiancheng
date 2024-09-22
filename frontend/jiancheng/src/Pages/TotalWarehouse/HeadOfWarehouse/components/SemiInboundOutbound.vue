@@ -5,11 +5,11 @@
     <el-row :gutter="20">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()" />
+            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()" />
+            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -156,7 +156,12 @@ export default {
                 "amount": this.currentRow.inboundAmount
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("入库成功")
+            }
+            else {
+                ElMessage.error("入库失败")
+            }
             this.semiInboundDialogVisible = false
             this.getTableData()
         },
@@ -170,7 +175,12 @@ export default {
                 "picker": this.outboundForm.receiver
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("出库成功")
+            }
+            else {
+                ElMessage.error("出库失败")
+            }
             this.semiOutboundDialogVisible = false
             this.getTableData()
         },

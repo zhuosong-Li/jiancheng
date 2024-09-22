@@ -11,21 +11,21 @@
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getMaterialTableData()" />
+                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getMaterialTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            <el-button type="primary" @click="getMaterialTableData()">搜索</el-button>
+                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="materialTableData" border stripe height="500">
+        <el-table :data="materialTableData" border stripe height="500" @sort-change="sortData">
+            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
+            <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
+            <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
 
@@ -38,7 +38,7 @@
             <el-table-column prop="orderRId" label="材料订单号"></el-table-column>
             <el-table-column prop="shoeRId" label="材料鞋型号"></el-table-column>
             <el-table-column prop="status" label="状态"></el-table-column>
-            <el-table-column label="操作">
+            <el-table-column fixed="right" label="操作">
                 <template #default="scope">
                     <el-button type="primary" size="small" @click="outboundMaterial(scope.row)">出库</el-button>
                 </template>
@@ -59,10 +59,10 @@
             <el-option v-for="item in materialTypeOptions" :value="item" />
         </el-select>
         请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getMaterialTableData()" />
+        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         请选择材料规格：
         <el-input v-model="materialSpecificationSearch" placeholder="" clearable
-            @keypress.enter="getMaterialTableData()" />
+            @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         请选择材料供应商：
         <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
             @change="getMaterialTableData()">
@@ -169,6 +169,7 @@
 </template>
 <script>
 import axios from 'axios';
+import { ElMessage } from 'element-plus';
 export default {
     data() {
         return {
@@ -222,7 +223,7 @@ export default {
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
-        async getMaterialTableData() {
+        async getMaterialTableData(sortColumn, sortOrder) {
             const params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
@@ -232,7 +233,9 @@ export default {
                 "materialSpec": this.materialSpecificationSearch,
                 "supplier": this.materialSupplierSearch,
                 "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch
+                "shoeRId": this.shoeNumberSearch,
+                "sortColumn": sortColumn,
+                "sortOrder": sortOrder
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.materialTableData = response.data.result
@@ -253,7 +256,14 @@ export default {
                 "picker": this.outboundForm.receiver
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundmaterial`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("出库成功")
+            }
+            else {
+                ElMessage.error("出库失败")
+            }
+            this.isOutboundDialogVisible = false
+            this.getMaterialTableData()
         },
         async submitSizeOutboundForm() {
             let data = {
@@ -273,7 +283,14 @@ export default {
 
             })
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsizematerial`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("出库成功")
+            }
+            else {
+                ElMessage.error("出库失败")
+            }
+            this.isMultiOutboundDialogVisible = false
+            this.getMaterialTableData()
         },
         handleSizeChange(val) {
             this.pageSize = val
@@ -302,6 +319,9 @@ export default {
                 this.currentRow = row
             }
         },
+        async sortData({prop, order}) {
+            await this.getMaterialTableData(prop, order)
+        }
     }
 }
 </script>

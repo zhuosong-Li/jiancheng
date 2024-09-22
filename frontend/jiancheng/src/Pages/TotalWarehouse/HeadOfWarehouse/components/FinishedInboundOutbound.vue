@@ -5,11 +5,13 @@
     <el-row :gutter="20">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()" />
+            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()" />
+            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData" />
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -44,8 +46,8 @@
             <el-col :span="24" :offset="0">
                 <el-form label-position="right" label-width="100px">
                     <el-form-item label="入库时间">
-                        <el-date-picker v-model="inboundDate" type="datetime" placeholder="选择日期时间"
-                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss"/>
+                        <el-date-picker v-model="inboundDate" type="datetime" placeholder="选择日期时间" style="width: 100%"
+                            value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
                     <el-form-item label="入库方式">
                         <el-radio-group v-model="inboundType">
@@ -69,7 +71,7 @@
                 <el-form label-position="right" label-width="100px">
                     <el-form-item label="出库时间">
                         <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
-                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss"/>
+                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
                     <el-form-item label="" prop="">
                         <el-text>成品最迟发货日期：{{ currentRow.endDate }}</el-text>
@@ -145,7 +147,12 @@ export default {
                 "amount": this.currentRow.inboundAmount
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("入库成功")
+            }
+            else {
+                ElMessage.error("入库失败")
+            }
             this.inboundDialogVisible = false
             this.getTableData()
         },
@@ -159,7 +166,12 @@ export default {
                 "isOutboundAll": this.outboundForm.isOutboundAll
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundfinished`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("出库成功")
+            }
+            else {
+                ElMessage.error("出库失败")
+            }
             this.outboundDialogVisible = false
             this.getTableData()
         },
