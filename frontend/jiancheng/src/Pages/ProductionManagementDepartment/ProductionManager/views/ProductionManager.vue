@@ -55,7 +55,7 @@ import ProductionSchedulingDialogue from '../components/ProductionSchedulingDial
 import LogisticInfo from '../components/LogisticInfo.vue'
 import OutSourceApproval from '../components/OutSourceApproval.vue'
 import WagesApproval from '../components/WagesApproval.vue'
-
+import axios from 'axios'
 export default {
   components: {
     UserFilled,

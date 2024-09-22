@@ -1,17 +1,14 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
+        <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getTableData()" />
+                @keypress.enter="getTableData()" @clear="getTableData"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            <el-button type="primary" @click="getTableData()">搜索</el-button>
+                @keypress.enter="getTableData()" @clear="getTableData"/>
         </el-col>
     </el-row>
     <el-table :data="tableData" border stripe height="400">

@@ -89,6 +89,7 @@ def get_all_material_info():
             MaterialStorage.material_specification,
             MaterialStorage.unit_price,
             MaterialStorage.material_estimated_arrival_date,
+            MaterialStorage.material_model,
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
@@ -128,6 +129,7 @@ def get_all_material_info():
             ),
             SizeMaterialStorage.unit_price,
             SizeMaterialStorage.material_estimated_arrival_date,
+            SizeMaterialStorage.size_material_model.label("size_material"),
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
@@ -200,6 +202,7 @@ def get_all_material_info():
             material_specification,
             unit_price,
             material_estimated_arrival_date,
+            material_model,
             material_name,
             material_unit,
             material_type_name,
@@ -238,7 +241,8 @@ def get_all_material_info():
             "colorName": color.color_name,
             "materialArrivalDate": date_value,
             "purchaseDivideOrderRId": purchase_divide_order_rid,
-            "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d")
+            "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d"),
+            "materialModel": material_model
         }
         result.append(obj)
     print(result)
@@ -567,7 +571,7 @@ def get_material_in_out_bound_records():
 
     result = []
     for row in inbound_response:
-        obj = {"opType": "入库", "date": row.inbound_datetime}
+        obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         if name == "sizeMaterial":
             for info in SHOESIZEINFO:
                 column_name = f"size_{info['shoe_size']}_inbound_amount"
@@ -577,7 +581,7 @@ def get_material_in_out_bound_records():
         result.append(obj)
 
     for row in outbound_response:
-        obj = {"opType": "出库", "date": row.outbound_datetime}
+        obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         if name == "sizeMaterial":
             for info in SHOESIZEINFO:
                 column_name = f"size_{info['shoe_size']}_outbound_amount"

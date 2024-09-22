@@ -8,20 +8,20 @@
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getTableData()" />
+                @keypress.enter="getTableData()" @clear="getTableData()"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            <el-button type="primary" @click="getTableData()">搜索</el-button>
+                @keypress.enter="getTableData()"  @clear="getTableData()"/>
         </el-col>
     </el-row>
-    <el-table :data="tableData" border stripe height="400">
+    <el-table :data="tableData" border stripe height="500" @sort-change="sortData">
+        <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
+        <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
         <el-table-column prop="materialType" label="材料类型"></el-table-column>
         <el-table-column prop="materialName" label="材料名称"></el-table-column>
+        <el-table-column prop="materialModel" label="材料型号"></el-table-column>
         <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
         <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
         <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
@@ -33,7 +33,7 @@
         <el-table-column prop="orderRId" label="材料订单号"></el-table-column>
         <el-table-column prop="shoeRId" label="材料鞋型号"></el-table-column>
         <el-table-column prop="status" label="状态"></el-table-column>
-        <el-table-column label="操作" width="200">
+        <el-table-column fixed="right" label="操作" width="120">
             <template #default="scope">
                 <el-button type="primary" size="small" @click="viewRecords(scope.row)">入/出库记录</el-button>
             </template>
@@ -53,10 +53,10 @@
             <el-option v-for="item in materialTypeOptions" :value="item" />
         </el-select>
         请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getTableData()" />
+        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
         请选择材料规格：
         <el-input v-model="materialSpecificationSearch" placeholder="" clearable
-            @keypress.enter="getTableData()" />
+            @keypress.enter="getTableData()" @clear="getTableData"/>
         请选择材料供应商：
         <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
             @change="getTableData()">
@@ -137,7 +137,7 @@ export default {
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
-        async getTableData() {
+        async getTableData(sortColumn, sortOrder) {
             const params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
@@ -146,7 +146,9 @@ export default {
                 "materialSpec": this.materialSpecificationSearch,
                 "supplier": this.materialSupplierSearch,
                 "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch
+                "shoeRId": this.shoeNumberSearch,
+                "sortColumn": sortColumn,
+                "sortOrder": sortOrder
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.tableData = response.data.result
@@ -178,6 +180,9 @@ export default {
                 this.recordData = response.data
             }
         },
+        async sortData({prop, order}) {
+            await this.getTableData(prop, order)
+        }
     }
 }
 </script>
