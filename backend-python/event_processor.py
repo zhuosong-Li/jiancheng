@@ -184,7 +184,7 @@ class EventProcessor:
             elif i == 37:
                 prevs.append(self.orderShoeStatusidToNode[33])
             elif i == 40:
-                prevs = [prev, self.orderShoeStatusidToNode[36]]
+                prevs = [prev, self.orderShoeStatusidToNode[35]]
             else:
                 prevs = [prev]
 

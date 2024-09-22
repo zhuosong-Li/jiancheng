@@ -6,12 +6,12 @@
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getOutsourceOverview()" />
+                @keypress.enter="getOutsourceOverview()" @clear="getOutsourceOverview"/>
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getOutsourceOverview()" />
+                @keypress.enter="getOutsourceOverview()" @clear="getOutsourceOverview"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">

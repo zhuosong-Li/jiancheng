@@ -37,33 +37,27 @@
 							<template #default="props">
 								<h3>鞋型详情</h3>
 								<el-table :data="props.row.detail" border>
-									<el-table-column label="配码编号" prop="batchInfoName" />
+									<el-table-column label="预览图" width="200">
+										<template #default="scope">
+											<el-image :src="scope.row.imageurl" fit="fill"></el-image>
+										</template>
+									</el-table-column>
 									<el-table-column label="颜色" prop="colorName" />
+									<el-table-column label="配码编号" prop="batchInfoName" />
 									<el-table-column label="订单总数" prop="batchAmount" />
 									<el-table-column label="裁断完成数量" prop="cuttingAmount" />
 									<el-table-column label="预备完成数量" prop="preSewingAmount" />
 									<el-table-column label="针车完成数量" prop="sewingAmount" />
 									<el-table-column label="成型完成数量" prop="moldingAmount" />
-									<el-table-column label="面料辅料" prop="materialLogistics" />
-									<el-table-column label="扣件拉链鞋带" prop="metalmaterialLogistics" />
-									<el-table-column label="鞋底物料" prop="soleLogistics" />
-									<el-table-column label="中底物料" prop="insoleLogistics" />
-									<el-table-column label="鞋盒物料" prop="packagingMaterialLogistics" />
-									<el-table-column label="楦型" prop="lasttypeLogistics" />
 									<el-table-column label="完成状态" prop="productionStatus" />
 								</el-table>
-							</template>
-						</el-table-column>
-
-						<el-table-column label="预览图" width="200">
-							<template #default="scope">
-								<el-image :src="scope.row.imageurl" fit="fill"></el-image>
 							</template>
 						</el-table-column>
 						<el-table-column prop="shoeRId" label="公司编号" width="100"></el-table-column>
 						<el-table-column prop="customerProductName" label="客户型号" width="100"></el-table-column>
 						<el-table-column prop="percentageText" label="生产状态百分比"></el-table-column>
 						<el-table-column prop="totalShoes" label="当前鞋型订单总数"></el-table-column>
+						<el-table-column prop="status" label="状态"></el-table-column>
 						<el-table-column label="操作">
 							<template #default="scope">
 								<el-button type="primary" size="small"
@@ -90,7 +84,7 @@
 							<el-col :span="8" :offset="6">
 								<el-descriptions title="" border>
 									<el-descriptions-item label="外包状态">
-										<div v-if="tab.isOutSource === false">
+										<div v-if="tab.isOutsourced === false">
 											未设置外包
 										</div>
 										<div v-else>
@@ -98,10 +92,11 @@
 										</div>
 									</el-descriptions-item>
 									<el-descriptions-item label="操作">
-										<el-button v-if="tab.isOutSource === false" type="primary" size="default"
+										<el-button v-if="tab.isOutsourced === false" type="primary" size="default"
 											@click="startOutSourceFlow()">启动外包流程</el-button>
 										<el-button-group v-else>
-											<el-button type="primary" size="default" @click="startOutSourceFlow()">查看外包流程</el-button>
+											<el-button type="primary" size="default"
+												@click="startOutSourceFlow()">查看外包流程</el-button>
 											<el-button type="warning" size="default" @click="">删除外包流程</el-button>
 										</el-button-group>
 									</el-descriptions-item>
@@ -113,34 +108,36 @@
 								<span>
 									{{ tab.dateLabel }}：
 									<el-date-picker v-model="tab.dateValue" type="daterange" size="default"
-										range-separator="-" start-placeholder="" end-placeholder="">
+										range-separator="-" :disabled-date="disableDate" value-format="YYYY-MM-DD">
 									</el-date-picker>
 								</span>
 							</el-col>
-							<!-- TODO -->
-							<!-- <el-col :span="5" :offset="0">
-								<el-button type="primary" size="default" @click="checkDateProductionStatus">查看工期内排产情况</el-button>
-							</el-col> -->
-							<el-col :span="5" :offset="0">预计每天生产数量：{{ calculateDailyProduction(tab.dateValue)
+							<el-col :span="5" :offset="0">
+								<el-button type="primary" size="default" @click="checkDateProductionStatus(tab)">{{
+									tab.isDateStatusTableVis ? '关闭表格' : '查看工期内排产情况' }}</el-button>
+							</el-col>
+							<el-col :span="5" :offset="0">预计每天生产数量：{{ calculateDailyProduction(currentRow.totalShoes,
+								tab.dateValue)
 								}}</el-col>
 						</el-row>
 						<el-row :gutter="20">
-							<el-table v-if="isDateStatusTableVis" :data="dateStatusTable" border stripe>
+							<el-table v-if="tab.isDateStatusTableVis" :data="tab.dateStatusTable" border stripe>
 								<el-table-column type="expand">
 									<template #default="props">
-										<el-table :data="props.row.shoeList">
+										<el-table :data="props.row.detail" border stripe>
 											<el-table-column type="index" />
-											<el-table-column label="订单号" prop="orderId" />
-											<el-table-column label="工厂型号" prop="shoeId" />
-											<el-table-column label="鞋型总数量" prop="amount" />
-											<el-table-column label="生产周期" prop="datePeriod" />
+											<el-table-column label="订单号" prop="orderRId" />
+											<el-table-column label="工厂型号" prop="shoeRId" />
+											<el-table-column label="鞋型总数量" prop="totalAmount" />
+											<el-table-column label="工段生产开始" prop="productionStartDate" />
+											<el-table-column label="工段生产结束" prop="productionEndDate" />
 											<el-table-column label="平均每天数量" prop="averageAmount" />
 										</el-table>
 									</template>
 								</el-table-column>
 
 								<el-table-column prop="date" label="日期"> </el-table-column>
-								<el-table-column prop="productAmount" label="已排产鞋型数"> </el-table-column>
+								<el-table-column prop="orderShoeCount" label="已排产鞋型数"> </el-table-column>
 								<el-table-column prop="predictAmount" label="预计当日现有生产量"> </el-table-column>
 							</el-table>
 						</el-row>
@@ -149,7 +146,9 @@
 				<template #footer>
 					<span>
 						<el-button @click="isScheduleModify = false">取消</el-button>
-						<el-button type="primary" @click="">修改</el-button>
+						<el-button type="primary" @click="modifyProductionSchedule">保存</el-button>
+						<el-button v-if="currentRow.status === '未排产'" type="success"
+							@click="startProduction">开始生产</el-button>
 					</span>
 				</template>
 			</el-dialog>
@@ -160,6 +159,7 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
+import { ElMessage, ElMessageBox } from 'element-plus';
 export default {
 	props: ['orderId', 'orderRId', 'orderStartDate', 'orderEndDate', 'customerName', 'orderTotalShoes'],
 	components: {
@@ -173,7 +173,7 @@ export default {
 			isScheduleModify: false,
 			isShoeScheduleVis: false,
 			// schedule production
-			activeTab: 'cutting',
+			activeTab: '裁断',
 			cuttingLine: 1,
 			cuttingDatePicker: '',
 			sewPreLine: 1,
@@ -182,58 +182,51 @@ export default {
 			isShoeScheduleVis: false,
 			isScheduleVis: false,
 			isScheduleModify: false,
-			isDateStatusTableVis: false,
 			// 0: 裁断，1：预备，2：针车，3：成型
 			tabs: [
 				{
-					name: 'cutting',
+					name: '裁断',
 					label: '裁断排产',
 					lineLabel: '裁断线号选择',
 					dateLabel: '裁断工期选择',
 					lineValue: [],
 					dateValue: [],
-					isOutSource: 0
+					dateStatusTable: [],
+					isOutsourced: 0,
+					isDateStatusTableVis: false,
 				},
 				{
-					name: 'preSewing',
+					name: '针车预备',
 					label: '针车预备排产',
-					lineLabel: '针车线号选择',
-					dateLabel: '针车工期选择',
+					lineLabel: '针车预备线号选择',
+					dateLabel: '针车预备工期选择',
 					lineValue: [],
 					dateValue: [],
-					isOutSource: 1
+					dateStatusTable: [],
+					isOutsourced: 0,
+					isDateStatusTableVis: false,
 				},
 				{
-					name: 'sewing',
+					name: '针车',
 					label: '针车排产',
 					lineLabel: '针车线号选择',
 					dateLabel: '针车工期选择',
 					lineValue: [],
 					dateValue: [],
-					isOutSource: 0
+					dateStatusTable: [],
+					isOutsourced: 0,
+					isDateStatusTableVis: false,
 				},
 				{
-					name: 'molding',
+					name: '成型',
 					label: '成型排产',
 					lineLabel: '成型线号选择',
 					dateLabel: '成型工期选择',
 					lineValue: [],
 					dateValue: [],
-					isOutSource: 0
-				}
-			],
-			dateStatusTable: [
-				{
-					date: '2024-07-16',
-					productAmount: 10,
-					predictAmount: 2000,
-					shoeList: [{
-						orderId: 'K24-2111620',
-						shoeId: '0E11150',
-						amount: 300,
-						datePeriod: "2024-07-16 至 2024-07-20",
-						averageAmount: 75
-					}]
+					dateStatusTable: [],
+					isOutsourced: 0,
+					isDateStatusTableVis: false,
 				}
 			],
 			productionLines: {},
@@ -277,34 +270,100 @@ export default {
 			let totalMoldingPercent = Math.round(totalMoldingAmount / orderTotalShoes * 100)
 			this.orderPercentageText = `裁断:${totalCuttingPercent.toString()}% 针车:${totalSewingPercent.toString()}% 成型:${totalMoldingPercent.toString()}%`
 		},
-		async scheduleProduction(rowData) {
-			this.isScheduleModify = true
-		},
 		async viewProductionSchedule(rowData) {
 			this.isScheduleModify = true
 			this.currentRow = rowData
 			const params = { "orderShoeId": rowData.orderShoeId }
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoescheduleinfo`, { params })
-			console.log(response.data)
 			this.tabs[0].lineValue = response.data.cuttingLineNumbers.split(",")
 			this.tabs[0].dateValue = [response.data.cuttingStartDate, response.data.cuttingEndDate]
-			this.tabs[0].isOutSource = response.data.isCuttingOutsourced
+			this.tabs[0].isOutsourced = response.data.isCuttingOutsourced
 
 			this.tabs[1].lineValue = response.data.preSewingLineNumbers.split(",")
 			this.tabs[1].dateValue = [response.data.preSewingStartDate, response.data.preSewingEndDate]
-			this.tabs[1].isOutSource = response.data.isSewingOutsourced
+			this.tabs[1].isOutsourced = response.data.isSewingOutsourced
 
 			this.tabs[2].lineValue = response.data.sewingLineNumbers.split(",")
 			this.tabs[2].dateValue = [response.data.sewingStartDate, response.data.sewingEndDate]
-			this.tabs[2].isOutSource = response.data.isSewingOutsourced
+			this.tabs[2].isOutsourced = response.data.isSewingOutsourced
 
 			this.tabs[3].lineValue = response.data.moldingLineNumbers.split(",")
 			this.tabs[3].dateValue = [response.data.moldingStartDate, response.data.moldingEndDate]
-			this.tabs[3].isOutSource = response.data.isMoldingOutsourced
-			console.log(this.tabs)
+			this.tabs[3].isOutsourced = response.data.isMoldingOutsourced
 		},
-		async checkDateProductionStatus() {
-
+		async modifyProductionSchedule() {
+			const data = {
+				"orderShoeId": this.currentRow.orderShoeId,
+				"cuttingInfo": {
+					"lineValue": this.tabs[0].lineValue.join(","),
+					"isOutsourced": this.tabs[0].isOutsourced,
+					"startDate": this.tabs[0].dateValue[0],
+					"endDate": this.tabs[0].dateValue[1]
+				},
+				"preSewingInfo": {
+					"lineValue": this.tabs[1].lineValue.join(","),
+					"isOutsourced": this.tabs[2].isOutsourced,
+					"startDate": this.tabs[1].dateValue[0],
+					"endDate": this.tabs[1].dateValue[1]
+				},
+				"sewingInfo": {
+					"lineValue": this.tabs[2].lineValue.join(","),
+					"isOutsourced": this.tabs[2].isOutsourced,
+					"startDate": this.tabs[2].dateValue[0],
+					"endDate": this.tabs[2].dateValue[1]
+				},
+				"moldingInfo": {
+					"lineValue": this.tabs[3].lineValue.join(","),
+					"isOutsourced": this.tabs[3].isOutsourced,
+					"startDate": this.tabs[3].dateValue[0],
+					"endDate": this.tabs[3].dateValue[1]
+				}
+			}
+			const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editproductionschedule`, data)
+			if (response.status == 200) {
+				ElMessage.success("修改成功")
+			}
+			else {
+				ElMessage.error("修改失败")
+			}
+			this.isScheduleModify = false
+		},
+		async startProduction() {
+			ElMessageBox.alert('点击确认后，你仍可修改排期，但推进流程操作不可撤回', '警告', {
+				confirmButtonText: '确认',
+				showCancelButton: true,
+				cancelButtonText: '取消'
+			}).then(async () => {
+				const data = { "orderId": this.$props.orderId, "orderShoeId": this.currentRow.orderShoeId }
+				const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
+				if (response.status == 200) {
+					ElMessage.success("生产开始")
+				}
+				else {
+					ElMessage.error("排期异常")
+				}
+				this.isScheduleModify = false
+				this.getOrderShoeTableData()
+			})
+		},
+		async checkDateProductionStatus(tab) {
+			if (tab.isDateStatusTableVis === true) {
+				tab.isDateStatusTableVis = false
+			}
+			else {
+				const params = { "startDate": tab.dateValue[0], "endDate": tab.dateValue[1], "team": tab.name }
+				const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/checkdateproductionstatus`, { params })
+				tab.dateStatusTable = response.data
+				tab.dateStatusTable.forEach(element => {
+					let amount = 0
+					element.detail.forEach(row => {
+						row.averageAmount = this.calculateDailyProduction(row.totalAmount, [row.productionStartDate, row.productionEndDate])
+						amount += Number(row.averageAmount)
+					})
+					element.predictAmount = amount;
+				})
+				tab.isDateStatusTableVis = true
+			}
 		},
 		startOutSourceFlow() {
 			const params = {
@@ -320,15 +379,20 @@ export default {
 			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
 			window.open(url, '_blank')
 		},
-		calculateDailyProduction(dateRange) {
+		calculateDailyProduction(totalShoes, dateRange) {
 			if (dateRange && dateRange.length === 2) {
 				const startDate = new Date(dateRange[0]);
 				const endDate = new Date(dateRange[1]);
 				const timeDiff = Math.abs(endDate - startDate);
 				const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
-				return (this.currentRow.totalShoes / diffDays).toFixed(2);
+				return (Number(totalShoes) / diffDays).toFixed(2);
 			}
 			return 0;
+		},
+		disableDate(time) {
+			const startDate = new Date(this.$props.orderStartDate)
+			const endDate = new Date(this.$props.orderEndDate)
+			return time.getTime() < startDate || time.getTime() > endDate.getTime();
 		},
 		statusJudge({ row, column, rowIndex, columnIndex }) {
 			const progressColumns = ['fabricCuttingProgress', 'preproductionProgress', 'sewingProgress', 'moldingProgress'];
