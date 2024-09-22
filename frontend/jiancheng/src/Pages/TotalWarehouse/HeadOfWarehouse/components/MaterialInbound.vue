@@ -11,15 +11,12 @@
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             订单号筛选：
             <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getMaterialTableData()" />
+                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getMaterialTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            <el-button type="primary" @click="getMaterialTableData()">搜索</el-button>
+                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -28,6 +25,7 @@
             <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
+            <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
@@ -39,7 +37,7 @@
             <el-table-column prop="orderRId" label="材料订单号"></el-table-column>
             <el-table-column prop="shoeRId" label="材料鞋型号"></el-table-column>
             <el-table-column prop="status" label="状态"></el-table-column>
-            <el-table-column label="操作">
+            <el-table-column fixed="right" label="操作">
                 <template #default="scope">
                     <el-button type="primary" size="small" @click="editMaterial(scope.row)">入库</el-button>
                 </template>
@@ -54,19 +52,19 @@
         </el-col>
     </el-row>
 
-    <el-dialog title="材料搜索" v-model="isMaterialDialogVisible" width="30%">
+    <el-dialog title="材料搜索" v-model="isMaterialDialogVisible" width="30%" :draggable="true">
         请选择材料类型：
-        <el-select v-model="materialTypeSearch" value-key="" placeholder="" clearable filterable
+        <el-select v-model="materialTypeSearch" placeholder="" clearable filterable
             @change="getMaterialTableData()">
             <el-option v-for="item in materialTypeOptions" :value="item" />
         </el-select>
         请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getMaterialTableData()" />
+        <el-input v-model="materialNameSearch" clearable @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" placeholder="" clearable
-            @keypress.enter="getMaterialTableData()" />
+        <el-input v-model="materialSpecificationSearch" clearable
+            @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
         请选择材料供应商：
-        <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
+        <el-select v-model="materialSupplierSearch" placeholder="" clearable filterable
             @change="getMaterialTableData()">
             <el-option v-for="item in materialSupplierOptions" :value="item" />
         </el-select>
@@ -201,7 +199,12 @@ export default {
                 "type": this.inboundForm.inboundType
             }
             let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("入库成功")
+            }
+            else {
+                ElMessage.error("入库失败")
+            }
             this.isInboundDialogVisible = false
             this.getMaterialTableData()
 
@@ -229,7 +232,12 @@ export default {
 
             })
             let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
-            console.log(response)
+            if (response.status == 200) {
+                ElMessage.success("入库成功")
+            }
+            else {
+                ElMessage.error("入库失败")
+            }
             this.isMultiInboundDialogVisible = false
             this.getMaterialTableData()
 

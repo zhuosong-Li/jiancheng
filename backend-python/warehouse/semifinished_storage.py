@@ -39,9 +39,10 @@ def get_semifinished_in_out_overview():
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             OrderShoeBatchInfo,
-            OrderShoeBatchInfo.order_shoe_id == OrderShoe.order_shoe_id,
+            OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
         )
         .join(
             SemifinishedShoeStorage,
@@ -230,12 +231,12 @@ def get_semifinished_in_out_bound_records():
 
     result = []
     for row in inbound_response:
-        obj = {"opType": "入库", "date": row.inbound_datetime}
+        obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         obj["amount"] = row.inbound_amount
         result.append(obj)
 
     for row in outbound_response:
-        obj = {"opType": "出库", "date": row.outbound_datetime}
+        obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         obj["amount"] = row.outbound_amount
         result.append(obj)
     return result
