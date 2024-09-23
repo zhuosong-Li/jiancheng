@@ -7,11 +7,6 @@
             <el-row :gutter="20" style="text-align: center;">
                 <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">裁断与批皮数量填报</el-col>
             </el-row>
-            <el-row>
-                <el-button type="primary" @click="handleCreateReport">
-                    <span>新建生产数量单</span>
-                </el-button>
-            </el-row>
             <el-dialog title="新建生产数量单" v-model="createReportVis">
                 <el-date-picker v-model="dateValue" type="date" :disabled-date="disabledDate" value-format="YYYY-MM-DD"
                     placeholder="选择日期" />
@@ -23,24 +18,24 @@
             </el-dialog>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="订单信息" :column="3" border>
-                        <el-descriptions-item label="订单编号">{{ props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="订单创建时间">{{ props.createTime }}</el-descriptions-item>
-                        <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
+                    <el-descriptions title="鞋型信息" :column="3" border>
+                        <el-descriptions-item label="订单号">{{ props.orderRId }}</el-descriptions-item>
                         <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
-                    </el-descriptions></el-col>
+                        <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
+                        <el-descriptions-item label="工段开始日期">{{ props.productionStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段结束日期">{{ props.productionEndDate }}</el-descriptions-item>
+                    </el-descriptions>
+                </el-col>
             </el-row>
-            <hr />
-            <el-table :data="taskData" :default-sort="{ prop: 'date', order: 'ascending' }" border>
+            <el-table :data="taskData" :default-sort="{ prop: 'date', order: 'ascending' }" border stripe max-height="500">
                 <el-table-column prop="creationDate" label="日期" sortable></el-table-column>
                 <el-table-column prop="status" label="状态"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button v-if="scope.row.status === '已提交生产数量单'" type="success"
+                        <el-button v-if="scope.row.status === '已提交'" type="success"
                             @click="openPreviewDialog(scope.row)">查看</el-button>
-                        <el-button-group v-else-if="scope.row.status === '未提交生产数量单'">
-                            <el-button type="primary" class="block-button"
-                                @click="handleEdit(scope.row)">编辑</el-button>
+                        <el-button-group v-else-if="scope.row.status === '未提交'">
+                            <el-button type="primary" class="block-button" @click="handleEdit(scope.row)">编辑</el-button>
                             <el-button type="success" class="block-button"
                                 @click="openPreviewDialog(scope.row)">查看</el-button>
                             <el-button type="warning" class="block-button"
@@ -51,12 +46,18 @@
                     </template>
                 </el-table-column>
             </el-table>
+            <el-row>
+                <el-button type="primary" @click="handleCreateReport">
+                    <span>新建生产数量单</span>
+                </el-button>
+            </el-row>
             <div v-if="createVis">
                 <AmountReportCreator :currentReport="currentReport" :orderShoeId="props.orderShoeId"
                     :handleClose="handleClose" />
             </div>
             <div v-else-if="previewVis">
-                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport" :handleClose="handleClose"/>
+                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport"
+                    :handleClose="handleClose" />
             </div>
         </el-main>
     </el-container>
@@ -72,10 +73,7 @@ import axios from 'axios'
 const createVis = ref(false)
 const createReportVis = ref(false)
 const previewVis = ref(false)
-const props = defineProps([
-    "orderId", "orderRId", "createTime", 
-    "customerName", "orderShoeId", "shoeRId"
-])
+const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
 const taskData = ref([])
 const currentReport = ref({})
 const dateValue = ref('')
@@ -85,6 +83,10 @@ const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 
 
 onMounted(async () => {
+    getAllQuantityReports()
+})
+
+const getAllQuantityReports = async () => {
     // get all quantity report for this order_shoe_id
     let params = {
         "orderShoeId": props.orderShoeId,
@@ -92,18 +94,7 @@ onMounted(async () => {
     }
     const response1 = await axios.get(`${apiBaseUrl}/production/getallquantityreports`, { params })
     taskData.value = response1.data
-    taskData.value.forEach(row => {
-        if (row.status == 0) {
-            row.status = "未提交生产数量单"
-        }
-        else if (row.status == 1) {
-            row.status = "已提交生产数量单"
-        }
-        else if (row.status == 2) {
-            row.status = "已审核生产数量单"
-        }
-    })
-})
+}
 
 const dateFormatter = (input) => {
     const date = new Date(input);
@@ -141,7 +132,7 @@ const handleConfirmCreate = async () => {
         "creationDate": dateValue.value,
         "team": "裁断"
     }
-    await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
+    const response = await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
     ElMessage({ type: 'success', message: '添加成功!' })
     taskData.value.push({
         reportId: response.data.reportId,
@@ -153,7 +144,8 @@ const handleConfirmCreate = async () => {
         orderShoeId: props.orderShoeId
     }
     await axios.post(`${apiBaseUrl}/production/createquantityreportdetail`, body)
-    window.location.reload()
+    createReportVis.value = false
+    getAllQuantityReports()
 }
 const handleCreateReport = () => {
     createReportVis.value = true
@@ -165,7 +157,7 @@ const openPreviewDialog = (rowData) => {
 }
 const handleSubmit = async (rowData) => {
     console.log(rowData)
-    await axios.patch(`${apiBaseUrl}/production/submitquantityreport`, {"reportId": rowData.reportId})
+    await axios.patch(`${apiBaseUrl}/production/submitquantityreport`, { "reportId": rowData.reportId })
     window.location.reload()
 }
 
@@ -175,8 +167,8 @@ const handleDelete = (row, index) => {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(async () => {
-        const params = {"reportId": row.reportId}
-        await axios.delete(`${apiBaseUrl}/production/deletequantityreport`, {params})
+        const params = { "reportId": row.reportId }
+        await axios.delete(`${apiBaseUrl}/production/deletequantityreport`, { params })
         taskData.value.splice(index, 1)
         ElMessage({
             type: 'success',

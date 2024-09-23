@@ -32,7 +32,8 @@
 </template>
 
 <script setup>
-import { ref, defineProps, getCurrentInstance } from 'vue'
+import { ref, getCurrentInstance, onMounted } from 'vue'
+import axios from 'axios'
 const userName = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
@@ -41,6 +42,9 @@ const getUserAndCharacter = async () => {
     const response = await axios.get(`${apiBaseUrl}/general/getcurrentstaffandcharacter`)
     userName.value = response.data.staffName + '-' + response.data.characterName
 }
+onMounted(() => {
+    getUserAndCharacter()
+})
 const props = defineProps(['onEvent'])
 const handleMenuOption = (option) => {
     props.onEvent(option)

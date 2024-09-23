@@ -4,11 +4,91 @@ from datetime import datetime
 from app_config import db
 from constants import END_OF_PRODUCTION_NUMBER, PRICE_REPORT_REFERENCE
 from event_processor import EventProcessor
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, current_app, jsonify, request
 from models import *
+from sqlalchemy import func
 from sqlalchemy.dialects.mysql import insert
 
 price_report_bp = Blueprint("price_report_bp", __name__)
+
+
+def check_report_status(number):
+    if number == 0:
+        status_name = "未提交"
+    elif number == 1:
+        status_name = "已提交"
+    elif number == 2:
+        status_name = "已审批"
+    else:
+        status_name = "被驳回"
+    return status_name
+
+
+@price_report_bp.route("/production/getnewpricereports", methods=["GET"])
+def get_new_price_reports():
+    page = request.args.get("page", type=int)
+    page_size = request.args.get("pageSize", type=int)
+    order_rid = request.args.get("orderRId")
+    shoe_rid = request.args.get("shoeRId")
+    team = request.args.get("team")
+    if team == "裁断":
+        start_date = OrderShoeProductionInfo.cutting_start_date
+        end_date = OrderShoeProductionInfo.cutting_end_date
+    elif team == "针车":
+        start_date = OrderShoeProductionInfo.sewing_start_date
+        end_date = OrderShoeProductionInfo.sewing_end_date
+    elif team == "成型":
+        start_date = OrderShoeProductionInfo.molding_start_date
+        end_date = OrderShoeProductionInfo.molding_end_date
+    else:
+        return jsonify({"message": "invalid team name"}), 400
+    query = (
+        db.session.query(
+            Order,
+            OrderShoe,
+            Shoe,
+            Customer,
+            UnitPriceReport.status,
+            start_date,
+            end_date,
+        )
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(Customer, Customer.customer_id == Order.customer_id)
+        .join(
+            OrderShoeProductionInfo,
+            OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
+        )
+        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(UnitPriceReport, UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id)
+        .filter(
+            OrderShoeStatus.current_status
+            == PRICE_REPORT_REFERENCE[team]["status_number"],
+            OrderShoeStatus.current_status_value.in_([0, 1]),
+        )
+    )
+    if order_rid and order_rid != "":
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
+    if shoe_rid and shoe_rid != "":
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
+    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    result = []
+    for row in response:
+        order, order_shoe, shoe, customer, status, start_date_res, end_date_res = row
+        status_name = check_report_status(status)
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "productionStartDate": start_date_res.strftime("%Y-%m-%d"),
+            "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
+            "customerName": customer.customer_name,
+            "statusName": status_name,
+        }
+        result.append(obj)
+    return {"result": result, "totalLength": count_result}
 
 
 @price_report_bp.route("/production/createpricereport", methods=["POST"])
@@ -86,21 +166,23 @@ def store_price_report_detail():
 def submit_price_report():
     data = request.get_json()
     report_id_arr = data["reportIdArr"]
-    print(report_id_arr)
-    processor = EventProcessor()
+    processor: EventProcessor = current_app.config["event_processor"]
     for report_id in report_id_arr:
         report = db.session.query(UnitPriceReport).get(report_id)
         report.submission_date = datetime.now().strftime("%Y-%m-%d")
         report.status = 1
-    event = Event(
-        staff_id=1,
-        handle_time=datetime.now(),
-        operation_id=PRICE_REPORT_REFERENCE[report.team]["operation_id"],
-        event_order_id=data["orderId"],
-        event_order_shoe_id=data["orderShoeId"],
-    )
-    result = processor.processEvent(event)
-    if not result:
+    try:
+        for operation in PRICE_REPORT_REFERENCE[report.team]["operation_id"]:
+            event = Event(
+                staff_id=1,
+                handle_time=datetime.now(),
+                operation_id=operation,
+                event_order_id=data["orderId"],
+                event_order_shoe_id=data["orderShoeId"],
+            )
+            processor.processEvent(event)
+    except Exception as e:
+        print(e)
         return jsonify({"message": "failed"}), 400
     db.session.add(event)
     db.session.commit()
@@ -141,33 +223,42 @@ def get_price_report_detail():
 def get_price_report_detail_by_order_shoe_id():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
-    response = (
-        db.session.query(
-            UnitPriceReport, UnitPriceReportDetail, OrderShoe, ProcedureReference
+    report = (
+        db.session.query(UnitPriceReport.report_id, UnitPriceReport.status)
+        .filter(
+            UnitPriceReport.order_shoe_id == order_shoe_id, UnitPriceReport.team == team
         )
-        .join(
-            UnitPriceReportDetail,
+        .first()
+    )
+    status_name = check_report_status(report.status)
+    meta_data = {"reportId": report.report_id, "statusName": status_name}
+    response = (
+        db.session.query(UnitPriceReportDetail, ProcedureReference.procedure_name)
+        .outerjoin(
+            UnitPriceReport,
             UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
         )
-        .join(OrderShoe, UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             ProcedureReference,
             UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
-        .filter(OrderShoe.order_shoe_id == order_shoe_id, UnitPriceReport.team == team)
+        .filter(UnitPriceReportDetail.report_id == report.report_id)
+        .order_by(UnitPriceReportDetail.row_id)
         .all()
     )
     result = []
+    detail = []
     for row in response:
-        _, report_detail, _, procedure_ref = row
-        result.append(
+        report_detail, procedure_name = row
+        detail.append(
             {
                 "rowId": report_detail.row_id,
-                "procedure": procedure_ref.procedure_name,
+                "procedure": procedure_name,
                 "price": report_detail.price,
                 "note": report_detail.note,
             }
         )
+    result = {"metaData": meta_data, "detail": detail}
     return result
 
 
@@ -183,10 +274,7 @@ def get_all_order_shoes_price_report():
             OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
         )
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .join(
-            UnitPriceReport,
-            UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id
-        )
+        .join(UnitPriceReport, UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id)
         .filter(
             OrderShoe.order_id == order_id,
             OrderShoeStatus.current_status >= status_val,

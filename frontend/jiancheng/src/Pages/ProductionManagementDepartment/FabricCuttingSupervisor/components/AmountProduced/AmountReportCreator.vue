@@ -7,6 +7,7 @@
             <el-table-column prop="totalPrice" label="总价格" />
         </el-table>
         <el-table :data="tableData" border :style="{ marginBottom: '20px' }">
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="name" label="鞋码编号"></el-table-column>
             <el-table-column label="生产数量">
                 <template #default="scope">
@@ -14,7 +15,7 @@
                         :max="scope.row.remainAmount" @blur="() => checkValue(scope.row)" />
                 </template>
             </el-table-column>
-            <el-table-column prop="remainAmount" label="预计剩余数量" />
+            <el-table-column prop="remainAmount" label="目前剩余数量" />
         </el-table>
 
         <template #footer>
@@ -41,7 +42,7 @@ onMounted(async () => {
     let params = { "orderShoeId": props.orderShoeId, 'team': '裁断' }
     // get price report detail
     let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
-    priceReport.value = response.data
+    priceReport.value = response.data.detail
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
     response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
@@ -59,7 +60,6 @@ onMounted(async () => {
                 priceReport.value.forEach((priceRow) => {
                     priceRow.totalPrice = (row.amount * priceRow.price).toFixed(2)
                 })
-                row.remainAmount = row.remainAmount + oldVal - newVal
             }, { deep: true }
         )
     })
