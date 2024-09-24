@@ -54,6 +54,9 @@ def upload_order():
                     "对/件": "pairEachBox",
                     "件数": "boxCount",
                     "双数": "pairCount",
+                    "货币单位": "currencyType",
+                    "单价": "pricePerPair",
+                    "总价": "totalPrice",
                 },
                 inplace=True,
             )
@@ -104,26 +107,6 @@ def transform_and_filter_data(data_list):
     return filtered_data_dict
 
 
-@order_import_bp.route("/orderimport/deleteuploadtempfile", methods=["DELETE"])
-def delete_temp_file():
-    time_s = time.time()
-    file_name = request.args.get("fileName")
-    if file_name:
-        file_path = os.path.join(FILE_STORAGE_PATH, file_name)
-        if os.path.exists(file_path):
-            os.remove(file_path)
-
-            result = jsonify({"message": "File deleted successfully"}), 200
-        else:
-            result = jsonify({"error": "File not found"}), 404
-    else:
-        result = jsonify({"error": "Invalid request"}), 400
-    time_t = time.time()
-
-    print("time taken for /deleteuploadtempfile is " + str(time_t - time_s))
-    return result
-
-
 @order_import_bp.route("/orderimport/confirmimportorder", methods=["POST"])
 def confirm_import_order():
     time_s = time.time()
@@ -137,6 +120,7 @@ def confirm_import_order():
     order_deadline = order_info["orderEndDate"]
     order_status = order_info["status"]
     order_salesman = order_info["salesman"]
+
     try:
         df = pd.read_excel(os.path.join(FILE_STORAGE_PATH, file_name), header=1)
         df.rename(
@@ -149,19 +133,20 @@ def confirm_import_order():
                 "对/件": "pairEachBox",
                 "件数": "boxCount",
                 "双数": "pairCount",
+                "货币单位": "currencyType",
+                "单价": "pricePerPair",
+                "总价": "totalPrice",
             },
             inplace=True,
         )
         df.fillna(0, inplace=True)
 
-        # Transform the dataframe as needed
         data_list = df.to_dict(orient="records")
-
-        # Transform and filter data as per your requirements
         filtered_data = transform_and_filter_data(data_list)
         exist_order = Order.query.filter_by(order_rid=order_rid).first()
         if exist_order:
             return jsonify({"error": "Order Name already exists"}), 400
+
         new_order = Order(
             order_rid=order_rid,
             customer_id=customer_id,
@@ -173,13 +158,14 @@ def confirm_import_order():
         )
         db.session.add(new_order)
         db.session.flush()
+        
         os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid))
         new_file_name = "生产数量表.xlsx"
         shutil.copy(
             os.path.join(FILE_STORAGE_PATH, file_name),
             os.path.join(FILE_STORAGE_PATH, order_rid, new_file_name),
         )
-        print("创建新文件成功")
+
         new_order_id = Order.query.filter_by(order_rid=order_rid).first().order_id
         new_order_status = OrderStatus(
             order_id=new_order_id,
@@ -188,36 +174,56 @@ def confirm_import_order():
         )
         db.session.add(new_order_status)
         db.session.flush()
-        i = 0
+
         for key, items in filtered_data.items():
-            # print(key, items)
             order_shoe_rid = key[0]
             customer_shoe_id = key[1]
             color_chinese_name = key[2]
             color_english_name = key[3]
-            testnumber = 1
-            if testnumber == 0:
-                return
+
+            # Ensure the Shoe exists
             shoe_obj = Shoe.query.filter_by(shoe_rid=order_shoe_rid).first()
             if not shoe_obj:
                 shoe_obj = Shoe(shoe_rid=order_shoe_rid)
                 db.session.add(shoe_obj)
                 db.session.flush()
+
+            # Ensure the Color exists (if not, create it)
             color_obj = Color.query.filter_by(
                 color_name=color_chinese_name, color_en_name=color_english_name
             ).first()
+
             if not color_obj:
+                # Create the Color if it doesn't exist
                 color_obj = Color(
                     color_name=color_chinese_name, color_en_name=color_english_name
                 )
                 db.session.add(color_obj)
                 db.session.flush()
-            db.session.add(new_order)
-            db.session.flush()
+
+            # Ensure the ShoeType exists
+            shoe_type = ShoeType.query.filter_by(
+                shoe_id=shoe_obj.shoe_id,
+                color_id=color_obj.color_id
+            ).first()
+
+            if not shoe_type:
+                # Create the ShoeType if it doesn't exist
+                shoe_type = ShoeType(
+                    shoe_id=shoe_obj.shoe_id,
+                    color_id=color_obj.color_id,
+                    shoe_image_url=""  # Assuming empty initially, or you can pass an image URL
+                )
+                db.session.add(shoe_type)
+                db.session.flush()
+
+            # Create OrderShoe (if it doesn't exist) and associate multiple OrderShoeTypes
             order_shoe = OrderShoe.query.filter_by(
                 order_id=new_order_id, shoe_id=shoe_obj.shoe_id
             ).first()
+
             if not order_shoe:
+                # Create the OrderShoe if it doesn't exist
                 order_shoe = OrderShoe(
                     order_id=new_order_id,
                     shoe_id=shoe_obj.shoe_id,
@@ -228,22 +234,54 @@ def confirm_import_order():
                 )
                 db.session.add(order_shoe)
                 db.session.flush()
+
                 os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid))
+
+                # Create OrderShoeStatus for the new OrderShoe
                 order_shoe_status = OrderShoeStatus(
                     order_shoe_id=order_shoe.order_shoe_id,
                     current_status=0,
                     current_status_value=0,
                 )
-            
-            db.session.add(order_shoe_status)
-            db.session.flush()
+                db.session.add(order_shoe_status)
+                db.session.flush()
+                order_shoe_production_info = OrderShoeProductionInfo(
+                    cutting_line_group="",
+                    pre_sewing_line_group="",
+                    sewing_line_group="",
+                    molding_line_group="",
+                    is_cutting_outsourced=0,
+                    is_sewing_outsourced=0,
+                    is_molding_outsourced=0,
+                    is_material_arrived=0,
+                    order_shoe_id=order_shoe.order_shoe_id,
+                )
+                db.session.add(order_shoe_production_info)
+                db.session.flush()
+
+            # Check if an OrderShoeType already exists for this combination of OrderShoe and ShoeType
+            order_shoe_type = OrderShoeType.query.filter_by(
+                order_shoe_id=order_shoe.order_shoe_id,
+                shoe_type_id=shoe_type.shoe_type_id
+            ).first()
+
+            if not order_shoe_type:
+                # Create OrderShoeType if it doesn't exist for this combination
+                order_shoe_type = OrderShoeType(
+                    order_shoe_id=order_shoe.order_shoe_id,
+                    shoe_type_id=shoe_type.shoe_type_id,
+                )
+                db.session.add(order_shoe_type)
+                db.session.flush()
+                
+
+            # Now, proceed to add order_shoe_batch details linked to the order_shoe_type_id
             arr = []
-            color_id = color_obj.color_id
-            order_shoe_id = order_shoe.order_shoe_id
+            order_shoe_type_id = order_shoe_type.order_shoe_type_id  # Use order_shoe_type_id for the batch info
+
             for item in items:
                 order_shoe_batch = OrderShoeBatchInfo(
-                    color_id=color_id,
-                    order_shoe_id=order_shoe_id,
+                    order_shoe_type_id=order_shoe_type_id,  # Use the newly created or found order_shoe_type_id
                     name=item["sizeId"],
                     total_amount=item["pairCount"],
                     cutting_amount=0,
@@ -262,9 +300,12 @@ def confirm_import_order():
                     size_43_amount=item["11/43"],
                     size_44_amount=item["12/44"],
                     size_45_amount=item["13/45"],
+                    price_per_pair=item["pricePerPair"],
+                    total_price=item["totalPrice"],
+                    currency_type=item["currencyType"],
                 )
                 arr.append(order_shoe_batch)
-                i += 1
+
             db.session.add_all(arr)
         db.session.commit()
 
@@ -272,9 +313,11 @@ def confirm_import_order():
 
     except Exception as e:
         result = jsonify({"error": str(e)}), 500
+
     time_t = time.time()
     print("time taken for /confirmimportorder is " + str(time_t - time_s))
     return result
+
 
 
 @order_import_bp.route("/orderimport/submitdoc", methods=["POST"])

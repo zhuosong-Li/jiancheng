@@ -12,34 +12,156 @@ dev_producion_order_bp = Blueprint("dev_producion_order_bp", __name__)
 @dev_producion_order_bp.route("/devproductionorder/getordershoelist", methods=["GET"])
 def get_order_list():
     order_id = request.args.get("orderid")
-    order_shoes = (
-        db.session.query(OrderShoe, Shoe)
+    entities = (
+        db.session.query(
+            Order, OrderShoe, OrderShoeType, Shoe, ShoeType, Color, Bom, TotalBom, PurchaseOrder
+        )
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(OrderShoe.order_id == order_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Color, ShoeType.color_id == Color.color_id)
+        .outerjoin(
+            Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id
+        )  # Assuming BOM is optional
+        .outerjoin(
+            TotalBom, Bom.total_bom_id == TotalBom.total_bom_id
+        )  # Assuming TotalBom is optional
+        .outerjoin(
+            PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
+        )  # Assuming PurchaseOrder is optional
         .all()
     )
-    result = []
-    for order_shoe, shoe in order_shoes:
+
+    print(entities)
+
+    # Initialize the result list
+    result_dict = {}
+
+    # Loop through the entities to build the result
+    for entity in entities:
+        (
+            order,
+            order_shoe,
+            order_shoe_type,
+            shoe,
+            shoe_type,
+            color,
+            bom,
+            total_bom,
+            purchase_order,
+        ) = entity
         if order_shoe.production_order_upload_status == "0":
             status = "未上传"
         elif order_shoe.production_order_upload_status == "1":
             status = "已上传"
         elif order_shoe.production_order_upload_status == "2":
             status = "已下发"
-        result.append(
-            {
+        if shoe.shoe_rid not in result_dict:
+            result_dict[shoe.shoe_rid] = {
                 "inheritId": shoe.shoe_rid,
                 "customerId": order_shoe.customer_product_name,
-                "image": (
-                    IMAGE_STORAGE_PATH + shoe.shoe_image_url
-                    if shoe.shoe_image_url is not None
-                    else None
-                ),
                 "designer": shoe.shoe_designer,
-                "editter": shoe.shoe_adjuster,
                 "status": status,
+                "typeInfos": [],  # Initialize empty list for colors
+                "colorSet": set(),  # Initialize a set to track colors for each shoe
             }
-        )
+
+        # Check if the color is already added for this shoe
+        if color.color_name not in result_dict[shoe.shoe_rid]["colorSet"]:
+            # Only link BOM information to the color associated with the correct OrderShoeType
+            first_bom_id = None
+            first_bom_status = None
+            first_purchase_order_id = None
+            first_purchase_order_status = None
+            second_bom_id = None
+            second_bom_status = None
+            second_purchase_order_id = None
+            second_purchase_order_status = None
+
+            # Only attach BOM and PurchaseOrder if it's associated with the correct OrderShoeType
+            if bom and bom.bom_type == 0:
+                first_bom_id = bom.bom_rid
+                if bom.bom_status == "1":
+                    first_bom_status = "已保存"
+                elif bom.bom_status == "2":
+                    first_bom_status = "已提交"
+                elif bom.bom_status == "3":
+                    first_bom_status = "已下发"
+
+            # Similarly, attach PurchaseOrder if applicable
+            if purchase_order and purchase_order.purchase_order_type == "F":
+                first_purchase_order_id = purchase_order.purchase_order_rid
+                if purchase_order.purchase_order_status == "1":
+                    first_purchase_order_status = "已保存"
+                elif purchase_order.purchase_order_status == "2":
+                    first_purchase_order_status = "已提交"
+                elif purchase_order.purchase_order_status == "3":
+                    first_purchase_order_status = "已下发"
+
+            # Same logic for second BOM and PurchaseOrder
+            if bom and bom.bom_type != 0:
+                second_bom_id = bom.bom_rid
+                if bom.bom_status == "1":
+                    second_bom_status = "已保存"
+                elif bom.bom_status == "2":
+                    second_bom_status = "已提交"
+                elif bom.bom_status == "3":
+                    second_bom_status = "已下发"
+
+            if purchase_order and purchase_order.purchase_order_type == "S":
+                second_purchase_order_id = purchase_order.purchase_order_rid
+                if purchase_order.purchase_order_status == "1":
+                    second_purchase_order_status = "已保存"
+                elif purchase_order.purchase_order_status == "2":
+                    second_purchase_order_status = "已提交"
+                elif purchase_order.purchase_order_status == "3":
+                    second_purchase_order_status = "已下发"
+
+            # Append the correct BOM and PurchaseOrder data to typeInfos
+            result_dict[shoe.shoe_rid]["typeInfos"].append(
+                {
+                    "orderShoeRid": shoe.shoe_rid,
+                    "color": color.color_name,
+                    "image": (
+                        IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
+                        if shoe_type.shoe_image_url
+                        else None
+                    ),
+                    "firstBomId": first_bom_id if first_bom_id else "未填写",
+                    "firstBomStatus": first_bom_status if first_bom_id else "未填写",
+                    "firstPurchaseOrderId": (
+                        first_purchase_order_id if first_purchase_order_id else "未填写"
+                    ),
+                    "firstPurchaseOrderStatus": (
+                        first_purchase_order_status
+                        if first_purchase_order_id
+                        else "未填写"
+                    ),
+                    "secondBomId": second_bom_id if second_bom_id else "未填写",
+                    "secondBomStatus": second_bom_status if second_bom_id else "未填写",
+                    "secondPurchaseOrderId": (
+                        second_purchase_order_id
+                        if second_purchase_order_id
+                        else "未填写"
+                    ),
+                    "secondPurchaseOrderStatus": (
+                        second_purchase_order_status
+                        if second_purchase_order_id
+                        else "未填写"
+                    ),
+                }
+            )
+
+            # Add the color to the colorSet to prevent future duplicates
+            result_dict[shoe.shoe_rid]["colorSet"].add(color.color_name)
+
+    # Remove the colorSet before returning the result
+    for shoe_rid in result_dict:
+        result_dict[shoe_rid].pop("colorSet")
+
+    # Convert result_dict to a list of values
+    result = list(result_dict.values())
     return jsonify(result)
 
 

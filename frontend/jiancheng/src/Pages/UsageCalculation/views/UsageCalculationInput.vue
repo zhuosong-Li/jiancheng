@@ -58,6 +58,87 @@
             <el-row :gutter="20" style="margin-top: 20px">
                 <el-col :span="24" :offset="0">
                     <el-table :data="testTableFilterData" border style="height: 400px">
+                        <el-table-column type="expand">
+                            <template #default="parentScope">
+                                <el-table :data="parentScope.row.typeInfos" border>
+                                    <el-table-column prop="color" label="颜色"></el-table-column>
+                                    <el-table-column label="鞋图">
+                                        <template #default="scope">
+                                            <el-image
+                                                style="width: 150px; height: 100px"
+                                                :src="scope.row.image"
+                                                :fit="contain"
+                                            />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="firstBomStatus"
+                                        label="一次BOM表"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="firstPurchaseOrderStatus"
+                                        label="一次采购订单"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="secondBomStatus"
+                                        label="二次BOM表"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="secondPurchaseOrderStatus"
+                                        label="二次采购订单"
+                                    ></el-table-column>
+                                    <el-table-column label="操作" align="center">
+                                        <template #default="scope">
+                                            <el-button
+                                                v-if="
+                                                    parentScope.row.status.includes(
+                                                        '面料单位用量计算'
+                                                    ) && scope.row.firstBomStatus === '等待用量填写'
+                                                "
+                                                type="primary"
+                                                @click="handleGenerate(scope.row)"
+                                                >填写</el-button
+                                            >
+                                            <el-button
+                                                v-else-if="
+                                                    scope.row.firstBomStatus === '已下发' ||
+                                                    scope.row.firstBomStatus === '已提交' ||
+                                                    scope.row.firstBomStatus === '用量填写已提交' ||
+                                                    scope.row.firstBomStatus === 'BOM完成'
+                                                "
+                                                type="primary"
+                                                @click="openPreviewDialog(scope.row)"
+                                                >查看</el-button
+                                            >
+                                            <div
+                                                v-else-if="
+                                                    parentScope.row.status.includes(
+                                                        '面料单位用量计算'
+                                                    ) &&
+                                                    scope.row.firstBomStatus === '用量填写已保存'
+                                                "
+                                            >
+                                                <el-button
+                                                    type="primary"
+                                                    @click="openEditDialog(scope.row)"
+                                                    >编辑</el-button
+                                                >
+                                                <el-button
+                                                    type="success"
+                                                    @click="openPreviewDialog(scope.row)"
+                                                    >预览</el-button
+                                                >
+                                                <el-button
+                                                    type="warning"
+                                                    @click="submitBOMUsage(scope.row)"
+                                                    >提交</el-button
+                                                >
+                                            </div>
+                                        </template></el-table-column
+                                    >
+                                </el-table>
+                            </template>
+                        </el-table-column>
                         <el-table-column
                             prop="inheritId"
                             label="工厂型号"
@@ -69,15 +150,6 @@
                             label="客户型号"
                             align="center"
                         ></el-table-column>
-                        <el-table-column label="鞋图" align="center">
-                            <template #default="scope">
-                                <el-image
-                                    style="width: 150px; height: 100px"
-                                    :src="scope.row.image"
-                                    :fit="contain"
-                                />
-                            </template>
-                        </el-table-column>
                         <el-table-column
                             prop="designer"
                             label="设计员"
@@ -89,57 +161,11 @@
                             align="center"
                         ></el-table-column>
                         <el-table-column
-                            prop="bomId"
-                            label="BOM编号"
-                            align="center"
-                        ></el-table-column>
-                        <el-table-column
                             prop="status"
                             label="状态"
                             align="center"
-                        ></el-table-column>
-                        <el-table-column label="操作" align="center">
-                            <template #default="scope">
-                                <el-button
-                                    v-if="scope.row.status === '等待用量填写'"
-                                    type="primary"
-                                    @click="handleGenerate(scope.row)"
-                                    >填写</el-button
-                                >
-                                <div v-else-if="
-                                        scope.row.status === '用量填写已提交' ||
-                                        scope.row.status === '用量填写已下发'
-                                    ">
-                                    <el-button
-                                    
-                                    type="primary"
-                                    @click="openPreviewDialog(scope.row)"
-                                    >查看</el-button
-                                >
-                                <el-button
-                                    
-                                    type="success"
-                                    @click="downloadfirstBOM(scope.row)"
-                                    >下载一次BOM表</el-button
-                                >
-
-                                </div>
-
-                                <div v-else-if="scope.row.status === '用量填写已保存'">
-                                    <el-button type="primary" @click="openEditDialog(scope.row)"
-                                        >编辑</el-button
-                                    >
-                                    <el-button type="success" @click="openPreviewDialog(scope.row)"
-                                        >预览</el-button
-                                    >
-                                    <el-button type="warning" @click="submitBOMUsage(scope.row)"
-                                        >提交</el-button
-                                    >
-                                </div>
-                            </template></el-table-column
-                        >
-                    </el-table></el-col
-                >
+                        ></el-table-column> </el-table
+                ></el-col>
             </el-row>
             <el-row :gutter="22" style="margin-top: 10px">
                 <el-col :span="6" :offset="20"
@@ -155,7 +181,7 @@
                 width="100%"
                 @close="handleGenerateClose"
             >
-                <el-descriptions title="订单信息" :column="2">
+                <el-descriptions title="订单信息" :column="2" border>
                     <el-descriptions-item label="订单编号" align="center">{{
                         orderData.orderId
                     }}</el-descriptions-item>
@@ -171,11 +197,24 @@
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
                     }}</el-descriptions-item>
-                    <el-descriptions-item label="工艺单"
-                        ><el-button type="primary" size="default" @click="downloadProductionOrderList">查看投产指令单</el-button>
+                    <el-descriptions-item label="鞋型号" align="center">{{
+                        currentBomShoeId
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="颜色" align="center">{{
+                        currentColor
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="工艺单" align="center">
+                        <el-button
+                            type="primary"
+                            size="default"
+                            @click="downloadProductionOrderList"
+                            >查看投产指令单</el-button
+                        >
                     </el-descriptions-item>
-                    <el-descriptions-item label="生产订单"
-                        ><el-button type="primary" size="default" @click="downloadProductionOrder">查看生产订单</el-button>
+                    <el-descriptions-item label="生产订单" align="center"
+                        ><el-button type="primary" size="default" @click="downloadProductionOrder"
+                            >查看生产订单</el-button
+                        >
                     </el-descriptions-item>
                 </el-descriptions>
 
@@ -186,10 +225,7 @@
                             border
                             style="width: 100%"
                             :span-method="arraySpanMethod"
-                            height="300"
                         >
-                            <el-table-column prop="color" label="颜色" />
-                            <el-table-column prop="size" label="配码" />
                             <el-table-column prop="35" label="35" />
                             <el-table-column prop="36" label="36" />
                             <el-table-column prop="37" label="37" />
@@ -201,7 +237,6 @@
                             <el-table-column prop="43" label="43" />
                             <el-table-column prop="44" label="44" />
                             <el-table-column prop="45" label="45" />
-                            <el-table-column prop="pairAmount" label="双数" />
                             <el-table-column prop="total" label="合计" />
                         </el-table>
                     </el-row>
@@ -211,20 +246,10 @@
                             </el-table-column>
                             <el-table-column prop="materialName" label="材料名称">
                             </el-table-column>
+                            <el-table-column prop="materialModel" label="材料型号" />
                             <el-table-column prop="materialSpecification" label="材料规格">
                             </el-table-column>
-                            <el-table-column prop="color" label="颜色">
-                                <template #default="scope">
-                                    <el-select v-model="scope.row.color" size="default" disabled>
-                                        <el-option
-                                            v-for="item in colorOptions"
-                                            :key="item.value"
-                                            :label="item.label"
-                                            :value="item.value"
-                                        ></el-option>
-                                    </el-select>
-                                </template>
-                            </el-table-column>
+                            <el-table-column prop="color" label="颜色"> </el-table-column>
                             <el-table-column prop="unit" label="单位"> </el-table-column>
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column prop="unitUsage" label="单位用量">
@@ -234,6 +259,7 @@
                                         v-model="scope.row.unitUsage"
                                         step="0.001"
                                         size="default"
+                                        @change="calculateApprovalUsage(scope.row)"
                                     />
                                     <el-button
                                         v-else-if="scope.row.materialCategory == 1"
@@ -309,6 +335,25 @@
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
                     }}</el-descriptions-item>
+                    <el-descriptions-item label="鞋型号" align="center">{{
+                        currentBomShoeId
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="颜色" align="center">{{
+                        currentColor
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="工艺单" align="center">
+                        <el-button
+                            type="primary"
+                            size="default"
+                            @click="downloadProductionOrderList"
+                            >查看投产指令单</el-button
+                        >
+                    </el-descriptions-item>
+                    <el-descriptions-item label="生产订单" align="center"
+                        ><el-button type="primary" size="default" @click="downloadProductionOrder"
+                            >查看生产订单</el-button
+                        >
+                    </el-descriptions-item>
                 </el-descriptions>
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">
                     <el-row :gutter="20" style="margin-bottom: 20px">
@@ -318,10 +363,7 @@
                                 border
                                 style="width: 100%"
                                 :span-method="arraySpanMethod"
-                                height="300"
                             >
-                                <el-table-column prop="color" label="颜色" />
-                                <el-table-column prop="size" label="配码" />
                                 <el-table-column prop="35" label="35" />
                                 <el-table-column prop="36" label="36" />
                                 <el-table-column prop="37" label="37" />
@@ -333,7 +375,6 @@
                                 <el-table-column prop="43" label="43" />
                                 <el-table-column prop="44" label="44" />
                                 <el-table-column prop="45" label="45" />
-                                <el-table-column prop="pairAmount" label="双数" />
                                 <el-table-column prop="total" label="合计" />
                             </el-table>
                         </el-col>
@@ -343,23 +384,9 @@
                             <el-table :data="bomPreviewData" border style="width: 100%">
                                 <el-table-column prop="materialType" label="材料类型" />
                                 <el-table-column prop="materialName" label="材料名称" />
+                                <el-table-column prop="materialModel" label="材料型号" />
                                 <el-table-column prop="materialSpecification" label="材料规格" />
-                                <el-table-column prop="color" label="颜色">
-                                    <template #default="scope">
-                                        <el-select
-                                            v-model="scope.row.color"
-                                            size="default"
-                                            disabled
-                                        >
-                                            <el-option
-                                                v-for="item in colorOptions"
-                                                :key="item.value"
-                                                :label="item.label"
-                                                :value="item.value"
-                                            ></el-option>
-                                        </el-select>
-                                    </template>
-                                </el-table-column>
+                                <el-table-column prop="color" label="颜色"> </el-table-column>
                                 <el-table-column prop="unit" label="单位" />
                                 <el-table-column prop="supplierName" label="厂家名称" />
                                 <el-table-column prop="unitUsage" label="单位用量">
@@ -420,6 +447,25 @@
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
                     }}</el-descriptions-item>
+                    <el-descriptions-item label="鞋型号" align="center">{{
+                        currentBomShoeId
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="颜色" align="center">{{
+                        currentColor
+                    }}</el-descriptions-item>
+                    <el-descriptions-item label="工艺单" align="center">
+                        <el-button
+                            type="primary"
+                            size="default"
+                            @click="downloadProductionOrderList"
+                            >查看投产指令单</el-button
+                        >
+                    </el-descriptions-item>
+                    <el-descriptions-item label="生产订单" align="center"
+                        ><el-button type="primary" size="default" @click="downloadProductionOrder"
+                            >查看生产订单</el-button
+                        >
+                    </el-descriptions-item>
                 </el-descriptions>
                 <div style="height: 400px; overflow-y: scroll; overflow-x: hidden">
                     <el-row :gutter="20" style="margin-bottom: 20px">
@@ -431,6 +477,94 @@
                                 @selection-change="handleShoeSelectionChange"
                             >
                                 <el-table-column type="selection" width="55"></el-table-column>
+                                <el-table-column type="expand">
+                                    <template #default="parentScope">
+                                        <el-table :data="parentScope.row.typeInfos" border>
+                                            <el-table-column
+                                                prop="color"
+                                                label="颜色"
+                                            ></el-table-column>
+                                            <el-table-column label="鞋图">
+                                                <template #default="scope">
+                                                    <el-image
+                                                        style="width: 150px; height: 100px"
+                                                        :src="scope.row.image"
+                                                        :fit="contain"
+                                                    />
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                prop="firstBomStatus"
+                                                label="一次BOM表"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="firstPurchaseOrderStatus"
+                                                label="一次采购订单"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="secondBomStatus"
+                                                label="二次BOM表"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="secondPurchaseOrderStatus"
+                                                label="二次采购订单"
+                                            ></el-table-column>
+                                            <el-table-column label="操作" align="center">
+                                                <template #default="scope">
+                                                    <el-button
+                                                        v-if="
+                                                            parentScope.row.status.includes(
+                                                                '面料单位用量计算'
+                                                            ) &&
+                                                            scope.row.firstBomStatus ===
+                                                                '等待用量填写'
+                                                        "
+                                                        type="primary"
+                                                        @click="handleGenerate(scope.row)"
+                                                        >填写</el-button
+                                                    >
+                                                    <el-button
+                                                        v-else-if="
+                                                            scope.row.firstBomStatus === '已下发' ||
+                                                            scope.row.firstBomStatus === '已提交' ||
+                                                            scope.row.firstBomStatus ===
+                                                                '用量填写已提交' ||
+                                                            scope.row.firstBomStatus === 'BOM完成'
+                                                        "
+                                                        type="primary"
+                                                        @click="openPreviewDialog(scope.row)"
+                                                        >查看</el-button
+                                                    >
+                                                    <div
+                                                        v-else-if="
+                                                            parentScope.row.status.includes(
+                                                                '面料单位用量计算'
+                                                            ) &&
+                                                            scope.row.firstBomStatus ===
+                                                                '用量填写已保存'
+                                                        "
+                                                    >
+                                                        <el-button
+                                                            type="primary"
+                                                            @click="openEditDialog(scope.row)"
+                                                            >编辑</el-button
+                                                        >
+                                                        <el-button
+                                                            type="success"
+                                                            @click="openPreviewDialog(scope.row)"
+                                                            >预览</el-button
+                                                        >
+                                                        <el-button
+                                                            type="warning"
+                                                            @click="submitBOMUsage(scope.row)"
+                                                            >提交</el-button
+                                                        >
+                                                    </div>
+                                                </template></el-table-column
+                                            >
+                                        </el-table>
+                                    </template>
+                                </el-table-column>
                                 <el-table-column
                                     prop="inheritId"
                                     label="工厂型号"
@@ -442,15 +576,6 @@
                                     label="客户型号"
                                     align="center"
                                 ></el-table-column>
-                                <el-table-column label="鞋图" align="center">
-                                    <template #default="scope">
-                                        <el-image
-                                            style="width: 150px; height: 100px"
-                                            :src="scope.row.image"
-                                            :fit="contain"
-                                        />
-                                    </template>
-                                </el-table-column>
                                 <el-table-column
                                     prop="designer"
                                     label="设计员"
@@ -461,16 +586,11 @@
                                     label="调版员"
                                     align="center"
                                 ></el-table-column>
-                                <el-table-column label="操作" align="center">
-                                    <template #default="scope">
-                                        <el-button
-                                            type="primary"
-                                            size="default"
-                                            @click="openPreviewDialog(scope.row)"
-                                            >查看单独BOM表</el-button
-                                        >
-                                    </template>
-                                </el-table-column>
+                                <el-table-column
+                                    prop="status"
+                                    label="状态"
+                                    align="center"
+                                ></el-table-column>
                             </el-table>
                         </el-col>
                     </el-row>
@@ -521,6 +641,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import Arrow from '@/components/OrderArrowView.vue'
 import { Search } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+import axios from 'axios'
 
 export default {
     components: {
@@ -533,6 +654,7 @@ export default {
             createEditSymbol: 0,
             sizeData: [],
             currentSizeData: [],
+            currentColor: '',
             currentSizeIndex: 0,
             isSizeDialogVisible: false,
             selectedShoe: '',
@@ -619,28 +741,29 @@ export default {
             console.log(this.orderData)
             this.updateArrowKey += 1
         },
-        async getOrderShoeBatchInfo(orderId, orderShoeId) {
-            const response = await this.$axios.get(`${this.$apiBaseUrl}/order/getordershoesizesinfo`, {
+        async getOrderShoeBatchInfo(orderId, orderShoeId, color) {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoesizetotal`, {
                 params: {
                     orderid: orderId,
-                    ordershoeid: orderShoeId
+                    ordershoeid: orderShoeId,
+                    color: color
                 }
             })
             this.orderProduceInfo = response.data
         },
         async getAllShoeBomInfo() {
-            const response = await this.$axios.get(
+            const response = await axios.get(
                 `${this.$apiBaseUrl}/usagecalculation/getallboms?orderid=${this.orderId}`
             )
             this.testTableData = response.data
             this.tableWholeFilter()
         },
         async getBOMDetails(row) {
-            const response = await this.$axios.get(
+            const response = await axios.get(
                 `${this.$apiBaseUrl}/usagecalculation/getshoebomitems`,
                 {
                     params: {
-                        bomrid: row.bomId
+                        bomrid: row.firstBomId
                     }
                 }
             )
@@ -649,12 +772,13 @@ export default {
         },
 
         async handleGenerate(row) {
-            this.newBomId = row.bomId
+            this.newBomId = row.firstBomId
             this.createVis = true
-            this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             this.getBOMDetails(row)
-            this.currentBomShoeId = row.inheritId
+            this.currentBomShoeId = row.orderShoeRid
             this.createEditSymbol = 0
+            this.currentColor = row.color
         },
         handleGenerateClose() {
             this.createVis = false
@@ -667,24 +791,27 @@ export default {
         },
         async openEditDialog(row) {
             const loadingInstance = this.$loading({
-                        lock: true,
-                        text: '等待中，请稍后...',
-                        background: 'rgba(0, 0, 0, 0.7)'
-                    })
+                lock: true,
+                text: '等待中，请稍后...',
+                background: 'rgba(0, 0, 0, 0.7)'
+            })
             await this.getBOMDetails(row)
-            await this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             loadingInstance.close()
-            this.newBomId = row.bomId
+            this.newBomId = row.firstBomId
             this.createVis = true
-            this.currentBomShoeId = row.inheritId
+            this.currentBomShoeId = row.orderShoeRid
+            this.currentColor = row.color
             this.createEditSymbol = 0
         },
         async openPreviewDialog(row) {
-            await this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
+            await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             await this.getBOMDetails(row)
-            this.previewBomId = row.bomId
+            this.previewBomId = row.firstBomId
             this.createEditSymbol = 1
             this.updateKey += 1
+            this.currentColor = row.color
+            this.currentBomShoeId = row.orderShoeRid
 
             // Replace this with the actual logic to get the file
 
@@ -692,9 +819,13 @@ export default {
         },
         openIssueDialog() {
             this.isFinalBOM = true
-            this.unIssueBOMData = this.testTableData.filter(
-                (row) => row.status === '用量填写已提交'
-            )
+            // Filter testTableData to find rows where all colors have firstBomStatus as '已提交'
+            this.unIssueBOMData = this.testTableData.filter((row) => {
+                // Check if any of the colors in typeInfos have '已提交' status
+                return row.typeInfos.every(
+                    (typeInfo) => typeInfo.firstBomStatus === '用量填写已提交'
+                )
+            })
         },
         openSizeDialog(row, index) {
             this.sizeData = row.sizeInfo
@@ -778,10 +909,10 @@ export default {
                 }
             }
             const loadingInstance = this.$loading({
-                        lock: true,
-                        text: '等待中，请稍后...',
-                        background: 'rgba(0, 0, 0, 0.7)'
-                    })
+                lock: true,
+                text: '等待中，请稍后...',
+                background: 'rgba(0, 0, 0, 0.7)'
+            })
             const response = await this.$axios.post(
                 `${this.$apiBaseUrl}/usagecalculation/savebomusage`,
                 {
@@ -819,7 +950,7 @@ export default {
                     const response = await this.$axios.post(
                         `${this.$apiBaseUrl}/usagecalculation/submitbomusage`,
                         {
-                            bomRid: row.bomId
+                            bomRid: row.firstBomId
                         }
                     )
                     loadingInstance.close()
@@ -845,14 +976,18 @@ export default {
         },
         async issueBOMs(selectedShoe) {
             const loadingInstance = this.$loading({
-                        lock: true,
-                        text: '等待中，请稍后...',
-                        background: 'rgba(0, 0, 0, 0.7)'
-                    })
-            const response = await this.$axios.post(`${this.$apiBaseUrl}/usagecalculation/issuebomusage`, {
-                orderId: this.orderData.orderId,
-                orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
+                lock: true,
+                text: '等待中，请稍后...',
+                background: 'rgba(0, 0, 0, 0.7)'
             })
+            const response = await this.$axios.post(
+                `${this.$apiBaseUrl}/usagecalculation/issuebomusage`,
+                {
+                    orderId: this.orderData.orderId,
+                    orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId),
+                    colors: selectedShoe.map((shoe) => shoe.typeInfos.map((typeInfo) => typeInfo.color))
+                }
+            )
             loadingInstance.close()
             if (response.status !== 200) {
                 this.$message({
@@ -973,6 +1108,11 @@ export default {
                     }
                 }
                 return [rowspan, 1]
+            }
+        },
+        calculateApprovalUsage(row) {
+            if (row.unitUsage) {
+                row.approvalUsage = (row.unitUsage * this.orderProduceInfo[0].total).toFixed(3)
             }
         },
         categroryFormatter(row) {
