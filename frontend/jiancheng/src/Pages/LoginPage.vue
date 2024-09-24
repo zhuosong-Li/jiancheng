@@ -2,7 +2,7 @@
     <div class="login-form-container">
         <h1>浙江健诚集团鞋业有限公司ERP系统</h1>
         <h2>(Version 0.1)</h2>
-        <el-form :model="loginForm" ref="loginFormRef" :rules="rules" class="login-form">
+        <el-form :model="loginForm" ref="loginFormRef" :rules="rules" class="login-form" @keyup.enter="handleSubmit" >
             <el-form-item prop="username">
                 <el-input
                     v-model="loginForm.username"
@@ -47,6 +47,7 @@ const loginFormRef = ref(null)
 const secretKey = '6f8e6f9178b12c08dce94bcf57b8df22' // The secret key you generated
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
+
 const handleSubmit = () => {
 
     loginFormRef.value.validate((valid) => {

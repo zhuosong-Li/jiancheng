@@ -25,6 +25,10 @@
                     label="鞋型编号"
                 ></el-table-column>
                 <el-table-column
+                    prop="shoeColor"
+                    label="鞋型颜色"
+                ></el-table-column>
+                <el-table-column
                     prop="shoeImage"
                     label="鞋型图片"
                     align="center">
@@ -35,10 +39,6 @@
                 <el-table-column
                     prop="shoeDesigner"
                     label="设计师"
-                ></el-table-column>
-                <el-table-column
-                    prop="shoeAdjuster"
-                    label="调版师"
                 ></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
@@ -69,29 +69,18 @@
             <el-form-item label="鞋型编号">
                 <el-input v-model="orderForm.shoeRId"></el-input>
             </el-form-item>
+            <el-form-item label="选择颜色">
+                <el-select v-model="orderForm.shoeColor" placeholder="请选择">
+                    <el-option
+                        v-for="item in colorOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    ></el-option>
+                </el-select>
+            </el-form-item>
             <el-form-item label="设计师">
                 <el-input v-model="orderForm.shoeDesigner"></el-input>
-            </el-form-item>
-            <el-form-item label="调版师">
-                <el-input v-model="orderForm.shoeAdjuster"></el-input>
-            </el-form-item>
-            <el-form-item label="鞋型图片">
-                <el-upload
-                    :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`"
-                    :on-success="handleUploadSuccess"
-                    :on-error="handleUploadError"
-                    :on-exceed="handleUploadExceed"
-                    :list-type="'picture-card'"
-                    :auto-upload="false"
-                    :data="{shoeRId: currentShoeImageId}"
-                    :limit="1"
-                    :file-list="fileList"
-                    accept="image/*"
-                    ref="imageUpload"
-                    :drag="true"
-                    >
-                    <el-button size="small" type="primary">点击上传</el-button>
-                </el-upload>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -109,11 +98,18 @@
             <el-form-item label="鞋型编号">
                 <el-input v-model="orderForm.shoeRId"></el-input>
             </el-form-item>
+            <el-form-item label="选择颜色">
+                <el-select v-model="orderForm.shoeColor" placeholder="请选择">
+                    <el-option
+                        v-for="item in colorOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    ></el-option>
+                </el-select>
+            </el-form-item>
             <el-form-item label="设计师">
                 <el-input v-model="orderForm.shoeDesigner"></el-input>
-            </el-form-item>
-            <el-form-item label="调版师">
-                <el-input v-model="orderForm.shoeAdjuster"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -132,9 +128,10 @@
             :on-success="handleUploadSuccess"
             :on-error="handleUploadError"
             :on-exceed="handleUploadExceed"
+            :headers="uploadHeaders"
             :list-type="'picture-card'"
             :auto-upload="false"
-            :data="{shoeRId: currentShoeImageId}"
+            :data="{shoeRId: currentShoeImageId, shoeColor: currentShoeColor}"
             :limit="1"
             :file-list="fileList"
             accept="image/*"
@@ -160,12 +157,15 @@ import { Search } from '@element-plus/icons-vue';
 export default {
     data() {
         return {
+            token: localStorage.getItem('token'),
             currentShoeImageId: "",
+            currentShoeColor: 0,
             fileList: [],
             orderForm: {
                 shoeRId: "",
                 shoeDesigner: "",
                 shoeAdjuster: "",
+                shoeColor: "",
             },
             reUploadImageDialogVis: false,
             editShoeDialogVis: false,
@@ -173,12 +173,25 @@ export default {
             Search,
             inheritIdSearch: "",
             shoeTableData: [],
+            colorOptions: [],
         };
     },
     mounted() {
+        this.getAllColors();
         this.getAllShoes();
     },
+    computed: {
+        uploadHeaders() {
+            return {
+                Authorization: `Bearer ${this.token}`
+            }
+        }
+    },
     methods: {
+        async getAllColors() {
+            const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`);
+            this.colorOptions = response.data;
+        },
         async getAllShoes() {
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
             this.shoeTableData = response.data;
@@ -198,6 +211,7 @@ export default {
         openReUploadImageDialog(row) {
             this.reUploadImageDialogVis = true;
             this.currentShoeImageId = row.shoeRId;
+            this.currentShoeColor = row.shoeColor;
         },
         handleUploadSuccess() {
             this.$message({

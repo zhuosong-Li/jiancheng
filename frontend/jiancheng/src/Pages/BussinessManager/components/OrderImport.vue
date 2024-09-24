@@ -41,7 +41,7 @@
     <el-dialog
         title="订单EXCEL导入"
         v-model="isImportVis"
-        width="90%"
+        width="100%"
         @close="closeClearUploadData"
     >
         <el-upload
@@ -77,6 +77,10 @@
             <el-table-column prop="pairEachBox" label="双/件"></el-table-column>
             <el-table-column prop="boxCount" label="件数"></el-table-column>
             <el-table-column prop="pairCount" label="双数"></el-table-column>
+            <el-table-column prop="pairCount" label="双数"></el-table-column>
+            <el-table-column prop="currencyType" label="货币单位"></el-table-column>
+            <el-table-column prop="pricePerPair" label="单价"></el-table-column>
+            <el-table-column prop="totalPrice" label="总价"></el-table-column>
         </el-table>
 
         <template #footer>
@@ -223,7 +227,7 @@
 
         <template #footer>
             <span>
-                <el-button type="primary" @click="previewOrderVis">确认</el-button>
+                <el-button type="primary" @click="previewOrderVis = false">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -362,8 +366,9 @@ export default {
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
                 // Manually submit the file without reopening the dialog
-                await this.$refs.uploadDoc.submit()
-                loadingInstance.close()
+                await this.$refs.uploadDoc.submit().then(() => {
+                    loadingInstance.close()
+                })
             }
             catch (error) {
                 console.error('Upload error:', error)

@@ -9,6 +9,8 @@ from models import (
     Order,
     OrderShoe,
     OrderShoeStatus,
+    OrderShoeType,
+    ShoeType,
     OrderShoeStatusReference,
     OrderShoeBatchInfo,
     OrderStatus,
@@ -143,9 +145,91 @@ def get_order_info():
         "customerName": entities.Customer.customer_name,
         "createTime": formatted_start_date,
         "deadlineTime": formatted_end_date,
-        "status": entities.OrderStatus.order_current_status if entities.OrderStatus else "N/A",
+        "status": (
+            entities.OrderStatus.order_current_status if entities.OrderStatus else "N/A"
+        ),
     }
     return jsonify(result)
+
+
+@order_bp.route("/order/getordershoesizetotal", methods=["GET"])
+def get_order_shoe_size_total():
+    order_id = request.args.get("orderid")
+    order_shoe_rid = request.args.get("ordershoeid")
+    color = request.args.get("color")
+
+    # Fetch the order_shoe_type_id based on filters
+    order_shoe_type_id = (
+        db.session.query(OrderShoe, OrderShoeType, Shoe, ShoeType, Color)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
+        .join(Color, ShoeType.color_id == Color.color_id)
+        .filter(Shoe.shoe_rid == order_shoe_rid)
+        .filter(Color.color_name == color)
+        .first()
+        .OrderShoeType.order_shoe_type_id
+    )
+
+    # Fetch all batch info entries for the given order_shoe_type_id
+    entities = (
+        db.session.query(OrderShoeBatchInfo)
+        .filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+        .all()
+    )
+
+    # Initialize accumulators for totals of all sizes
+    total_size_35 = 0
+    total_size_36 = 0
+    total_size_37 = 0
+    total_size_38 = 0
+    total_size_39 = 0
+    total_size_40 = 0
+    total_size_41 = 0
+    total_size_42 = 0
+    total_size_43 = 0
+    total_size_44 = 0
+    total_size_45 = 0
+    overall_total = 0
+
+    # Collect results and accumulate totals
+    result = []
+    for entity in entities:
+        # Accumulate totals for each size and overall
+        total_size_35 += entity.size_35_amount
+        total_size_36 += entity.size_36_amount
+        total_size_37 += entity.size_37_amount
+        total_size_38 += entity.size_38_amount
+        total_size_39 += entity.size_39_amount
+        total_size_40 += entity.size_40_amount
+        total_size_41 += entity.size_41_amount
+        total_size_42 += entity.size_42_amount
+        total_size_43 += entity.size_43_amount
+        total_size_44 += entity.size_44_amount
+        total_size_45 += entity.size_45_amount
+        overall_total += entity.total_amount
+
+    # Append the totals for all sizes and overall to the result
+    result.append(
+        {
+            "35": total_size_35,
+            "36": total_size_36,
+            "37": total_size_37,
+            "38": total_size_38,
+            "39": total_size_39,
+            "40": total_size_40,
+            "41": total_size_41,
+            "42": total_size_42,
+            "43": total_size_43,
+            "44": total_size_44,
+            "45": total_size_45,
+            "total": overall_total
+        }
+    )
+
+    # Return the result as JSON
+    return jsonify(result)
+
 
 
 @order_bp.route("/order/getordershoesizesinfo", methods=["GET"])
@@ -257,7 +341,9 @@ def get_order_shoe_info():
         db.session.query(
             Order,
             OrderShoe,
+            OrderShoeType,
             Shoe,
+            ShoeType,
             OrderShoeBatchInfo,
             Color,
             func.group_concat(OrderShoeStatusReference.status_name).label(
@@ -265,33 +351,48 @@ def get_order_shoe_info():
             ),
         )
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
-        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(
+        .outerjoin(
+            OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id
+        )  # Outer join to handle cases where there's no status
+        .outerjoin(
             OrderShoeStatusReference,
             OrderShoeStatus.current_status == OrderShoeStatusReference.status_id,
         )
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id
+        )  # Join ShoeType using the correct relation with OrderShoeType
         .join(
             OrderShoeBatchInfo,
-            OrderShoeBatchInfo.order_shoe_id == OrderShoe.order_shoe_id,
+            OrderShoeBatchInfo.order_shoe_type_id
+            == OrderShoeType.order_shoe_type_id,  # Ensure each batch is for the correct shoe type
         )
-        .join(Color, OrderShoeBatchInfo.color_id == Color.color_id)
+        .join(Color, Color.color_id == ShoeType.color_id)
         .filter(Order.order_rid == order_id)
         .group_by(
             Order.order_id,
             OrderShoe.order_shoe_id,
-            Shoe.shoe_id,
-            OrderShoeBatchInfo.order_shoe_batch_info_id,
+            OrderShoeType.order_shoe_type_id,
+            ShoeType.shoe_type_id,
             Color.color_id,
-        )  # Group by necessary fields
+            OrderShoeBatchInfo.order_shoe_batch_info_id,
+        )  # Group by fields that ensure uniqueness for each type and batch
         .all()
     )
     print(entities)
     result = []
     for entity in entities:
-        order, order_shoe, shoe, order_shoe_batch_info, color, combined_statuses = (
-            entity
-        )
+        (
+            order,
+            order_shoe,
+            order_shoe_type,
+            shoe,
+            shoe_type,
+            order_shoe_batch_info,
+            color,
+            combined_statuses,
+        ) = entity
         formatted_start_date = order.start_date.strftime("%Y-%m-%d")
         formatted_end_date = order.end_date.strftime("%Y-%m-%d")
         result.append(
@@ -356,9 +457,14 @@ def get_order_full_info():
             Bom,
         )
         .outerjoin(OrderStatus, Order.order_id == OrderStatus.order_id)
-        .outerjoin(OrderStatusReference, OrderStatus.order_current_status == OrderStatusReference.order_status_id)
+        .outerjoin(
+            OrderStatusReference,
+            OrderStatus.order_current_status == OrderStatusReference.order_status_id,
+        )
         .outerjoin(OrderShoe, OrderShoe.order_id == Order.order_id)
-        .outerjoin(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(
+            OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id
+        )
         .outerjoin(
             OrderShoeStatusReference,
             OrderShoeStatus.current_status == OrderShoeStatusReference.status_id,
@@ -393,9 +499,13 @@ def get_order_full_info():
         purchase_order,
         bom,
     ) in query:
-        formatted_start_date = order.start_date.strftime("%Y-%m-%d") if order.start_date else "N/A"
-        formatted_end_date = order.end_date.strftime("%Y-%m-%d") if order.end_date else "N/A"
-        
+        formatted_start_date = (
+            order.start_date.strftime("%Y-%m-%d") if order.start_date else "N/A"
+        )
+        formatted_end_date = (
+            order.end_date.strftime("%Y-%m-%d") if order.end_date else "N/A"
+        )
+
         # If the order isn't already in the dictionary, add it
         if order.order_id not in orders_dict:
             orders_dict[order.order_id] = {
@@ -404,8 +514,12 @@ def get_order_full_info():
                 "customerName": customer.customer_name if customer else "N/A",
                 "createTime": formatted_start_date,
                 "deadlineTime": formatted_end_date,
-                "status": order_status_reference.order_status_name if order_status_reference else "N/A",
-                "shoes": {}  # Using a dictionary to avoid duplicate shoes
+                "status": (
+                    order_status_reference.order_status_name
+                    if order_status_reference
+                    else "N/A"
+                ),
+                "shoes": {},  # Using a dictionary to avoid duplicate shoes
             }
 
         # Use a unique key for each shoe to avoid duplicates
@@ -415,49 +529,61 @@ def get_order_full_info():
             # Prepare shoe information for the first occurrence
             orders_dict[order.order_id]["shoes"][shoe_key] = {
                 "shoeRid": shoe.shoe_rid if shoe else "N/A",
-                'customerId': order_shoe.customer_product_name if order_shoe else "N/A",
+                "customerId": order_shoe.customer_product_name if order_shoe else "N/A",
                 "firstBom": "N/A",
                 "secondBom": "N/A",
                 "firstOrder": "N/A",
                 "secondOrder": "N/A",
-                "statuses": ""  # To hold the combined statuses as a string
+                "statuses": "",  # To hold the combined statuses as a string
             }
 
         # Add the status for the current OrderShoe, checking for duplicates
         if order_shoe_status_reference:
             status_string = f"{order_shoe_status_reference.status_name}"
-            
+
             # Ensure the status is only added once
-            if status_string not in orders_dict[order.order_id]["shoes"][shoe_key]["statuses"]:
+            if (
+                status_string
+                not in orders_dict[order.order_id]["shoes"][shoe_key]["statuses"]
+            ):
                 if orders_dict[order.order_id]["shoes"][shoe_key]["statuses"]:
-                    orders_dict[order.order_id]["shoes"][shoe_key]["statuses"] += " | " + status_string
+                    orders_dict[order.order_id]["shoes"][shoe_key]["statuses"] += (
+                        " | " + status_string
+                    )
                 else:
-                    orders_dict[order.order_id]["shoes"][shoe_key]["statuses"] = status_string
+                    orders_dict[order.order_id]["shoes"][shoe_key][
+                        "statuses"
+                    ] = status_string
 
         # Assign BOM based on bom_type
         if bom:
             if bom.bom_type == 0:
                 orders_dict[order.order_id]["shoes"][shoe_key]["firstBom"] = bom.bom_rid
             elif bom.bom_type == 1:
-                orders_dict[order.order_id]["shoes"][shoe_key]["secondBom"] = bom.bom_rid
+                orders_dict[order.order_id]["shoes"][shoe_key][
+                    "secondBom"
+                ] = bom.bom_rid
 
         # Assign purchase orders based on purchase_order_type
         if purchase_order:
             if purchase_order.purchase_order_type == "F":
-                orders_dict[order.order_id]["shoes"][shoe_key]["firstOrder"] = purchase_order.purchase_order_rid
+                orders_dict[order.order_id]["shoes"][shoe_key][
+                    "firstOrder"
+                ] = purchase_order.purchase_order_rid
             elif purchase_order.purchase_order_type == "S":
-                orders_dict[order.order_id]["shoes"][shoe_key]["secondOrder"] = purchase_order.purchase_order_rid
+                orders_dict[order.order_id]["shoes"][shoe_key][
+                    "secondOrder"
+                ] = purchase_order.purchase_order_rid
 
     # Convert the shoes from dictionary to list and create the final result list
     result = []
     for order_id, order_data in orders_dict.items():
-        order_data["shoes"] = list(order_data["shoes"].values())  # Convert shoe dict to list
+        order_data["shoes"] = list(
+            order_data["shoes"].values()
+        )  # Convert shoe dict to list
         result.append(order_data)
 
     # Apply pagination to the result
     result = result[offset : offset + per_page]
 
     return jsonify(result)
-
-
-

@@ -17,7 +17,7 @@ class BomItem(db.Model):
     material_id = db.Column(
         db.BigInteger,
     )
-    material_specification = db.Column(db.String(50), nullable=False)
+    material_specification = db.Column(db.String(50), nullable=True)
     material_model = db.Column(db.String(50), nullable=True)
     unit_usage = db.Column(db.Numeric(10, 5), nullable=False)
     total_usage = db.Column(db.Numeric(10, 5), nullable=False)
@@ -56,6 +56,7 @@ class Bom(db.Model):
         db.BigInteger,
     )
     bom_status = db.Column(db.String(1), nullable=True)
+    total_bom_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<Bom(bom_id={self.bom_id})>"
@@ -302,6 +303,9 @@ class OrderShoeBatchInfo(db.Model):
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
+    price_per_pair = db.Column(db.DECIMAL(10,2), nullable=True)
+    total_price = db.Column(db.DECIMAL(10,2), nullable=True)
+    currency_type = db.Column(db.String(3), nullable=True)
 
     def __repr__(self):
         return f"<OrderShoeBatchInfo(order_shoe_batch_info_id={self.order_shoe_batch_info_id})>"
@@ -882,6 +886,7 @@ class ShoeType(db.Model):
     shoe_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     shoe_image_url = db.Column(db.String(100), nullable=True)
     color_id = db.Column(db.Integer, nullable=False)
+    shoe_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"<ShoeType(shoe_type_id={self.shoe_type_id})>"
@@ -895,3 +900,11 @@ class OrderShoeType(db.Model):
 
     def __repr__(self):
         return f"<OrderShoeType(order_shoe_type_id={self.order_shoe_type_id})>"
+
+class TotalBom(db.Model):
+    __tablename__ = "total_bom"
+    total_bom_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    total_bom_rid = db.Column(db.String(50), nullable=False)
+
+    def __repr__(self):
+        return f"<TotalBom(total_bom_id={self.total_bom_id})>"

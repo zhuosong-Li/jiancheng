@@ -63,17 +63,19 @@ export default {
         },
         displayProgress(){
             this.$emit('changeToProgress')
-        }
-    },
-    handleRowClick(row) {
+        },
+        handleRowClick(row) {
+            console.log(row)
             let url;
             if (row.taskName === '投产指令单创建') {
-                url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
+                url = `${window.location.origin}/developmentmanager/productionorder/create/orderid=${row.orderId}`;
             } 
             if (url) {
                 window.open(url, '_blank');
             }
         },
+    },
+
 
 }
 </script>

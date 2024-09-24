@@ -58,6 +58,38 @@
             <el-row :gutter="20" style="margin-top: 20px">
                 <el-col :span="24" :offset="0">
                     <el-table :data="testTableFilterData" border style="height: 400px">
+                        <el-table-column type="expand">
+                            <template #default="scope">
+                                <el-table :data="scope.row.typeInfos" border>
+                                    <el-table-column prop="color" label="颜色"></el-table-column>
+                                    <el-table-column label="鞋图" align="center">
+                                        <template #default="scope">
+                                            <el-image
+                                                style="width: 150px; height: 100px"
+                                                :src="scope.row.image"
+                                                :fit="contain"
+                                            />
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column
+                                        prop="firstBomId"
+                                        label="一次BOM表"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="firstPurchaseOrderId"
+                                        label="一次采购订单"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="secondBomId"
+                                        label="二次BOM表"
+                                    ></el-table-column>
+                                    <el-table-column
+                                        prop="secondPurchaseOrderId"
+                                        label="二次采购订单"
+                                    ></el-table-column>
+                                </el-table>
+                            </template>
+                        </el-table-column>
                         <el-table-column
                             prop="inheritId"
                             label="工厂型号"
@@ -69,23 +101,9 @@
                             label="客户型号"
                             align="center"
                         ></el-table-column>
-                        <el-table-column label="鞋图" align="center">
-                            <template #default="scope">
-                                <el-image
-                                    style="width: 150px; height: 100px"
-                                    :src="scope.row.image"
-                                    :fit="contain"
-                                />
-                            </template>
-                        </el-table-column>
                         <el-table-column
                             prop="designer"
                             label="设计员"
-                            align="center"
-                        ></el-table-column>
-                        <el-table-column
-                            prop="editter"
-                            label="调版员"
                             align="center"
                         ></el-table-column>
                         <el-table-column
@@ -277,6 +295,7 @@ export default {
         return {
             token: localStorage.getItem('token'),
             currentShoeId: '',
+            currentColor: '',
             fileList: [],
             UploadVis: false,
             createEditSymbol: 0,
@@ -338,9 +357,7 @@ export default {
     },
     methods: {
         async getAllMaterialList() {
-            const response = await axios.get(
-                `${this.$apiBaseUrl}/logistics/getmaterialtypeandname`
-            )
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/getmaterialtypeandname`)
             this.assetTable = response.data
             this.assetFilterTable = this.assetTable
         },
@@ -365,6 +382,7 @@ export default {
             this.getOrderShoeBatchInfo(this.orderData.orderId, row.inheritId)
             this.getBOMDetails(row)
             this.currentBomShoeId = row.inheritId
+            
             this.createEditSymbol = 0
         },
         handleGenerateClose() {
