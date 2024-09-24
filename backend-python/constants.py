@@ -3,19 +3,19 @@ PRODUCTION_LINE_REFERENCE = ['F', 'S', 'M']
 PRICE_REPORT_REFERENCE = {
     "裁断": {
         "status_number": 20,
-        "operation_id": 79,
+        "operation_id": [78, 79],
     },
     "针车预备": {
         "status_number": 27,
-        "operation_id": 93,
+        "operation_id": [92, 93],
     },
     "针车": {
         "status_number": 27,
-        "operation_id": 93,
+        "operation_id": [92, 93],
     },
     "成型": {
         "status_number": 37,
-        "operation_id": 113,
+        "operation_id": [112, 113],
     },
 }
 
