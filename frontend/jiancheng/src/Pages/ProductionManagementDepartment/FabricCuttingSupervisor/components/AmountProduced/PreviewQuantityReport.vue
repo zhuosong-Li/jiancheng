@@ -1,9 +1,10 @@
 <template>
     <el-dialog :title="currentTitle" v-model="previewVis" width="90%" @close="handleClose">
         <el-table :data="tableData" border>
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="name" label="鞋码编号"></el-table-column>
             <el-table-column prop="amount" label="生产数量"></el-table-column>
-            <el-table-column prop="remainAmount" label="剩余数量" />
+            <el-table-column prop="remainAmount" label="目前剩余数量" />
         </el-table>
         <template #footer>
             <span>
@@ -36,7 +37,7 @@ onMounted(async () => {
     let obj = [
         { prop: "name", label: "鞋码编号" },
         { prop: "amount", label: "生产数量" },
-        { prop: "remainAmount", label: "剩余数量" },
+        { prop: "remainAmount", label: "目前剩余数量" },
     ]
     columns.value = obj
 })

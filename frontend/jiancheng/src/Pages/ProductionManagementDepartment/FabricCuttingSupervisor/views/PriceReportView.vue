@@ -9,34 +9,22 @@
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="订单信息" :column="3" border>
-                        <el-descriptions-item label="订单编号">{{ props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="订单创建时间">{{ props.createTime }}</el-descriptions-item>
+                    <el-descriptions title="鞋型号信息" :column="3" border>
+                        <el-descriptions-item label="订单号">{{ props.orderRId }}</el-descriptions-item>
+                        <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
                         <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
-                    </el-descriptions></el-col>
+                        <el-descriptions-item label="工段开始日期">{{ props.productionStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段结束日期">{{ props.productionEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工价单状态">{{ statusName }}</el-descriptions-item>
+                    </el-descriptions>
+                </el-col>
             </el-row>
-            <el-table :data="taskData" border>
-                <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
-                <el-table-column prop="date" label="提交日期"></el-table-column>
-                <el-table-column prop="statusName" label="状态"></el-table-column>
-                <el-table-column label="操作">
-                    <template #default="scope">
-                        <el-button-group v-if="scope.row.statusName === '未提交工价单'">
-                            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-                            <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
-                            <el-button type="warning" @click="handleSubmit(scope.row)">提交</el-button>
-                        </el-button-group>
-                        <el-button-group v-if="scope.row.statusName === '已提交工价单'">
-                            <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
-                        </el-button-group>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <div v-if="createVis">
-                <PriceReportCreator :currentRowData="currentRowData" :handleClose="handleClose" />
+            <div v-if="statusName === '未提交' || statusName === '被驳回'">
+                <PriceReportCreator :orderId="props.orderId" :orderShoeId="props.orderShoeId" :reportId="reportId"
+                    :tableData="tableData" :procedureInfo="procedureInfo" />
             </div>
-            <div v-else-if="previewVis">
-                <PreviewReportPage :currentRowData="currentRowData" :handleClose="handleClose" />
+            <div v-else-if="statusName === '已提交' || statusName === '已审批'">
+                <PreviewReportPage :tableData="tableData" :procedureInfo="procedureInfo" />
             </div>
         </el-main>
     </el-container>
@@ -48,68 +36,33 @@ import axios from 'axios';
 import PriceReportCreator from '../components/LaborPriceReport/PriceReportCreator.vue'
 import PreviewReportPage from '../components/LaborPriceReport/PreviewReportPage.vue';
 import AllHeader from '@/components/AllHeader.vue';
-const createVis = ref(false)
-const previewVis = ref(false)
-const currentTitle = ref('')
-const currentRowData = ref({})
+const tableData = ref([])
+const reportId = ref([])
+const procedureInfo = ref({})
+const statusName = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const props = defineProps({
-    'orderId': Number,
-    'orderRId': String,
-    'createTime': String,
-    'customerName': String,
-    'taskName': String
+const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
+onMounted(() => {
+    getAllProcedures()
+    getPriceReportDetail()
 })
-const taskData = ref([])
-onMounted(async () => {
-    const params = {
-        "orderId": props.orderId,
-        "teams": "裁断"
-    }
-    const response = await axios.get(`${apiBaseUrl}/production/getallordershoespricereports`, { params })
-    response.data.forEach(element => {
-        {
-            if (element.status == 0) {
-                element["statusName"] = "未提交工价单"
-            }
-            else if (element.status == 1) {
-                element["statusName"] = "已提交工价单"
-            } else {
-                element["statusName"] = "已审核工价单"
-            }
-            taskData.value.push(element)
-        }
+const getAllProcedures = async () => {
+    const params = { teams: ['裁断'].toString() }
+    const response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, { params })
+    response.data.forEach(row => {
+        procedureInfo.value[row.procedureName] = { "price": row.price, "id": row.procedureId }
     });
-})
+}
 
-// const handleGenerate = async (rowData) => {
-//     currentRowData.value = rowData
-//     const data = {
-//         "orderShoeId": currentRowData.value.orderShoeId,
-//         "line": "cutting"
-//     }
-//     await axios.post(`${this.$apiBaseUrl}/production/createpricereport`, data)
-//     window.location.reload()
-// }
-
-const handleEdit = (rowData) => {
-    createVis.value = true
-    currentRowData.value = rowData
-}
-const openPreviewDialog = (rowData) => {
-    currentRowData.value = rowData
-    previewVis.value = true
-}
-const handleSubmit = async (rowData) => {
-    console.log(rowData)
-    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
-    { "orderId": props.orderId, "orderShoeId": rowData.orderShoeId, "reportIdArr": [rowData.reportId] })
-    console.log(response)
-    window.location.reload()
-}
-const handleClose = (option) => {
-    if (option === 0) createVis.value = false
-    else if (option === 1) previewVis.value = false
+const getPriceReportDetail = async () => {
+    const params = {
+        "orderShoeId": props.orderShoeId,
+        "team": "裁断"
+    }
+    const response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+    tableData.value = response.data.detail
+    reportId.value = response.data.metaData.reportId
+    statusName.value = response.data.metaData.statusName
 }
 </script>
