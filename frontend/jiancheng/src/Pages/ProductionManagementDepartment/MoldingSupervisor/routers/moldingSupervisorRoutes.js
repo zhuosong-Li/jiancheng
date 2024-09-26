@@ -1,33 +1,20 @@
-import OrderShoeList from '../views/OrderShoeList.vue'
 import AmountReportList from '../views/AmountReportList.vue'
 import PriceReport from '../views/PriceReportView.vue'
 
 export default [
     {
-        path: '/molding/ordershoelist',
-        name: 'molding-ordershoelist',
-        component: OrderShoeList,
-        props: route => (
-            {
-                orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
-                createTime: route.query.createTime,
-                taskName: route.query.taskName,
-                customerName: route.query.customerName
-            })
-    },
-    {
-        path: '/molding/ordershoelist/amountreportlist',
-        name: 'molding-ordershoelist-amountreportlist',
+        path: '/molding/amountreportlist',
+        name: 'molding-amountreportlist',
         component: AmountReportList,
         props: route => (
             {
                 orderId: route.query.orderId,
                 orderRId: route.query.orderRId,
-                createTime: route.query.createTime,
-                customerName: route.query.customerName,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId
+                shoeRId: route.query.shoeRId,
+                customerName: route.query.customerName,
+                productionStartDate: route.query.productionStartDate,
+                productionEndDate: route.query.productionEndDate
             })
     },
     {
@@ -38,9 +25,11 @@ export default [
             {
                 orderId: route.query.orderId,
                 orderRId: route.query.orderRId,
-                createTime: route.query.createTime,
-                taskName: route.query.taskName,
-                customerName: route.query.customerName
+                orderShoeId: route.query.orderShoeId,
+                shoeRId: route.query.shoeRId,
+                customerName: route.query.customerName,
+                productionStartDate: route.query.productionStartDate,
+                productionEndDate: route.query.productionEndDate
             })
     }
 ]

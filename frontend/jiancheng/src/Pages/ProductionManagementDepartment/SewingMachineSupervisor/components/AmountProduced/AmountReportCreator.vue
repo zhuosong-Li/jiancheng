@@ -7,6 +7,7 @@
             <el-table-column prop="totalPrice" label="总价格" />
         </el-table>
         <el-table :data="tableData" border :style="{ marginBottom: '20px' }">
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="name" label="鞋码编号"></el-table-column>
             <el-table-column label="生产数量">
                 <template #default="scope">
@@ -14,7 +15,7 @@
                         :max="scope.row.remainAmount" @blur="() => checkValue(scope.row)" />
                 </template>
             </el-table-column>
-            <el-table-column prop="remainAmount" label="预计剩余数量" />
+            <el-table-column prop="remainAmount" label="目前剩余数量" />
         </el-table>
 
         <template #footer>
@@ -30,7 +31,7 @@
 import { watch, ref, onMounted, getCurrentInstance } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios';
-const props = defineProps(['currentReport', 'orderShoeId', 'handleClose'])
+const props = defineProps(['currentReport', 'orderShoeId', 'teamName', 'handleClose'])
 const tableData = ref([])
 const createVis = ref(true)
 const priceReport = ref([])
@@ -38,15 +39,15 @@ const producedAmount = ref(0)
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
-    let params = { "orderShoeId": props.orderShoeId, 'team': props.currentReport.team }
+    let params = { "orderShoeId": props.orderShoeId, 'team': props.teamName }
     // get price report detail
     let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
-    priceReport.value = response.data
+    priceReport.value = response.data.detail
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
     response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })
@@ -59,7 +60,6 @@ onMounted(async () => {
                 priceReport.value.forEach((priceRow) => {
                     priceRow.totalPrice = (row.amount * priceRow.price).toFixed(2)
                 })
-                row.remainAmount = row.remainAmount + oldVal - newVal
             }, { deep: true }
         )
     })
@@ -83,17 +83,18 @@ const handleSaveData = () => {
             "reportId": props.currentReport.reportId,
             "data": tableData.value
         }
-        await axios.put(`${apiBaseUrl}/production/editquantityreportdetail`, data)
-        ElMessage({
-            type: 'success',
-            message: '保存成功!'
-        });
+        const response = await axios.put(`${apiBaseUrl}/production/editquantityreportdetail`, data)
+        if (response.status == 200) {
+            ElMessage.success("保存成功")
+        }
+        else {
+            ElMessage.error("保存失败")
+        }
+        handleGenerateClose()
     }).catch(() => {
-        ElMessage({
-            type: 'info',
-            message: '已取消保存'
-        });
-    });
+        ElMessage.info("取消保存");
+        handleGenerateClose()
+    })
 }
 const handleGenerateClose = () => {
     createVis.value = false
