@@ -104,6 +104,7 @@
                                                     scope.row.firstBomStatus === '已下发' ||
                                                     scope.row.firstBomStatus === '已提交' ||
                                                     scope.row.firstBomStatus === '用量填写已提交' ||
+                                                    scope.row.firstBomStatus === '用量填写已下发' ||
                                                     scope.row.firstBomStatus === 'BOM完成'
                                                 "
                                                 type="primary"

@@ -16,14 +16,14 @@ def load_template(template_path, new_file_path):
     return wb, ws
 
 # Function to download an image from a URL and save it locally
-def download_image(image_url, save_path):
-    response = requests.get(image_url, stream=True)
-    if response.status_code == 200:
-        with open(save_path, 'wb') as out_file:
-            shutil.copyfileobj(response.raw, out_file)
-        print(f"Image downloaded successfully: {save_path}")
+def download_image(image_path, save_path):
+    # Check if the source image exists
+    if os.path.exists(image_path):
+        # Copy the image to the destination
+        shutil.copy(image_path, save_path)
+        print(f"Image copied successfully from {image_path} to {save_path}")
     else:
-        print(f"Failed to download image: {response.status_code}")
+        print(f"Image not found at: {image_path}")
 
 # Function to calculate the size of the image to fit within a cell range
 def resize_image_to_fit(ws, image_path, start_cell, end_cell):
@@ -69,8 +69,8 @@ def insert_series_data(ws, series_data, start_row=9):
     for i, row_data in enumerate(series_data):
         for col_index, (col, value) in enumerate(row_data.items()):
             column_map = {
-                "序号": "A", "材料类型": "B", "材料名称": "D", "材料规格": "F", "颜色": "H",
-                "单位": "I", "厂家名称": "J", "单位用量": "K", "核定用量": "L", "使用工段": "M", "备注": "O"
+                "序号": "A", "材料类型": "B","材料名称": "C", "材料型号":"E", "材料规格": "G", "颜色": "I",
+                "单位": "J", "厂家名称": "K", "单位用量": "L", "核定用量": "M", "使用工段": "N", "备注": "O"
             }
             column_letter = column_map.get(col)
             if column_letter:
