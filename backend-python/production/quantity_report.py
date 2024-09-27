@@ -3,7 +3,7 @@ from datetime import datetime
 from app_config import db
 from constants import END_OF_PRODUCTION_NUMBER, QUANTTIY_REPORT_REFERENCE
 from flask import Blueprint, jsonify, request
-from sqlalchemy import func
+from sqlalchemy import func, literal
 from models import *
 
 quantity_report_bp = Blueprint("quantity_report_bp", __name__)
@@ -27,49 +27,59 @@ def get_quantity_report_tasks():
     page_size = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
-    team = request.args.get("team")
-    if team == "裁断":
-        start_date = OrderShoeProductionInfo.cutting_start_date
-        end_date = OrderShoeProductionInfo.cutting_end_date
-    elif team == "针车":
-        start_date = OrderShoeProductionInfo.sewing_start_date
-        end_date = OrderShoeProductionInfo.sewing_end_date
-    elif team == "成型":
-        start_date = OrderShoeProductionInfo.molding_start_date
-        end_date = OrderShoeProductionInfo.molding_end_date
-    else:
-        return jsonify({"message": "invalid team name"}), 400
-    query = (
-        db.session.query(
-            Order,
-            OrderShoe,
-            Shoe,
-            Customer,
-            start_date,
-            end_date,
+    teams = request.args.get("teams").split(",")
+    queries = []
+    for team in teams:
+        if team == "裁断":
+            start_date = OrderShoeProductionInfo.cutting_start_date
+            end_date = OrderShoeProductionInfo.cutting_end_date
+        elif team == "针车预备":
+            start_date = OrderShoeProductionInfo.pre_sewing_start_date
+            end_date = OrderShoeProductionInfo.pre_sewing_end_date
+        elif team == "针车":
+            start_date = OrderShoeProductionInfo.sewing_start_date
+            end_date = OrderShoeProductionInfo.sewing_end_date
+        elif team == "成型":
+            start_date = OrderShoeProductionInfo.molding_start_date
+            end_date = OrderShoeProductionInfo.molding_end_date
+        else:
+            return jsonify({"message": "invalid team name"}), 400
+        query = (
+            db.session.query(
+                Order,
+                OrderShoe,
+                Shoe,
+                Customer,
+                start_date,
+                end_date,
+                literal(team).label('team')
+            )
+            .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+            .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+            .join(Customer, Customer.customer_id == Order.customer_id)
+            .join(
+                OrderShoeProductionInfo,
+                OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
+            )
+            .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+            .filter(
+                OrderShoeStatus.current_status == QUANTTIY_REPORT_REFERENCE[team],
+                OrderShoeStatus.current_status_value.in_([0, 1]),
+            )
         )
-        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .join(Customer, Customer.customer_id == Order.customer_id)
-        .join(
-            OrderShoeProductionInfo,
-            OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
-        )
-        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
-        .filter(
-            OrderShoeStatus.current_status == QUANTTIY_REPORT_REFERENCE[team],
-            OrderShoeStatus.current_status_value.in_([0, 1]),
-        )
-    )
+        queries.append(query)
+    union_query = queries[0]
+    for i in range(1, len(queries)):
+        union_query.union(queries[i])
     if order_rid and order_rid != "":
-        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
+        union_query = union_query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
-        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
-    count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+        union_query = union_query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    count_result = db.session.query(func.count()).select_from(union_query.subquery()).scalar()
+    response = union_query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
-        order, order_shoe, shoe, customer, start_date_res, end_date_res = row
+        order, order_shoe, shoe, customer, start_date_res, end_date_res, team = row
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -78,6 +88,7 @@ def get_quantity_report_tasks():
             "productionStartDate": start_date_res.strftime("%Y-%m-%d"),
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
+            "team": team
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
@@ -207,6 +218,7 @@ def get_quantity_report_detail():
     for row in response:
         batch_info, color, report_item = row
         obj = {
+                "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
                 "colorName": color.color_name,
                 "name": batch_info.name,
                 "amount": report_item.amount,
@@ -217,36 +229,4 @@ def get_quantity_report_detail():
                 "moldingAmount": batch_info.molding_amount,
             }
         result.append(obj)
-    return result
-
-
-@quantity_report_bp.route(
-    "/production/getallordershoesquantityreports", methods=["GET"]
-)
-def get_all_order_shoes_quantity_reports():
-    order_id = request.args.get("orderId")
-    team = request.args.get("team")
-    status_val = QUANTTIY_REPORT_REFERENCE[team]
-    response = (
-        db.session.query(OrderShoe, Shoe)
-        .join(Order, OrderShoe.order_id == Order.order_id)
-        .join(
-            OrderShoeStatus,
-            OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
-        )
-        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .filter(
-            Order.order_id == order_id,
-            OrderShoeStatus.current_status >= status_val,
-            OrderShoeStatus.current_status < END_OF_PRODUCTION_NUMBER,
-        )
-        .all()
-    )
-    result = {}
-    for row in response:
-        order_shoe, shoe = row
-        result[order_shoe.order_shoe_id] = {
-            "shoeRId": shoe.shoe_rid,
-            "status": "",
-        }
     return result

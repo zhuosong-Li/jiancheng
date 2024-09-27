@@ -48,7 +48,7 @@ onMounted(() => {
     getPriceReportDetail()
 })
 const getAllProcedures = async () => {
-    const params = { teams: ['裁断'].toString() }
+    const params = { team: '裁断' }
     const response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, { params })
     response.data.forEach(row => {
         procedureInfo.value[row.procedureName] = { "price": row.price, "id": row.procedureId }

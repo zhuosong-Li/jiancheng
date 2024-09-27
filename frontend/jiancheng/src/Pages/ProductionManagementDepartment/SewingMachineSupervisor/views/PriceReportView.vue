@@ -7,118 +7,168 @@
             <el-row :gutter="20" style="text-align: center;">
                 <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">针车工价填报</el-col>
             </el-row>
-            <el-row :gutter="20" style="text-align: center;">
-                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center;">{{ props.taskName }}</el-col>
-            </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="订单信息" :column="3" border>
-                        <el-descriptions-item label="订单编号">{{ props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="订单创建时间">{{ props.createTime }}</el-descriptions-item>
+                    <el-descriptions title="鞋型号信息" :column="3" border>
+                        <el-descriptions-item label="订单号">{{ props.orderRId }}</el-descriptions-item>
+                        <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
                         <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
-                    </el-descriptions></el-col>
+                        <el-descriptions-item label="工段开始日期">{{ props.productionStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段结束日期">{{ props.productionEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工价单状态">{{ statusName }}</el-descriptions-item>
+                    </el-descriptions>
+                </el-col>
             </el-row>
-            <el-table :data="taskData" border>
-                <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
-                <el-table-column prop="date" label="提交日期"></el-table-column>
-                <el-table-column prop="statusName" label="状态"></el-table-column>
-                <el-table-column label="操作">
-                    <template #default="scope">
-                        <el-button-group v-if="scope.row.statusName === '未提交工价单'">
-                            <el-button type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-                            <el-button type="success"
-                                @click="openPreviewDialog(scope.row)">预览</el-button>
-                            <el-button type="warning"
-                                @click="handleSubmit(scope.row)">提交</el-button>
-                        </el-button-group>
-                        <el-button-group v-if="scope.row.statusName === '已提交工价单'">
-                            <el-button type="success" @click="openPreviewDialog(scope.row)">预览</el-button>
-                        </el-button-group>
-                    </template>
-                </el-table-column>
-            </el-table>
-            <div v-if="createVis">
-                <PriceReportCreator :currentRowData="currentRowData" :handleClose="handleClose" />
+            <div v-if="statusName === '未提交' || statusName === '被驳回'">
+                <el-tabs v-model="currentTab" type="border-card" tab-position="top">
+                    <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
+                        <div v-if="item.key === 1 && preSewingTableData !== null">
+                            <SewingPriceReportTable :tableData="preSewingTableData"
+                                :procedureInfo="preSewingProcedureInfo" />
+                        </div>
+                        <div v-else-if="item.key === 2 && tableData !== null">
+                            <SewingPriceReportTable :tableData="tableData" :procedureInfo="procedureInfo" />
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+                <el-row>
+                    <el-button style="position: fixed; right: 90px;" type="primary"
+                        @click="handleSaveData">保存</el-button>
+                    <el-button style="position: fixed; right: 20px;" type="success" @click="handleSubmit">提交</el-button>
+                </el-row>
             </div>
-            <div v-else-if="previewVis">
-                <PreviewReportPage :currentRowData="currentRowData" :handleClose="handleClose" />
+            <div v-else-if="statusName === '已提交' || statusName === '已审批'">
+                <el-tabs v-model="currentTab" type="border-card" tab-position="top">
+                    <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
+                        <div v-if="item.key === 1 && preSewingTableData !== null">
+                            <PreviewReportPage :tableData="preSewingTableData" />
+                        </div>
+                        <div v-else-if="item.key === 2 && tableData !== null">
+                            <PreviewReportPage :tableData="tableData" />
+                        </div>
+                    </el-tab-pane>
+                </el-tabs>
+
             </div>
         </el-main>
     </el-container>
 </template>
 
 <script setup>
-import { onMounted, ref,getCurrentInstance } from 'vue';
+import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios';
-import PriceReportCreator from '../components/LaborPriceReport/PriceReportCreator.vue'
 import PreviewReportPage from '../components/LaborPriceReport/PreviewReportPage.vue';
+import SewingPriceReportTable from '../components/LaborPriceReport/SewingPriceReportTable.vue';
 import AllHeader from '@/components/AllHeader.vue';
+import { ElMessage } from 'element-plus';
+import { useRouter } from 'vue-router';
+
+const preSewingTableData = ref(null)
+const pewSewingReportId = ref(null)
+const preSewingProcedureInfo = ref({})
+
+const tableData = ref(null)
+const reportId = ref(null)
+const procedureInfo = ref({})
+const statusName = ref('')
+const currentTab = ref(1)
+const panes = ref([
+    {
+        label: '针车预备',
+        key: 1
+    },
+    {
+        label: '针车',
+        key: 2
+    },
+])
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const createVis = ref(false)
-const previewVis = ref(false)
-const currentRowData = ref({})
-const props = defineProps({
-    'orderId': Number,
-    'orderRId': String,
-    'createTime': String,
-    'customerName': String,
-    'taskName': String
+const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
+
+onMounted(() => {
+    getPreSewingProcedures()
+    getSewingProcedures()
+    getPreSewingPriceReportDetail()
+    getPriceReportDetail()
 })
-const taskData = ref([])
-const orderShoeReportMapping = ref({})
-onMounted(async () => {
-    const params = {
-        "orderId": props.orderId,
-        "teams": "针车预备,针车"
-    }
-    const response = await axios.get(`${apiBaseUrl}/production/getallordershoespricereports`, { params })
-    response.data.forEach(element => {
-        if (!(element.orderShoeId in orderShoeReportMapping.value)) {
-            if (element.status == 0) element["statusName"] = "未提交工价单"
-            else if (element.status == 1) element["statusName"] = "已提交工价单"
-            else element["statusName"] = "已审核工价单"
-            taskData.value.push(element)
-            orderShoeReportMapping.value[element.orderShoeId] = {}
-            orderShoeReportMapping.value[element.orderShoeId][element["team"]] = element.reportId
-        }
-        else {
-            orderShoeReportMapping.value[element.orderShoeId][element["team"]] = element.reportId
-        }
+const getPreSewingProcedures = async () => {
+    await getProcedures(preSewingProcedureInfo, "针车预备")
+}
+
+const getSewingProcedures = async () => {
+    await getProcedures(procedureInfo, "针车")
+}
+
+const getProcedures = async (arr, name) => {
+    const params = { team: name }
+    const response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, { params })
+    response.data.forEach(row => {
+        arr.value[row.procedureName] = { "price": row.price, "id": row.procedureId }
     });
-    console.log(orderShoeReportMapping.value)
-})
-
-// const handleGenerate = async (rowData) => {
-//     currentRowData.value = rowData
-//     const data = {
-//         "orderShoeId": currentRowData.value.orderShoeId,
-//         "line": "cutting"
-//     }
-//     await axios.post(`${this.$apiBaseUrl}/production/createpricereport`, data)
-//     window.location.reload()
-// }
-
-const handleEdit = (rowData) => {
-    createVis.value = true
-    currentRowData.value = orderShoeReportMapping.value[rowData.orderShoeId]
-
 }
-const openPreviewDialog = (rowData) => {
-    currentRowData.value = orderShoeReportMapping.value[rowData.orderShoeId]
-    currentRowData.value["shoeRId"] = rowData.shoeRId
-    previewVis.value = true
+
+const getPreSewingPriceReportDetail = async () => {
+    const params = {
+        "orderShoeId": props.orderShoeId,
+        "team": "针车预备"
+    }
+    const response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+    if (response.status == 200) {
+        preSewingTableData.value = response.data.detail
+        pewSewingReportId.value = response.data.metaData.reportId
+        statusName.value = response.data.metaData.statusName
+    }
 }
-const handleSubmit = async (rowData) => {
-    console.log(rowData)
-    const arr = Object.values(orderShoeReportMapping.value[rowData.orderShoeId])
-    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
-    { "orderId": props.orderId, "orderShoeId": rowData.orderShoeId, "reportIdArr": arr })
-    console.log(response)
-    window.location.reload()
+
+const getPriceReportDetail = async () => {
+    const params = {
+        "orderShoeId": props.orderShoeId,
+        "team": "针车"
+    }
+    const response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+    if (response.status == 200) {
+        tableData.value = response.data.detail
+        reportId.value = response.data.metaData.reportId
+        statusName.value = response.data.metaData.statusName
+    }
 }
-const handleClose = (option) => {
-    if (option === 0) createVis.value = false
-    else if (option === 1) previewVis.value = false
+
+const handleSaveData = async () => {
+    console.log(preSewingTableData.value, tableData.value)
+    console.log(preSewingProcedureInfo.value, procedureInfo.value)
+    preSewingTableData.value.forEach(row => {
+        row["price"] = preSewingProcedureInfo.value[row.procedure]["price"]
+        row["procedureId"] = preSewingProcedureInfo.value[row.procedure]["id"]
+    })
+    const response1 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
+        { reportId: pewSewingReportId.value, newData: preSewingTableData.value })
+
+    tableData.value.forEach(row => {
+        row["price"] = procedureInfo.value[row.procedure]["price"]
+        row["procedureId"] = procedureInfo.value[row.procedure]["id"]
+    })
+    const response2 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
+        { reportId: reportId.value, newData: tableData.value })
+
+    if (response1.status == 200 && response2.status == 200) {
+        ElMessage.success("保存成功")
+    }
+    else {
+        ElMessage.error("保存失败")
+    }
+}
+
+const handleSubmit = async () => {
+    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`,
+        { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [pewSewingReportId.value, reportId.value] })
+    if (response.status == 200) {
+        ElMessage.success("提交成功")
+    }
+    else {
+        ElMessage.error("提交失败")
+    }
+    const router = useRouter();
+    router.push(`/sewingmachine`)
 }
 </script>

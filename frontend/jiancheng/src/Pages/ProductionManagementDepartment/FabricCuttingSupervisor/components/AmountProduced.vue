@@ -64,7 +64,7 @@ const getOrderTableData = async () => {
         "pageSize": pageSize.value,
         "orderRId": orderRIdSearch.value,
         "shoeRId": shoeRIdSearch.value,
-        "team": "裁断"
+        "teams": ["裁断"].toString()
     }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreporttasks`, { params })
     taskData.value = response.data.result

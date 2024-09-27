@@ -1,9 +1,10 @@
 <template>
     <el-dialog :title="currentTitle" v-model="previewVis" width="90%" @close="handleClose">
         <el-table :data="tableData" border>
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="name" label="鞋码编号"></el-table-column>
             <el-table-column prop="amount" label="生产数量"></el-table-column>
-            <el-table-column prop="remainAmount" label="剩余数量" />
+            <el-table-column prop="remainAmount" label="目前剩余数量" />
         </el-table>
         <template #footer>
             <span>
@@ -25,17 +26,18 @@ const currentTitle = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
+    console.log(props.currentReport)
     currentTitle.value = "鞋型号_" + props.shoeRId + "_生产数量单_" + props.currentReport.creationDate
     let params = { reportId: props.currentReport.reportId }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
         tableData.value.push(row)
     })
     let obj = [
         { prop: "name", label: "鞋码编号" },
         { prop: "amount", label: "生产数量" },
-        { prop: "remainAmount", label: "剩余数量" },
+        { prop: "remainAmount", label: "目前剩余数量" },
     ]
     columns.value = obj
 })
