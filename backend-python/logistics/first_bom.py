@@ -41,7 +41,9 @@ def get_order_first_bom():
         )  # Assuming TotalBom is optional
         .outerjoin(
             PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
-        )  # Assuming PurchaseOrder is optional
+        ).filter(
+            Order.order_id == order_id
+        )
         .all()
     )
 

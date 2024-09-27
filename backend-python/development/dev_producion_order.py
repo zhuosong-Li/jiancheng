@@ -29,6 +29,8 @@ def get_order_list():
         )  # Assuming TotalBom is optional
         .outerjoin(
             PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
+        ).filter(
+            Order.order_id == order_id
         )  # Assuming PurchaseOrder is optional
         .all()
     )
