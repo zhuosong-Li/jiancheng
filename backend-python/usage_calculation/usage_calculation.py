@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 
 import os
 import shutil
@@ -8,6 +8,8 @@ from models import *
 from event_processor import EventProcessor
 from general_document.bom import generate_excel_file
 from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from api_utility import randomIdGenerater
+from collections import defaultdict
 
 usage_calculation_bp = Blueprint("usage_calculation_bp", __name__)
 
@@ -19,7 +21,15 @@ def get_order_first_bom():
     # Querying the necessary data with joins and filters
     entities = (
         db.session.query(
-            Order, OrderShoe, OrderShoeType, Shoe, ShoeType, Color, Bom, TotalBom, PurchaseOrder
+            Order,
+            OrderShoe,
+            OrderShoeType,
+            Shoe,
+            ShoeType,
+            Color,
+            Bom,
+            TotalBom,
+            PurchaseOrder,
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
@@ -32,7 +42,9 @@ def get_order_first_bom():
         .outerjoin(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
         .outerjoin(
             PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
-        )  # Assuming PurchaseOrder is optional
+        ).filter(
+            Order.order_id == order_id
+        )
         .all()
     )
 
@@ -208,7 +220,9 @@ def get_shoe_bom_items():
                 "innerSize": "7",
                 "outterSize": "7",
                 "approvalAmount": (
-                    bom_item.size_35_total_usage if bom_item.size_35_total_usage else 0.00
+                    bom_item.size_35_total_usage
+                    if bom_item.size_35_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -216,7 +230,9 @@ def get_shoe_bom_items():
                 "innerSize": "7",
                 "outterSize": "7.5",
                 "approvalAmount": (
-                    bom_item.size_36_total_usage if bom_item.size_36_total_usage else 0.00
+                    bom_item.size_36_total_usage
+                    if bom_item.size_36_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -224,7 +240,9 @@ def get_shoe_bom_items():
                 "innerSize": "8",
                 "outterSize": "8",
                 "approvalAmount": (
-                    bom_item.size_37_total_usage if bom_item.size_37_total_usage else 0.00
+                    bom_item.size_37_total_usage
+                    if bom_item.size_37_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -232,7 +250,9 @@ def get_shoe_bom_items():
                 "innerSize": "8",
                 "outterSize": "8.5",
                 "approvalAmount": (
-                    bom_item.size_38_total_usage if bom_item.size_38_total_usage else 0.00
+                    bom_item.size_38_total_usage
+                    if bom_item.size_38_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -240,7 +260,9 @@ def get_shoe_bom_items():
                 "innerSize": "9",
                 "outterSize": "9",
                 "approvalAmount": (
-                    bom_item.size_39_total_usage if bom_item.size_39_total_usage else 0.00
+                    bom_item.size_39_total_usage
+                    if bom_item.size_39_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -248,7 +270,9 @@ def get_shoe_bom_items():
                 "innerSize": "9",
                 "outterSize": "9.5",
                 "approvalAmount": (
-                    bom_item.size_40_total_usage if bom_item.size_40_total_usage else 0.00
+                    bom_item.size_40_total_usage
+                    if bom_item.size_40_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -256,7 +280,9 @@ def get_shoe_bom_items():
                 "innerSize": "10",
                 "outterSize": "10",
                 "approvalAmount": (
-                    bom_item.size_41_total_usage if bom_item.size_41_total_usage else 0.00
+                    bom_item.size_41_total_usage
+                    if bom_item.size_41_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -264,7 +290,9 @@ def get_shoe_bom_items():
                 "innerSize": "10",
                 "outterSize": "10.5",
                 "approvalAmount": (
-                    bom_item.size_42_total_usage if bom_item.size_42_total_usage else 0.00
+                    bom_item.size_42_total_usage
+                    if bom_item.size_42_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -272,7 +300,9 @@ def get_shoe_bom_items():
                 "innerSize": "11",
                 "outterSize": "11",
                 "approvalAmount": (
-                    bom_item.size_43_total_usage if bom_item.size_43_total_usage else 0.00
+                    bom_item.size_43_total_usage
+                    if bom_item.size_43_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -280,7 +310,9 @@ def get_shoe_bom_items():
                 "innerSize": "12",
                 "outterSize": "12",
                 "approvalAmount": (
-                    bom_item.size_44_total_usage if bom_item.size_44_total_usage else 0.00
+                    bom_item.size_44_total_usage
+                    if bom_item.size_44_total_usage
+                    else 0.00
                 ),
             },
             {
@@ -288,7 +320,9 @@ def get_shoe_bom_items():
                 "innerSize": "13",
                 "outterSize": "13",
                 "approvalAmount": (
-                    bom_item.size_45_total_usage if bom_item.size_45_total_usage else 0.00
+                    bom_item.size_45_total_usage
+                    if bom_item.size_45_total_usage
+                    else 0.00
                 ),
             },
         ]
@@ -302,7 +336,11 @@ def get_shoe_bom_items():
                 "materialSpecification": bom_item.material_specification,
                 "color": bom_item.bom_item_color,
                 "unit": material.material_unit,
-                "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material.material_category == 0 else None,
+                "unitUsage": (
+                    bom_item.unit_usage
+                    if bom_item.unit_usage
+                    else 0.00 if material.material_category == 0 else None
+                ),
                 "approvalUsage": bom_item.total_usage if bom_item.total_usage else 0.00,
                 "useDepart": bom_item.department_id,
                 "supplierName": supplier.supplier_name,
@@ -313,15 +351,12 @@ def get_shoe_bom_items():
         )
     return jsonify(result)
 
+
 @usage_calculation_bp.route("/usagecalculation/savebomusage", methods=["POST"])
 def save_bom_usage():
     bom_rid = request.json.get("bomRid")
     bom_items = request.json.get("bomItems")
-    bom = (
-        db.session.query(Bom)
-        .filter(Bom.bom_rid == bom_rid)
-        .first()
-    )
+    bom = db.session.query(Bom).filter(Bom.bom_rid == bom_rid).first()
     bom.bom_status = "4"
     db.session.commit()
     print(bom_items)
@@ -348,18 +383,16 @@ def save_bom_usage():
         db.session.commit()
     return jsonify({"status": "success"})
 
+
 @usage_calculation_bp.route("/usagecalculation/submitbomusage", methods=["POST"])
 def submit_bom_usage():
     bom_rid = request.json.get("bomRid")
-    bom = (
-        db.session.query(Bom)
-        .filter(Bom.bom_rid == bom_rid)
-        .first()
-    )
+    bom = db.session.query(Bom).filter(Bom.bom_rid == bom_rid).first()
     bom.bom_status = "5"
     db.session.commit()
 
     return jsonify({"status": "success"})
+
 
 @usage_calculation_bp.route("/usagecalculation/issuebomusage", methods=["POST"])
 def issue_bom_usage():
@@ -367,19 +400,27 @@ def issue_bom_usage():
     order_shoes = request.json.get("orderShoeIds")
     colors = request.json.get("colors")
     order_id = (
-        db.session.query(Order)
-        .filter(Order.order_rid == order_rid)
-        .first()
-        .order_id
+        db.session.query(Order).filter(Order.order_rid == order_rid).first().order_id
     )
+    current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
+    random_string = randomIdGenerater(6)
+    total_bom_rid = current_time_stamp + random_string + "TF"
+    total_bom = TotalBom(total_bom_rid=total_bom_rid)
+    db.session.add(total_bom)
+    db.session.flush()
+    material_dict = defaultdict(lambda: {"total_usage": 0})
+    series_data = []
     for order_shoe_rid in order_shoes:
-        index = order_shoe_rids.index(order_shoe_rid)
+        index = order_shoes.index(order_shoe_rid)
         color = colors[index]
         for color_item in color:
             order_shoe_type_id = (
                 db.session.query(Order, OrderShoe, Shoe, ShoeType, OrderShoeType, Color)
                 .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-                .join(OrderShoeType, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
+                .join(
+                    OrderShoeType,
+                    OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id,
+                )
                 .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
                 .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
                 .join(Color, ShoeType.color_id == Color.color_id)
@@ -393,13 +434,72 @@ def issue_bom_usage():
             )
             bom = (
                 db.session.query(Bom)
-                .filter(
-                    Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == 0
-                )
+                .filter(Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == 0)
                 .first()
             )
-            bom.Bom.bom_status = "6"
+            bom.bom_status = "6"
+            bom.total_bom_id = total_bom.total_bom_id
             db.session.commit()
+            bom_id = bom.bom_id
+            bom_items = (
+                db.session.query(BomItem, Material, MaterialType, Supplier, Department)
+                .join(Material, Material.material_id == BomItem.material_id)
+                .join(
+                    MaterialType,
+                    MaterialType.material_type_id == Material.material_type_id,
+                )
+                .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+                .outerjoin(
+                    Department, Department.department_id == BomItem.department_id
+                )
+                .filter(BomItem.bom_id == bom_id)
+                .all()
+            )
+            for bom_item in bom_items:
+                # Create a unique key based on the attributes
+                key = (
+                    bom_item.MaterialType.material_type_name,
+                    bom_item.Material.material_name,
+                    bom_item.BomItem.material_model,
+                    bom_item.BomItem.material_specification,
+                    bom_item.Supplier.supplier_name,
+                )
+                
+                # Update the dictionary: sum the total_usage and add other details
+                if key not in material_dict:
+                    material_dict[key] = {
+                        "材料类型": bom_item.MaterialType.material_type_name,
+                        "材料名称": bom_item.Material.material_name,
+                        "材料型号": bom_item.BomItem.material_model,
+                        "材料规格": bom_item.BomItem.material_specification,
+                        "颜色": bom_item.BomItem.bom_item_color,
+                        "单位": bom_item.Material.material_unit,
+                        "厂家名称": bom_item.Supplier.supplier_name,
+                        "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
+                        "核定用量": 0,  # Initialize "核定用量" for summing
+                        "使用工段": bom_item.Department.department_name,
+                        "备注": bom_item.BomItem.remark,
+                    }
+                
+                # Update the total usage (核定用量)
+                material_dict[key]["核定用量"] += bom_item.BomItem.total_usage
+        index = 1
+        for material_info in material_dict.values():
+            material_info["序号"] = index
+            series_data.append(material_info)
+            index += 1
+        if (
+            os.path.exists(
+                os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom")
+            )
+            == False
+        ):
+            os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom"))
+
+        image_save_path = os.path.join(
+            FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom", "shoe_image.jpg"
+        )
+        print(image_save_path)
         order_shoe_id = (
             db.session.query(OrderShoe, Shoe)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
@@ -407,6 +507,44 @@ def issue_bom_usage():
             .first()
             .OrderShoe.order_shoe_id
         )
+        shoe_directory = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid)
+
+# Get the list of folders inside the directory
+        folders = os.listdir(shoe_directory)
+
+        # Filter out any non-folder entries (just in case)
+        folders = [f for f in folders if os.path.isdir(os.path.join(shoe_directory, f))]
+
+        # Get the first folder in the directory
+        if folders:
+            first_folder = folders[0]
+            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, first_folder, "shoe_image.jpg")
+        else:
+            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg")
+        generate_excel_file(
+            FILE_STORAGE_PATH + "/BOM-V1.0-temp.xlsx",
+            os.path.join(
+                FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom", "一次BOM表.xlsx"
+            ),
+            {
+                "order_id": order_rid,
+                "last_type": "",
+                "input_person": "",
+                "order_finish_time": db.session.query(Order)
+                .filter(Order.order_rid == order_rid)
+                .first()
+                .end_date,
+                "inherit_id": order_shoe_rid,
+                "customer_id": db.session.query(OrderShoe)
+                .filter(OrderShoe.order_shoe_id == order_shoe_id)
+                .first()
+                .customer_product_name,
+            },
+            series_data,
+            image_path,
+            image_save_path,
+        )
+
         processor = EventProcessor()
         event = Event(
             staff_id=1,
@@ -460,54 +598,5 @@ def issue_bom_usage():
         db.session.add(event)
         db.session.commit()
 
-    bom_items = (
-        db.session.query(BomItem, Material, MaterialType, Supplier, Color, Department)
-        .join(Material, Material.material_id == BomItem.material_id)
-        .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
-        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .outerjoin(Color, Color.color_id == BomItem.bom_item_color)
-        .outerjoin(Department, Department.department_id == BomItem.department_id)
-        .filter(BomItem.bom_id == bom_id)
-        .all()
-    )
-    if os.path.exists(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom")) == False:
-        os.mkdir(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom"))
-    series_data = []
-    for bom_item in bom_items:
-        index = 1
-        series_data.append(
-            {
-                "序号": index,
-                "材料类型": bom_item.MaterialType.material_type_name,
-                "材料名称": bom_item.Material.material_name,
-                "材料规格": bom_item.BomItem.material_specification,
-                "颜色": bom_item.Color.color_name if bom_item.Color else "",
-                "单位": bom_item.Material.material_unit,
-                "厂家名称": bom_item.Supplier.supplier_name,
-                "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
-                "核定用量": bom_item.BomItem.total_usage,
-                "使用工段": bom_item.Department.department_name,
-                "备注": bom_item.BomItem.remark,
-            }
-        )
-        index += 1
-    image_save_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom", "shoe_image.jpg")
-    print(image_save_path)
-    generate_excel_file(
-        FILE_STORAGE_PATH+"/BOM-V1.0-temp.xlsx",
-        os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "firstbom", "一次BOM表.xlsx"),
-        {
-            "order_id": order_rid,
-            "last_type": "",
-            "input_person": "",
-            "order_finish_time": db.session.query(Order).filter(Order.order_rid == order_rid).first().end_date,
-            "inherit_id": order_shoe_rid,
-            "customer_id": db.session.query(OrderShoe).filter(OrderShoe.order_shoe_id == order_shoe_id).first().customer_product_name,
 
-
-        },
-        series_data,
-        IMAGE_STORAGE_PATH + "shoe/" + order_shoe_rid+"/shoe_image.jpg",
-        image_save_path,
-    )
     return jsonify({"status": "success"})
