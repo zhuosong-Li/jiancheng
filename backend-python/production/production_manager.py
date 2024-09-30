@@ -357,7 +357,7 @@ def get_finished_nodes():
     page_size = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
-    status_point = request.args.get("statusPoint")
+    status_point = request.args.get("nodeName")
     query = (
         db.session.query(Order, OrderShoe, Shoe, OrderShoeStatusReference)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
@@ -464,24 +464,22 @@ def check_date_production_status():
 
     sub_table = (
         db.session.query(
-            OrderShoe, OrderShoeType, func.sum(OrderShoeBatchInfo.total_amount).label("total_amount")
+            OrderShoe,
+            OrderShoeType,
+            func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
         )
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             OrderShoeBatchInfo,
             OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
-        ).group_by(
-            OrderShoe.order_shoe_id, OrderShoeType.order_shoe_type_id
-        ).subquery()
+        )
+        .group_by(OrderShoe.order_shoe_id, OrderShoeType.order_shoe_type_id)
+        .subquery()
     )
 
     response = (
         db.session.query(
-            Order,
-            OrderShoe,
-            Shoe,
-            OrderShoeProductionInfo,
-            sub_table.c.total_amount
+            Order, OrderShoe, Shoe, OrderShoeProductionInfo, sub_table.c.total_amount
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -551,28 +549,31 @@ def check_date_production_status():
 def edit_order_shoe_status():
     data = request.get_json()
     status_name = data["nodeName"]
-    report = None
+    reports = []
     if status_name == "生产开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="裁断", status=0
-        )
+        ))
     elif status_name == "裁断开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
+            order_shoe_id=data["orderShoeId"], team="针车预备", status=0
+        ))
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="针车", status=0
-        )
+        ))
     elif status_name == "针车开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="成型", status=0
-        )
-    if report:
-        db.session.add(report)
+        ))
+    if len(reports) > 0:
+        db.session.add_all(reports)
     try:
         processor: EventProcessor = current_app.config["event_processor"]
         next_operations = {
             "生产开始": [74, 75],
-            "裁断开始": [84, 85],
-            "针车预备开始": [98, 99],
-            "针车开始": [102, 103],
+            "裁断开始": [84, 85, 86, 87],
+            "针车预备开始": [98, 99, 100, 101],
+            "针车开始": [102, 103, 104, 105],
             "成型开始": [118, 119],
             "生产结束": [19, 120, 121],
         }
@@ -954,7 +955,9 @@ def get_all_quantity_reports_overview():
         .join(
             QuantityReportItem, QuantityReportItem.report_id == QuantityReport.report_id
         )
-        .filter(QuantityReport.submission_date == yesterday_date)
+        .filter(
+            QuantityReport.submission_date == yesterday_date, QuantityReport.status == 2
+        )
         .group_by(OrderShoe.order_shoe_id, QuantityReport.team)
         .subquery()
     )
@@ -974,7 +977,7 @@ def get_all_quantity_reports_overview():
             OrderShoe.order_shoe_id == yesterday_production_table.c.order_shoe_id,
         )
         .filter(
-            OrderShoeStatus.current_status.in_([23, 29, 31, 39]),
+            OrderShoeStatus.current_status.in_([23, 30, 32, 40]),
         )
     )
 
@@ -1030,7 +1033,7 @@ def get_submitted_quantity_reports():
         .filter(
             OrderShoeProductionInfo.order_shoe_id == order_shoe_id,
         )
-        .filter(QuantityReport.status.in_([1, 2]))
+        .filter(QuantityReport.status.in_([1, 2, 3]))
     )
     if search_start_date and search_end_date:
         try:
@@ -1063,11 +1066,14 @@ def get_submitted_quantity_reports():
             end_date = production_info.molding_end_date
         if report.status == 1:
             report_status = "未审批"
-        else:
+        elif report.status == 2:
             report_status = "已审批"
+        else:
+            report_status = "被驳回"
         obj = {
             "reportId": report.report_id,
-            "reportDate": report.submission_date.strftime("%Y-%m-%d"),
+            "creationDate": report.creation_date.strftime("%Y-%m-%d"),
+            "submissionDate": report.submission_date.strftime("%Y-%m-%d"),
             "startDate": start_date.strftime("%Y-%m-%d"),
             "endDate": end_date.strftime("%Y-%m-%d"),
             "team": report.team,
@@ -1085,6 +1091,20 @@ def approve_quantity_report():
     report = db.session.query(QuantityReport).get(data["reportId"])
     report.status = 2
     report.rejection_reason = None
+    response = db.session.query(QuantityReportItem, OrderShoeBatchInfo).join(
+        OrderShoeBatchInfo,
+        QuantityReportItem.order_shoe_batch_info_id == OrderShoeBatchInfo.order_shoe_batch_info_id,
+    ).filter(QuantityReportItem.report_id == data["reportId"]).all()
+    for row in response:
+        report_item, batch_info = row
+        if report.team == "裁断":
+            batch_info.cutting_amount += report_item.amount
+        elif report.team == "针车预备":
+            batch_info.pre_sewing_amount += report_item.amount
+        elif report.team == "针车":
+            batch_info.sewing_amount += report_item.amount
+        elif report.team == "成型":
+            batch_info.molding_amount += report_item.amount
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -1095,7 +1115,7 @@ def approve_quantity_report():
 def reject_quantity_report():
     data = request.get_json()
     report = db.session.query(QuantityReport).get(data["reportId"])
-    report.status = 0
+    report.status = 3
     report.rejection_reason = data["rejectionReason"]
     db.session.commit()
     return jsonify({"message": "success"})

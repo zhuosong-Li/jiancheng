@@ -18,8 +18,10 @@
         <el-table-column prop="orderRId" label="订单号"></el-table-column>
         <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
         <el-table-column prop="customerName" label="客户名称"></el-table-column>
-        <el-table-column prop="productionStartDate" label="工段开始日期"></el-table-column>
-        <el-table-column prop="productionEndDate" label="工段结束日期"></el-table-column>
+        <el-table-column prop="preSewingProductionStartDate" label="针车预备开始日期"></el-table-column>
+        <el-table-column prop="preSewingProductionEndDate" label="针车预备结束日期"></el-table-column>
+        <el-table-column prop="productionStartDate" label="针车开始日期"></el-table-column>
+        <el-table-column prop="productionEndDate" label="针车结束日期"></el-table-column>
         <el-table-column prop="statusName" label="状态"></el-table-column>
         <el-table-column label="操作">
             <template #default="scope">

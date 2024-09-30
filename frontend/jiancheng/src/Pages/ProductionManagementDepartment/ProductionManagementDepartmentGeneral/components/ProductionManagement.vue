@@ -158,6 +158,7 @@ export default {
                 else {
                     ElMessage.error("推进流程失败")
                 }
+                this.isProductionConfirmVis = false
                 this.getOrderTableData()
             })
         },

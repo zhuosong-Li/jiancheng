@@ -35,6 +35,8 @@ def get_new_price_reports():
         start_date = OrderShoeProductionInfo.cutting_start_date
         end_date = OrderShoeProductionInfo.cutting_end_date
     elif team == "针车":
+        pre_start_date = OrderShoeProductionInfo.pre_sewing_start_date
+        pre_end_date = OrderShoeProductionInfo.pre_sewing_end_date
         start_date = OrderShoeProductionInfo.sewing_start_date
         end_date = OrderShoeProductionInfo.sewing_end_date
     elif team == "成型":
@@ -42,8 +44,20 @@ def get_new_price_reports():
         end_date = OrderShoeProductionInfo.molding_end_date
     else:
         return jsonify({"message": "invalid team name"}), 400
-    query = (
-        db.session.query(
+    if team == "针车":
+        query = db.session.query(
+            Order,
+            OrderShoe,
+            Shoe,
+            Customer,
+            UnitPriceReport.status,
+            pre_start_date,
+            pre_end_date,
+            start_date,
+            end_date,
+        )
+    else:
+        query = db.session.query(
             Order,
             OrderShoe,
             Shoe,
@@ -52,7 +66,8 @@ def get_new_price_reports():
             start_date,
             end_date,
         )
-        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+    query = (
+        query.join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .join(Customer, Customer.customer_id == Order.customer_id)
         .join(
@@ -65,6 +80,7 @@ def get_new_price_reports():
             OrderShoeStatus.current_status
             == PRICE_REPORT_REFERENCE[team]["status_number"],
             OrderShoeStatus.current_status_value.in_([0, 1]),
+            UnitPriceReport.team == team,
         )
     )
     if order_rid and order_rid != "":
@@ -75,7 +91,10 @@ def get_new_price_reports():
     response = query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
-        order, order_shoe, shoe, customer, status, start_date_res, end_date_res = row
+        if team == "针车":
+            order, order_shoe, shoe, customer, status, pre_start_date_res, pre_end_date_res, start_date_res, end_date_res = row
+        else:
+            order, order_shoe, shoe, customer, status, start_date_res, end_date_res = row
         status_name = check_report_status(status)
         obj = {
             "orderId": order.order_id,
@@ -87,6 +106,9 @@ def get_new_price_reports():
             "customerName": customer.customer_name,
             "statusName": status_name,
         }
+        if team == "针车":
+            obj["preSewingProductionStartDate"] = pre_start_date_res.strftime("%Y-%m-%d")
+            obj["preSewingProductionEndDate"] = pre_end_date_res.strftime("%Y-%m-%d")
         result.append(obj)
     return {"result": result, "totalLength": count_result}
 
