@@ -38,15 +38,19 @@
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
                     <el-table :data="amountListData" border stripe>
-                        <el-table-column prop="reportDate" label="日期"></el-table-column>
+                        <el-table-column prop="creationDate" label="数量单日期"></el-table-column>
+                        <el-table-column prop="submissionDate" label="提交日期"></el-table-column>
                         <el-table-column prop="team" label="工段"></el-table-column>
                         <el-table-column prop="startDate" label="生产起始日期"></el-table-column>
                         <el-table-column prop="endDate" label="生产结束日期"></el-table-column>
                         <el-table-column prop="reportStatus" label="状态"></el-table-column>
                         <el-table-column label="操作">
                             <template #default="scope">
-                                <el-button type="primary" size="default"
+                                <el-button v-if="scope.row.reportStatus === '未审批'" type="primary" size="default"
                                     @click="openApprovalDialog(scope.row)">审批</el-button>
+                                <el-button
+                                    v-else-if="scope.row.reportStatus === '已审批' || scope.row.reportStatus === '被驳回'"
+                                    type="primary" size="default" @click="openApprovalDialog(scope.row)">查看</el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -66,7 +70,7 @@
             <el-col :span="24" :offset="0">
                 <el-table :data="shoeBatchAmountData" border stripe>
                     <el-table-column prop="name" label="鞋码编号"></el-table-column>、
-                    <el-table-column prop="amount" label="昨日生产数量"></el-table-column>
+                    <el-table-column prop="amount" label="当日生产数量"></el-table-column>
                     <el-table-column prop="producedAmount" label="累计生产数量"></el-table-column>
                     <el-table-column prop="totalAmount" label="目标数量"></el-table-column>
                 </el-table>
@@ -74,9 +78,9 @@
         </el-row>
         <template #footer>
             <span>
-                <el-button @click="">取消</el-button>
-                <el-button type="danger" @click="openRefusalDialog">驳回请求</el-button>
-                <el-button type="primary" @click="openConfirmDialog">审批通过</el-button>
+                <el-button @click="isAmountApprovalVis = false">返回</el-button>
+                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="danger" @click="openRefusalDialog">驳回请求</el-button>
+                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="primary" @click="openConfirmDialog">审批通过</el-button>
             </span>
         </template>
     </el-dialog>
@@ -89,7 +93,6 @@
 
             </el-col>
         </el-row>
-
         <template #footer>
             <span>
                 <el-button @click="isRefuseApprovalVis = false">取消</el-button>
@@ -171,7 +174,7 @@ export default {
         },
         async openConfirmDialog() {
             try {
-                const data = {"reportId": this.currentRow.reportId,}
+                const data = { "reportId": this.currentRow.reportId, }
                 console.log(data)
                 await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvequantityreport`, data)
                 ElMessage({

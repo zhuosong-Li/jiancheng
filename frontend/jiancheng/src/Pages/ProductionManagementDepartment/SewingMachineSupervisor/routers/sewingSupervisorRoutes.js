@@ -30,7 +30,9 @@ export default [
                 shoeRId: route.query.shoeRId,
                 customerName: route.query.customerName,
                 productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate
+                productionEndDate: route.query.productionEndDate,
+                preSewingProductionStartDate: route.query.preSewingProductionStartDate,
+                preSewingProductionEndDate: route.query.preSewingProductionEndDate,
             })
     }
 ]

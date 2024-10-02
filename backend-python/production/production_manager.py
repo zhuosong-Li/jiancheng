@@ -11,6 +11,16 @@ from sqlalchemy.dialects.mysql import insert
 
 production_manager_bp = Blueprint("production_manager_bp", __name__)
 
+def format_date(date_obj):
+    if not date_obj:
+        return ""
+    return date_obj.strftime("%Y-%m-%d")
+
+def format_line_group(line_group_obj):
+    if not line_group_obj:
+        return []
+    return line_group_obj.split(",")
+
 
 @production_manager_bp.route(
     "/production/productionmanager/getinprogressorders", methods=["GET"]
@@ -57,12 +67,14 @@ def get_in_progress_orders():
             total_amount,
             molding_amount,
         ) = row
+        cutting_start_date = format_date(cutting_start_date)
+        molding_end_date = format_date(molding_end_date)
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
             "customerName": customer.customer_name,
-            "startDate": cutting_start_date.strftime("%Y-%m-%d"),
-            "endDate": molding_end_date.strftime("%Y-%m-%d"),
+            "startDate": cutting_start_date,
+            "endDate": molding_end_date,
             "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
             "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
             "orderTotalShoes": total_amount,
@@ -91,19 +103,31 @@ def get_order_shoe_schedule_info():
         .filter(OrderShoeProductionInfo.order_shoe_id == order_shoe_id)
         .first()
     )
+    cutting_start_date = format_date(response.cutting_start_date)
+    cutting_end_date = format_date(response.cutting_end_date)
+    pre_sewing_start_date = format_date(response.pre_sewing_start_date)
+    pre_sewing_end_date = format_date(response.pre_sewing_end_date)
+    sewing_start_date = format_date(response.sewing_start_date)
+    sewing_end_date = format_date(response.sewing_end_date)
+    molding_start_date = format_date(response.molding_start_date)
+    molding_end_date = format_date(response.molding_end_date)
+    cutting_line_group = format_line_group(response.cutting_line_group)
+    pre_sewing_line_group = format_line_group(response.pre_sewing_line_group)
+    sewing_line_group = format_line_group(response.sewing_line_group)
+    molding_line_group = format_line_group(response.molding_line_group)
     result = {
-        "cuttingLineNumbers": response.cutting_line_group,
-        "preSewingLineNumbers": response.pre_sewing_line_group,
-        "sewingLineNumbers": response.sewing_line_group,
-        "moldingLineNumbers": response.molding_line_group,
-        "cuttingStartDate": response.cutting_start_date.strftime("%Y-%m-%d"),
-        "cuttingEndDate": response.cutting_end_date.strftime("%Y-%m-%d"),
-        "preSewingStartDate": response.pre_sewing_start_date.strftime("%Y-%m-%d"),
-        "preSewingEndDate": response.pre_sewing_end_date.strftime("%Y-%m-%d"),
-        "sewingStartDate": response.sewing_start_date.strftime("%Y-%m-%d"),
-        "sewingEndDate": response.sewing_end_date.strftime("%Y-%m-%d"),
-        "moldingStartDate": response.molding_start_date.strftime("%Y-%m-%d"),
-        "moldingEndDate": response.molding_end_date.strftime("%Y-%m-%d"),
+        "cuttingLineNumbers": cutting_line_group,
+        "preSewingLineNumbers": pre_sewing_line_group,
+        "sewingLineNumbers": sewing_line_group,
+        "moldingLineNumbers": molding_line_group,
+        "cuttingStartDate": cutting_start_date,
+        "cuttingEndDate": cutting_end_date,
+        "preSewingStartDate": pre_sewing_start_date,
+        "preSewingEndDate": pre_sewing_end_date,
+        "sewingStartDate": sewing_start_date,
+        "sewingEndDate": sewing_end_date,
+        "moldingStartDate": molding_start_date,
+        "moldingEndDate": molding_end_date,
         "isCuttingOutsourced": response.is_cutting_outsourced,
         "isSewingOutsourced": response.is_sewing_outsourced,
         "isMoldingOutsourced": response.is_molding_outsourced,
@@ -220,18 +244,15 @@ def edit_production_schedule():
     return jsonify({"message": "success"})
 
 
-# TODO
 @production_manager_bp.route(
     "/production/productionmanager/startproduction", methods=["PATCH"]
 )
 def start_production():
     data = request.get_json()
     # pass to event processor
-    print(data["orderId"])
-    print(data["orderShoeId"])
     processor: EventProcessor = current_app.config["event_processor"]
     try:
-        for operation in [74, 75]:
+        for operation in [72, 73]:
             event = Event(
                 staff_id=1,
                 handle_time=datetime.now(),
@@ -357,7 +378,7 @@ def get_finished_nodes():
     page_size = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
-    status_point = request.args.get("statusPoint")
+    status_point = request.args.get("nodeName")
     query = (
         db.session.query(Order, OrderShoe, Shoe, OrderShoeStatusReference)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
@@ -464,24 +485,22 @@ def check_date_production_status():
 
     sub_table = (
         db.session.query(
-            OrderShoe, OrderShoeType, func.sum(OrderShoeBatchInfo.total_amount).label("total_amount")
+            OrderShoe,
+            OrderShoeType,
+            func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
         )
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             OrderShoeBatchInfo,
             OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
-        ).group_by(
-            OrderShoe.order_shoe_id, OrderShoeType.order_shoe_type_id
-        ).subquery()
+        )
+        .group_by(OrderShoe.order_shoe_id, OrderShoeType.order_shoe_type_id)
+        .subquery()
     )
 
     response = (
         db.session.query(
-            Order,
-            OrderShoe,
-            Shoe,
-            OrderShoeProductionInfo,
-            sub_table.c.total_amount
+            Order, OrderShoe, Shoe, OrderShoeProductionInfo, sub_table.c.total_amount
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -551,28 +570,31 @@ def check_date_production_status():
 def edit_order_shoe_status():
     data = request.get_json()
     status_name = data["nodeName"]
-    report = None
+    reports = []
     if status_name == "生产开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="裁断", status=0
-        )
+        ))
     elif status_name == "裁断开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
+            order_shoe_id=data["orderShoeId"], team="针车预备", status=0
+        ))
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="针车", status=0
-        )
+        ))
     elif status_name == "针车开始":
-        report = UnitPriceReport(
+        reports.append(UnitPriceReport(
             order_shoe_id=data["orderShoeId"], team="成型", status=0
-        )
-    if report:
-        db.session.add(report)
+        ))
+    if len(reports) > 0:
+        db.session.add_all(reports)
     try:
         processor: EventProcessor = current_app.config["event_processor"]
         next_operations = {
             "生产开始": [74, 75],
-            "裁断开始": [84, 85],
-            "针车预备开始": [98, 99],
-            "针车开始": [102, 103],
+            "裁断开始": [84, 85, 86, 87],
+            "针车预备开始": [98, 99, 100, 101],
+            "针车开始": [102, 103, 104, 105],
             "成型开始": [118, 119],
             "生产结束": [19, 120, 121],
         }
@@ -954,7 +976,9 @@ def get_all_quantity_reports_overview():
         .join(
             QuantityReportItem, QuantityReportItem.report_id == QuantityReport.report_id
         )
-        .filter(QuantityReport.submission_date == yesterday_date)
+        .filter(
+            QuantityReport.submission_date == yesterday_date, QuantityReport.status == 2
+        )
         .group_by(OrderShoe.order_shoe_id, QuantityReport.team)
         .subquery()
     )
@@ -974,7 +998,7 @@ def get_all_quantity_reports_overview():
             OrderShoe.order_shoe_id == yesterday_production_table.c.order_shoe_id,
         )
         .filter(
-            OrderShoeStatus.current_status.in_([23, 29, 31, 39]),
+            OrderShoeStatus.current_status.in_([23, 30, 32, 40]),
         )
     )
 
@@ -1030,7 +1054,7 @@ def get_submitted_quantity_reports():
         .filter(
             OrderShoeProductionInfo.order_shoe_id == order_shoe_id,
         )
-        .filter(QuantityReport.status.in_([1, 2]))
+        .filter(QuantityReport.status.in_([1, 2, 3]))
     )
     if search_start_date and search_end_date:
         try:
@@ -1063,11 +1087,14 @@ def get_submitted_quantity_reports():
             end_date = production_info.molding_end_date
         if report.status == 1:
             report_status = "未审批"
-        else:
+        elif report.status == 2:
             report_status = "已审批"
+        else:
+            report_status = "被驳回"
         obj = {
             "reportId": report.report_id,
-            "reportDate": report.submission_date.strftime("%Y-%m-%d"),
+            "creationDate": report.creation_date.strftime("%Y-%m-%d"),
+            "submissionDate": report.submission_date.strftime("%Y-%m-%d"),
             "startDate": start_date.strftime("%Y-%m-%d"),
             "endDate": end_date.strftime("%Y-%m-%d"),
             "team": report.team,
@@ -1085,6 +1112,20 @@ def approve_quantity_report():
     report = db.session.query(QuantityReport).get(data["reportId"])
     report.status = 2
     report.rejection_reason = None
+    response = db.session.query(QuantityReportItem, OrderShoeBatchInfo).join(
+        OrderShoeBatchInfo,
+        QuantityReportItem.order_shoe_batch_info_id == OrderShoeBatchInfo.order_shoe_batch_info_id,
+    ).filter(QuantityReportItem.report_id == data["reportId"]).all()
+    for row in response:
+        report_item, batch_info = row
+        if report.team == "裁断":
+            batch_info.cutting_amount += report_item.amount
+        elif report.team == "针车预备":
+            batch_info.pre_sewing_amount += report_item.amount
+        elif report.team == "针车":
+            batch_info.sewing_amount += report_item.amount
+        elif report.team == "成型":
+            batch_info.molding_amount += report_item.amount
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -1095,7 +1136,7 @@ def approve_quantity_report():
 def reject_quantity_report():
     data = request.get_json()
     report = db.session.query(QuantityReport).get(data["reportId"])
-    report.status = 0
+    report.status = 3
     report.rejection_reason = data["rejectionReason"]
     db.session.commit()
     return jsonify({"message": "success"})

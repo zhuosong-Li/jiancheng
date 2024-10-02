@@ -9,13 +9,15 @@
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
-                    <el-descriptions title="鞋型号信息" :column="3" border>
+                    <el-descriptions title="鞋型号信息" :column="4" border>
                         <el-descriptions-item label="订单号">{{ props.orderRId }}</el-descriptions-item>
                         <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
                         <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
-                        <el-descriptions-item label="工段开始日期">{{ props.productionStartDate }}</el-descriptions-item>
-                        <el-descriptions-item label="工段结束日期">{{ props.productionEndDate }}</el-descriptions-item>
                         <el-descriptions-item label="工价单状态">{{ statusName }}</el-descriptions-item>
+                        <el-descriptions-item label="针车预备开始日期">{{ props.preSewingProductionStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="针车预备结束日期">{{ props.preSewingProductionEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="针车开始日期">{{ props.productionStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="针车结束日期">{{ props.productionEndDate }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
@@ -62,7 +64,7 @@ import SewingPriceReportTable from '../components/LaborPriceReport/SewingPriceRe
 import AllHeader from '@/components/AllHeader.vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
-
+const router = useRouter();
 const preSewingTableData = ref(null)
 const pewSewingReportId = ref(null)
 const preSewingProcedureInfo = ref({})
@@ -84,7 +86,7 @@ const panes = ref([
 ])
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
+const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate", "preSewingProductionStartDate", "preSewingProductionEndDate"])
 
 onMounted(() => {
     getPreSewingProcedures()
@@ -168,7 +170,6 @@ const handleSubmit = async () => {
     else {
         ElMessage.error("提交失败")
     }
-    const router = useRouter();
     router.push(`/sewingmachine`)
 }
 </script>

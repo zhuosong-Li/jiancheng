@@ -1,6 +1,7 @@
 from helperclass import *
 from models import *
 from app_config import db
+from logger import logger
 
 
 ORDERSTATUSNAMELIST = [
@@ -295,9 +296,9 @@ class EventProcessor:
         curStat, curVal = self.dbQueryOrderShoeStatus(orderShoeId)
         modifiedStatus = operation.operation_modified_status
         modifiedValue = operation.operation_modified_value
-        print("current order_shoe_id is " + str(orderShoeId))
-        print("current status is " + str(curStat) + " with value " + str(curVal))
-        print(
+        logger.debug("current order_shoe_id is " + str(orderShoeId))
+        logger.debug("current status is " + str(curStat) + " with value " + str(curVal))
+        logger.debug(
             "modifying into "
             + str(modifiedStatus)
             + " with value "
@@ -307,7 +308,7 @@ class EventProcessor:
         if modifiedStatus in curStat and (
             modifiedValue - curVal[curStat.index(modifiedStatus)] == 1
         ):
-            print("operation is valid")
+            logger.debug("operation is valid")
             if modifiedValue == 1:
                 result = self.dbSetOrderShoeStatus(event, operation)
             else:
@@ -321,7 +322,7 @@ class EventProcessor:
 
             ### TODO INSERT EVENT INTO DB
         else:
-            print("Modifying an non exist status or existing status with a wrong value")
+            logger.debug("Modifying an non exist status or existing status with a wrong value")
             result = False
         return result
 
@@ -385,8 +386,8 @@ class EventProcessor:
                     for prev in self.orderShoeStatusidToNode[next_status[0]].getPrev()
                 ]
                 if self.isMerge(next_status[0]):
-                    print("YES ITS MERGE")
-                    print(prevStatus)
+                    logger.debug("YES ITS MERGE")
+                    logger.debug(prevStatus)
                     entities = (
                         db.session.query(OrderShoeStatus)
                         .filter(
@@ -395,7 +396,7 @@ class EventProcessor:
                         )
                         .all()
                     )
-                    print(entities)
+                    logger.debug(entities)
                     for entity in entities:
                         db.session.delete(entity)
                     newEntity = OrderShoeStatus(
@@ -418,8 +419,8 @@ class EventProcessor:
                     entity.current_status_value = 0
             else:
                 prevStatus = operation.operation_modified_status
-                print(prevStatus)
-                print(next_status)
+                logger.debug(prevStatus)
+                logger.debug(next_status)
                 if prevStatus in next_status:
                     next_status.remove(prevStatus)
                     newEntity = OrderShoeStatus(
@@ -456,7 +457,7 @@ class EventProcessor:
                         db.session.add(newEntity)
         ### or only setting value
         else:
-            print("no next value")
+            logger.debug("no next value")
             entity = (
                 db.session.query(OrderShoeStatus)
                 .filter(
@@ -478,11 +479,11 @@ class EventProcessor:
         if len(cur_node.getNext()) > 1:
             next_ids = [next_node.getVal().getId() for next_node in cur_node.getNext()]
             result = []
-            for next in next_ids:
-                if self.isMerge(next):
+            for next_id in next_ids:
+                if self.isMerge(next_id):
                     prev_ids = [
                         prev.getVal().getId()
-                        for prev in self.orderShoeStatusidToNode[next].getPrev()
+                        for prev in self.orderShoeStatusidToNode[next_id].getPrev()
                     ]
                     prev_ids.remove(modified_status)
                     entity = (
@@ -491,7 +492,7 @@ class EventProcessor:
                             OrderShoeStatus.current_status == prev_ids[0],
                         )
                     ).first()
-                    print(entity)
+                    logger.debug(entity)
                     if entity.current_status_value == 2:
                         result.append(next_id)
                     else:
@@ -500,7 +501,7 @@ class EventProcessor:
                     #     print(5)
                     #     ### do nothing
                 else:
-                    result.append(next)
+                    result.append(next_id)
         else:
             ### only one next
             ### if it's merge
@@ -517,13 +518,13 @@ class EventProcessor:
                         OrderShoeStatus.current_status == prev_ids[0],
                     )
                 ).first()
-                if entity.current_status_value == 2:
+                if entity and entity.current_status_value == 2:
                     result = [next_id]
                 else:
                     result = None
             else:
                 result = [next_id]
-        print(result)
+        logger.debug(result)
         return result
 
         if len(currentStatus) == 1:

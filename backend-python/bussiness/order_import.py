@@ -246,10 +246,6 @@ def confirm_import_order():
                 db.session.add(order_shoe_status)
                 db.session.flush()
                 order_shoe_production_info = OrderShoeProductionInfo(
-                    cutting_line_group="",
-                    pre_sewing_line_group="",
-                    sewing_line_group="",
-                    molding_line_group="",
                     is_cutting_outsourced=0,
                     is_sewing_outsourced=0,
                     is_molding_outsourced=0,

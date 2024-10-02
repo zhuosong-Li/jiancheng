@@ -163,6 +163,7 @@ def get_all_quantity_report():
             {
                 "reportId": row.report_id,
                 "creationDate": row.creation_date.strftime("%Y-%m-%d"),
+                "submissionDate": row.submission_date.strftime("%Y-%m-%d"),
                 "status": check_report_status(row.status),
                 "rejectionReason": row.rejection_reason,
             }
