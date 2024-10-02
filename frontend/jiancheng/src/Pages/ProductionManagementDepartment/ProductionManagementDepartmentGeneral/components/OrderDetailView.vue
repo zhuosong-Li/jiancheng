@@ -84,7 +84,7 @@
 							<el-col :span="8" :offset="6">
 								<el-descriptions title="" border>
 									<el-descriptions-item label="外包状态">
-										<div v-if="tab.isOutsourced === false">
+										<div v-if="tab.isOutsourced == 0">
 											未设置外包
 										</div>
 										<div v-else>
@@ -92,7 +92,7 @@
 										</div>
 									</el-descriptions-item>
 									<el-descriptions-item label="操作">
-										<el-button v-if="tab.isOutsourced === false" type="primary" size="default"
+										<el-button v-if="tab.isOutsourced == 0" type="primary" size="default"
 											@click="startOutSourceFlow()">启动外包流程</el-button>
 										<el-button-group v-else>
 											<el-button type="primary" size="default"
@@ -241,6 +241,7 @@ export default {
 		async getProductionLineOptions() {
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getproductionlines`)
 			this.productionLines = response.data
+			console.log(this.productionLines)
 		},
 		async getOrderShoeTableData() {
 			const params = { "orderId": this.$props.orderId }
@@ -275,19 +276,19 @@ export default {
 			this.currentRow = rowData
 			const params = { "orderShoeId": rowData.orderShoeId }
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoescheduleinfo`, { params })
-			this.tabs[0].lineValue = response.data.cuttingLineNumbers.split(",")
+			this.tabs[0].lineValue = response.data.cuttingLineNumbers
 			this.tabs[0].dateValue = [response.data.cuttingStartDate, response.data.cuttingEndDate]
 			this.tabs[0].isOutsourced = response.data.isCuttingOutsourced
 
-			this.tabs[1].lineValue = response.data.preSewingLineNumbers.split(",")
+			this.tabs[1].lineValue = response.data.preSewingLineNumbers
 			this.tabs[1].dateValue = [response.data.preSewingStartDate, response.data.preSewingEndDate]
 			this.tabs[1].isOutsourced = response.data.isSewingOutsourced
 
-			this.tabs[2].lineValue = response.data.sewingLineNumbers.split(",")
+			this.tabs[2].lineValue = response.data.sewingLineNumbers
 			this.tabs[2].dateValue = [response.data.sewingStartDate, response.data.sewingEndDate]
 			this.tabs[2].isOutsourced = response.data.isSewingOutsourced
 
-			this.tabs[3].lineValue = response.data.moldingLineNumbers.split(",")
+			this.tabs[3].lineValue = response.data.moldingLineNumbers
 			this.tabs[3].dateValue = [response.data.moldingStartDate, response.data.moldingEndDate]
 			this.tabs[3].isOutsourced = response.data.isMoldingOutsourced
 		},
@@ -390,8 +391,9 @@ export default {
 			return 0;
 		},
 		disableDate(time) {
-			const startDate = new Date(this.$props.orderStartDate)
-			const endDate = new Date(this.$props.orderEndDate)
+			let startDate = new Date(this.$props.orderStartDate)
+			startDate.setDate(startDate.getDate() - 1)
+			let endDate = new Date(this.$props.orderEndDate)
 			return time.getTime() < startDate || time.getTime() > endDate.getTime();
 		},
 		statusJudge({ row, column, rowIndex, columnIndex }) {

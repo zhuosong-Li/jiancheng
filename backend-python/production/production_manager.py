@@ -11,6 +11,16 @@ from sqlalchemy.dialects.mysql import insert
 
 production_manager_bp = Blueprint("production_manager_bp", __name__)
 
+def format_date(date_obj):
+    if not date_obj:
+        return ""
+    return date_obj.strftime("%Y-%m-%d")
+
+def format_line_group(line_group_obj):
+    if not line_group_obj:
+        return []
+    return line_group_obj.split(",")
+
 
 @production_manager_bp.route(
     "/production/productionmanager/getinprogressorders", methods=["GET"]
@@ -57,12 +67,14 @@ def get_in_progress_orders():
             total_amount,
             molding_amount,
         ) = row
+        cutting_start_date = format_date(cutting_start_date)
+        molding_end_date = format_date(molding_end_date)
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
             "customerName": customer.customer_name,
-            "startDate": cutting_start_date.strftime("%Y-%m-%d"),
-            "endDate": molding_end_date.strftime("%Y-%m-%d"),
+            "startDate": cutting_start_date,
+            "endDate": molding_end_date,
             "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
             "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
             "orderTotalShoes": total_amount,
@@ -91,19 +103,31 @@ def get_order_shoe_schedule_info():
         .filter(OrderShoeProductionInfo.order_shoe_id == order_shoe_id)
         .first()
     )
+    cutting_start_date = format_date(response.cutting_start_date)
+    cutting_end_date = format_date(response.cutting_end_date)
+    pre_sewing_start_date = format_date(response.pre_sewing_start_date)
+    pre_sewing_end_date = format_date(response.pre_sewing_end_date)
+    sewing_start_date = format_date(response.sewing_start_date)
+    sewing_end_date = format_date(response.sewing_end_date)
+    molding_start_date = format_date(response.molding_start_date)
+    molding_end_date = format_date(response.molding_end_date)
+    cutting_line_group = format_line_group(response.cutting_line_group)
+    pre_sewing_line_group = format_line_group(response.pre_sewing_line_group)
+    sewing_line_group = format_line_group(response.sewing_line_group)
+    molding_line_group = format_line_group(response.molding_line_group)
     result = {
-        "cuttingLineNumbers": response.cutting_line_group,
-        "preSewingLineNumbers": response.pre_sewing_line_group,
-        "sewingLineNumbers": response.sewing_line_group,
-        "moldingLineNumbers": response.molding_line_group,
-        "cuttingStartDate": response.cutting_start_date.strftime("%Y-%m-%d"),
-        "cuttingEndDate": response.cutting_end_date.strftime("%Y-%m-%d"),
-        "preSewingStartDate": response.pre_sewing_start_date.strftime("%Y-%m-%d"),
-        "preSewingEndDate": response.pre_sewing_end_date.strftime("%Y-%m-%d"),
-        "sewingStartDate": response.sewing_start_date.strftime("%Y-%m-%d"),
-        "sewingEndDate": response.sewing_end_date.strftime("%Y-%m-%d"),
-        "moldingStartDate": response.molding_start_date.strftime("%Y-%m-%d"),
-        "moldingEndDate": response.molding_end_date.strftime("%Y-%m-%d"),
+        "cuttingLineNumbers": cutting_line_group,
+        "preSewingLineNumbers": pre_sewing_line_group,
+        "sewingLineNumbers": sewing_line_group,
+        "moldingLineNumbers": molding_line_group,
+        "cuttingStartDate": cutting_start_date,
+        "cuttingEndDate": cutting_end_date,
+        "preSewingStartDate": pre_sewing_start_date,
+        "preSewingEndDate": pre_sewing_end_date,
+        "sewingStartDate": sewing_start_date,
+        "sewingEndDate": sewing_end_date,
+        "moldingStartDate": molding_start_date,
+        "moldingEndDate": molding_end_date,
         "isCuttingOutsourced": response.is_cutting_outsourced,
         "isSewingOutsourced": response.is_sewing_outsourced,
         "isMoldingOutsourced": response.is_molding_outsourced,
@@ -220,18 +244,15 @@ def edit_production_schedule():
     return jsonify({"message": "success"})
 
 
-# TODO
 @production_manager_bp.route(
     "/production/productionmanager/startproduction", methods=["PATCH"]
 )
 def start_production():
     data = request.get_json()
     # pass to event processor
-    print(data["orderId"])
-    print(data["orderShoeId"])
     processor: EventProcessor = current_app.config["event_processor"]
     try:
-        for operation in [74, 75]:
+        for operation in [72, 73]:
             event = Event(
                 staff_id=1,
                 handle_time=datetime.now(),

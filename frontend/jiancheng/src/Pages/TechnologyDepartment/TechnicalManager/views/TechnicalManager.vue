@@ -51,7 +51,8 @@ export default {
     data() {
         return {
             UserFilled,
-            currentComponent: 'Dashboard'
+            currentComponent: 'Dashboard',
+            userName: ''
         }
     },
     mounted() {

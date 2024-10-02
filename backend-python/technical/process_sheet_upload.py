@@ -13,15 +13,16 @@ process_sheet_upload_bp = Blueprint("process_sheet_upload_bp", __name__)
 def get_order_list():
     order_id = request.args.get("orderid")
     order_shoes = (
-        db.session.query(OrderShoe, Shoe, OrderShoeStatus)
+        db.session.query(OrderShoe, Shoe, ShoeType)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .join(ShoeType, ShoeType.shoe_id == Shoe.shoe_id)
         .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(OrderShoe.order_id == order_id)
         .filter(OrderShoeStatus.current_status == 9)
         .all()
     )
     result = []
-    for order_shoe, shoe, order_shoe_status in order_shoes:
+    for order_shoe, shoe, shoe_type in order_shoes:
         if order_shoe.process_sheet_upload_status == "0":
             status = "未上传"
         elif order_shoe.process_sheet_upload_status == "1":
@@ -33,8 +34,8 @@ def get_order_list():
                 "inheritId": shoe.shoe_rid,
                 "customerId": order_shoe.customer_product_name,
                 "image": (
-                    IMAGE_STORAGE_PATH + shoe.shoe_image_url
-                    if shoe.shoe_image_url is not None
+                    IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
+                    if shoe_type.shoe_image_url is not None
                     else None
                 ),
                 "designer": shoe.shoe_designer,
@@ -108,7 +109,6 @@ def issue_production_order():
         )
         order_id = order_shoe.Order.order_id
         order_shoe_id = order_shoe.OrderShoe.order_shoe_id
-        print(order_shoe.OrderShoe.process_sheet_upload_status)
         if order_shoe.OrderShoe.process_sheet_upload_status != "1":
             return jsonify({"error": "Production order not uploaded yet"}), 500
         order_shoe.OrderShoe.process_sheet_upload_status = "2"
