@@ -14,7 +14,7 @@
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
-            <el-table :data="tableData" border stripe height="400">
+            <el-table :data="tableData" border stripe>
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客人号"></el-table-column>
@@ -79,8 +79,11 @@
                         </el-radio-group>
                     </el-form-item>
                     <el-form-item label="出库工段">
-                        <div v-if="outboundForm.outboundType === '1'">
+                        <div v-if="outboundForm.outboundType === '1' && currentRow.object === '裁断后材料'">
                             针车
+                        </div>
+                        <div v-else-if="outboundForm.outboundType === '1' && currentRow.object === '鞋包'">
+                            成型
                         </div>
                         <div v-else>
                         </div>
@@ -108,6 +111,7 @@
 </template>
 <script>
 import axios from 'axios'
+import { ElMessage } from 'element-plus';
 export default {
     data() {
         return {
@@ -155,11 +159,12 @@ export default {
                 "type": this.inboundType,
                 "amount": this.currentRow.inboundAmount
             }
-            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
-            if (response.status == 200) {
+            try {
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
                 ElMessage.success("入库成功")
             }
-            else {
+            catch(error) {
+                console.log(error)
                 ElMessage.error("入库失败")
             }
             this.semiInboundDialogVisible = false
@@ -189,7 +194,7 @@ export default {
             this.getTableData()
         },
         handlePageChange(val) {
-            this.page = val
+            this.currentPage = val
             this.getTableData()
         },
         inboundSemifinished(row) {

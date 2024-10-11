@@ -49,7 +49,6 @@
 									<el-table-column label="预备完成数量" prop="preSewingAmount" />
 									<el-table-column label="针车完成数量" prop="sewingAmount" />
 									<el-table-column label="成型完成数量" prop="moldingAmount" />
-									<el-table-column label="完成状态" prop="productionStatus" />
 								</el-table>
 							</template>
 						</el-table-column>

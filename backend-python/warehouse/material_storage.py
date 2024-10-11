@@ -184,9 +184,7 @@ def get_all_material_info():
             union_query = union_query.order_by(asc(PurchaseOrder.purchase_order_issue_date))
         elif sort_order == 'descending':
             union_query = union_query.order_by(desc(PurchaseOrder.purchase_order_issue_date))
-    count_result = (
-        db.session.query(func.count()).select_from(union_query.subquery()).scalar()
-    )
+    count_result = union_query.distinct().count()
     response = union_query.limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:

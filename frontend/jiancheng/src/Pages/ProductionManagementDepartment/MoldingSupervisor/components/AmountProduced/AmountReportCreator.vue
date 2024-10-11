@@ -12,7 +12,7 @@
             <el-table-column label="生产数量">
                 <template #default="scope">
                     <el-input v-model="scope.row.amount" style="width: 100px" type="number" min="0"
-                        :max="scope.row.remainAmount" @blur="() => checkValue(scope.row)" />
+                        @blur="() => checkValue(scope.row)" />
                 </template>
             </el-table-column>
             <el-table-column prop="remainAmount" label="目前剩余数量" />
@@ -47,7 +47,7 @@ onMounted(async () => {
     params = { "reportId": props.currentReport.reportId }
     response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })
@@ -58,7 +58,7 @@ onMounted(async () => {
                 newVal = Number(newVal), oldVal = Number(oldVal)
                 producedAmount.value = producedAmount.value + newVal - oldVal
                 priceReport.value.forEach((priceRow) => {
-                    priceRow.totalPrice = (row.amount * priceRow.price).toFixed(2)
+                    priceRow.totalPrice = (producedAmount.value * priceRow.price).toFixed(2)
                 })
             }, { deep: true }
         )
@@ -68,8 +68,6 @@ onMounted(async () => {
 const checkValue = (row) => {
     if (row.amount < 0) {
         row.amount = 0
-    } else if (row.remainAmount < 0) {
-        row.amount = Number(row.amount) + row.remainAmount
     }
 }
 

@@ -30,12 +30,19 @@
             </el-row>
             <el-table :data="taskData" :default-sort="{ prop: 'date', order: 'ascending' }" border stripe max-height="500">
                 <el-table-column prop="creationDate" label="日期" sortable></el-table-column>
-                <el-table-column prop="status" label="状态"></el-table-column>
+                <el-table-column prop="status" label="状态">
+                    <template v-slot="scope">
+                        <el-tooltip v-if="scope.row.status === '被驳回'" effect="dark" :content="scope.row.rejectionReason">
+                            <span class="rejected">{{ scope.row.status }}</span>
+                        </el-tooltip>
+                        <span v-else>{{ scope.row.status }}</span>
+                    </template>
+                </el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button v-if="scope.row.status === '已提交'" type="success"
+                        <el-button v-if="scope.row.status === '已提交' || scope.row.status === '已审批'" type="success"
                             @click="openPreviewDialog(scope.row)">查看</el-button>
-                        <el-button-group v-else-if="scope.row.status === '未提交'">
+                        <el-button-group v-else-if="scope.row.status === '未提交' || scope.row.status === '被驳回'">
                             <el-button type="primary" class="block-button" @click="handleEdit(scope.row)">编辑</el-button>
                             <el-button type="success" class="block-button"
                                 @click="openPreviewDialog(scope.row)">查看</el-button>
@@ -57,7 +64,7 @@
                     :handleClose="handleClose" />
             </div>
             <div v-else-if="previewVis">
-                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport"
+                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport" :teamName="props.teamName"
                     :handleClose="handleClose" />
             </div>
         </el-main>
@@ -95,7 +102,6 @@ const getAllQuantityReports = async () => {
     }
     const response1 = await axios.get(`${apiBaseUrl}/production/getallquantityreports`, { params })
     taskData.value = response1.data
-    console.log(taskData.value)
 }
 
 const dateFormatter = (input) => {

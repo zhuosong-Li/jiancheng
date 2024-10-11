@@ -20,7 +20,14 @@
         <el-table-column prop="customerName" label="客户名称"></el-table-column>
         <el-table-column prop="productionStartDate" label="工段开始日期"></el-table-column>
         <el-table-column prop="productionEndDate" label="工段结束日期"></el-table-column>
-        <el-table-column prop="statusName" label="状态"></el-table-column>
+        <el-table-column prop="statusName" label="状态">
+            <template v-slot="scope">
+                <el-tooltip v-if="scope.row.statusName === '被驳回'" effect="dark" :content="scope.row.rejectionReason">
+                    <span class="rejected">{{ scope.row.statusName }}</span>
+                </el-tooltip>
+                <span v-else>{{ scope.row.statusName }}</span>
+            </template>
+        </el-table-column>
         <el-table-column label="操作">
             <template #default="scope">
                 <el-button type="primary" @click="handleView(scope.row)">查看</el-button>

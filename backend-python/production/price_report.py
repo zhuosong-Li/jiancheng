@@ -51,6 +51,7 @@ def get_new_price_reports():
             Shoe,
             Customer,
             UnitPriceReport.status,
+            UnitPriceReport.rejection_reason,
             pre_start_date,
             pre_end_date,
             start_date,
@@ -63,6 +64,7 @@ def get_new_price_reports():
             Shoe,
             Customer,
             UnitPriceReport.status,
+            UnitPriceReport.rejection_reason,
             start_date,
             end_date,
         )
@@ -87,14 +89,14 @@ def get_new_price_reports():
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
-    count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
+    count_result = query.distinct().count()
     response = query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         if team == "针车":
-            order, order_shoe, shoe, customer, status, pre_start_date_res, pre_end_date_res, start_date_res, end_date_res = row
+            order, order_shoe, shoe, customer, status, rejection_reason, pre_start_date_res, pre_end_date_res, start_date_res, end_date_res = row
         else:
-            order, order_shoe, shoe, customer, status, start_date_res, end_date_res = row
+            order, order_shoe, shoe, customer, status, rejection_reason, start_date_res, end_date_res = row
         status_name = check_report_status(status)
         obj = {
             "orderId": order.order_id,
@@ -105,6 +107,7 @@ def get_new_price_reports():
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
             "statusName": status_name,
+            "rejectionReason": rejection_reason
         }
         if team == "针车":
             obj["preSewingProductionStartDate"] = pre_start_date_res.strftime("%Y-%m-%d")
@@ -203,6 +206,7 @@ def get_price_report_detail():
             UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
         .filter(UnitPriceReport.report_id == report_id)
+        .order_by(UnitPriceReportDetail.row_id)
         .all()
     )
     result = []
@@ -223,17 +227,20 @@ def get_price_report_detail():
 def get_price_report_detail_by_order_shoe_id():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
-    report = (
-        db.session.query(UnitPriceReport.report_id, UnitPriceReport.status)
+    status = request.args.get("status", type=int)
+    query = (
+        db.session.query(UnitPriceReport)
         .filter(
             UnitPriceReport.order_shoe_id == order_shoe_id, UnitPriceReport.team == team
         )
-        .first()
     )
+    if status:
+        query = query.filter(UnitPriceReport.status == 2)
+    report = query.first()
     if not report:
         return jsonify({"message": "Report not found"}), 400
     status_name = check_report_status(report.status)
-    meta_data = {"reportId": report.report_id, "statusName": status_name}
+    meta_data = {"reportId": report.report_id, "statusName": status_name, "rejectionReason": report.rejection_reason}
     response = (
         db.session.query(UnitPriceReportDetail, ProcedureReference.procedure_name)
         .outerjoin(

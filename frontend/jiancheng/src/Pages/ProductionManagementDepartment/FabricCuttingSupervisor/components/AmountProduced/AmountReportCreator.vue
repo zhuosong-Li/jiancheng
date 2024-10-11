@@ -39,30 +39,37 @@ const producedAmount = ref(0)
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
-    let params = { "orderShoeId": props.orderShoeId, 'team': '裁断' }
+    let params = { "orderShoeId": props.orderShoeId, 'team': '裁断', "status": 2 }
     // get price report detail
-    let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
-    priceReport.value = response.data.detail
+    try {
+        let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+        priceReport.value = response.data.detail
+    }
+    catch(error) {
+        console.log("error")
+    }
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
-    response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
-    response.data.forEach(row => {
+    let response2 = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
+    response2.data.forEach(row => {
         row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })
-    tableData.value.forEach(row => {
-        watch(
-            () => row.amount,
-            (newVal, oldVal) => {
-                newVal = Number(newVal), oldVal = Number(oldVal)
-                producedAmount.value = producedAmount.value + newVal - oldVal
-                priceReport.value.forEach((priceRow) => {
-                    priceRow.totalPrice = (row.amount * priceRow.price).toFixed(2)
-                })
-            }, { deep: true }
-        )
-    })
+    if (priceReport.value.length > 0) {
+        tableData.value.forEach(row => {
+            watch(
+                () => row.amount,
+                (newVal, oldVal) => {
+                    newVal = Number(newVal), oldVal = Number(oldVal)
+                    producedAmount.value = producedAmount.value + newVal - oldVal
+                    priceReport.value.forEach((priceRow) => {
+                        priceRow.totalPrice = (producedAmount.value * priceRow.price).toFixed(2)
+                    })
+                }, { deep: true }
+            )
+        })
+    }
 })
 
 const checkValue = (row) => {
@@ -79,7 +86,7 @@ const handleSaveData = () => {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(async () => {
-        const data = { 
+        const data = {
             "reportId": props.currentReport.reportId,
             "data": tableData.value
         }

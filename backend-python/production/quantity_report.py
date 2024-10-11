@@ -1,10 +1,11 @@
 from datetime import datetime
 
+from api_utility import format_date
 from app_config import db
 from constants import END_OF_PRODUCTION_NUMBER, QUANTTIY_REPORT_REFERENCE
 from flask import Blueprint, jsonify, request
-from sqlalchemy import func, literal
 from models import *
+from sqlalchemy import func, literal
 
 quantity_report_bp = Blueprint("quantity_report_bp", __name__)
 
@@ -33,26 +34,46 @@ def get_quantity_report_tasks():
         if team == "裁断":
             start_date = OrderShoeProductionInfo.cutting_start_date
             end_date = OrderShoeProductionInfo.cutting_end_date
+            produced_amount = OrderShoeBatchInfo.cutting_amount
         elif team == "针车预备":
             start_date = OrderShoeProductionInfo.pre_sewing_start_date
             end_date = OrderShoeProductionInfo.pre_sewing_end_date
+            produced_amount = OrderShoeBatchInfo.pre_sewing_amount
         elif team == "针车":
             start_date = OrderShoeProductionInfo.sewing_start_date
             end_date = OrderShoeProductionInfo.sewing_end_date
+            produced_amount = OrderShoeBatchInfo.sewing_amount
         elif team == "成型":
             start_date = OrderShoeProductionInfo.molding_start_date
             end_date = OrderShoeProductionInfo.molding_end_date
+            produced_amount = OrderShoeBatchInfo.molding_amount
         else:
             return jsonify({"message": "invalid team name"}), 400
+        amount_table = (
+            db.session.query(
+                OrderShoe.order_shoe_id,
+                func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
+                func.sum(produced_amount).label("produced_amount"),
+            )
+            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(
+                OrderShoeBatchInfo,
+                OrderShoeBatchInfo.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id,
+            )
+            .group_by(OrderShoe.order_shoe_id)
+        ).subquery()
         query = (
             db.session.query(
                 Order,
                 OrderShoe,
                 Shoe,
                 Customer,
-                start_date,
-                end_date,
-                literal(team).label('team')
+                start_date.label("start_date"),
+                end_date.label("end_date"),
+                literal(team).label("team"),
+                amount_table.c.produced_amount,
+                amount_table.c.total_amount
             )
             .join(OrderShoe, OrderShoe.order_id == Order.order_id)
             .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -61,7 +82,17 @@ def get_quantity_report_tasks():
                 OrderShoeProductionInfo,
                 OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(
+                OrderShoeBatchInfo,
+                OrderShoeBatchInfo.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id,
+            )
+            .join(
+                OrderShoeStatus,
+                OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id,
+            )
+            .join(amount_table, amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
             .filter(
                 OrderShoeStatus.current_status == QUANTTIY_REPORT_REFERENCE[team],
                 OrderShoeStatus.current_status_value.in_([0, 1]),
@@ -70,16 +101,26 @@ def get_quantity_report_tasks():
         queries.append(query)
     union_query = queries[0]
     for i in range(1, len(queries)):
-        union_query.union(queries[i])
+        union_query = union_query.union(queries[i])
     if order_rid and order_rid != "":
         union_query = union_query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         union_query = union_query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
-    count_result = db.session.query(func.count()).select_from(union_query.subquery()).scalar()
+    count_result = union_query.distinct().count()
     response = union_query.limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
-        order, order_shoe, shoe, customer, start_date_res, end_date_res, team = row
+        (
+            order,
+            order_shoe,
+            shoe,
+            customer,
+            start_date_res,
+            end_date_res,
+            team,
+            produced_amount,
+            total_amount,
+        ) = row
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -88,7 +129,8 @@ def get_quantity_report_tasks():
             "productionStartDate": start_date_res.strftime("%Y-%m-%d"),
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
-            "team": team
+            "team": team,
+            "progress": str(produced_amount) + '/' + str(total_amount)
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
@@ -154,6 +196,7 @@ def delete_quantity_report():
 def get_all_quantity_report():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
+    print("hello")
     response = QuantityReport.query.filter_by(
         order_shoe_id=order_shoe_id, team=team
     ).all()
@@ -162,8 +205,8 @@ def get_all_quantity_report():
         result.append(
             {
                 "reportId": row.report_id,
-                "creationDate": row.creation_date.strftime("%Y-%m-%d"),
-                "submissionDate": row.submission_date.strftime("%Y-%m-%d"),
+                "creationDate": format_date(row.creation_date),
+                "submissionDate": format_date(row.submission_date),
                 "status": check_report_status(row.status),
                 "rejectionReason": row.rejection_reason,
             }
@@ -219,15 +262,15 @@ def get_quantity_report_detail():
     for row in response:
         batch_info, color, report_item = row
         obj = {
-                "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
-                "colorName": color.color_name,
-                "name": batch_info.name,
-                "amount": report_item.amount,
-                "totalAmount": batch_info.total_amount,
-                "cuttingAmount": batch_info.cutting_amount,
-                "preSewingAmount": batch_info.pre_sewing_amount,
-                "sewingAmount": batch_info.sewing_amount,
-                "moldingAmount": batch_info.molding_amount,
-            }
+            "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
+            "colorName": color.color_name,
+            "name": batch_info.name,
+            "amount": report_item.amount,
+            "totalAmount": batch_info.total_amount,
+            "cuttingAmount": batch_info.cutting_amount,
+            "preSewingAmount": batch_info.pre_sewing_amount,
+            "sewingAmount": batch_info.sewing_amount,
+            "moldingAmount": batch_info.molding_amount,
+        }
         result.append(obj)
     return result

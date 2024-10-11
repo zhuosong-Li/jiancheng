@@ -35,6 +35,7 @@ onMounted(async () => {
         tableData.value.push(row)
     })
     let obj = [
+        { prop: "colorName", label: "颜色" },
         { prop: "name", label: "鞋码编号" },
         { prop: "amount", label: "生产数量" },
         { prop: "remainAmount", label: "目前剩余数量" },

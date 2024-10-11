@@ -36,7 +36,7 @@ def get_finished_in_out_overview():
             Order,
             OrderShoe,
             Shoe,
-            OrderShoeBatchInfo.total_amount,
+            func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
             FinishedShoeStorage.finished_shoe_id,
             FinishedShoeStorage.finished_amount,
             FinishedShoeStorage.finished_status,
@@ -54,6 +54,7 @@ def get_finished_in_out_overview():
         )
         .join(OrderStatus, OrderStatus.order_id == Order.order_id)
         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+        .group_by(OrderShoe.order_shoe_id, FinishedShoeStorage.finished_shoe_id)
     )
     if op_type == 1:
         query = query.filter(
@@ -66,12 +67,12 @@ def get_finished_in_out_overview():
             )
         ).filter(FinishedShoeStorage.finished_status.in_([0, 1]))
 
-    if order_rid and order_rid != '':
+    if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
-    if shoe_rid and shoe_rid != '':
+    if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
 
-    count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
+    count_result = query.distinct().count()
     response = query.limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
@@ -115,7 +116,7 @@ def inbound_finished():
     if not storage:
         return jsonify({"message": "failed"}), 400
 
-    storage.finished_amount += data["amount"]
+    storage.finished_amount += int(data["amount"])
     storage.finished_type = data["type"]
     storage.finished_inbound_datetime = data["inboundDate"]
     storage.finished_status = 1
@@ -158,10 +159,15 @@ def inbound_finished():
 def outbound_finished():
     data = request.get_json()
     if data["isOutboundAll"]:
-        response = db.session.query(FinishedShoeStorage).join(
-            OrderShoe,
-            OrderShoe.order_shoe_id == OrderShoe.order_shoe_id,
-        ).filter(OrderShoe.order_id == data["orderId"]).all()
+        response = (
+            db.session.query(FinishedShoeStorage)
+            .join(
+                OrderShoe,
+                OrderShoe.order_shoe_id == OrderShoe.order_shoe_id,
+            )
+            .filter(OrderShoe.order_id == data["orderId"])
+            .all()
+        )
         for row in response:
             storage = row
             _outbound_helper(storage, data)
@@ -193,6 +199,7 @@ def _outbound_helper(storage, data):
     )
     record.shoe_outbound_rid = rid
 
+
 @finished_storage_bp.route(
     "/warehouse/warehousemanager/getfinishedinoutboundrecords", methods=["GET"]
 )
@@ -208,12 +215,18 @@ def get_finished_in_out_bound_records():
 
     result = []
     for row in inbound_response:
-        obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "入库",
+            "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         obj["amount"] = row.inbound_amount
         result.append(obj)
 
     for row in outbound_response:
-        obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "出库",
+            "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         obj["amount"] = row.outbound_amount
         result.append(obj)
     return result
