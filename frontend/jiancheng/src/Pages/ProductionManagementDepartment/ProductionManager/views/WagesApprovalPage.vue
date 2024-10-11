@@ -23,7 +23,7 @@
                     <el-table :data="shoeInfo" border stripe :max-height="200">
                         <el-table-column prop="colorName" label="颜色"></el-table-column>
                         <el-table-column prop="batchName" label="配码编号"></el-table-column>
-                        <el-table-column prop="size35" label="34"></el-table-column>
+                        <el-table-column prop="size34" label="34"></el-table-column>
                         <el-table-column prop="size35" label="35"></el-table-column>
                         <el-table-column prop="size36" label="36"></el-table-column>
                         <el-table-column prop="size37" label="37"></el-table-column>
@@ -31,12 +31,13 @@
                         <el-table-column prop="size39" label="39"></el-table-column>
                         <el-table-column prop="size40" label="40"></el-table-column>
                         <el-table-column prop="size41" label="41"></el-table-column>
-                        <el-table-column prop="size35" label="42"></el-table-column>
-                        <el-table-column prop="size35" label="43"></el-table-column>
-                        <el-table-column prop="size35" label="44"></el-table-column>
-                        <el-table-column prop="size35" label="45"></el-table-column>
-                        <el-table-column prop="size35" label="46"></el-table-column>
-                        <el-table-column prop="totalAmount" label="双数"></el-table-column>
+                        <el-table-column prop="size42" label="42"></el-table-column>
+                        <el-table-column prop="size43" label="43"></el-table-column>
+                        <el-table-column prop="size44" label="44"></el-table-column>
+                        <el-table-column prop="size45" label="45"></el-table-column>
+                        <el-table-column prop="size46" label="46"></el-table-column>
+                        <el-table-column prop="pairAmount" label="双数"></el-table-column>
+                        <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
                     </el-table>
                 </el-col>
             </el-row>
@@ -50,7 +51,14 @@
                         <el-table-column prop="reportStatus" label="状态"></el-table-column>
                         <el-table-column label="操作">
                             <template #default="scope">
-                                <el-button type="primary" @click="getReportDetail(scope.row)">审核</el-button>
+                                <el-button type="primary" @click="getReportDetail(scope.row)">
+                                    <span v-if="scope.row.reportStatus === '未审核'">
+                                        审核
+                                    </span>
+                                    <span v-else>
+                                        查看
+                                    </span>
+                                </el-button>
                             </template>
                         </el-table-column>
                     </el-table>
@@ -79,14 +87,14 @@
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 请填写驳回原因（不超过20字）：
-                <el-input v-model="refuseReason" type="textarea" placeholder="" size="normal" resize="none" clearable
+                <el-input v-model="rejectionReason" type="textarea" placeholder="" resize="none" clearable
                     @change=""></el-input>
             </el-col>
         </el-row>
         <template #footer>
             <span>
-                <el-button @click="">取消</el-button>
-                <el-button type="success" @click="">确认</el-button>
+                <el-button @click="isRefuseApprovalVis = false">取消</el-button>
+                <el-button type="success" @click="rejectReport">确认</el-button>
             </span>
         </template>
     </el-dialog>
@@ -102,7 +110,7 @@ export default {
     props: ["orderShoeId", "orderId", "orderRId", "shoeRId", "orderEndDate", "customerName"],
     data() {
         return {
-            refuseReason: '',
+            rejectionReason: '',
             isRefuseApprovalVis: false,
             reportDetail: [],
             shoeInfo: [],
@@ -117,12 +125,14 @@ export default {
     },
     methods: {
         async getOrderShoeBatchInfo() {
-            const params = { "orderShoeId": this.$props.orderShoeId }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
-            this.shoeInfo = response.data
-            this.shoeInfo.forEach(row => {
-                this.totalShoes += row.totalAmount
-            })
+            try {
+                const params = { "orderShoeId": this.$props.orderShoeId }
+                const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
+                this.shoeInfo = response.data
+            }
+            catch(error) {
+                console.log(error)
+            }
         },
         async getPriceReportInfo() {
             const params = { "orderShoeId": this.$props.orderShoeId }
@@ -141,9 +151,26 @@ export default {
                 '此操作无法撤回，是否通过？',
                 '提示',
             ).then(async () => {
-                const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportId": this.currentRow.reportId }
-                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvepricereport`, data)
-                ElMessage.success('审批成功')
+                let reportIdArr = []
+                if (this.currentRow.team === '针车预备' || this.currentRow.team === '针车') {
+                    this.priceReports.forEach(row => {
+                        if (row.team === '针车预备' || row.team === '针车') {
+                            reportIdArr.push(row.reportId)
+                        }
+                    })
+                }
+                else {
+                    reportIdArr = [this.currentRow.reportId]
+                }
+                const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportIdArr": reportIdArr }
+                try {
+                    await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvepricereport`, data)
+                    ElMessage.success('审批成功')
+                }
+                catch(error) {
+                    console.log(error)
+                    ElMessage.error('驳回失败')
+                }
                 this.isWagesApprovalVis = false
                 this.getPriceReportInfo()
             }).catch(() => {
@@ -152,7 +179,39 @@ export default {
         },
         openRefusalDialog() {
             this.isRefuseApprovalVis = true
-        }
+        },
+        async rejectReport() {
+            ElMessageBox.confirm(
+                '此操作无法撤回，是否驳回？',
+                '提示',
+            ).then(async () => {
+                let reportIdArr = []
+                if (this.currentRow.team === '针车预备' || this.currentRow.team === '针车') {
+                    this.priceReports.forEach(row => {
+                        if (row.team === '针车预备' || row.team === '针车') {
+                            reportIdArr.push(row.reportId)
+                        }
+                    })
+                }
+                else {
+                    reportIdArr = [this.currentRow.reportId]
+                }
+                const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportIdArr": reportIdArr, "rejectionReason": this.rejectionReason }
+                try {
+                    await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/rejectpricereport`, data)
+                    ElMessage.success('驳回成功')
+                }
+                catch(error) {
+                    console.log(error)
+                    ElMessage.error('驳回失败')
+                }
+                this.isRefuseApprovalVis = false
+                this.isWagesApprovalVis = false
+                this.getPriceReportInfo()
+            }).catch(() => {
+                ElMessage.info('撤销操作')
+            })
+        },
     }
 }
 </script>

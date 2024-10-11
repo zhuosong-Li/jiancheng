@@ -47,7 +47,12 @@ onMounted(async () => {
     params = { "reportId": props.currentReport.reportId }
     response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
+        if (props.teamName === '针车预备') {
+            row["remainAmount"] = row["totalAmount"] - row["preSewingAmount"]
+        }
+        else {
+            row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
+        }
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })
@@ -58,7 +63,7 @@ onMounted(async () => {
                 newVal = Number(newVal), oldVal = Number(oldVal)
                 producedAmount.value = producedAmount.value + newVal - oldVal
                 priceReport.value.forEach((priceRow) => {
-                    priceRow.totalPrice = (row.amount * priceRow.price).toFixed(2)
+                    priceRow.totalPrice = (producedAmount.value * priceRow.price).toFixed(2)
                 })
             }, { deep: true }
         )

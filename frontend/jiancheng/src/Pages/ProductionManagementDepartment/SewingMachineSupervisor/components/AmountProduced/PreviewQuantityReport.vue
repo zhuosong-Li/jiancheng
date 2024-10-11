@@ -19,7 +19,7 @@ import axios from 'axios'
 import { exportTableToExcel } from '@/Pages/ProductionManagementDepartment/utils';
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const props = defineProps(['shoeRId', 'currentReport', 'handleClose'])
+const props = defineProps(['shoeRId', 'currentReport', 'handleClose', 'teamName'])
 const previewVis = ref(true)
 const columns = ref([])
 const tableData = ref([])
@@ -29,10 +29,16 @@ onMounted(async () => {
     let params = { reportId: props.currentReport.reportId }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
+        if (props.teamName === '针车预备') {
+            row["remainAmount"] = row["totalAmount"] - row["preSewingAmount"]
+        }
+        else {
+            row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
+        }
         tableData.value.push(row)
     })
     let obj = [
+        { prop: "colorName", label: "颜色" },
         { prop: "name", label: "鞋码编号" },
         { prop: "amount", label: "生产数量" },
         { prop: "remainAmount", label: "剩余数量" },

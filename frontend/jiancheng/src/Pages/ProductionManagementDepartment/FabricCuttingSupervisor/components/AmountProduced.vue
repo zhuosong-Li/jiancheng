@@ -20,7 +20,7 @@
         <el-table-column prop="customerName" label="客户名称"></el-table-column>
         <el-table-column prop="productionStartDate" label="工段开始日期"></el-table-column>
         <el-table-column prop="productionEndDate" label="工段结束日期"></el-table-column>
-        <el-table-column prop="statusName" label="状态"></el-table-column>
+        <el-table-column prop="progress" label="生产进度"></el-table-column>
         <el-table-column label="操作">
             <template #default="{ row }">
                 <el-button type="primary" @click="handleView(row)">查看</el-button>

@@ -4,7 +4,7 @@ from event_processor import *
 import random
 import string
 
-processEventEntity = EventProcessor()
+
 ### check if a shoe exists in DB
 def check_shoe_exists(shoe_rid):
     existance = (
@@ -81,9 +81,23 @@ def dbcreateOrder(order_Rid, order_createTime, order_Customer):
     db.session.commit()
     return True
 
+
 def processEvent(event):
     return
 
+
 def randomIdGenerater(digit):
-    random_str = ''.join(random.choices(string.digits, k=digit))
+    random_str = "".join(random.choices(string.digits, k=digit))
     return random_str
+
+
+def format_date(date_obj):
+    if not date_obj:
+        return ""
+    return date_obj.strftime("%Y-%m-%d")
+
+
+def format_line_group(line_group_obj):
+    if not line_group_obj:
+        return []
+    return line_group_obj.split(",")

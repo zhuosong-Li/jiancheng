@@ -103,10 +103,10 @@ IMAGE_STORAGE_PATH = "http://localhost:12667/"
 IMAGE_UPLOAD_PATH = "D:/imgtmp"
 
 PRODUCTION_LINES = {
-    "cutting": [1, 2, 3, 4],
-    "pre_sewing": [1, 2, 3, 4],
-    "sewing": [1, 2, 3, 4, 5, 6],
-    "molding": [1, 2, 3, 4]
+    "裁断": [1, 2, 3, 4],
+    "针车预备": [1, 2, 3, 4],
+    "针车": [1, 2, 3, 4, 5, 6],
+    "成型": [1, 2, 3, 4]
 }
 
 ORDER_SHOE_STATUS_REFERENCE = {
@@ -115,5 +115,5 @@ ORDER_SHOE_STATUS_REFERENCE = {
     '针车预备开始': 30,
     '针车开始': 32,
     '成型开始': 40,
-    '生产结束': 41
+    '生产结束': 42
 }

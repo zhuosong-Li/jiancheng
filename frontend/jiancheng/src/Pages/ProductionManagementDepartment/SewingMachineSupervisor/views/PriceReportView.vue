@@ -21,6 +21,9 @@
                     </el-descriptions>
                 </el-col>
             </el-row>
+            <el-row v-if="statusName === '被驳回'" :gutter="20">
+                <span>驳回原因：{{ rejectionReason }}</span>
+            </el-row>
             <div v-if="statusName === '未提交' || statusName === '被驳回'">
                 <el-tabs v-model="currentTab" type="border-card" tab-position="top">
                     <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
@@ -73,6 +76,7 @@ const tableData = ref(null)
 const reportId = ref(null)
 const procedureInfo = ref({})
 const statusName = ref('')
+const rejectionReason = ref('')
 const currentTab = ref(1)
 const panes = ref([
     {
@@ -120,6 +124,7 @@ const getPreSewingPriceReportDetail = async () => {
         preSewingTableData.value = response.data.detail
         pewSewingReportId.value = response.data.metaData.reportId
         statusName.value = response.data.metaData.statusName
+        rejectionReason.value = response.data.metaData.rejectionReason
     }
 }
 

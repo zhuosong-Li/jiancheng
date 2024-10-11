@@ -96,6 +96,7 @@
 </template>
 <script>
 import axios from 'axios'
+import { ElMessage } from 'element-plus';
 export default {
     data() {
         return {
@@ -146,11 +147,12 @@ export default {
                 "type": this.inboundType,
                 "amount": this.currentRow.inboundAmount
             }
-            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
-            if (response.status == 200) {
+            await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
+            try {
                 ElMessage.success("入库成功")
             }
-            else {
+            catch(error) {
+                console.log(error)
                 ElMessage.error("入库失败")
             }
             this.inboundDialogVisible = false

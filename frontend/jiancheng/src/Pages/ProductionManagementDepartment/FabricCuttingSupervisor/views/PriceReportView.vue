@@ -19,6 +19,9 @@
                     </el-descriptions>
                 </el-col>
             </el-row>
+            <el-row v-if="statusName === '被驳回'" :gutter="20">
+                <span>驳回原因：{{ rejectionReason }}</span>
+            </el-row>
             <div v-if="statusName === '未提交' || statusName === '被驳回'">
                 <PriceReportCreator :orderId="props.orderId" :orderShoeId="props.orderShoeId" :reportId="reportId"
                     :tableData="tableData" :procedureInfo="procedureInfo" />
@@ -40,6 +43,7 @@ const tableData = ref([])
 const reportId = ref([])
 const procedureInfo = ref({})
 const statusName = ref('')
+const rejectionReason = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
@@ -64,5 +68,6 @@ const getPriceReportDetail = async () => {
     tableData.value = response.data.detail
     reportId.value = response.data.metaData.reportId
     statusName.value = response.data.metaData.statusName
+    rejectionReason.value = response.data.metaData.rejectionReason
 }
 </script>

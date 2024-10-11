@@ -31,10 +31,11 @@ onMounted(async () => {
     let params = { reportId: props.currentReport.reportId }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
         tableData.value.push(row)
     })
     let obj = [
+        { prop: "colorName", label: "颜色" },
         { prop: "name", label: "鞋码编号" },
         { prop: "amount", label: "生产数量" },
         { prop: "remainAmount", label: "目前剩余数量" },

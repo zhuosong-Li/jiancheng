@@ -37,20 +37,18 @@
 							<template #default="props">
 								<h3>鞋型详情</h3>
 								<el-table :data="props.row.detail" border>
-									<el-table-column label="配码编号" prop="batchInfoName" />
+									<el-table-column label="预览图" width="200">
+										<template #default="scope">
+											<el-image :src="scope.row.imageurl" fit="fill"></el-image>
+										</template>
+									</el-table-column>
 									<el-table-column label="颜色" prop="colorName" />
+									<el-table-column label="配码编号" prop="batchInfoName" />
 									<el-table-column label="订单总数" prop="batchAmount" />
 									<el-table-column label="裁断完成数量" prop="cuttingAmount" />
 									<el-table-column label="预备完成数量" prop="preSewingAmount" />
 									<el-table-column label="针车完成数量" prop="sewingAmount" />
 									<el-table-column label="成型完成数量" prop="moldingAmount" />
-									<el-table-column label="面料辅料" prop="materialLogistics" />
-									<el-table-column label="扣件拉链鞋带" prop="metalmaterialLogistics" />
-									<el-table-column label="鞋底物料" prop="soleLogistics" />
-									<el-table-column label="中底物料" prop="insoleLogistics" />
-									<el-table-column label="鞋盒物料" prop="packagingMaterialLogistics" />
-									<el-table-column label="楦型" prop="lasttypeLogistics" />
-									<el-table-column label="完成状态" prop="productionStatus" />
 								</el-table>
 							</template>
 						</el-table-column>

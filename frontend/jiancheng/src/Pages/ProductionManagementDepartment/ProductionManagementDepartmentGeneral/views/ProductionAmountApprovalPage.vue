@@ -19,7 +19,7 @@
             </el-row>
             <el-row :gutter="20">
                 <el-col :span="12" :offset="0">
-                    日期范围限制：
+                    数量单日期范围限制：
                     <el-date-picker v-model="datePeriod" type="daterange" value-format="YYYY-MM-DD" clearable
                         start-placeholder="起始日期" end-placeholder="截止日期" @change="getAmountListData"
                         @clear="getAmountListData">
@@ -69,7 +69,8 @@
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-table :data="shoeBatchAmountData" border stripe>
-                    <el-table-column prop="name" label="鞋码编号"></el-table-column>、
+                    <el-table-column prop="colorName" label="颜色"></el-table-column>、
+                    <el-table-column prop="name" label="鞋码编号"></el-table-column>
                     <el-table-column prop="amount" label="当日生产数量"></el-table-column>
                     <el-table-column prop="producedAmount" label="累计生产数量"></el-table-column>
                     <el-table-column prop="totalAmount" label="目标数量"></el-table-column>

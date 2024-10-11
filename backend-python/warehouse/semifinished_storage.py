@@ -34,7 +34,7 @@ def get_semifinished_in_out_overview():
             Order,
             OrderShoe,
             Shoe,
-            OrderShoeBatchInfo.total_amount,
+            func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
             SemifinishedShoeStorage,
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
@@ -48,35 +48,36 @@ def get_semifinished_in_out_overview():
             SemifinishedShoeStorage,
             SemifinishedShoeStorage.order_shoe_id == OrderShoe.order_shoe_id,
         )
+        .group_by(OrderShoe.order_shoe_id, SemifinishedShoeStorage.semifinished_shoe_id)
     )
-    if order_rid and order_rid != '':
+    if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
-    if shoe_rid and shoe_rid != '':
+    if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     if op_type != 0:
-        query = (
-            query.join(
+        status_table = (
+            db.session.query(OrderShoe.order_shoe_id.label("order_shoe_id"), OrderShoeStatus)
+            .join(
                 OrderShoeStatus,
-                OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id,
+                OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
             )
             .filter(
                 OrderShoeStatus.current_status.in_([25, 26, 34, 35]),
                 OrderShoeStatus.current_status_value.in_([0, 1]),
             )
+            .subquery()
+        )
+        query = (
+            query.join(
+                status_table, status_table.c.order_shoe_id == OrderShoe.order_shoe_id,
+            )
             .filter(SemifinishedShoeStorage.semifinished_status != 2)
         )
-
-    count_result = db.session.query(func.count()).select_from(query.subquery()).scalar()
+    count_result = query.distinct().count()
     response = query.limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
-        (
-            order,
-            order_shoe,
-            shoe,
-            total_amount,
-            storage_obj,
-        ) = row
+        (order, order_shoe, shoe, total_amount, storage_obj) = row
         if storage_obj.semifinished_status == 0:
             status_name = "未完成入库"
         elif storage_obj.semifinished_status == 1:
@@ -112,7 +113,7 @@ def inbound_semifinished():
     if not storage:
         return jsonify({"message": "failed"}), 400
     else:
-        storage.semifinished_amount += data["amount"]
+        storage.semifinished_amount += int(data["amount"])
         storage.semifinished_type = data["type"]
         storage.semifinished_inbound_datetime = data["inboundDate"]
         storage.semifinished_status = 1
@@ -199,9 +200,15 @@ def outbound_semifinished():
     record.shoe_outbound_rid = rid
     storage.semifinished_amount = 0
     storage.semifinished_status = 2
+    if storage.semifinished_object == 0:
+        ops = [90, 91]
+    elif storage.semifinished_object == 1:
+        ops = [108, 109]
+    else:
+        return jsonify({"message": "invalid semifinished object"}), 400
     try:
         processor: EventProcessor = current_app.config["event_processor"]
-        for op in [90, 91]:
+        for op in ops:
             event = Event(
                 staff_id=1,
                 handle_time=datetime.datetime.now(),
@@ -215,6 +222,7 @@ def outbound_semifinished():
         return jsonify({"message": "failed"}), 500
     db.session.commit()
     return jsonify({"message": "success"})
+
 
 @semifinished_storage_bp.route(
     "/warehouse/warehousemanager/getsemifinishedinoutboundrecords", methods=["GET"]
@@ -231,12 +239,18 @@ def get_semifinished_in_out_bound_records():
 
     result = []
     for row in inbound_response:
-        obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "入库",
+            "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         obj["amount"] = row.inbound_amount
         result.append(obj)
 
     for row in outbound_response:
-        obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "出库",
+            "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         obj["amount"] = row.outbound_amount
         result.append(obj)
     return result

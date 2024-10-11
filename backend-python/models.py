@@ -300,6 +300,19 @@ class OrderShoeBatchInfo(db.Model):
     size_44_amount = db.Column(db.Integer, nullable=True)
     size_45_amount = db.Column(db.Integer, nullable=True)
     size_46_amount = db.Column(db.Integer, nullable=True)
+    size_34_actual_amount = db.Column(db.Integer, nullable=True)
+    size_35_actual_amount = db.Column(db.Integer, nullable=True)
+    size_36_actual_amount = db.Column(db.Integer, nullable=True)
+    size_37_actual_amount = db.Column(db.Integer, nullable=True)
+    size_38_actual_amount = db.Column(db.Integer, nullable=True)
+    size_39_actual_amount = db.Column(db.Integer, nullable=True)
+    size_40_actual_amount = db.Column(db.Integer, nullable=True)
+    size_41_actual_amount = db.Column(db.Integer, nullable=True)
+    size_42_actual_amount = db.Column(db.Integer, nullable=True)
+    size_43_actual_amount = db.Column(db.Integer, nullable=True)
+    size_44_actual_amount = db.Column(db.Integer, nullable=True)
+    size_45_actual_amount = db.Column(db.Integer, nullable=True)
+    size_46_actual_amount = db.Column(db.Integer, nullable=True)
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
@@ -777,7 +790,7 @@ class FinishedShoeStorage(db.Model):
     order_shoe_id = db.Column(
         db.BigInteger,
     )
-    finished_amount = db.Column(db.Integer, nullable=False)
+    finished_amount = db.Column(db.Integer, default=0, nullable=False)
     finished_type = db.Column(db.CHAR(1), nullable=False)
     finished_status = db.Column(
         db.SmallInteger,

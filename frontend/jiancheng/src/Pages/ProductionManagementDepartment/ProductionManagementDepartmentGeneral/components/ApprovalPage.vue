@@ -27,6 +27,7 @@
                 <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
                 <el-table-column prop="cuttingAmount" label="昨日裁断数量上报"></el-table-column>
+                <el-table-column prop="preSewingAmount" label="昨日针车预备数量上报"></el-table-column>
                 <el-table-column prop="sewingAmount" label="昨日针车数量上报"></el-table-column>
                 <el-table-column prop="moldingAmount" label="昨日成型数量上报"></el-table-column>
                 <el-table-column label="操作">
