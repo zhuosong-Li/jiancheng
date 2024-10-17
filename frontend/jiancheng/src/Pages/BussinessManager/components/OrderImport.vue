@@ -169,7 +169,7 @@
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-descriptions title="" :column="2" border>
-                    <el-descriptions-item label="生产订单上传状态" align="center"
+                    <el-descriptions-item label="包装资料上传状态" align="center"
                         >{{ orderDocData.productionDoc }}
                         <el-button
                             type="primary"
