@@ -39,14 +39,19 @@ const producedAmount = ref(0)
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
-    let params = { "orderShoeId": props.orderShoeId, 'team': '成型' }
+    let params = { "orderShoeId": props.orderShoeId, 'team': '成型', "status": 2 }
     // get price report detail
-    let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
-    priceReport.value = response.data.detail
+    try {
+        let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+        priceReport.value = response.data.detail
+    }
+    catch(error) {
+        console.log("error")
+    }
     // get quantity report detail
     params = { "reportId": props.currentReport.reportId }
-    response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
-    response.data.forEach(row => {
+    let response2 = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
+    response2.data.forEach(row => {
         row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]

@@ -22,13 +22,17 @@
                 <el-table-column prop="customerProductName" label="客人号"></el-table-column>
                 <el-table-column prop="inboundAmount" label="鞋型应入库数量"></el-table-column>
                 <el-table-column prop="currentAmount" label="鞋型库存"></el-table-column>
-                <el-table-column prop="statusName" label="状态"></el-table-column>
-                <el-table-column label="操作" width="200">
+                <el-table-column prop="storageType" label="自产/外包"></el-table-column>
+                <el-table-column label="操作" width="300">
                     <template #default="scope">
-                        <el-button v-if="scope.row.statusName === '未完成入库'" type="primary" size="small"
-                            @click="inboundFinished(scope.row)">入库</el-button>
-                        <el-button v-else type="success" size="small"
-                            @click="outboundFinished(scope.row)">出库</el-button>
+                        <el-button-group>
+                            <el-button type="primary" size="small"
+                                @click="inboundFinished(scope.row)">入库</el-button>
+                            <el-button type="success" size="small"
+                                @click="outboundFinished(scope.row)">出库</el-button>
+                            <el-button type="warning" size="small"
+                                @click="finishInoutbound(scope.row)">完成出入库</el-button>
+                        </el-button-group>
                     </template>
                 </el-table-column>
             </el-table>
@@ -49,11 +53,8 @@
                         <el-date-picker v-model="inboundDate" type="datetime" placeholder="选择日期时间" style="width: 100%"
                             value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
-                    <el-form-item label="入库方式">
-                        <el-radio-group v-model="inboundType">
-                            <el-radio value="1">自产入库</el-radio>
-                            <el-radio value="2">外包入库</el-radio>
-                        </el-radio-group>
+                    <el-form-item label="入库数量">
+                        <el-input v-model="actualInboundAmount"></el-input>
                     </el-form-item>
                 </el-form>
             </el-col>
@@ -100,7 +101,7 @@ import { ElMessage } from 'element-plus';
 export default {
     data() {
         return {
-            inboundType: '1',
+            actualInboundAmount: '',
             inboundDate: '',
             currentPage: 1,
             pageSize: 10,
@@ -144,8 +145,7 @@ export default {
                 "orderShoeId": this.currentRow.orderShoeId,
                 "storageId": this.currentRow.storageId,
                 "inboundDate": this.inboundDate,
-                "type": this.inboundType,
-                "amount": this.currentRow.inboundAmount
+                "amount": this.actualInboundAmount
             }
             await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
             try {

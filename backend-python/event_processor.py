@@ -3,6 +3,8 @@ from models import *
 from app_config import db
 from logger import logger
 from sqlalchemy import or_, and_
+from collections import deque
+from copy import deepcopy
 
 
 ORDERSTATUSNAMELIST = [
@@ -73,6 +75,52 @@ ORDERSHOESTATUSNAMELIST = [
     "生产结束",
 ]
 
+ORDERSHOESTATUSGRAPH = {
+    0: {"outgoing": [1], "incoming": []},
+    1: {"outgoing": [2, 9, 17], "incoming": [0]},
+    2: {"outgoing": [3], "incoming": [1]},
+    3: {"outgoing": [4], "incoming": [2]},
+    4: {"outgoing": [5], "incoming": [3]},
+    5: {"outgoing": [6], "incoming": [4]},
+    6: {"outgoing": [7], "incoming": [5]},
+    7: {"outgoing": [8], "incoming": [6]},
+    8: {"outgoing": [16], "incoming": [7]},
+    9: {"outgoing": [10], "incoming": [1]},
+    10: {"outgoing": [11, 18], "incoming": [9]},
+    11: {"outgoing": [12], "incoming": [10]},
+    12: {"outgoing": [13], "incoming": [11]},
+    13: {"outgoing": [14], "incoming": [12]},
+    14: {"outgoing": [15], "incoming": [13]},
+    15: {"outgoing": [16], "incoming": [14]},
+    16: {"outgoing": [42], "incoming": [8, 15]},
+    17: {"outgoing": [18], "incoming": [1]},
+    18: {"outgoing": [20, 23], "incoming": [10, 17]},
+    19: {"outgoing": [], "incoming": []},
+    20: {"outgoing": [21], "incoming": [18]},
+    21: {"outgoing": [22], "incoming": [20]},
+    22: {"outgoing": [24], "incoming": [21]},
+    23: {"outgoing": [24], "incoming": [18]},
+    24: {"outgoing": [27, 30], "incoming": [22, 23]},
+    25: {"outgoing": [], "incoming": []},
+    26: {"outgoing": [], "incoming": []},
+    27: {"outgoing": [28], "incoming": [24]},
+    28: {"outgoing": [29], "incoming": [27]},
+    29: {"outgoing": [33], "incoming": [28]},
+    30: {"outgoing": [31], "incoming": [24]},
+    31: {"outgoing": [32], "incoming": [30]},
+    32: {"outgoing": [33], "incoming": [31]},
+    33: {"outgoing": [37, 40], "incoming": [29, 32]},
+    34: {"outgoing": [], "incoming": []},
+    35: {"outgoing": [], "incoming": []},
+    36: {"outgoing": [], "incoming": []},
+    37: {"outgoing": [38], "incoming": [33]},
+    38: {"outgoing": [39], "incoming": [37]},
+    39: {"outgoing": [41], "incoming": [38]},
+    40: {"outgoing": [41], "incoming": [33]},
+    41: {"outgoing": [42], "incoming": [39, 40]},
+    42: {"outgoing": [], "incoming": [41, 16]},
+}
+
 
 class OrderStatusVal:
     def __init__(self, status_id, status_name):
@@ -101,7 +149,7 @@ class OrderShoeStatusVal:
         return self.status_name
 
     def __repr__(self):
-        return str(self.status_id) + " " + self.status_name
+        return f"{self.status_id} {self.status_name}"
 
 
 class Procedure:
@@ -158,46 +206,17 @@ class EventProcessor:
         )
 
         ### orderShoeStatusPath
-        head = self.orderShoeProductionPath.getSource()
-        prev = None
-        for i in range(len(self.ORDERSHOESTATUSNAMELIST)):
-            statusName = ORDERSHOESTATUSNAMELIST[i]
-            node = GraphNode(val=OrderShoeStatusVal(i, statusName))
-            self.orderShoeStatusidToNode[i] = node
-            prevs = []
-            if i == 0:
-                self.orderShoeProductionPath.setSource(node)
-            elif i == 9:
-                prevs.append(self.orderShoeStatusidToNode[1])
-            elif i == 16:
-                prevs = [prev, self.orderShoeStatusidToNode[8]]
-            elif i == 17:
-                prevs.append(self.orderShoeStatusidToNode[1])
-            elif i == 18:
-                prevs = [prev, self.orderShoeStatusidToNode[10]]
-            elif i == 19:
-                continue
-            elif i == 20:
-                prevs = [self.orderShoeStatusidToNode[18]]
-            elif i == 23:
-                prevs = [prev, self.orderShoeStatusidToNode[18]]
-            elif i == 27:
-                prevs = [self.orderShoeStatusidToNode[24]]
-            elif i == 30:
-                prevs = [prev, self.orderShoeStatusidToNode[26]]
-            elif i == 36:
-                continue
-            elif i == 37:
-                prevs.append(self.orderShoeStatusidToNode[33])
-            elif i == 40:
-                prevs = [prev, self.orderShoeStatusidToNode[35]]
-            else:
-                prevs = [prev]
+        for node_id, value in ORDERSHOESTATUSGRAPH.items():
+            status_name = ORDERSHOESTATUSNAMELIST[node_id]
+            node = GraphNode(val=OrderShoeStatusVal(node_id, status_name))
+            self.orderShoeStatusidToNode[node_id] = node
 
-            for prev_node in prevs:
-                prev_node.insertNext(node)
-                node.insertPrev(prev_node)
-            prev = node
+        for node_id, value in ORDERSHOESTATUSGRAPH.items():
+            node = self.orderShoeStatusidToNode[node_id]
+            for prev_node_id in value["incoming"]:
+                node.insertPrev(self.orderShoeStatusidToNode[prev_node_id])
+            for next_node_id in value["outgoing"]:
+                node.insertNext(self.orderShoeStatusidToNode[next_node_id])
 
         ### disconnect LogisticProcedure and Production Procedure
         # li = self.orderShoeStatusidToNode[2].getPrev()[0].getNext()
@@ -227,6 +246,7 @@ class EventProcessor:
             print("prev has " + str(node.getPrev()))
             print("cur node is " + str(node))
             print("next has " + str(node.getNext()))
+            print("================================")
 
     def isMerge(self, node_id):
         node_prevs = self.orderShoeStatusidToNode[node_id].getPrev()
@@ -310,7 +330,11 @@ class EventProcessor:
             + str(modifiedValue)
         )
         result = False
-        ### check operation validility
+        # if the event is outsource event
+        if event.event_type == 1:
+            logger.debug("outsource event")
+            return self.handleOutsourceEvent(curStat, modifiedStatus, event)
+        # check operation validility
         if modifiedStatus in curStat and (
             modifiedValue - curVal[curStat.index(modifiedStatus)] == 1
         ):
@@ -384,6 +408,21 @@ class EventProcessor:
         db.session.commit()
         return True
 
+    def handleOutsourceEvent(self, current_status_arr, modified_status, event):
+        query = db.session.query(OrderShoeStatus).filter(OrderShoeStatus.order_shoe_id == event.event_order_shoe_id)
+        if 18 in current_status_arr and modified_status in [23, 32, 40]:
+            status = query.filter(OrderShoeStatus.current_status==18).first()
+        elif 24 in current_status_arr and modified_status in [32, 40]:
+            status = query.filter(OrderShoeStatus.current_status==24).first()
+        elif 33 in current_status_arr and modified_status in [40]:
+            status = query.filter(OrderShoeStatus.current_status==33).first()
+        if status:
+            status.current_status = modified_status
+            status.current_status_value = 0
+            db.session.commit()
+            return True
+        return False
+
     def dbSetOrderShoeStatus(self, event, operation, next_status=None):
         ### if setting next status
         if next_status:
@@ -408,15 +447,20 @@ class EventProcessor:
                         db.session.delete(entity)
                     newEntity = (
                         db.session.query(OrderShoeStatus)
-                        .filter_by(current_status=next_status[0])
+                        .filter_by(
+                            order_shoe_id=event.event_order_shoe_id,
+                            current_status=next_status[0],
+                        )
                         .first()
                     )
+                    logger.debug(newEntity)
                     if not newEntity:
                         newEntity = OrderShoeStatus(
                             order_shoe_id=event.event_order_shoe_id,
                             current_status=next_status[0],
                             current_status_value=0,
                         )
+                        logger.debug(newEntity)
                         db.session.add(newEntity)
                 else:
                     entity = (

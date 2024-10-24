@@ -1,0 +1,125 @@
+<template>
+    <div class="order-lifecycle">
+        <div v-for="(status, index) in productionWorkflow" :key="index" class="status-item">
+            <div :class="[
+                'status-circle',
+                { completed: currentStatus > index, current: currentStatus === index }
+            ]">
+            </div>
+            <div :class="[
+                'status-text',
+                { completed: currentStatus > index, current: currentStatus === index }
+            ]">
+                {{ status.stage }}<br />
+            </div>
+            <div v-if="index < productionWorkflow.length" :class="[
+                'status-arrow',
+                { completed: currentStatus > index, current: currentStatus === index }
+            ]">
+                →
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    props: ['status'],
+    data() {
+        return {
+            productionWorkflow: [
+                { stage: '生产开始', department: '生产部' },
+                { stage: '裁断开始', department: '生产部' },
+                { stage: '裁断结束', department: '业务部' },
+                { stage: '针车预备开始', department: '生产部' },
+                { stage: '针车预备结束', department: '生产部' },
+                { stage: '针车开始', department: '生产部' },
+                { stage: '针车结束', department: '生产部' },
+                { stage: '成型开始', department: '生产部' },
+                { stage: '成型结束', department: '生产部' },
+                { stage: '生产结束', department: '生产部' }
+            ],
+            currentStatus: this.$props.status // Example: the current status index
+        };
+    }
+};
+</script>
+
+<style scoped>
+.order-lifecycle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    overflow-x: auto;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 0 10px;
+}
+
+.status-circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 5px;
+    transition: background-color 0.3s;
+}
+
+.status-circle.completed {
+    background-color: #28a745;
+    /* Green for completed steps */
+}
+
+.status-circle.current {
+    background-color: #ff9800;
+    /* Orange for current step */
+}
+
+.status-text {
+    font-size: 10px;
+    color: #999;
+    transition: color 0.3s;
+}
+
+.status-text.completed {
+    color: #28a745;
+    /* Green for completed steps */
+    font-weight: bold;
+}
+
+.status-text.current {
+    color: #ff9800;
+    /* Orange for current step */
+    font-weight: bold;
+}
+
+.status-arrow {
+    margin: 0 5px;
+    color: #ccc;
+    font-size: 16px;
+    transition: color 0.3s;
+}
+
+.status-arrow.completed {
+    color: #28a745;
+    /* Green for completed steps */
+}
+
+.status-arrow.current {
+    color: #ff9800;
+    /* Orange for current step */
+}
+</style>

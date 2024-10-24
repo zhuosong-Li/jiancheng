@@ -15,14 +15,17 @@
         </el-col>
         <el-col :span="4" :offset="4">
             <span style="white-space: nowrap">状态点查询：
-                <el-select v-model="nodeNameSearch" clearable filterable
-                    @change="getOrderTableData()" @clear="getOrderTableData()">
+                <el-select v-model="nodeNameSearch" clearable filterable @change="getOrderTableData()"
+                    @clear="getOrderTableData()">
                     <el-option v-for="item in [
                         '生产开始',
                         '裁断开始',
                         '针车预备开始',
                         '针车开始',
                         '成型开始',
+                        '裁断结束',
+                        '针车结束',
+                        '成型结束',
                         '生产结束'
                     ]" :key="item" :label="item" :value="item">
                     </el-option>
@@ -38,6 +41,7 @@
             <el-table-column label="操作">
                 <template #default="scope">
                     <el-button type="primary" size="default" @click="handleConfirmation(scope.row)">确认状态完成</el-button>
+                    <el-button type="primary" size="default" @click="openConfirmationPage(scope.row)">新版状态完成</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -93,6 +97,7 @@ export default {
             orderTableData: [],
             currentRow: {},
             shoeInfo: [],
+            outsourcedLines: ''
         }
     },
     mounted() {
@@ -162,7 +167,15 @@ export default {
                 this.getOrderTableData()
             })
         },
-
+        async openConfirmationPage(rowData) {
+			const params = {
+				"orderId": rowData.orderId,
+				"orderShoeId": rowData.orderShoeId,
+			}
+			const queryString = new URLSearchParams(params).toString();
+			const url = `${window.location.origin}/productiongeneral/productionstatustracking?${queryString}`
+			window.open(url, '_blank')
+        },
     }
 }
 </script>

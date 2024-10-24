@@ -55,24 +55,7 @@ def get_semifinished_in_out_overview():
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     if op_type != 0:
-        status_table = (
-            db.session.query(OrderShoe.order_shoe_id.label("order_shoe_id"), OrderShoeStatus)
-            .join(
-                OrderShoeStatus,
-                OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id,
-            )
-            .filter(
-                OrderShoeStatus.current_status.in_([25, 26, 34, 35]),
-                OrderShoeStatus.current_status_value.in_([0, 1]),
-            )
-            .subquery()
-        )
-        query = (
-            query.join(
-                status_table, status_table.c.order_shoe_id == OrderShoe.order_shoe_id,
-            )
-            .filter(SemifinishedShoeStorage.semifinished_status != 2)
-        )
+        query = query.filter(SemifinishedShoeStorage.semifinished_status != 2)
     count_result = query.distinct().count()
     response = query.limit(number).offset((page - 1) * number).all()
     result = []
@@ -88,6 +71,10 @@ def get_semifinished_in_out_overview():
             object = "裁断后材料"
         else:
             object = "鞋包"
+        if storage_obj.semifinished_type == 0:
+            storage_type = '自产'
+        else:
+            storage_type = '外包'
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -98,6 +85,7 @@ def get_semifinished_in_out_overview():
             "inboundAmount": total_amount,
             "currentAmount": storage_obj.semifinished_amount,
             "object": object,
+            "storageType": storage_type,
             "statusName": status_name,
         }
         result.append(obj)
@@ -112,16 +100,13 @@ def inbound_semifinished():
     storage = SemifinishedShoeStorage.query.get(data["storageId"])
     if not storage:
         return jsonify({"message": "failed"}), 400
-    else:
-        storage.semifinished_amount += int(data["amount"])
-        storage.semifinished_type = data["type"]
-        storage.semifinished_inbound_datetime = data["inboundDate"]
-        storage.semifinished_status = 1
+
+    storage.semifinished_amount += int(data["amount"])
+    storage.semifinished_inbound_datetime = data["inboundDate"]
 
     record = ShoeInboundRecord(
         inbound_amount=data["amount"],
         inbound_datetime=data["inboundDate"],
-        inbound_type=data["type"],
         semifinished_shoe_storage_id=data["storageId"],
     )
     db.session.add(record)
@@ -132,36 +117,21 @@ def inbound_semifinished():
         + str(record.shoe_inbound_record_id)
     )
     record.shoe_inbound_rid = rid
-
-    try:
-        if storage.semifinished_object == 0:
-            opertion1, operation2 = 88, 89
-        else:
-            opertion1, operation2 = 106, 107
-        processor: EventProcessor = current_app.config["event_processor"]
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=opertion1,
-            event_order_id=data["orderId"],
-            event_order_shoe_id=data["orderShoeId"],
-        )
-        result = processor.processEvent(event)
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=operation2,
-            event_order_id=data["orderId"],
-            event_order_shoe_id=data["orderShoeId"],
-        )
-        result = processor.processEvent(event)
-    except Exception as e:
-        print(e)
-    if not result:
-        return jsonify({"message": "failed"}), 500
     db.session.commit()
     return jsonify({"message": "success"})
 
+
+@semifinished_storage_bp.route(
+    "/warehouse/warehousemanager/finishinoutbound", methods=["PATCH"]
+)
+def finish_inoutbound():
+    data = request.get_json()
+    storage = SemifinishedShoeStorage.query.get(data["storageId"])
+    if not storage:
+        return jsonify({"message": "order shoe storage not found"}), 400
+    storage.semifinished_status = 2
+    db.session.commit()
+    return jsonify({"message": "success"})
 
 @semifinished_storage_bp.route(
     "/warehouse/warehousemanager/outboundsemifinished", methods=["POST", "PATCH"]
@@ -171,20 +141,20 @@ def outbound_semifinished():
     storage = SemifinishedShoeStorage.query.get(data["storageId"])
     if not storage:
         return jsonify({"message": "failed"}), 400
-    if data["outboundType"] == "1":
+    if storage.semifinished_type == 0:
         record = ShoeOutboundRecord(
-            outbound_amount=storage.semifinished_amount,
+            outbound_amount=int(data["outboundAmount"]),
             outbound_datetime=data["outboundDate"],
             picker=data["picker"],
-            outbound_type=data["outboundType"],
+            outbound_type=storage.semifinished_type,
             semifinished_shoe_storage_id=storage.semifinished_shoe_id,
         )
-    elif data["outboundType"] == "2":
+    elif storage.semifinished_type == 1:
         record = ShoeOutboundRecord(
-            outbound_amount=storage.semifinished_amount,
+            outbound_amount=int(data["outboundAmount"]),
             outbound_datetime=data["outboundDate"],
             outbound_address=data["outboundAddress"],
-            outbound_type=data["outboundType"],
+            outbound_type=storage.semifinished_type,
             semifinished_shoe_storage_id=storage.semifinished_shoe_id,
         )
     else:
@@ -198,28 +168,7 @@ def outbound_semifinished():
         + str(record.shoe_outbound_record_id)
     )
     record.shoe_outbound_rid = rid
-    storage.semifinished_amount = 0
-    storage.semifinished_status = 2
-    if storage.semifinished_object == 0:
-        ops = [90, 91]
-    elif storage.semifinished_object == 1:
-        ops = [108, 109]
-    else:
-        return jsonify({"message": "invalid semifinished object"}), 400
-    try:
-        processor: EventProcessor = current_app.config["event_processor"]
-        for op in ops:
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=op,
-                event_order_id=data["orderId"],
-                event_order_shoe_id=data["orderShoeId"],
-            )
-            processor.processEvent(event)
-    except Exception as e:
-        print(e)
-        return jsonify({"message": "failed"}), 500
+    storage.semifinished_amount -= int(data["outboundAmount"])
     db.session.commit()
     return jsonify({"message": "success"})
 

@@ -196,7 +196,6 @@ def delete_quantity_report():
 def get_all_quantity_report():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
-    print("hello")
     response = QuantityReport.query.filter_by(
         order_shoe_id=order_shoe_id, team=team
     ).all()

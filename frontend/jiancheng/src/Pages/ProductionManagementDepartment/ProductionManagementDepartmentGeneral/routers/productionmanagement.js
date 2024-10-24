@@ -1,6 +1,7 @@
 import OrderDetails from '../components/OrderDetailView.vue'
 import ProductionOutsourcePage from '../views/ProductionOutsourcePage.vue'
 import ProductionAmountApprovalPage from '../views/ProductionAmountApprovalPage.vue'
+import ProductionStatusTrackingPage from '../views/ProductionStatusTrackingPage.vue'
 export default [
   {
     path: '/productiongeneral/productiondetail',
@@ -45,6 +46,17 @@ export default [
         shoeRId: route.query.shoeRId,
         orderEndDate: route.query.orderEndDate,
         customerProductName: route.query.customerProductName,
+      }
+    )
+  },
+  {
+    path: '/productiongeneral/productionstatustracking',
+    name: 'production-status-tracking',
+    component: ProductionStatusTrackingPage,
+    props: route => (
+      {
+        orderRId: route.query.orderRId,
+        orderShoeId: route.query.orderShoeId,
       }
     )
   }
