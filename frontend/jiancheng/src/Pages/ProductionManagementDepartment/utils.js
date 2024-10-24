@@ -32,3 +32,29 @@ export function exportTableToExcel(data, columns, filename = 'table.xlsx') {
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     saveAs(new Blob([wbout], { type: 'application/octet-stream' }), filename);
 }
+
+export function shoeBatchInfoTableSpanMethod(tableData) {
+    return function spanMethod({ row, column, rowIndex, columnIndex }) {
+        // Merging 'colorName' and 'totalAmount' columns
+        if (columnIndex === 0 || columnIndex === 15) { // colorName and totalAmount columns
+            const currentColor = tableData[rowIndex].colorName;
+
+            // Skip rows already merged
+            if (rowIndex > 0 && tableData[rowIndex - 1].colorName === currentColor) {
+                return [0, 0]; // Skip this cell
+            }
+
+            // Calculate the rowspan for the current 'colorName'
+            let rowspan = 1;
+            for (let i = rowIndex + 1; i < tableData.length; i++) {
+                if (tableData[i].colorName === currentColor) {
+                    rowspan++;
+                } else {
+                    break;
+                }
+            }
+
+            return [rowspan, 1]; // Set the rowspan for merging, and colspan = 1
+        }
+    }
+}

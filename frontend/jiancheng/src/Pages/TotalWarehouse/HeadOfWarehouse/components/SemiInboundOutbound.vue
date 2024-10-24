@@ -5,11 +5,13 @@
     <el-row :gutter="20">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
+            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
+            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData" />
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -18,16 +20,20 @@
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客人号"></el-table-column>
-                <el-table-column prop="inboundAmount" label="鞋型入库数量"></el-table-column>
-                <el-table-column prop="currentAmount" label="鞋型库存"></el-table-column>
-                <el-table-column prop="object" label="鞋型组件"></el-table-column>
-                <el-table-column prop="statusName" label="状态"></el-table-column>
-                <el-table-column label="操作" width="200">
+                <el-table-column prop="inboundAmount" label="计划入库数量"></el-table-column>
+                <el-table-column prop="currentAmount" label="半成品库存"></el-table-column>
+                <el-table-column prop="object" label="半成品类型"></el-table-column>
+                <el-table-column prop="storageType" label="自产/外包"></el-table-column>
+                <el-table-column label="操作" width="300">
                     <template #default="scope">
-                        <el-button v-if="scope.row.statusName === '未完成入库'" type="primary" size="small"
-                            @click="inboundSemifinished(scope.row)">入库</el-button>
-                        <el-button v-else type="success" size="small"
-                            @click="outboundSemifinished(scope.row)">出库</el-button>
+                        <el-button-group>
+                            <el-button type="primary" size="small"
+                                @click="inboundSemifinished(scope.row)">入库</el-button>
+                            <el-button type="success" size="small"
+                                @click="outboundSemifinished(scope.row)">出库</el-button>
+                            <el-button type="warning" size="small"
+                                @click="finishInoutbound(scope.row)">完成出入库</el-button>
+                        </el-button-group>
                     </template>
                 </el-table-column>
             </el-table>
@@ -48,11 +54,8 @@
                         <el-date-picker v-model="inboundDate" type="datetime" placeholder="选择日期时间"
                             value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
                     </el-form-item>
-                    <el-form-item label="入库方式">
-                        <el-radio-group v-model="inboundType">
-                            <el-radio value="1">自产入库</el-radio>
-                            <el-radio value="2">外包入库</el-radio>
-                        </el-radio-group>
+                    <el-form-item label="入库数量">
+                        <el-input v-model="actualInboundAmount"></el-input>
                     </el-form-item>
                 </el-form>
             </el-col>
@@ -68,36 +71,33 @@
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-form label-position="right" label-width="100px">
-                    <el-form-item label="出库时间">
-                        <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
-                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
-                    </el-form-item>
-                    <el-form-item label="出库方式">
-                        <el-radio-group v-model="outboundForm.outboundType">
-                            <el-radio value="1">内部出库</el-radio>
-                            <el-radio value="2">外包出库</el-radio>
-                        </el-radio-group>
-                    </el-form-item>
-                    <el-form-item label="出库工段">
-                        <div v-if="outboundForm.outboundType === '1' && currentRow.object === '裁断后材料'">
-                            针车
-                        </div>
-                        <div v-else-if="outboundForm.outboundType === '1' && currentRow.object === '鞋包'">
-                            成型
-                        </div>
-                        <div v-else>
-                        </div>
-                    </el-form-item>
-                    <el-form-item label="领料人">
-                        <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"
-                            :disabled="outboundForm.outboundType !== '1'"></el-input>
-                    </el-form-item>
-                    <el-form-item label="外包信息"> </el-form-item>
-                    <el-text>半成品最迟发货日期：{{ outboundForm.deadlineDate }}</el-text>
-                    <el-form-item label="发货地址">
-                        <el-input v-model="outboundForm.address" placeholder="请输入发货地址"
-                            :disabled="outboundForm.outboundType !== '2'"></el-input>
-                    </el-form-item>
+                    <div v-if="currentRow.storageType === '自产'">
+                        <el-form-item label="出库时间">
+                            <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
+                                style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+                        </el-form-item>
+                        <el-form-item label="出库工段">
+                            <div v-if="currentRow.object === '裁断后材料'">
+                                针车
+                            </div>
+                            <div v-else-if="currentRow.object === '鞋包'">
+                                成型
+                            </div>
+                        </el-form-item>
+                        <el-form-item label="出库数量">
+                            <el-input v-model="outboundForm.outboundAmount"></el-input>
+                        </el-form-item>
+                        <el-form-item label="领料人">
+                            <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"></el-input>
+                        </el-form-item>
+                    </div>
+                    <div v-else>
+                        <el-form-item label="外包信息"> </el-form-item>
+                        <el-text>半成品最迟发货日期：{{ outboundForm.deadlineDate }}</el-text>
+                        <el-form-item label="发货地址">
+                            <el-input v-model="outboundForm.address" placeholder="请输入发货地址"></el-input>
+                        </el-form-item>
+                    </div>
                 </el-form>
             </el-col>
         </el-row>
@@ -111,20 +111,20 @@
 </template>
 <script>
 import axios from 'axios'
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 export default {
     data() {
         return {
-            inboundType: '1',
             inboundDate: '',
+            actualInboundAmount: '',
             currentPage: 1,
             pageSize: 10,
             outboundForm: {
                 outboundDate: '',
-                outboundType: '1',
                 receiver: '',
                 deadlineDate: '',
-                address: ''
+                address: '',
+                outboundAmount: ''
             },
             semiInboundDialogVisible: false,
             semiOutboundDialogVisible: false,
@@ -156,14 +156,13 @@ export default {
                 "orderShoeId": this.currentRow.orderShoeId,
                 "storageId": this.currentRow.storageId,
                 "inboundDate": this.inboundDate,
-                "type": this.inboundType,
-                "amount": this.currentRow.inboundAmount
+                "amount": this.actualInboundAmount
             }
             try {
                 await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
                 ElMessage.success("入库成功")
             }
-            catch(error) {
+            catch (error) {
                 console.log(error)
                 ElMessage.error("入库失败")
             }
@@ -176,7 +175,7 @@ export default {
                 "orderShoeId": this.currentRow.orderShoeId,
                 "storageId": this.currentRow.storageId,
                 "outboundDate": this.outboundForm.outboundDate,
-                "outboundType": this.outboundForm.outboundType,
+                "outboundAmount": this.outboundForm.outboundAmount,
                 "picker": this.outboundForm.receiver
             }
             const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)
@@ -204,6 +203,24 @@ export default {
         outboundSemifinished(row) {
             this.semiOutboundDialogVisible = true
             this.currentRow = row
+        },
+        finishInoutbound(row) {
+            ElMessageBox.alert('你仍可前往出入库记录修改库存信息，是否继续？', '警告', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                cancelButtonText: '取消'
+            }).then(async () => {
+                const data = { "storageId": row.storageId }
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinoutbound`, data)
+                try {
+                    ElMessage.success("操作成功")
+                }
+                catch (error) {
+                    console.log(error)
+                    ElMessage.error("操作异常")
+                }
+                this.getTableData()
+            })
         }
     }
 }

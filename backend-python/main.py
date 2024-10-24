@@ -26,6 +26,7 @@ def main():
 if __name__ == "__main__":
     event_processor = EventProcessor()
     app.config['event_processor'] = event_processor
+    # event_processor.testPaths()
     # with app.app_context():
     # db.create_all()  # This will create the database tables under the application context.
     # shoes_rid = ["0E21922", "000000", "111111","222222"]

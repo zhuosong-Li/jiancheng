@@ -151,18 +151,7 @@ export default {
                 '此操作无法撤回，是否通过？',
                 '提示',
             ).then(async () => {
-                let reportIdArr = []
-                if (this.currentRow.team === '针车预备' || this.currentRow.team === '针车') {
-                    this.priceReports.forEach(row => {
-                        if (row.team === '针车预备' || row.team === '针车') {
-                            reportIdArr.push(row.reportId)
-                        }
-                    })
-                }
-                else {
-                    reportIdArr = [this.currentRow.reportId]
-                }
-                const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportIdArr": reportIdArr }
+                const data = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId, "reportId": this.currentRow.reportId }
                 try {
                     await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvepricereport`, data)
                     ElMessage.success('审批成功')

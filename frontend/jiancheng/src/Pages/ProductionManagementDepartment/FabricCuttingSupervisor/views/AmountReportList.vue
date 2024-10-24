@@ -143,11 +143,6 @@ const handleConfirmCreate = async () => {
     }
     const response = await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
     ElMessage({ type: 'success', message: '添加成功!' })
-    taskData.value.push({
-        reportId: response.data.reportId,
-        date: dateValue.value,
-        status: "未提交生产数量表"
-    })
     body = {
         reportId: response.data.reportId,
         orderShoeId: props.orderShoeId

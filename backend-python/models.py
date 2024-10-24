@@ -191,6 +191,7 @@ class Event(db.Model):
     )
     event_order_id = db.Column(db.BigInteger, nullable=True)
     event_order_shoe_id = db.Column(db.BigInteger, nullable=True)
+    event_type = db.Column(db.SmallInteger, default=0)
 
     def __repr__(self):
         return f"<Event(event_id={self.event_id})>"
@@ -274,6 +275,27 @@ class OrderShoeStatus(db.Model):
 
     def __repr__(self):
         return f"<OrderShoeStatus(order_shoe_status_id={self.order_shoe_status_id})>"
+    
+
+class OutsourceBatchInfo(db.Model):
+    __tablename__ = 'outsource_batch_info'
+    outsource_batch_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    order_shoe_batch_info_id = db.Column(db.BigInteger, nullable=False)
+    batch_outsource_amount = db.Column(db.Integer, default=0)
+    size_34_outsource_amount = db.Column(db.Integer, default=0)
+    size_35_outsource_amount = db.Column(db.Integer, default=0)
+    size_36_outsource_amount = db.Column(db.Integer, default=0)
+    size_37_outsource_amount = db.Column(db.Integer, default=0)
+    size_38_outsource_amount = db.Column(db.Integer, default=0)
+    size_39_outsource_amount = db.Column(db.Integer, default=0)
+    size_40_outsource_amount = db.Column(db.Integer, default=0)
+    size_41_outsource_amount = db.Column(db.Integer, default=0)
+    size_42_outsource_amount = db.Column(db.Integer, default=0)
+    size_43_outsource_amount = db.Column(db.Integer, default=0)
+    size_44_outsource_amount = db.Column(db.Integer, default=0)
+    size_45_outsource_amount = db.Column(db.Integer, default=0)
+    size_46_outsource_amount = db.Column(db.Integer, default=0)
+    outsource_info_id = db.Column(db.BigInteger, nullable=False)
 
 
 class OrderShoeBatchInfo(db.Model):
@@ -313,6 +335,7 @@ class OrderShoeBatchInfo(db.Model):
     size_44_actual_amount = db.Column(db.Integer, nullable=True)
     size_45_actual_amount = db.Column(db.Integer, nullable=True)
     size_46_actual_amount = db.Column(db.Integer, nullable=True)
+    actual_total_amount = db.Column(db.Integer, nullable=True)
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
@@ -565,7 +588,7 @@ class SemifinishedShoeStorage(db.Model):
     semifinished_inbound_datetime = db.Column(db.DateTime)
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
     semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
-    semifinished_type = db.Column(db.String(1), nullable=False)
+    semifinished_type = db.Column(db.SmallInteger, nullable=False)
     semifinished_status = db.Column(db.SmallInteger)
     semifinished_object = db.Column(db.SmallInteger)
 

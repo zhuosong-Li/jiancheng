@@ -23,8 +23,7 @@ def get_finished_in_out_overview():
     """
     op_type:
         0: show all orders,
-        1: means show inbound info,
-        2: means show outbound info
+        1: show active orders
     """
     page = request.args.get("page", type=int)
     number = request.args.get("pageSize", type=int)
@@ -37,9 +36,7 @@ def get_finished_in_out_overview():
             OrderShoe,
             Shoe,
             func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
-            FinishedShoeStorage.finished_shoe_id,
-            FinishedShoeStorage.finished_amount,
-            FinishedShoeStorage.finished_status,
+            FinishedShoeStorage,
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -52,26 +49,14 @@ def get_finished_in_out_overview():
             FinishedShoeStorage,
             FinishedShoeStorage.order_shoe_id == OrderShoe.order_shoe_id,
         )
-        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
-        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
         .group_by(OrderShoe.order_shoe_id, FinishedShoeStorage.finished_shoe_id)
     )
-    if op_type == 1:
-        query = query.filter(
-            or_(
-                and_(
-                    OrderStatus.order_current_status == 9,
-                    OrderShoeStatus.current_status == 41,
-                ),
-                OrderStatus.order_current_status == 15,
-            )
-        ).filter(FinishedShoeStorage.finished_status.in_([0, 1]))
-
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
-
+    if op_type != 0:
+        query = query.filter(FinishedShoeStorage.finished_status != 2)
     count_result = query.distinct().count()
     response = query.limit(number).offset((page - 1) * number).all()
     result = []
@@ -81,27 +66,30 @@ def get_finished_in_out_overview():
             order_shoe,
             shoe,
             total_amount,
-            storage_id,
-            finished_amount,
-            finished_status,
+            storage_obj,
         ) = row
-        if finished_status == 0:
+        if storage_obj.finished_status == 0:
             status_name = "未完成入库"
-        elif finished_status == 1:
+        elif storage_obj.finished_status == 1:
             status_name = "已完成入库"
         else:
             status_name = "已完成出库"
+        if storage_obj.finished_type == 0:
+            storage_type = '自产'
+        else:
+            storage_type = '外包'
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
-            "storageId": storage_id,
+            "storageId": storage_obj.finished_shoe_id,
             "customerProductName": order_shoe.customer_product_name,
             "inboundAmount": total_amount,
-            "currentAmount": finished_amount,
+            "currentAmount": storage_obj.finished_amount,
             "statusName": status_name,
             "endDate": order.end_date,
+            "storageType": storage_type,
         }
         result.append(obj)
     return {"result": result, "total": count_result}
@@ -117,14 +105,11 @@ def inbound_finished():
         return jsonify({"message": "failed"}), 400
 
     storage.finished_amount += int(data["amount"])
-    storage.finished_type = data["type"]
     storage.finished_inbound_datetime = data["inboundDate"]
-    storage.finished_status = 1
 
     record = ShoeInboundRecord(
         inbound_amount=data["amount"],
         inbound_datetime=data["inboundDate"],
-        inbound_type=data["type"],
         finished_shoe_storage_id=storage.finished_shoe_id,
     )
     db.session.add(record)
@@ -135,20 +120,6 @@ def inbound_finished():
         + str(record.shoe_inbound_record_id)
     )
     record.shoe_inbound_rid = rid
-    try:
-        processor: EventProcessor = current_app.config["event_processor"]
-        for op in [120, 121]:
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=op,
-                event_order_id=data["orderId"],
-                event_order_shoe_id=data["orderShoeId"],
-            )
-            processor.processEvent(event)
-    except Exception as e:
-        print(e)
-        return jsonify({"message": "failed"}), 500
     db.session.commit()
     return jsonify({"message": "success"})
 

@@ -14,14 +14,13 @@
 						<el-descriptions-item label="鞋型号">{{ $props.shoeRId }}</el-descriptions-item>
 						<el-descriptions-item label="客户号">{{ $props.customerName }}</el-descriptions-item>
 						<el-descriptions-item label="出货日期">{{ $props.orderEndDate }}</el-descriptions-item>
-						<el-descriptions-item label="外包总数">{{ totalShoes }}</el-descriptions-item>
 					</el-descriptions>
 				</el-col>
 			</el-row>
 			<el-row :gutter="20" style="margin-top: 20px">
 				<el-col :span="24" :offset="0">
 					鞋型配码信息
-					<el-table :data="shoeInfo" border stripe :max-height="200">
+					<el-table :data="shoeInfo" :span-method="shoeBatchInfoTableSpanMethod" border stripe :max-height="500">
 						<el-table-column prop="colorName" label="颜色"></el-table-column>
 						<el-table-column prop="batchName" label="配码编号"></el-table-column>
 						<el-table-column prop="size34" label="34"></el-table-column>
@@ -36,98 +35,180 @@
 						<el-table-column prop="size43" label="43"></el-table-column>
 						<el-table-column prop="size44" label="44"></el-table-column>
 						<el-table-column prop="size45" label="45"></el-table-column>
-						<el-table-column prop="size46" label="46"></el-table-column>
-						<el-table-column prop="totalAmount" label="双数"></el-table-column>
+						<el-table-column prop="pairAmount" label="双数"></el-table-column>
+						<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
 					</el-table>
 				</el-col>
 			</el-row>
 			<el-row :gutter="20">
-				<el-col :span="24" :offset="0">
-					现有外包流程
-					<el-table :data="outsourceInfo" border stripe scrollbar-always-on>
-						<el-table-column prop="outsourceTypeArr" label="外包类型" width="200">
-							<template #default="scope">
-								<el-select v-model="scope.row.outsourceTypeArr" placeholder="" filterable multiple>
-									<el-option v-for="item in productionDepartments" :key="item" :label="item"
-										:value="item">
-									</el-option>
-								</el-select>
-							</template>
-						</el-table-column>
-						<el-table-column prop="outsourceFactory" label="外包厂家" width="200">
-							<template #default="scope">
-								<el-select v-model="scope.row.outsourceFactory" value-key="id" placeholder="" clearable
-									filterable>
-									<el-option v-for="item in factoryOptions" :key="item.id" :label="item.value"
-										:value="item">
-									</el-option>
-								</el-select>
-							</template>
-
-						</el-table-column>
-						<el-table-column prop="outsourcePeriod" label="外包周期" width="380">
-							<template #default="scope">
-								<el-date-picker v-model="scope.row.outsourcePeriodArr" type="daterange"
-									value-format="YYYY-MM-DD" response range-separator="-" start-placeholder=""
-									end-placeholder="" size="small">
-								</el-date-picker>
-							</template>
-						</el-table-column>
-						<el-table-column prop="semifinishedRequired" label="是否需要外发半成品" width="200">
-							<template #default="scope">
-								<el-radio-group v-model="scope.row.semifinishedRequired">
-									<el-radio value="1">是</el-radio>
-									<el-radio value="2">否</el-radio>
-								</el-radio-group>
-							</template>
-						</el-table-column>
-						<el-table-column prop="semifinishedEstimatedOutboundDate" label="半成品预计发货日期" width="250">
-							<template #default="scope">
-								<el-date-picker v-model="scope.row.semifinishedEstimatedOutboundDate" type="date"
-									value-format="YYYY-MM-DD" response placeholder="选择日期时间"
-									:disabled="scope.row.semifinishedRequired == '2'" size="small">
-								</el-date-picker>
-							</template>
-						</el-table-column>
-						<el-table-column prop="materialEstimatedOutboundDate" label="材料预计出货日期" width="250">
-							<template #default="scope">
-								<el-date-picker v-model="scope.row.materialEstimatedOutboundDate" type="date"
-									value-format="YYYY-MM-DD" response placeholder="选择日期时间" size="small">
-								</el-date-picker>
-							</template>
-						</el-table-column>
-						<el-table-column prop="approvalStatus" label="审批状态"></el-table-column>
-						<el-table-column prop="deadlineDate" label="最迟交货日期" width="150">
-							<template #default="scope">
-								<el-date-picker v-model="scope.row.deadlineDate" type="date" value-format="YYYY-MM-DD"
-									response placeholder="选择日期时间">
-								</el-date-picker>
-							</template>
-						</el-table-column>
-						<el-table-column label="操作" fixed="right" width="180">
-							<template #default="scope">
-								<el-button-group>
-									<el-button type="primary" size="small"
-										@click="checkOutboundInfo(scope.row)">发货情况</el-button>
-									<el-button size="small" type="danger"
-										@click="deleteRow(scope.$index)">删除</el-button>
-								</el-button-group>
-							</template>
-						</el-table-column>
-					</el-table>
-				</el-col>
+				现有外包流程
+				<el-table :data="outsourceInfo" border stripe scrollbar-always-on>
+					<el-table-column prop="outsourceType" label="外包类型"></el-table-column>
+					<el-table-column prop="outsourceFactory.value" label="外包厂家"></el-table-column>
+					<el-table-column prop="outsourceAmount" label="外包数量"></el-table-column>
+					<el-table-column prop="outsourceStartDate" label="外包开始日期"></el-table-column>
+					<el-table-column prop="outsourceEndDate" label="外包结束日期"></el-table-column>
+					<el-table-column prop="approvalStatus" label="审批状态"></el-table-column>
+					<el-table-column label="操作" fixed="right" width="180">
+						<template #default="scope">
+							<el-button-group>
+								<el-button type="primary" size="small"
+									@click="checkOutboundInfo(scope.row)">发货情况</el-button>
+								<el-button type="primary" size="small" @click="editRow(scope.row)">编辑</el-button>
+								<el-button type="warning" size="small" @click="submitOutsourceInfo(scope.row)">提交</el-button>
+								<el-button size="small" type="danger" @click="deleteRow(scope.row)">删除</el-button>
+							</el-button-group>
+						</template>
+					</el-table-column>
+				</el-table>
 			</el-row>
 			<el-row :gutter="20">
 				<el-col :span="6" :offset="0">
-					<el-button type="primary" size="default" @click="createOutsouce">新建外包流程</el-button>
-				</el-col>
-				<el-col :span="6" :offset="12">
-					<el-button type="success" size="default" @click="saveOutsourceInfo">保存</el-button>
-					<el-button type="warning" size="default" @click="submitOutsouceInfo">提交</el-button>
+					<el-button type="primary" size="default" @click="editRow(null)">新建外包流程</el-button>
 				</el-col>
 			</el-row>
 		</el-main>
 	</el-container>
+	<el-dialog title="外包编辑页面" v-model="showOutsourceEditPage" width="95%">
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">外包类型</el-col>
+			<el-col :span="8" :offset="0">
+				<el-select v-model="currentRow.outsourceType" placeholder="" filterable multiple>
+					<el-option v-for="item in productionDepartments" :key="item" :label="item"
+						:value="item"></el-option>
+				</el-select>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">外包厂家</el-col>
+			<el-col :span="8" :offset="0">
+				<el-select v-model="currentRow.outsourceFactory" value-key="id" placeholder="" filterable clearable>
+					<el-option v-for="item in factoryOptions" :key="item.id" :label="item.value" :value="item">
+					</el-option>
+				</el-select>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">外包周期</el-col>
+			<el-col :span="8" :offset="0">
+				<el-date-picker v-model="currentRow.outsourcePeriodArr" type="daterange" value-format="YYYY-MM-DD"
+					response range-separator="至">
+				</el-date-picker>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">材料出货日期</el-col>
+			<el-col :span="8" :offset="0">
+				<el-date-picker v-model="currentRow.materialEstimatedOutboundDate" type="date" value-format="YYYY-MM-DD"
+					response placeholder="选择日期时间">
+				</el-date-picker>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">是否需要外发半成品</el-col>
+			<el-col :span="8" :offset="0">
+				<el-radio-group v-model="currentRow.semifinishedRequired">
+					<el-radio :value="true">是</el-radio>
+					<el-radio :value="false">否</el-radio>
+				</el-radio-group>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">半成品发货日期</el-col>
+			<el-col :span="8" :offset="0">
+				<el-date-picker v-model="currentRow.semifinishedEstimatedOutboundDate" type="date"
+					value-format="YYYY-MM-DD" response :disabled="currentRow.semifinishedRequired == false"
+					placeholder="选择日期时间">
+				</el-date-picker>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">最迟交货日期</el-col>
+			<el-col :span="8" :offset="0">
+				<el-date-picker v-model="currentRow.deadlineDate" type="date" value-format="YYYY-MM-DD" response
+					placeholder="选择日期时间">
+				</el-date-picker>
+			</el-col>
+		</el-row>
+		<el-row :gutter="20">
+			<el-col :span="4" :offset="1">外包数量</el-col></el-row>
+		<el-row :gutter="20">
+			<el-col :span="23" :offset="1">
+				<el-table :data="outsourceShoeBatchInfo" :span-method="outsourceShoeBatchInfoTableSpanMethod" border stripe :max-height="500">
+					<el-table-column prop="colorName" label="颜色"></el-table-column>
+					<el-table-column prop="batchName" label="配码编号"></el-table-column>
+					<el-table-column prop="size34" label="34">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size34" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size35" label="35">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size35" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size36" label="36">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size36" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size37" label="37">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size37" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size38" label="38">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size38" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size39" label="39">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size39" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size40" label="40">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size40" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size41" label="41">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size41" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size42" label="42">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size42" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size43" label="43">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size43" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size44" label="44">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size44" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="size45" label="45">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size45" />
+						</template>
+					</el-table-column>
+					<el-table-column prop="pairAmount" label="双数"></el-table-column>
+					<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+				</el-table>
+			</el-col>
+		</el-row>
+		<template #footer>
+			<span>
+				<el-button type="" @click="showOutsourceEditPage = false">退出</el-button>
+				<el-button type="primary" @click="saveOutsourceInfo">保存</el-button>
+			</span>
+		</template>
+	</el-dialog>
 	<el-dialog title="外包物料发货情况查询" v-model="isOutsourceLogistic" width="80%">
 		<el-row :gutter="20">
 			<el-col :span="24" :offset="0"> 半成品发货状态： </el-col>
@@ -162,6 +243,8 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus';
+import { shoeBatchInfoTableSpanMethod } from '../../utils';
 export default {
 	props: ['orderId', 'orderRId', 'orderStartDate', 'orderEndDate', 'customerName', 'orderShoeId', 'shoeRId'],
 	components: {
@@ -169,21 +252,20 @@ export default {
 	},
 	data() {
 		return {
-			isTransitNeed: false,
 			isOutsourceLogistic: false,
 			isOutsourcePreviewVis: false,
+			showOutsourceEditPage: false,
 			factoryOptions: [],
 			semifinishedLogisticData: [],
 			materialLogisticData: [],
 			outsourceInfo: [],
 			shoeInfo: [],
+			outsourceShoeBatchInfo: [],
 			productionDepartments: [],
-			prodLineRef: {
-				"0": "裁断",
-				"1": "针车",
-				"2": "成型"
-			},
-			totalShoes: ''
+			totalShoes: 0,
+			currentRow: {},
+			outsourceShoeBatchInfoTableSpanMethod: null,
+			shoeBatchInfoTableSpanMethod: null,
 		}
 	},
 	mounted() {
@@ -193,8 +275,36 @@ export default {
 		this.getOutsourceInfo()
 	},
 	methods: {
-		deleteRow(index) {
-			this.outsourceInfo.splice(index, 1)
+		async editRow(rowData) {
+			this.outsourceShoeBatchInfo = JSON.parse(JSON.stringify(this.shoeInfo));
+			if (rowData === null) {
+				this.currentRow = {}
+				this.outsourceShoeBatchInfo.forEach(row => {
+					for (let i = 34; i < 47; i++) {
+						row[`size${i}`] = 0
+					}
+				})
+			}
+			else {
+				this.currentRow = rowData
+				let params = {"orderShoeId": this.$props.orderShoeId, "outsourceInfoId": rowData.outsourceInfoId}
+				let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, {params})
+				this.outsourceShoeBatchInfo = response.data
+			}
+			this.outsourceShoeBatchInfoTableSpanMethod = shoeBatchInfoTableSpanMethod(this.outsourceShoeBatchInfo)
+			this.showOutsourceEditPage = true
+		},
+		async deleteRow(rowData) {
+			const params = { "orderShoeId": this.$props.orderShoeId, "outsourceInfoId": rowData.outsourceInfoId }
+			try {
+				await axios.delete(`${this.$apiBaseUrl}/production/productionmanager/deleteoutsourceinfo`, { params })
+				ElMessage.success("删除成功")
+			}
+			catch (error) {
+				console.log(error)
+				ElMessage.error("删除失败")
+			}
+			this.getOutsourceInfo()
 		},
 		async getAllOutsourceFactories() {
 			const response = await axios.get(`${this.$apiBaseUrl}/general/getalloutsourcefactories`)
@@ -209,65 +319,77 @@ export default {
 			const params = { "orderShoeId": this.$props.orderShoeId }
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
 			this.shoeInfo = response.data
-			this.shoeInfo.forEach(row => {
-				this.totalShoes += row.totalAmount
-			})
+			this.shoeBatchInfoTableSpanMethod = shoeBatchInfoTableSpanMethod(this.shoeInfo)
 		},
 		async getOutsourceInfo() {
 			const params = { "orderShoeId": this.$props.orderShoeId }
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
 			this.outsourceInfo = response.data
 			this.outsourceInfo.forEach(row => {
-				let temp = []
-				row.outsourceType.split(",").forEach(number => {
-					temp.push(this.prodLineRef[number])
-				})
-				row.outsourceTypeArr = temp
 				row.outsourcePeriodArr = [row.outsourceStartDate, row.outsourceEndDate]
-				if (row.approvalStatus) {
-					row.approvalStatus = "已审批"
-				} else {
-					row.approvalStatus = "未审批"
+				if (row.approvalStatus == 1) {
+					row.approvalStatus = "已提交"
+				}
+				else if (row.approvalStatus == 2) {
+					row.approvalStatus = '已审批'
+				}
+				else if (row.approvalStatus == 3) {
+					row.approvalStatus = "被驳回"
+				}
+				else {
+					row.approvalStatus = "未提交"
 				}
 			})
 		},
-		createOutsouce() {
-			this.outsourceInfo.push({})
+		createOutsource() {
+			this.showOutsourceEditPage = true
 		},
 		async checkOutboundInfo(rowData) {
-			const params = {"outsource_info_id": rowData.outsourceInfoId}
-			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcesemifinishedshipping`, {params})
+			const params = { "outsource_info_id": rowData.outsourceInfoId }
+			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcesemifinishedshipping`, { params })
 			this.semifinishedLogisticData = response.data
-			response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcematerialshipping`, {params})
+			response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcematerialshipping`, { params })
 			this.materialLogisticData = response.data
 			this.isOutsourceLogistic = true
 
 		},
 		async saveOutsourceInfo() {
-			const dataArr = []
-			this.outsourceInfo.forEach(row => {
-				let element = {
-					"type": row.outsourceTypeArr,
-					"factoryId": row.outsourceFactory.id,
-					"outsourceStartDate": row.outsourcePeriod[0],
-					"outsourceEndDate": row.outsourcePeriod[1],
-					"semifinishedRequired": row.semifinishedRequired,
-					"semifinishedEstimatedOutboundDate": row.semifinishedEstimatedOutboundDate,
-					"deadlineDate": row.deadlineDate,
-					"materialEstimatedOutboundDate": row.materialEstimatedOutboundDate,
-					"outsourceAmount": this.$props.totalShoes,
-					"orderShoeId": this.$props.orderShoeId
-				}
-				dataArr.push(element)
-			})
-			const response = await axios.put(`${this.$apiBaseUrl}/production/productionmanager/storeoutsourceforordershoe`, dataArr)
+			let element = {
+				"outsourceInfoId": this.currentRow.outsourceInfoId,
+				"type": this.currentRow.outsourceType,
+				"factoryId": this.currentRow.outsourceFactory.id,
+				"outsourceStartDate": this.currentRow.outsourcePeriodArr[0],
+				"outsourceEndDate": this.currentRow.outsourcePeriodArr[1],
+				"semifinishedRequired": this.currentRow.semifinishedRequired,
+				"semifinishedEstimatedOutboundDate": this.currentRow.semifinishedEstimatedOutboundDate,
+				"deadlineDate": this.currentRow.deadlineDate,
+				"materialEstimatedOutboundDate": this.currentRow.materialEstimatedOutboundDate,
+				"outsourceAmount": this.outsourceShoeBatchInfo,
+				"orderShoeId": this.$props.orderShoeId
+			}
+
+			try {
+				await axios.put(`${this.$apiBaseUrl}/production/productionmanager/storeoutsourceforordershoe`, element)
+				ElMessage.success("保存成功")
+			}
+			catch (error) {
+				console.log(error)
+				ElMessage.error("保存失败")
+			}
 			this.getOutsourceInfo()
 		},
-		async submitOutsouceInfo() {
-			const inputData = {"orderShoeId": this.$props.orderShoeId}
-			await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/submitoutsourceinfo`, inputData)
-			console.log("success")
-		}
+		async submitOutsourceInfo(row) {
+			let inputData = { "outsourceInfoId": row.outsourceInfoId }
+			try {
+				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/submitoutsourceinfo`, inputData)
+				ElMessage.success("提交成功")
+			}
+			catch (error) {
+				console.log(error)
+				ElMessage.error("提交失败")
+			}
+			this.getOutsourceInfo()
+		},
 	}
 }
 </script>

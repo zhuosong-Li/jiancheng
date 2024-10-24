@@ -39,7 +39,7 @@ const producedAmount = ref(0)
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
-    let params = { "orderShoeId": props.orderShoeId, 'team': props.teamName }
+    let params = { "orderShoeId": props.orderShoeId, 'team': props.teamName, "status": 2 }
     // get price report detail
     let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
     priceReport.value = response.data.detail

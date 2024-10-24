@@ -66,7 +66,7 @@
 					</el-table>
 				</el-col>
 			</el-row>
-			<el-dialog title="修改排产信息" v-model="isScheduleModify" width="90%">
+			<el-dialog title="修改排产信息" v-model="isScheduleModify" width="95%">
 				<el-tabs v-model="activeTab" type="card" tab-position="top" @tab-click="">
 					<el-tab-pane v-for="tab in tabs" :key="tab.name" :label="tab.label" :name="tab.name">
 						<el-row :gutter="20">
@@ -96,7 +96,6 @@
 										<el-button-group v-else>
 											<el-button type="primary" size="default"
 												@click="startOutSourceFlow()">查看外包流程</el-button>
-											<el-button type="warning" size="default" @click="">删除外包流程</el-button>
 										</el-button-group>
 									</el-descriptions-item>
 								</el-descriptions>
@@ -142,6 +141,102 @@
 						</el-row>
 					</el-tab-pane>
 				</el-tabs>
+				<el-row :gutter="20" style="margin-top: 20px">
+				<el-col :span="24" :offset="0">
+					鞋型配码信息
+					<el-table :data="shoeBatchInfo" :span-method="spanMethod" border stripe :max-height="500">
+						<el-table-column prop="colorName" label="颜色"></el-table-column>
+						<el-table-column prop="batchName" label="配码编号"></el-table-column>
+						<el-table-column prop="size34" label="34"></el-table-column>
+						<el-table-column prop="size35" label="35"></el-table-column>
+						<el-table-column prop="size36" label="36"></el-table-column>
+						<el-table-column prop="size37" label="37"></el-table-column>
+						<el-table-column prop="size38" label="38"></el-table-column>
+						<el-table-column prop="size39" label="39"></el-table-column>
+						<el-table-column prop="size40" label="40"></el-table-column>
+						<el-table-column prop="size41" label="41"></el-table-column>
+						<el-table-column prop="size42" label="42"></el-table-column>
+						<el-table-column prop="size43" label="43"></el-table-column>
+						<el-table-column prop="size44" label="44"></el-table-column>
+						<el-table-column prop="size45" label="45"></el-table-column>
+						<el-table-column prop="pairAmount" label="双数"></el-table-column>
+						<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+					</el-table>
+				</el-col>
+			</el-row>
+				<el-row>
+					计划自产数量
+				</el-row>
+				<el-row :gutter="20">
+					<el-col>
+						<el-table :data="shoeBatchProductionPlan" :span-method="productionSpanMethod" border stripe :max-height="500">
+							<el-table-column prop="colorName" label="颜色"></el-table-column>
+							<el-table-column prop="batchName" label="配码编号"></el-table-column>
+							<el-table-column prop="size34" label="34">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size34" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size35" label="35">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size35" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size36" label="36">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size36" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size37" label="37">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size37" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size38" label="38">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size38" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size39" label="39">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size39" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size40" label="40">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size40" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size41" label="41">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size41" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size42" label="42">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size42" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size43" label="43">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size43" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size44" label="44">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size44" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="size45" label="45">
+								<template v-slot="scope">
+									<el-input v-model="scope.row.size45" />
+								</template>
+							</el-table-column>
+							<el-table-column prop="pairAmount" label="双数"></el-table-column>
+							<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+						</el-table>
+					</el-col>
+				</el-row>
 				<template #footer>
 					<span>
 						<el-button @click="isScheduleModify = false">取消</el-button>
@@ -159,6 +254,7 @@
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
+import { shoeBatchInfoTableSpanMethod } from '../../utils';
 export default {
 	props: ['orderId', 'orderRId', 'orderStartDate', 'orderEndDate', 'customerName', 'orderTotalShoes'],
 	components: {
@@ -229,7 +325,11 @@ export default {
 				}
 			],
 			productionLines: {},
-			currentRow: {}
+			currentRow: {},
+			shoeBatchInfo: [],
+			shoeBatchProductionPlan: [],
+			spanMethod: null,
+			productionSpanMethod: null
 		}
 	},
 	mounted() {
@@ -273,8 +373,8 @@ export default {
 		async viewProductionSchedule(rowData) {
 			this.isScheduleModify = true
 			this.currentRow = rowData
-			const params = { "orderShoeId": rowData.orderShoeId }
-			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoescheduleinfo`, { params })
+			let params = { "orderShoeId": rowData.orderShoeId }
+			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoescheduleinfo`, { params })
 			this.tabs[0].lineValue = response.data.cuttingLineNumbers
 			this.tabs[0].dateValue = [response.data.cuttingStartDate, response.data.cuttingEndDate]
 			this.tabs[0].isOutsourced = response.data.isCuttingOutsourced
@@ -290,9 +390,23 @@ export default {
 			this.tabs[3].lineValue = response.data.moldingLineNumbers
 			this.tabs[3].dateValue = [response.data.moldingStartDate, response.data.moldingEndDate]
 			this.tabs[3].isOutsourced = response.data.isMoldingOutsourced
+			this.getOrderShoeBatchInfo()
+			this.getOrderShoeBatchEstimatedAmount()
+		},
+		async getOrderShoeBatchInfo() {
+			const params = { "orderShoeId": this.currentRow.orderShoeId }
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
+			this.shoeBatchInfo = response.data
+			this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo);
+		},
+		async getOrderShoeBatchEstimatedAmount() {
+			const params = { "orderShoeId": this.currentRow.orderShoeId }
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchestimatedamount`, { params })
+			this.shoeBatchProductionPlan = response.data
+			this.productionSpanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchProductionPlan);
 		},
 		async modifyProductionSchedule() {
-			const data = {
+			let data = {
 				"orderShoeId": this.currentRow.orderShoeId,
 				"cuttingInfo": {
 					"lineValue": this.tabs[0].lineValue.join(","),
@@ -319,11 +433,12 @@ export default {
 					"endDate": this.tabs[3].dateValue[1]
 				}
 			}
-			const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editproductionschedule`, data)
-			if (response.status == 200) {
+			try {
+				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editproductionschedule`, data)
+				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/saveproductionamount`, this.shoeBatchProductionPlan)
 				ElMessage.success("修改成功")
 			}
-			else {
+			catch(error) {
 				ElMessage.error("修改失败")
 			}
 			this.isScheduleModify = false
@@ -423,7 +538,7 @@ export default {
 				style.background = 'rgba(0, 128, 0, 0.8)'; // Green background for 100% completion
 				return style
 			}
-		}
+		},
 	}
 }
 </script>

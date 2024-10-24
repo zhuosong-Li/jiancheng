@@ -18,11 +18,9 @@
         <el-col :span="24" :offset="0">
             <el-table :data="orderTableData" border stripe>
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
-                <el-table-column prop="ShoeRId" label="鞋型号"></el-table-column>
+                <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
-                <el-table-column prop="isCuttingOutsourced" label="裁断外包"></el-table-column>
-                <el-table-column prop="isSewingOutsourced" label="针车外包"></el-table-column>
-                <el-table-column prop="isMoldingOutsourced" label="成型外包"></el-table-column>
+                <el-table-column prop="outsourceInfo" label="外包工段"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default"
@@ -76,9 +74,27 @@ export default {
             }
             const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderoutsourceoverview`, {params})
             this.orderTableData = response.data.result
+            this.orderTableData.forEach(row => {
+                let teamArr = []
+                if (row.isCuttingOutsourced) {
+                    teamArr.push("裁断")
+                }
+                if (row.isSewingOutsourced) {
+                    teamArr.push("针车")
+                }
+                if (row.isMoldingOutsourced) {
+                    teamArr.push("成型")
+                }
+                if (teamArr.length == 0) {
+                    teamArr = ["无外包"]
+                }
+                row["outsourceInfo"] = teamArr
+            })
+            console.log(this.orderTableData)
             this.totalRows = response.data.totalLength
         },
 		startOutSourceFlow(rowData) {
+            console.log(rowData)
 			const params = {
 				"orderId": rowData.orderId,
 				"orderRId": rowData.orderRId,
