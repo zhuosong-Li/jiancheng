@@ -310,6 +310,7 @@ def get_all_orders():
         result.append(
             {
                 "orderRid": order.order_rid,
+                "orderCid": order.order_cid,
                 "customerName": customer.customer_name,
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,

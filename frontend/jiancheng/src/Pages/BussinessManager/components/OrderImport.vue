@@ -6,18 +6,33 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="4" :offset="0"
-            ><el-button size="default" type="primary" @click="openImportDialog"
+            >
+            <el-button size="default" type="primary" @click="openImportDialog"
                 >通过EXCEL上传订单</el-button
-            ></el-col
-        >
+            >
+            <el-button size="default" type="primary" @click="openCreateOrderDialog"
+                >创建订单</el-button
+            >
+        </el-col>
         <el-col :span="4" :offset="15"
             ><el-input
-                v-model="searchOrder"
+                v-model="orderRidFilter"
                 placeholder="请输入订单号"
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @input="filterData"
+                @input="filterByRid()"
+            ></el-input>
+        </el-col>
+
+        <el-col :span="4" :offset="19"
+            ><el-input
+                v-model="orderCidFilter"
+                placeholder="请输入客户订单号"
+                size="normal"
+                :suffix-icon="Search"
+                clearable
+                @input="filterByCid()"
             ></el-input>
         </el-col>
     </el-row>
@@ -26,6 +41,7 @@
             <el-table-column type="index" width="50" />
             <el-table-column prop="orderRid" label="订单号" />
             <el-table-column prop="customerName" label="客户名" />
+            <el-table-column prop="orderCid" label="客户订单号" />
             <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
             <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
             <el-table-column prop="orderStatus" label="订单状态" />
@@ -90,6 +106,7 @@
             </span>
         </template>
     </el-dialog>
+    
     <el-dialog title="订单详情填写" v-model="orderInfoVis" width="40%">
         <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
             <el-form-item label="请输入订单号">
@@ -260,6 +277,71 @@
         </span>
         </template>
     </el-dialog>
+
+    <el-dialog title="创建订单详情填写" v-model="orderCreationInfoVis" width="80%">
+        <el-form :model="newOrderForm" label-width="120px" :inline="false" size="normal">
+            <el-form-item label="请输入订单号">
+                <el-input v-model="newOrderForm.orderRId"></el-input>
+            </el-form-item>
+            <el-form-item label="请选择客户">
+                <el-select v-model="newOrderForm.customerId" filterable placeholder="请选择客户">
+                    <el-option
+                        v-for="item in customerList"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    ></el-option>
+                </el-select>
+            </el-form-item>
+            <el-row :gutter="20">
+            <el-col :span="4" :offset="0" style="white-space: nowrap;">
+                鞋型号搜索：
+                <el-input v-model="shoeRidFilter" 
+                placeholder="" size="normal" 
+                :suffix-icon="Search"
+                clearable 
+                @input="filterByShoeRid()">
+            </el-input> 
+            </el-col>
+            
+            </el-row>
+            <el-table
+                :data="shoeTableDisplayData"
+                style="width: 100%"
+                stripe
+                border
+                height="500"
+            >
+                <el-table-column
+                    prop="shoeRId"
+                    label="鞋型编号"
+                ></el-table-column>
+                <el-table-column
+                    prop="shoeColor"
+                    label="鞋型颜色"
+                ></el-table-column>
+                <el-table-column
+                    prop="shoeImage"
+                    label="鞋型图片"
+                    align="center">
+                    <template #default="scope">
+                        <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;"/>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-form-item label="业务员">
+                <el-input v-model="orderForm.salesman"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span>
+                <el-button @click="orderInfoVis = false">取消</el-button>
+                <el-button type="primary" @click="newOrderSecondStep">确认</el-button>
+            </span>
+        </template>
+    </el-dialog>
+
 </template>
 
 <script>
@@ -281,20 +363,33 @@ export default {
             fileList: [],
             isImportVis: false,
             isSubmitDocVis: false,
+            orderCreationInfoVis: false,
             Search,
             Upload,
-            searchOrder: '',
+            orderRidFilter: '',
+            orderCidFilter: '',
             displayData: [],
+            filterData: [],
+            unfilteredData: [],
             uploadData: [],
             updatekey: 0,
             tempFileName: '',
+            shoeTableData: [],
+            shoeTableDisplayData: [],
+            shoeTableTemp:[],
+            shoeRidFilter: '',
             orderForm: {
                 orderRId: '',
+                orderCid: '',
                 customerId: null,
                 orderStartDate: '',
                 orderEndDate: '',
                 status: '',
                 salesman: ''
+            },
+            newOrderForm:{
+                orderRId:'',
+                customerId: null,
             }
         }
     },
@@ -316,6 +411,11 @@ export default {
         openImportDialog() {
             this.isImportVis = true
         },
+        openCreateOrderDialog() {
+            this.orderCreationInfoVis = true
+            this.getAllShoes()
+            this.shoeTableDisplayData = this.shoeTableData
+        },  
         async openPreviewDialog(row) {
             this.orderData = row
             await this.getOrderOrderShoe(row.orderRid)
@@ -330,13 +430,17 @@ export default {
                 this.submitDocType = 1
             }
         },
+        newOrderSecondStep(){
+
+        },
         async getAllCutomers() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getallcustomers`)
             this.customerList = response.data
         },
         async getAllOrders() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
-            this.displayData = response.data
+            this.unfilteredData = response.data
+            this.displayData = this.unfilteredData
         },
         async getAllOrderStatus() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
@@ -349,6 +453,10 @@ export default {
                 }
             })
             this.orderShoePreviewData = response.data
+        },
+        async getAllShoes() {
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
+            this.shoeTableData = response.data;
         },
         async getOrderDocInfo(orderRid) {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getorderdocinfo`, {
@@ -377,7 +485,44 @@ export default {
             }
 
         },
+        filterByCid(){
+            if (!this.orderCidFilter){
+                this.displayData = this.unfilteredData
+            }
+            else {
+                this.filterData = this.unfilteredData.filter((task) => {
+                const filterMatch = task.orderCid.includes(this.orderCidFilter)
+                return filterMatch
+            })
+                this.displayData = this.filterData
+            }
+        },
+        filterByRid(){
+            if (!this.orderRidFilter){
+                this.displayData = this.unfilteredData
+            }
+            else {
+                this.filterData = this.unfilteredData.filter((task) => {
+                const filterMatch = task.orderRid.includes(this.orderRidFilter)
+                return filterMatch
+            })
+                this.displayData = this.filterData
+            }
+        },
+        filterByShoeRid(){
+            console.log("123123123")
+            if (!this.shoeRidFilter){
+                this.shoeTableDisplayData = this.shoeTableData
+            }
+            else{
+                this.shoeTableTemp = this.shoeTableData.filter((task) => {
+                const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
+                return filterMatch
+            })
+                this.shoeTableDisplayData = this.shoeTableTemp
+            }
 
+        },
         handleUploadSuccess(response, file) {
             // Handle the successful response
             this.tempFileName = response.tempFileName

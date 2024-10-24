@@ -19,6 +19,9 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>客户管理</span>
                         </el-menu-item>
+                        <el-menu-item index="4" @click="handleMenuClick(4)">
+                            <span>BatchInfoManagement</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -38,13 +41,14 @@ import { UserFilled } from '@element-plus/icons-vue'
 import OrderImport from '../components/OrderImport.vue';
 import CustomerManagement from '../components/CustomerManagement.vue';
 import axios from 'axios'
-
+import BatchInfoManagement from '../components/BatchInfoManagement.vue';
 
 export default {
     components: {
         AllHeader,
         OrderImport,
-        CustomerManagement
+        CustomerManagement,
+        BatchInfoManagement
     },
     data() {
         return {
@@ -72,6 +76,9 @@ export default {
                     break
                 case 3:
                     this.currentComponent = 'CustomerManagement'
+                    break
+                case 4:
+                    this.currentComponent = 'BatchInfoManagement'
                     break
                 case 9:
                     this.$router.push('/')
