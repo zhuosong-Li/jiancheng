@@ -321,6 +321,7 @@ class PackagingInfo(db.Model):
     size_44_ratio = db.Column(db.Integer, nullable=True)
     size_45_ratio = db.Column(db.Integer, nullable=True)
     size_46_ratio = db.Column(db.Integer, nullable=True)
+    total_quantity_ratio = db.Column(db.Integer, nullable=True)
 
 
     def __repr__(self):
