@@ -372,16 +372,6 @@
 
 
     <el-dialog title="创建订单详情填写" v-model="orderCreationSecondInfoVis" width="90%">
-        <el-col :span="4" :offset="15"
-            ><el-input
-                v-model="batchNameFilter"
-                placeholder="请输入配码名称"
-                size="default"
-                :suffix-icon="Search"
-                clearable
-                @input="filterBatchData"
-            ></el-input>
-        </el-col>
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-descriptions title="" :column="2" border>
@@ -455,7 +445,7 @@
         </el-row> -->
         <span>
             <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
-            <el-button @click="openAddBatchInfoDialog(scope.row)"> 添加配码</el-button>
+            <!-- <el-button @click="openAddBatchInfoDialog(scope.row)"> 添加配码</el-button> -->
         </span>
     </el-dialog>
 
@@ -470,7 +460,7 @@
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @input="filterBatchData"
+                @input="filterBatchDataWithSelection"
             ></el-input>
         </el-col>
         <el-row :gutter="20">
@@ -487,7 +477,8 @@
         </el-row>
         <el-row :gutter="20">
             <el-table :data="customerDisplayBatchData" border stripe height="500" 
-            @selection-change="scope.row.orderShoeTypeBatchInfo = $event">
+            @selection-change="handleSelectionBatchData"
+            ref = "batchInfoSelectionTable">
                 <el-table-column
                     size = "small"
                     type = "selection"
@@ -522,9 +513,13 @@
             <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
             <el-button @click="openAddCustomerBatchDialog()"> 添加配码</el-button>
         </span>
-        <el-button @click="CustomerBatchDialog()"> 添加配码</el-button>
+        <el-button @click="insertBatchQuantityDialog()"> 添加配码</el-button>
     </el-dialog>
 
+    <el-dialog>
+        batch quantity todo
+
+    </el-dialog>
 </template>
 
 <script>
@@ -547,6 +542,7 @@ export default {
             selectedShoeList:[],
             orderStatusList: [],
             orderBatchInfo:[],
+            currentBatch:[],
             previewOrderVis: false,
             orderInfoVis: false,
             fileList: [],
@@ -573,6 +569,7 @@ export default {
             shoeTableTemp:[],
             shoeRidFilter: '',
             checkgroup:[],
+            curShoeTypeId : '',
             orderForm: {
                 orderRId: '',
                 orderCid: '',
@@ -637,6 +634,7 @@ export default {
         openAddBatchInfoDialog(row) {
             this.addBatchInfoDialogVis = true
             console.log(row)
+            this.curShoeTypeId = row.shoeTypeId
         },
 
         orderCreationSecondStep() {
@@ -652,6 +650,10 @@ export default {
         handleSelectionShoeType(selection) {
             this.selectedShoeList = selection
             this.newOrderForm.orderShoeTypes = selection
+        },
+        handleSelectionBatchData(selection){
+            this.currentBatch = selection
+            console.log(this.currentBatch)
         },
         async getCustomerBatchInfo(customerId) {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{
@@ -687,6 +689,28 @@ export default {
                     return filteredData
                 })
                 this.customerDisplayBatchData = this.customerFilteredBatchData
+            }
+        },
+        filterBatchDataWithSelection(){
+            const selectedBatch = this.currentBatch
+            if (!this.batchNameFilter){
+                this.customerDisplayBatchData = this.customerBatchData
+            }
+            else{
+                this.customerFilteredBatchData = this.customerBatchData.filter((task) => {
+                    const filteredData = task.packagingInfoName.includes(this.batchNameFilter)
+                    return filteredData
+                })
+                this.customerDisplayBatchData = Array.from(new Set([...selectedBatch.concat(this.customerFilteredBatchData)]))
+
+                this.$nextTick(()=>{
+                    selectedBatch.forEach(item =>
+                    {
+                    this.$refs.batchInfoSelectionTable.toggleRowSelection(this.customerDisplayBatchData.find(row => {
+                        return row.packagingInfoId == item.packagingInfoId
+                    }),true)
+                    }) 
+                })
             }
         },
         async getAllOrders() {
@@ -784,7 +808,7 @@ export default {
                 return filterMatch})
                 // console.log(this.shoeTableTemp)
                 // console.log(this.selectedShoeList)
-                this.shoeTableDisplayData = Array.from(new Set([...this.shoeTableTemp.concat(this.selectedShoeList)]))
+                this.shoeTableDisplayData = Array.from(new Set([...this.selectedShoeList.concat(this.shoeTableTemp)]))
                 // this.selectedShoeList.forEach(row => {
                 //     this.$refs.shoeTypeSelectionTable.toggleRowSelection(row, true)
                 // })
