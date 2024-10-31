@@ -307,6 +307,37 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
+            <el-form-item label="订单开始日期">
+                <el-date-picker
+                    v-model="newOrderForm.orderStartDate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="YYYY-MM-DD"
+                ></el-date-picker>
+            </el-form-item>
+            <el-form-item label="订单结束日期">
+                <el-date-picker
+                    v-model="newOrderForm.orderEndDate"
+                    type="date"
+                    placeholder="选择日期"
+                    value-format="YYYY-MM-DD"
+                ></el-date-picker>
+            </el-form-item>
+            <el-form-item label="订单状态">
+                <el-select v-model="newOrderForm.status" filterable placeholder="请选择订单状态">
+                    <el-option
+                        v-for="item in orderStatusList"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    >
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="业务员">
+                <el-input v-model="newOrderForm.salesman"></el-input>
+            </el-form-item>
+
             <el-row :gutter="20">
             <el-col :span="4" :offset="0" style="white-space: nowrap;">
                 鞋型号搜索：
@@ -357,9 +388,6 @@
                     </template>
                 </el-table-column>
             </el-table>
-            <el-form-item label="业务员">
-                <el-input v-model="newOrderForm.salesman"></el-input>
-            </el-form-item>
         </el-form>
 
         <template #footer>
@@ -392,8 +420,10 @@
                 </el-descriptions>
             </el-col>
         </el-row>
-        <el-table :data="this.newOrderForm.orderShoeTypes" border stripe height = "900">
-            <el-table-column type = "expand">
+        <el-table :data="this.newOrderForm.orderShoeTypes" border stripe height = "900"
+        :row-key = "(row) => {return row.shoeTypeId}"
+                @expand-change = "expandOpen" :expand-row-keys = "expandedRowKeys" >
+            <el-table-column type = "expand" >
                 <template #default = "props">
                     <el-table :data = "props.row.orderShoeTypeBatchInfo" border>
                         <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
@@ -411,9 +441,18 @@
                         <el-table-column prop="size44Ratio" label="44" />
                         <el-table-column prop="size45Ratio" label="45" />
                         <el-table-column prop="size46Ratio" label="46" />
-                        <el-table-column prop="totalQuantityInRatio"         label="比例和"/>
-                        <el-table-column prop="unitQuantity" label="单位数量"/>
-                        <el-table-column prop="totalQuantity" label="总数量"/>
+                        <el-table-column prop="totalQuantityInRatio" label="比例和"/>
+                        <el-table-column label="单位数量">
+                        <template #default="scope">
+                            <el-input size = small
+                            v-model = "props.row.quantityMapping[scope.row.packagingInfoId]"
+                            placeholder = '123'controls-position = "right"
+                            >
+                            </el-input>
+                        </template>
+                        </el-table-column>
+                        <el-table-column label="总数量">
+                        </el-table-column>
                     </el-table>
                 </template>
             </el-table-column>
@@ -424,6 +463,13 @@
             <template #default="scope">
                     <el-button type="primary" size="default" @click="openAddBatchInfoDialog(scope.row)"
                         >添加配码</el-button
+                    >
+            </template>
+            </el-table-column>
+            <el-table-column label = "添加客户鞋型编号">
+            <template #default="scope">
+                    <el-input size="default" v-model = "this.newOrderForm.customerShoeName[scope.row.shoeRId]"
+                        ></el-input
                     >
             </template>
             </el-table-column>
@@ -445,19 +491,20 @@
         </el-row> -->
         <span>
             <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
-            <!-- <el-button @click="openAddBatchInfoDialog(scope.row)"> 添加配码</el-button> -->
+            <el-button @click="submitNewOrder"> 添加订单 </el-button>
         </span>
     </el-dialog>
 
     <el-dialog
         title = "配码添加"
         v-model="addBatchInfoDialogVis"
-        width = "90%">
+        width = "90%"
+        @close = "closeAddBatchInfoDialog()">
         <el-col :span="4" :offset="15"
             ><el-input
                 v-model="batchNameFilter"
                 placeholder="请输入配码名称"
-                size="normal"
+                size="default"
                 :suffix-icon="Search"
                 clearable
                 @input="filterBatchDataWithSelection"
@@ -510,10 +557,9 @@
  -->            </el-table>
         </el-row>
         <span>
-            <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
-            <el-button @click="openAddCustomerBatchDialog()"> 添加配码</el-button>
+            <el-button @click="closeAddBatchInfoDialog()">取消</el-button>
+            <el-button @click="addShoeTypeBatchInfo()"> 添加配码</el-button>
         </span>
-        <el-button @click="insertBatchQuantityDialog()"> 添加配码</el-button>
     </el-dialog>
 
     <el-dialog>
@@ -541,8 +587,8 @@ export default {
             customerDisplayBatchData:[],
             selectedShoeList:[],
             orderStatusList: [],
-            orderBatchInfo:[],
             currentBatch:[],
+            expandedRowKeys:[],
             previewOrderVis: false,
             orderInfoVis: false,
             fileList: [],
@@ -588,8 +634,8 @@ export default {
                 status: '',
                 salesman: '',
                 orderShoeTypes:[],
-                batchInfoMapping:[],
-                batchInfoQuantity:[]
+                batchInfoQuantity:[],
+                customerShoeName:{}
             }
         }
     },
@@ -598,7 +644,12 @@ export default {
       return {
         Authorization: `Bearer ${this.token}`
       };
-    }
+    },
+    computeTotal(row){
+        console.log(row)
+        return 10
+
+    },
   },
     mounted() {
         this.$setAxiosToken()
@@ -606,10 +657,25 @@ export default {
         this.getAllCutomers()
         this.getAllOrderStatus()
         this.getAllShoes()
-        console.log(this.$refs.shoeTypeSelectionTable)
     },
     methods: {
+        findOrderShoeTypeById(id){
+            return this.newOrderForm.orderShoeTypes.find(orderShoeType => { return orderShoeType.shoeTypeId == id
+            })
+        },
+        reselectSelected(ref, selected, displaydataentity,id){
 
+            this.$nextTick(()=>{
+                    selected.forEach(item =>
+                    {
+                    ref.toggleRowSelection(
+                        displaydataentity.find(row => {
+                        return row[id] == item[id]
+                    }),true)
+                    }) 
+                })
+
+        },
         openImportDialog() {
             this.isImportVis = true
         },
@@ -632,19 +698,27 @@ export default {
             }
         },
         openAddBatchInfoDialog(row) {
-            this.addBatchInfoDialogVis = true
-            console.log(row)
             this.curShoeTypeId = row.shoeTypeId
+            this.addBatchInfoDialogVis = true
+            const idField = 'packagingInfoId'
+            this.reselectSelected(this.$refs.batchInfoSelectionTable,
+                row.orderShoeTypeBatchInfo, this.customerDisplayBatchData, idField)
         },
-
+        closeAddBatchInfoDialog(){
+            this.addBatchInfoDialogVis = false
+            this.$refs.batchInfoSelectionTable.clearSelection()
+        },
         orderCreationSecondStep() {
             this.orderCreationInfoVis = false
             this.orderCreationSecondInfoVis = true
             this.newOrderForm.orderShoeTypes.forEach(item => {
                 item.orderShoeTypeBatchInfo = []
+                item.quantityMapping = {}
+                this.newOrderForm.customerShoeName[item.shoeRId] = ""
+
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
-            console.log(this.newOrderForm)
+            // console.log(this.newOrderForm)
 
         },
         handleSelectionShoeType(selection) {
@@ -653,7 +727,7 @@ export default {
         },
         handleSelectionBatchData(selection){
             this.currentBatch = selection
-            console.log(this.currentBatch)
+            // console.log(this.currentBatch)
         },
         async getCustomerBatchInfo(customerId) {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{
@@ -661,7 +735,7 @@ export default {
                     customerid: customerId
                 }
             })
-            console.log(response.data)
+            // console.log(response.data)
             this.customerBatchData = response.data
             this.customerDisplayBatchData = response.data
         },
@@ -694,7 +768,7 @@ export default {
         filterBatchDataWithSelection(){
             const selectedBatch = this.currentBatch
             if (!this.batchNameFilter){
-                this.customerDisplayBatchData = this.customerBatchData
+                this.customerDisplayBatchData = Array.from(new Set([...selectedBatch.concat(this.customerBatchData)]))
             }
             else{
                 this.customerFilteredBatchData = this.customerBatchData.filter((task) => {
@@ -702,8 +776,8 @@ export default {
                     return filteredData
                 })
                 this.customerDisplayBatchData = Array.from(new Set([...selectedBatch.concat(this.customerFilteredBatchData)]))
-
-                this.$nextTick(()=>{
+            }
+            this.$nextTick(()=>{
                     selectedBatch.forEach(item =>
                     {
                     this.$refs.batchInfoSelectionTable.toggleRowSelection(this.customerDisplayBatchData.find(row => {
@@ -711,7 +785,42 @@ export default {
                     }),true)
                     }) 
                 })
-            }
+
+        },
+        addShoeTypeBatchInfo() {
+
+            this.newOrderForm.orderShoeTypes.find(row => {
+                return row.shoeTypeId == this.curShoeTypeId
+            }).orderShoeTypeBatchInfo = this.currentBatch
+
+            const curQuantityMapping = this.newOrderForm.orderShoeTypes.find(row => {
+                return row.shoeTypeId == this.curShoeTypeId
+            }).quantityMapping
+
+
+            this.currentBatch.forEach(batch => {
+                {
+                    curQuantityMapping[batch.packagingInfoId] = 0
+                }
+            })
+            // this.newOrderForm.orderShoeTypes.find(row => {
+            //     return row.shoeTypeId == this.curShoeTypeId
+            // }).unitQuantityInPair = 0
+
+            // this.newOrderForm.orderShoeTypes.find(row => {
+            //     return row.shoeTypeId == this.curShoeTypeId
+            // }).
+            console.log(curQuantityMapping, this.curShoeTypeId)
+            this.addBatchInfoDialogVis = false
+
+        },
+        expandOpen(row, expand){
+            console.log(this.expandedRowKeys)
+            this.expandedRowKeys.push(row.shoeTypeId)
+            // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
+        },
+        closeAddBatchInfodialog(){
+            addBatchInfoDialogVis = false
         },
         async getAllOrders() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
@@ -761,6 +870,7 @@ export default {
             }
 
         },
+
         filterByCid(){
             if (!this.orderCidFilter){
                 this.displayData = this.unfilteredData
@@ -797,8 +907,9 @@ export default {
                 this.shoeTableDisplayData = this.shoeTableTemp}
         },
         filterByShoeRidWithSelection(){
+            const selectedShoeTypeIds = this.selectedShoeList.map(row => row.shoeTypeId)
             if (!this.shoeRidFilter){
-                this.shoeTableDisplayData = this.shoeTableData
+                this.shoeTableDisplayData = Array.from(new Set([...this.selectedShoeList.concat(this.shoeTableData)]))
             }
             else
             {
@@ -806,35 +917,20 @@ export default {
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
                 const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
                 return filterMatch})
-                // console.log(this.shoeTableTemp)
-                // console.log(this.selectedShoeList)
                 this.shoeTableDisplayData = Array.from(new Set([...this.selectedShoeList.concat(this.shoeTableTemp)]))
-                // this.selectedShoeList.forEach(row => {
-                //     this.$refs.shoeTypeSelectionTable.toggleRowSelection(row, true)
-                // })
-                const selectedShoeTypeIds = this.selectedShoeList.map(row => row.shoeTypeId)
-                const rowsToToggle = this.shoeTableDisplayData.filter(row => selectedShoeTypeIds.includes(row.shoeTypeId))
-
-                this.$nextTick(()=>{
-                    selectedShoeTypeIds.forEach(item =>
-                    {
-                    this.$refs.shoeSelectionTable.toggleRowSelection(this.shoeTableDisplayData.find(row => {
-                        return row.shoeTypeId == item
-                    }),true)
-                    }) 
-                })
-                
-
-
-                // this.shoeTableDisplayData.forEach(row => 
-                //     {
-                //     if (row.shoeTypeId in selectedShoeTypeIds)
-                //         {
-                //         this.$refs.shoeSelectionTable.toggleRowSelection(row, true)
-                //         } 
-                //     })
-                
             }
+            const rowsToToggle = this.shoeTableDisplayData.filter(row => selectedShoeTypeIds.includes(row.shoeTypeId))
+
+            const fieldName = 'shoeTypeId'
+            this.reselectSelected(this.$refs.shoeSelectionTable, rowsToToggle, this.shoeTableDisplayData,fieldName)
+            // this.$nextTick(()=>{
+            //         selectedShoeTypeIds.forEach(item =>
+            //         {
+            //         this.$refs.shoeSelectionTable.toggleRowSelection(this.shoeTableDisplayData.find(row => {
+            //             return row.shoeTypeId == item
+            //         }),true)
+            //         }) 
+            //     })
         },
         handleUploadSuccess(response, file) {
             // Handle the successful response
@@ -1041,7 +1137,30 @@ export default {
                         message: '已取消导入'
                     })
                 })
-        }
+        },
+        async submitNewOrder() {
+            this.$confirm('确认导入订单信息？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async ()=> {
+                const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+            })
+                console.log(this.newOrderForm)
+                loadingInstance.close()
+                const response = await axios.post(
+                        `${this.$apiBaseUrl}/ordercreate/createneworder`,
+                        {
+                            orderInfo:this.newOrderForm
+                        }
+                )
+                loadingInstance.close()
+
+            })
+        },
     }
 }
 </script>

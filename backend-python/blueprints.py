@@ -13,6 +13,7 @@ from logistics.first_bom import first_bom_bp
 from shared_apis.department import department_bp
 from usage_calculation.usage_calculation import usage_calculation_bp
 from bussiness.order_import import order_import_bp
+from bussiness.order_create import order_create_bp
 from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
 from technical.second_bom import second_bom_bp
@@ -62,3 +63,4 @@ def register_blueprints():
     app.register_blueprint(message_bp)
     app.register_blueprint(outsource_factory_bp)
     app.register_blueprint(process_sheet_upload_bp)
+    app.register_blueprint(order_create_bp)
