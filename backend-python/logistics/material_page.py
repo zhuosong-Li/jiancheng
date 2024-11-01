@@ -78,24 +78,33 @@ def get_all_warehouse_names():
 
 @material_page_bp.route("/logistics/allmaterialtypes", methods=["GET"])
 def get_all_material_types():
+    # Query only necessary fields and apply distinct on material_type_name
     material_types = (
-        db.session.query(MaterialType, MaterialWarehouse, Material)
+        db.session.query(
+            MaterialType.material_type_name,
+            Material.material_category,
+            MaterialWarehouse.material_warehouse_name
+        )
         .join(
             MaterialWarehouse,
             MaterialType.warehouse_id == MaterialWarehouse.material_warehouse_id,
         )
         .join(Material, Material.material_type_id == MaterialType.material_type_id)
+        .distinct(MaterialType.material_type_name)
+        .order_by(MaterialType.material_type_name)
         .all()
     )
-    result = []
-    for material_type in material_types:
-        result.append(
-            {
-                "materialType": material_type.MaterialType.material_type_name,
-                'materialCategory': material_type.Material.material_category,
-                "warehouseName": material_type.MaterialWarehouse.material_warehouse_name,
-            }
-        )
+
+    # Format results as a list of dictionaries
+    result = [
+        {
+            "materialType": material_type_name,
+            "materialCategory": material_category,
+            "warehouseName": warehouse_name,
+        }
+        for material_type_name, material_category, warehouse_name in material_types
+    ]
+
     return jsonify(result)
 
 
@@ -245,7 +254,6 @@ def create_material():
             material_type_id=material_type_record.material_type_id,
             material_unit=unit,
             material_supplier=factory.supplier_id,
-            shoe_part_id=1,
             material_creation_date=datetime.now().strftime("%Y-%m-%d"),
             material_category=material_category,
         )

@@ -25,6 +25,12 @@
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>订单查询</span>
                         </el-menu-item>
+                        <el-menu-item index="5" @click="handleMenuClick(5)">
+                            <span>物料管理</span>
+                        </el-menu-item>
+                        <el-menu-item index="6" @click="handleMenuClick(6)">
+                            <span>供应商管理</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -45,6 +51,8 @@ import Dashboard from '../components/DevelopmentManagerDashboard.vue'
 import ProductionOrderCreate from '../components/ProductionOrderCreate.vue'
 import ShoeManagement from '../components/ShoeManagement.vue'
 import OrderSearch from '../components/OrderSearch.vue'
+import MaterialManagement from '../components/MaterialManagementView.vue'
+import SupplierManagement from '../components/SupplierManagementView.vue'
 import axios from 'axios'
 
 
@@ -54,7 +62,9 @@ export default {
         Dashboard,
         ProductionOrderCreate,
         ShoeManagement,
-        OrderSearch
+        OrderSearch,
+        MaterialManagement,
+        SupplierManagement
     },
     data() {
         return {
@@ -85,6 +95,12 @@ export default {
                     break
                 case 4:
                     this.currentComponent = 'OrderSearch'
+                    break
+                case 5:
+                    this.currentComponent = 'MaterialManagement'
+                    break
+                case 6:
+                    this.currentComponent = 'SupplierManagement'
                     break
             }
         },

@@ -213,7 +213,7 @@ class MaterialStorage(db.Model):
     material_specification = db.Column(db.String(40), nullable=True)
     material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
-    material_storage_color = db.Column(db.Integer)
+    material_storage_color = db.Column(db.String(40), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
 
@@ -322,20 +322,6 @@ class OrderShoeBatchInfo(db.Model):
     size_44_amount = db.Column(db.Integer, nullable=True)
     size_45_amount = db.Column(db.Integer, nullable=True)
     size_46_amount = db.Column(db.Integer, nullable=True)
-    size_34_actual_amount = db.Column(db.Integer, nullable=True)
-    size_35_actual_amount = db.Column(db.Integer, nullable=True)
-    size_36_actual_amount = db.Column(db.Integer, nullable=True)
-    size_37_actual_amount = db.Column(db.Integer, nullable=True)
-    size_38_actual_amount = db.Column(db.Integer, nullable=True)
-    size_39_actual_amount = db.Column(db.Integer, nullable=True)
-    size_40_actual_amount = db.Column(db.Integer, nullable=True)
-    size_41_actual_amount = db.Column(db.Integer, nullable=True)
-    size_42_actual_amount = db.Column(db.Integer, nullable=True)
-    size_43_actual_amount = db.Column(db.Integer, nullable=True)
-    size_44_actual_amount = db.Column(db.Integer, nullable=True)
-    size_45_actual_amount = db.Column(db.Integer, nullable=True)
-    size_46_actual_amount = db.Column(db.Integer, nullable=True)
-    actual_total_amount = db.Column(db.Integer, nullable=True)
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
@@ -737,9 +723,7 @@ class SizeMaterialStorage(db.Model):
     material_id = db.Column(
         db.BigInteger,
     )
-    size_material_color = db.Column(
-        db.Integer,
-    )
+    size_material_color = db.Column(db.String(40), nullable=True)
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
@@ -941,6 +925,35 @@ class TotalBom(db.Model):
     __tablename__ = "total_bom"
     total_bom_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     total_bom_rid = db.Column(db.String(50), nullable=False)
+    order_shoe_id = db.Column(db.BigInteger, nullable=False)
 
     def __repr__(self):
         return f"<TotalBom(total_bom_id={self.total_bom_id})>"
+
+class ProductionInstruction(db.Model):
+    __tablename__ = "production_instruction"
+    production_instruction_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    order_shoe_id = db.Column(db.BigInteger, nullable=False)
+    production_instruction_rid = db.Column(db.String(50), nullable=False)
+    production_instruction_status = db.Column(db.String(1), nullable=False)
+
+    def __repr__(self):
+        return f"<ProductionInstruction(production_instruction_id={self.production_instruction_id})>"
+
+class ProductionInstructionItem(db.Model):
+    __tablename__ = "production_instruction_item"
+    production_instruction_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    production_instruction_id = db.Column(db.BigInteger, nullable=False)
+    material_id = db.Column(db.BigInteger, nullable=False)
+    remark = db.Column(db.String(50), nullable=True)
+    department_id = db.Column(db.Integer, nullable=False)
+    material_specification = db.Column(db.String(50), nullable=True)
+    material_model = db.Column(db.String(50), nullable=True)
+    color = db.Column(db.String(20), nullable=True)
+    is_pre_purchase = db.Column(db.Boolean, nullable=False)
+    material_type = db.Column(db.String(1), nullable=False)
+    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+
+
+    def __repr__(self):
+        return f"<ProductionInstructionItem(production_instruction_item_id={self.production_instruction_item_id})>"

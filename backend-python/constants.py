@@ -98,9 +98,9 @@ IN_PRODUCTION_ORDER_NUMBER = 9
 END_OF_ORDER_NUMBER = 18
 END_OF_PRODUCTION_NUMBER = 42
 
-FILE_STORAGE_PATH = "C:/Users/ericc/Downloads"
+FILE_STORAGE_PATH = "D:/temp"
 IMAGE_STORAGE_PATH = "http://localhost:12667/"
-IMAGE_UPLOAD_PATH = "C:/Users/ericc/Downloads/tmps"
+IMAGE_UPLOAD_PATH = "D:/imgtmp"
 
 PRODUCTION_LINES = {
     "裁断": [1, 2, 3, 4],
