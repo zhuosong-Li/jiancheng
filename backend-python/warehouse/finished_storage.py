@@ -74,10 +74,6 @@ def get_finished_in_out_overview():
             status_name = "已完成入库"
         else:
             status_name = "已完成出库"
-        if storage_obj.finished_type == 0:
-            storage_type = '自产'
-        else:
-            storage_type = '外包'
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -89,7 +85,6 @@ def get_finished_in_out_overview():
             "currentAmount": storage_obj.finished_amount,
             "statusName": status_name,
             "endDate": order.end_date,
-            "storageType": storage_type,
         }
         result.append(obj)
     return {"result": result, "total": count_result}
@@ -201,3 +196,29 @@ def get_finished_in_out_bound_records():
         obj["amount"] = row.outbound_amount
         result.append(obj)
     return result
+
+
+@finished_storage_bp.route(
+    "/warehouse/warehousemanager/completeinboundfinished", methods=["PATCH"]
+)
+def complete_inbound_finished():
+    data = request.get_json()
+    storage = FinishedShoeStorage.query.get(data["storageId"])
+    if not storage:
+        return jsonify({"message": "order shoe storage not found"}), 400
+    storage.finished_status = 1
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@finished_storage_bp.route(
+    "/warehouse/warehousemanager/completeoutboundfinished", methods=["PATCH"]
+)
+def complete_outbound_finished():
+    data = request.get_json()
+    storage = FinishedShoeStorage.query.get(data["storageId"])
+    if not storage:
+        return jsonify({"message": "order shoe storage not found"}), 400
+    storage.finished_status = 2
+    db.session.commit()
+    return jsonify({"message": "success"})

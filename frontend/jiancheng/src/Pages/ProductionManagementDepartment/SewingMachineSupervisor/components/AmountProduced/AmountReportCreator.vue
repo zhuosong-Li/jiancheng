@@ -41,18 +41,25 @@ const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
     let params = { "orderShoeId": props.orderShoeId, 'team': props.teamName, "status": 2 }
     // get price report detail
-    let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
-    priceReport.value = response.data.detail
+    try {
+        let response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
+        priceReport.value = response.data.detail
+    }
+    catch(error) {
+        console.log(error)
+    }
     // get quantity report detail
-    params = { "reportId": props.currentReport.reportId }
-    response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
-    response.data.forEach(row => {
-        if (props.teamName === '针车预备') {
-            row["remainAmount"] = row["totalAmount"] - row["preSewingAmount"]
-        }
-        else {
-            row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
-        }
+    let teamId = -1
+    if (props.teamName === '针车预备') {
+        teamId = 1
+    }
+    else {
+        teamId = 2
+    }
+    params = { "reportId": props.currentReport.reportId, "team": teamId }
+    let response2 = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
+    response2.data.forEach(row => {
+        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })
@@ -84,7 +91,7 @@ const handleSaveData = () => {
         cancelButtonText: '取消',
         type: 'warning'
     }).then(async () => {
-        const data = { 
+        const data = {
             "reportId": props.currentReport.reportId,
             "data": tableData.value
         }

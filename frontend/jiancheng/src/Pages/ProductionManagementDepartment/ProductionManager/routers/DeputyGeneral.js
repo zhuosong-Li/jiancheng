@@ -10,10 +10,6 @@ export default [
       {
         orderId: route.query.orderId,
         orderRId: route.query.orderRId,
-        orderStartDate: route.query.orderStartDate,
-        orderEndDate: route.query.orderEndDate,
-        customerName: route.query.customerName,
-        orderTotalShoes: route.query.orderTotalShoes
       }
     )
   },
