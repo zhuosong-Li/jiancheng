@@ -29,7 +29,7 @@
         </el-col>
     </el-row>
     <el-row>
-        <el-table :data="orderData" border stripe height="600">
+        <el-table :data="orderData" border stripe height="600" @row-click="handleRowClick">
             <el-table-column type="expand">
                 <template #default="props">
                     <el-table :data="props.row.shoes" :border="true">
@@ -92,6 +92,12 @@
             <el-table-column prop="createTime" label="订单日期"></el-table-column>
             <el-table-column prop="deadlineTime" label="交货日期"></el-table-column>
             <el-table-column prop="status" label="订单状态"></el-table-column>
+            <el-table-column label="操作">
+                <template #default="scope">
+                    <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看</el-button>
+                </template>
+            </el-table-column>
+            
         </el-table>
     </el-row>
     <el-row :gutter="20">
@@ -125,6 +131,7 @@ export default {
         }
     },
     mounted() {
+        this.$setAxiosToken()
         this.getOrderData(this.currentPage)
     },
     methods: {
@@ -133,7 +140,12 @@ export default {
                 `${this.$apiBaseUrl}/order/getorderfullinfo?page=${page}&orderSearch=${this.orderSearch}&customerSearch=${this.customerSearch}`
             )
             this.orderData = response.data
-        }
+        },
+        handleRowClick(row) {
+            // Use orderRid to open a new page, here using window.open
+            const url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
+            window.open(url, '_blank'); // Opens in a new tab
+        },
     }
 }
 </script>

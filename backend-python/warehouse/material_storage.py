@@ -96,14 +96,13 @@ def get_all_material_info():
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
-            Color,
             PurchaseDivideOrder.purchase_divide_order_rid,
-            PurchaseOrder.purchase_order_issue_date
+            PurchaseOrder.purchase_order_issue_date,
+            MaterialStorage.material_storage_color
         )
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
-        .join(Color, Color.color_id == MaterialStorage.material_storage_color)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == MaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
         .outerjoin(OrderShoeType, MaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
@@ -137,14 +136,13 @@ def get_all_material_info():
             MaterialType.material_type_name,
             Material.material_category,
             Supplier.supplier_name,
-            Color,
             PurchaseDivideOrder.purchase_divide_order_rid,
-            PurchaseOrder.purchase_order_issue_date
+            PurchaseOrder.purchase_order_issue_date,
+            SizeMaterialStorage.size_material_color
         )
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
-        .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == SizeMaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
         .outerjoin(OrderShoeType, SizeMaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
@@ -209,9 +207,9 @@ def get_all_material_info():
             material_type_name,
             material_category,
             supplier_name,
-            color,
             purchase_divide_order_rid,
             purchase_order_issue_date,
+            color
         ) = row
         if material_storage_status == 0:
             status = "未完成入库"
@@ -241,7 +239,7 @@ def get_all_material_info():
             "shoeRId": shoe_rid,
             "materialStorageId": material_storage_id,
             "status": status,
-            "colorName": color.color_name,
+            "colorName": color,
             "materialArrivalDate": date_value,
             "purchaseDivideOrderRId": purchase_divide_order_rid,
             "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d"),
