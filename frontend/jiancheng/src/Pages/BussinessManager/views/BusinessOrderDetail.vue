@@ -97,8 +97,8 @@
             </el-table-column>
             <el-table-column prop = "shoeRid" label = "鞋型编号" sortable/>
 			<el-table-column prop = "shoeCid" label = "客户鞋型编号" sortable/>
-            <el-table-column prop = "shoeColor" label = "鞋型颜色" />
-            <el-table-column prop = "shoeImage" label = "鞋型图片" />
+            <el-table-column prop = "currentStatus" label = "订单状态" />
+
             <el-table-column>
             <template #default="scope">
                     <el-button type="primary" size="default" 

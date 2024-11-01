@@ -190,10 +190,12 @@ def get_order_info_business():
         "orderShoeAllData":[],
         # 备注
     }
+    
     order_shoe_ids = []
     for order_shoe in order_shoe_entities:
         response = {}
-        response["shoeId"] = order_shoe.OrderShoe.order_shoe_id
+        response["orderShoeId"] = order_shoe.OrderShoe.order_shoe_id
+        response["shoeId"] = order_shoe.Shoe.shoe_id
         response["shoeRid"] = order_shoe.Shoe.shoe_rid
         response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
@@ -203,7 +205,38 @@ def get_order_info_business():
         if order_shoe_id not in order_shoe_ids:
             order_shoe_ids.append(order_shoe_id)
 
-    
+    order_shoe_id_to_status = {order_shoe_id:"" for order_shoe_id in order_shoe_ids}
+    order_shoe_id_to_order_shoe_types = {order_shoe_id:[] for order_shoe_id in order_shoe_ids}
+    for order_shoe_id in order_shoe_ids:
+        order_shoe_status_entities = (db.session.query(OrderShoeStatus, OrderShoeStatusReference)
+            .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
+            .join(OrderShoeStatusReference, OrderShoeStatus.current_status == OrderShoeStatusReference.status_id)
+            .all()
+        )
+        for entity in order_shoe_status_entities:
+            order_shoe_id_to_status[order_shoe_id] +=((entity.OrderShoeStatusReference.status_name) + " ")
+
+        order_shoe_type_entities = (db.session.query(OrderShoeType, Color, ShoeType)
+            .filter(OrderShoeType.order_shoe_id == order_shoe_id)
+            .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
+            .join(Color, Color.color_id == ShoeType.color_id)
+            ).all()
+
+        for entity in order_shoe_type_entities:
+            print(entity)
+            order_shoe_id_to_order_shoe_types[order_shoe_id].append(
+                {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
+                    "shoeTypeColorName":entity.Color.color_name,
+                   "shoeTypeColorId":entity.Color.color_id,
+                   "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url
+                })
+            print(order_shoe_id_to_order_shoe_types[order_shoe_id])
+    print(123)
+    print(order_shoe_id_to_order_shoe_types)
+    for order_shoe in result['orderShoeAllData']:
+        order_shoe["currentStatus"] = order_shoe_id_to_status[order_shoe["orderShoeId"]]
+        order_shoe["orderShoeTypes"] = order_shoe_id_to_order_shoe_types[order_shoe["orderShoeId"]]
+    print(order_shoe_id_to_status)
     print(result)
 
     return jsonify(result)

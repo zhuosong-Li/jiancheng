@@ -128,7 +128,7 @@ def create_new_order():
 		batch_info = shoe_type["orderShoeTypeBatchInfo"]
 		existing_entity = OrderShoeType.query.filter_by(
 			order_shoe_id = order_shoe_id,
-			shoe_type_id = shoe_type_id)
+			shoe_type_id = shoe_type_id).first()
 		if not existing_entity:
 			new_entity = OrderShoeType(
 				order_shoe_id = order_shoe_id,
