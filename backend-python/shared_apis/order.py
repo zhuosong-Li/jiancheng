@@ -203,6 +203,7 @@ def get_order_info_business():
         if order_shoe_id not in order_shoe_ids:
             order_shoe_ids.append(order_shoe_id)
 
+    
     print(result)
 
     return jsonify(result)
