@@ -10,10 +10,10 @@
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
                     <el-descriptions title="订单及鞋型信息" border column="2">
-                        <el-descriptions-item label="订单号">{{ $props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="鞋型号">{{ $props.shoeRId }}</el-descriptions-item>
-                        <el-descriptions-item label="客户型号">{{ $props.customerProductName }}</el-descriptions-item>
-                        <el-descriptions-item label="订单截止日期">{{ $props.orderEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="订单号">{{ orderInfo.orderRId }}</el-descriptions-item>
+                        <el-descriptions-item label="鞋型号">{{ orderInfo.shoeRId }}</el-descriptions-item>
+                        <el-descriptions-item label="客户型号">{{ orderInfo.customerProductName }}</el-descriptions-item>
+                        <el-descriptions-item label="订单截止日期">{{ orderInfo.orderEndDate }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
@@ -107,7 +107,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus';
 export default {
-    props: ['orderShoeId', 'orderRId', 'shoeRId', 'orderEndDate', 'customerProductName'],
+    props: ['orderShoeId', 'orderId'],
     components: {
         AllHeader
     },
@@ -123,13 +123,20 @@ export default {
             departSelect: '',
             amountListData: [],
             currentRow: {},
-            shoeBatchAmountData: []
+            shoeBatchAmountData: [],
+            orderInfo: {},
         }
     },
     mounted() {
+        this.getOrderInfo()
         this.getAmountListData()
     },
     methods: {
+        async getOrderInfo() {
+            let params = {"orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId}
+            let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
+            this.orderInfo = response.data
+        },
         async getAmountListData() {
             let startDate = null, endDate = null
             if (this.datePeriod) {
@@ -157,20 +164,19 @@ export default {
             this.getAmountListData()
         },
         async openApprovalDialog(rowData) {
+            let teamId = -1
+            if (rowData.team == "裁断")
+                teamId = 0
+            else if (rowData.team == "针车预备")
+                teamId = 1
+            else if (rowData.team == "针车")
+                teamId = 2
+            else if (rowData.team == "成型")
+                teamId = 3
             this.currentRow = rowData
-            let params = { reportId: rowData.reportId }
+            let params = { reportId: rowData.reportId, team: teamId}
             let response = await axios.get(`${this.$apiBaseUrl}/production/getquantityreportdetail`, { params })
             this.shoeBatchAmountData = response.data
-            this.shoeBatchAmountData.forEach(row => {
-                if (rowData.team == "裁断")
-                    row["producedAmount"] = row.cuttingAmount
-                else if (rowData.team == "针车预备")
-                    row["producedAmount"] = row.preSewingAmount
-                else if (rowData.team == "针车")
-                    row["producedAmount"] = row.sewingAmount
-                else if (rowData.team == "成型")
-                    row["producedAmount"] = row.moldingAmount
-            })
             this.isAmountApprovalVis = true
         },
         async openConfirmDialog() {

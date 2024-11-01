@@ -11,11 +11,6 @@ export default [
       {
         orderId: route.query.orderId,
         orderRId: route.query.orderRId,
-        orderStartDate: route.query.orderStartDate,
-        orderEndDate: route.query.orderEndDate,
-        taskName: route.query.taskName,
-        customerName: route.query.customerName,
-        orderTotalShoes: route.query.orderTotalShoes
       }
     )
   },
@@ -26,12 +21,7 @@ export default [
     props: route => (
       {
         orderId: route.query.orderId,
-        orderRId: route.query.orderRId,
         orderShoeId: route.query.orderShoeId,
-        shoeRId: route.query.shoeRId,
-        orderStartDate: route.query.orderStartDate,
-        orderEndDate: route.query.orderEndDate,
-        customerName: route.query.customerName,
       }
     )
   },
@@ -41,11 +31,8 @@ export default [
     component: ProductionAmountApprovalPage,
     props: route => (
       {
-        orderRId: route.query.orderRId,
+        orderId: route.query.orderId,
         orderShoeId: route.query.orderShoeId,
-        shoeRId: route.query.shoeRId,
-        orderEndDate: route.query.orderEndDate,
-        customerProductName: route.query.customerProductName,
       }
     )
   },
@@ -55,7 +42,7 @@ export default [
     component: ProductionStatusTrackingPage,
     props: route => (
       {
-        orderRId: route.query.orderRId,
+        orderId: route.query.orderId,
         orderShoeId: route.query.orderShoeId,
       }
     )

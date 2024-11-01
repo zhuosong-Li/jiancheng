@@ -87,11 +87,19 @@ const dateValue = ref('')
 const createdDates = ref(new Set())
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
+const orderStartDate = ref('')
 
 
 onMounted(async () => {
+    getOrderStartDate()
     getAllQuantityReports()
 })
+
+const getOrderStartDate = async () => {
+    let params = {"orderId": props.orderId}
+    let response = await axios.get(`${apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
+    orderStartDate.value = response.data.orderStartDate
+}
 
 const getAllQuantityReports = async () => {
     // get all quantity report for this order_shoe_id
@@ -121,7 +129,8 @@ const handleEdit = (rowData) => {
     currentReport.value = rowData
 }
 const disabledDate = (time) => {
-    const startDate = new Date(props.createTime)
+    let startDate = new Date(orderStartDate.value)
+    startDate.setDate(startDate.getDate() - 1);
     const endDate = new Date()
     return time.getTime() < startDate || time.getTime() > endDate.getTime() || createdDates.value.has(dateFormatter(time));
 }

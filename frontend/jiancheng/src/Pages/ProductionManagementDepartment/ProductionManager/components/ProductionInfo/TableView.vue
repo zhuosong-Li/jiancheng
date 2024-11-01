@@ -62,7 +62,11 @@ export default {
 		},
 		openNewWindow(rowData) {
 			let url = ""
-			const queryString = new URLSearchParams(rowData).toString();
+			let params = {
+				"orderId": rowData.orderId,
+				"orderRId": rowData.orderRId
+			}
+			const queryString = new URLSearchParams(params).toString();
 			url = `${window.location.origin}/productionmanager/productiondetail?${queryString}`
 			window.open(url, '_blank')
 		},

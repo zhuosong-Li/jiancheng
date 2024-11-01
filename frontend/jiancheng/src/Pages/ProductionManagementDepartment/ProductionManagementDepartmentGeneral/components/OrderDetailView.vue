@@ -10,33 +10,35 @@
 			<el-row :gutter="20">
 				<el-col :span="24" :offset="0">
 					<el-descriptions title="订单信息" :column="2" border>
-						<el-descriptions-item label="客人编号">{{
-							$props.customerName
+						<el-descriptions-item label="客户名称">{{
+							orderInfo.customerName
 						}}</el-descriptions-item>
 						<el-descriptions-item label="订单编号">{{
 							$props.orderRId
 						}}</el-descriptions-item>
-						<el-descriptions-item label="订单创建时间">{{
-							$props.orderStartDate
+						<el-descriptions-item label="订单创建日期">{{
+							orderInfo.orderStartDate
 						}}</el-descriptions-item>
-						<el-descriptions-item label="订单出货日期">{{
-							$props.orderEndDate
+						<el-descriptions-item label="订单截止日期">{{
+							orderInfo.orderEndDate
 						}}</el-descriptions-item>
 						<el-descriptions-item label="订单总数量">{{
-							$props.orderTotalShoes
+							orderInfo.orderTotalShoes
 						}}</el-descriptions-item>
 						<el-descriptions-item label="订单总完成度百分比">{{
 							orderPercentageText
 						}}</el-descriptions-item>
-					</el-descriptions></el-col>
+					</el-descriptions>
+				</el-col>
 			</el-row>
 			<el-row :gutter="20" style="margin-top: 20px">
 				<el-col :span="24" :offset="0">
 					<el-table :data="orderShoeDataTable" border style="height: 800px">
 						<el-table-column type="expand">
-							<template #default="props">
+							<template #default="{row}">
 								<h3>鞋型详情</h3>
-								<el-table :data="props.row.detail" border>
+								<el-table :data="row.detail"
+									:span-method="(params) => orderShoeDataTableSpanMethod(params, row.detail)" border>
 									<el-table-column label="预览图" width="200">
 										<template #default="scope">
 											<el-image :src="scope.row.imageurl" fit="fill"></el-image>
@@ -92,10 +94,10 @@
 									</el-descriptions-item>
 									<el-descriptions-item label="操作">
 										<el-button v-if="tab.isOutsourced == 0" type="primary" size="default"
-											@click="startOutSourceFlow()">启动外包流程</el-button>
+											@click="openOutsourceFlow()">启动外包流程</el-button>
 										<el-button-group v-else>
 											<el-button type="primary" size="default"
-												@click="startOutSourceFlow()">查看外包流程</el-button>
+												@click="openOutsourceFlow()">查看外包流程</el-button>
 										</el-button-group>
 									</el-descriptions-item>
 								</el-descriptions>
@@ -139,99 +141,106 @@
 								<el-table-column prop="predictAmount" label="预计当日现有生产量"> </el-table-column>
 							</el-table>
 						</el-row>
+						<el-row>
+							计划自产数量
+						</el-row>
+						<el-row :gutter="20">
+							<el-col>
+								<el-table :data="tab.productionAmountTable" :span-method="tab.productionSpanMethod"
+									border stripe :max-height="500">
+									<el-table-column prop="colorName" label="颜色"></el-table-column>
+									<el-table-column prop="batchName" label="配码编号"></el-table-column>
+									<el-table-column prop="size34" label="34">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size34" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size35" label="35">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size35" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size36" label="36">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size36" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size37" label="37">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size37" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size38" label="38">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size38" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size39" label="39">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size39" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size40" label="40">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size40" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size41" label="41">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size41" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size42" label="42">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size42" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size43" label="43">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size43" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size44" label="44">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size44" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size45" label="45">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size45" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="size46" label="46">
+										<template v-slot="scope">
+											<el-input v-model="scope.row.size46" />
+										</template>
+									</el-table-column>
+									<el-table-column prop="pairAmount" label="双数"></el-table-column>
+									<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+								</el-table>
+							</el-col>
+						</el-row>
 					</el-tab-pane>
 				</el-tabs>
 				<el-row :gutter="20" style="margin-top: 20px">
-				<el-col :span="24" :offset="0">
-					鞋型配码信息
-					<el-table :data="shoeBatchInfo" :span-method="spanMethod" border stripe :max-height="500">
-						<el-table-column prop="colorName" label="颜色"></el-table-column>
-						<el-table-column prop="batchName" label="配码编号"></el-table-column>
-						<el-table-column prop="size34" label="34"></el-table-column>
-						<el-table-column prop="size35" label="35"></el-table-column>
-						<el-table-column prop="size36" label="36"></el-table-column>
-						<el-table-column prop="size37" label="37"></el-table-column>
-						<el-table-column prop="size38" label="38"></el-table-column>
-						<el-table-column prop="size39" label="39"></el-table-column>
-						<el-table-column prop="size40" label="40"></el-table-column>
-						<el-table-column prop="size41" label="41"></el-table-column>
-						<el-table-column prop="size42" label="42"></el-table-column>
-						<el-table-column prop="size43" label="43"></el-table-column>
-						<el-table-column prop="size44" label="44"></el-table-column>
-						<el-table-column prop="size45" label="45"></el-table-column>
-						<el-table-column prop="pairAmount" label="双数"></el-table-column>
-						<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
-					</el-table>
-				</el-col>
-			</el-row>
-				<el-row>
-					计划自产数量
-				</el-row>
-				<el-row :gutter="20">
-					<el-col>
-						<el-table :data="shoeBatchProductionPlan" :span-method="productionSpanMethod" border stripe :max-height="500">
+					<el-col :span="24" :offset="0">
+						鞋型配码信息
+						<el-table :data="shoeBatchInfo" :span-method="spanMethod" border stripe :max-height="500">
 							<el-table-column prop="colorName" label="颜色"></el-table-column>
 							<el-table-column prop="batchName" label="配码编号"></el-table-column>
-							<el-table-column prop="size34" label="34">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size34" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size35" label="35">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size35" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size36" label="36">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size36" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size37" label="37">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size37" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size38" label="38">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size38" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size39" label="39">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size39" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size40" label="40">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size40" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size41" label="41">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size41" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size42" label="42">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size42" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size43" label="43">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size43" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size44" label="44">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size44" />
-								</template>
-							</el-table-column>
-							<el-table-column prop="size45" label="45">
-								<template v-slot="scope">
-									<el-input v-model="scope.row.size45" />
-								</template>
-							</el-table-column>
+							<el-table-column prop="size34" label="34"></el-table-column>
+							<el-table-column prop="size35" label="35"></el-table-column>
+							<el-table-column prop="size36" label="36"></el-table-column>
+							<el-table-column prop="size37" label="37"></el-table-column>
+							<el-table-column prop="size38" label="38"></el-table-column>
+							<el-table-column prop="size39" label="39"></el-table-column>
+							<el-table-column prop="size40" label="40"></el-table-column>
+							<el-table-column prop="size41" label="41"></el-table-column>
+							<el-table-column prop="size42" label="42"></el-table-column>
+							<el-table-column prop="size43" label="43"></el-table-column>
+							<el-table-column prop="size44" label="44"></el-table-column>
+							<el-table-column prop="size45" label="45"></el-table-column>
+							<el-table-column prop="size46" label="46"></el-table-column>
 							<el-table-column prop="pairAmount" label="双数"></el-table-column>
 							<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
 						</el-table>
@@ -256,7 +265,7 @@ import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { shoeBatchInfoTableSpanMethod } from '../../utils';
 export default {
-	props: ['orderId', 'orderRId', 'orderStartDate', 'orderEndDate', 'customerName', 'orderTotalShoes'],
+	props: ['orderId', 'orderRId'],
 	components: {
 		AllHeader
 	},
@@ -277,7 +286,14 @@ export default {
 			isShoeScheduleVis: false,
 			isScheduleVis: false,
 			isScheduleModify: false,
-			// 0: 裁断，1：预备，2：针车，3：成型
+			orderInfo: {
+				customerName: '',
+				orderRId: '',
+				orderStartDate: '',
+				orderEndDate: '',
+				orderTotalShoes: ''
+			},
+			// index 0: 裁断，1：预备，2：针车，3：成型
 			tabs: [
 				{
 					name: '裁断',
@@ -289,6 +305,9 @@ export default {
 					dateStatusTable: [],
 					isOutsourced: 0,
 					isDateStatusTableVis: false,
+					productionAmountTable: [],
+					productionSpanMethod: null,
+					team: 0
 				},
 				{
 					name: '针车预备',
@@ -300,6 +319,9 @@ export default {
 					dateStatusTable: [],
 					isOutsourced: 0,
 					isDateStatusTableVis: false,
+					productionAmountTable: [],
+					productionSpanMethod: null,
+					team: 1
 				},
 				{
 					name: '针车',
@@ -311,6 +333,9 @@ export default {
 					dateStatusTable: [],
 					isOutsourced: 0,
 					isDateStatusTableVis: false,
+					productionAmountTable: [],
+					productionSpanMethod: null,
+					team: 1
 				},
 				{
 					name: '成型',
@@ -322,25 +347,33 @@ export default {
 					dateStatusTable: [],
 					isOutsourced: 0,
 					isDateStatusTableVis: false,
+					productionAmountTable: [],
+					productionSpanMethod: null,
+					team: 2
 				}
 			],
 			productionLines: {},
 			currentRow: {},
 			shoeBatchInfo: [],
-			shoeBatchProductionPlan: [],
 			spanMethod: null,
-			productionSpanMethod: null
 		}
 	},
 	mounted() {
+		this.getOrderInfo()
 		this.getProductionLineOptions()
-		this.getOrderShoeTableData()
 	},
 	methods: {
+		async getOrderInfo() {
+			let params = { orderId: this.$props.orderId }
+			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
+			this.orderInfo = response.data
+			response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderamount`, { params })
+			this.orderInfo.orderTotalShoes = response.data.orderTotalShoes
+			this.getOrderShoeTableData()
+		},
 		async getProductionLineOptions() {
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getproductionlines`)
 			this.productionLines = response.data
-			console.log(this.productionLines)
 		},
 		async getOrderShoeTableData() {
 			const params = { "orderId": this.$props.orderId }
@@ -364,10 +397,11 @@ export default {
 				totalSewingAmount += sewingAmount
 				totalMoldingAmount += moldingAmount
 			})
-			let orderTotalShoes = Number(this.$props.orderTotalShoes)
+			let orderTotalShoes = Number(this.orderInfo.orderTotalShoes)
 			let totalCuttingPercent = Math.round(totalCuttingAmount / orderTotalShoes * 100)
 			let totalSewingPercent = Math.round(totalSewingAmount / orderTotalShoes * 100)
 			let totalMoldingPercent = Math.round(totalMoldingAmount / orderTotalShoes * 100)
+			console.log(orderTotalShoes)
 			this.orderPercentageText = `裁断:${totalCuttingPercent.toString()}% 针车:${totalSewingPercent.toString()}% 成型:${totalMoldingPercent.toString()}%`
 		},
 		async viewProductionSchedule(rowData) {
@@ -402,43 +436,67 @@ export default {
 		async getOrderShoeBatchEstimatedAmount() {
 			const params = { "orderShoeId": this.currentRow.orderShoeId }
 			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchestimatedamount`, { params })
-			this.shoeBatchProductionPlan = response.data
-			this.productionSpanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchProductionPlan);
+			let temp = []
+			this.tabs.forEach(row => {
+				if (response.data[row.team] === undefined) {
+					row.productionAmountTable = JSON.parse(JSON.stringify(this.shoeBatchInfo))
+				}
+				else {
+					row.productionAmountTable = response.data[row.team]
+				}
+				row.productionSpanMethod = shoeBatchInfoTableSpanMethod(row.productionAmountTable)
+			})
+			this.tabs[1].productionAmountTable = this.tabs[2].productionAmountTable
 		},
 		async modifyProductionSchedule() {
-			let data = {
-				"orderShoeId": this.currentRow.orderShoeId,
-				"cuttingInfo": {
-					"lineValue": this.tabs[0].lineValue.join(","),
-					"isOutsourced": this.tabs[0].isOutsourced,
-					"startDate": this.tabs[0].dateValue[0],
-					"endDate": this.tabs[0].dateValue[1]
-				},
-				"preSewingInfo": {
-					"lineValue": this.tabs[1].lineValue.join(","),
-					"isOutsourced": this.tabs[2].isOutsourced,
-					"startDate": this.tabs[1].dateValue[0],
-					"endDate": this.tabs[1].dateValue[1]
-				},
-				"sewingInfo": {
-					"lineValue": this.tabs[2].lineValue.join(","),
-					"isOutsourced": this.tabs[2].isOutsourced,
-					"startDate": this.tabs[2].dateValue[0],
-					"endDate": this.tabs[2].dateValue[1]
-				},
-				"moldingInfo": {
-					"lineValue": this.tabs[3].lineValue.join(","),
-					"isOutsourced": this.tabs[3].isOutsourced,
-					"startDate": this.tabs[3].dateValue[0],
-					"endDate": this.tabs[3].dateValue[1]
-				}
-			}
 			try {
+				let data = {
+					"orderShoeId": this.currentRow.orderShoeId,
+					"cuttingInfo": {
+						"lineValue": this.tabs[0].lineValue.join(","),
+						"isOutsourced": this.tabs[0].isOutsourced,
+						"startDate": this.tabs[0].dateValue[0],
+						"endDate": this.tabs[0].dateValue[1]
+					},
+					"preSewingInfo": {
+						"lineValue": this.tabs[1].lineValue.join(","),
+						"isOutsourced": this.tabs[2].isOutsourced,
+						"startDate": this.tabs[1].dateValue[0],
+						"endDate": this.tabs[1].dateValue[1]
+					},
+					"sewingInfo": {
+						"lineValue": this.tabs[2].lineValue.join(","),
+						"isOutsourced": this.tabs[2].isOutsourced,
+						"startDate": this.tabs[2].dateValue[0],
+						"endDate": this.tabs[2].dateValue[1]
+					},
+					"moldingInfo": {
+						"lineValue": this.tabs[3].lineValue.join(","),
+						"isOutsourced": this.tabs[3].isOutsourced,
+						"startDate": this.tabs[3].dateValue[0],
+						"endDate": this.tabs[3].dateValue[1]
+					}
+				}
 				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editproductionschedule`, data)
-				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/saveproductionamount`, this.shoeBatchProductionPlan)
+				let temp_data = [this.tabs[0].productionAmountTable, this.tabs[2].productionAmountTable, this.tabs[3].productionAmountTable]
+				data = []
+				temp_data.forEach((table, index) => {
+					table.forEach(row => {
+						let obj = {
+							"productionAmountId": row.productionAmountId,
+							"orderShoeBatchInfoId": row.orderShoeBatchInfoId,
+							"productionTeam": index,
+						}
+						for (let i = 34; i < 47; i++) {
+							obj[`size${i}`] = row[`size${i}`]
+						}
+						data.push(obj)
+					})
+				})
+				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/saveproductionamount`, data)
 				ElMessage.success("修改成功")
 			}
-			catch(error) {
+			catch (error) {
 				ElMessage.error("修改失败")
 			}
 			this.isScheduleModify = false
@@ -449,12 +507,16 @@ export default {
 				showCancelButton: true,
 				cancelButtonText: '取消'
 			}).then(async () => {
-				const data = { "orderId": this.$props.orderId, "orderShoeId": this.currentRow.orderShoeId }
-				const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
-				if (response.status == 200) {
+				try {
+					await this.modifyProductionSchedule()
+					const data = { "orderId": this.$props.orderId, "orderShoeId": this.currentRow.orderShoeId }
+					await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
 					ElMessage.success("生产开始")
+					this.isScheduleModify = false
+					this.getOrderShoeTableData()
 				}
-				else {
+				catch (error) {
+					console.log(error)
 					ElMessage.error("排期异常")
 				}
 				this.isScheduleModify = false
@@ -480,15 +542,12 @@ export default {
 				tab.isDateStatusTableVis = true
 			}
 		},
-		startOutSourceFlow() {
+		openOutsourceFlow() {
 			const params = {
 				"orderId": this.$props.orderId,
 				"orderRId": this.$props.orderRId,
 				"orderShoeId": this.currentRow.orderShoeId,
 				"shoeRId": this.currentRow.shoeRId,
-				"orderStartDate": this.$props.orderStartDate,
-				"orderEndDate": this.$props.orderEndDate,
-				"customerName": this.$props.customerName
 			}
 			const queryString = new URLSearchParams(params).toString();
 			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
@@ -539,6 +598,28 @@ export default {
 				return style
 			}
 		},
+		orderShoeDataTableSpanMethod({ row, column, rowIndex, columnIndex }, tableData) {
+			// Merging 'colorName' and 'totalAmount' columns
+			if (columnIndex === 0 || columnIndex === 1) {
+				const currentColor = tableData[rowIndex].colorName;
+				// Skip rows already merged
+				if (rowIndex > 0 && tableData[rowIndex - 1].colorName === currentColor) {
+					return [0, 0]; // Skip this cell
+				}
+
+				// Calculate the rowspan for the current 'colorName'
+				let rowspan = 1;
+				for (let i = rowIndex + 1; i < tableData.length; i++) {
+					if (tableData[i].colorName === currentColor) {
+						rowspan++;
+					} else {
+						break;
+					}
+				}
+
+				return [rowspan, 1]; // Set the rowspan for merging, and colspan = 1
+			}
+		}
 	}
 }
 </script>

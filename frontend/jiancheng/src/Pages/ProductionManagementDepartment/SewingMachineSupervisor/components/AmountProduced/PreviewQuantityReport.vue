@@ -26,15 +26,17 @@ const tableData = ref([])
 const currentTitle = ref('')
 onMounted(async () => {
     currentTitle.value = "鞋型号_" + props.shoeRId + "_生产数量单_" + props.currentReport.creationDate
-    let params = { reportId: props.currentReport.reportId }
+    let teamId = -1
+    if (props.teamName === '针车预备') {
+        teamId = 1
+    }
+    else {
+        teamId = 2
+    }
+    let params = { reportId: props.currentReport.reportId, team: teamId }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        if (props.teamName === '针车预备') {
-            row["remainAmount"] = row["totalAmount"] - row["preSewingAmount"]
-        }
-        else {
-            row["remainAmount"] = row["totalAmount"] - row["sewingAmount"]
-        }
+        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
         tableData.value.push(row)
     })
     let obj = [
