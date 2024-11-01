@@ -19,6 +19,9 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>客户管理</span>
                         </el-menu-item>
+                        <el-menu-item index="4" @click="handleMenuClick(4)">
+                            <span>鞋型管理</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -35,21 +38,22 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import { UserFilled } from '@element-plus/icons-vue'
-import OrderImport from '../components/OrderImport.vue';
+import OrderManagement from '../components/OrderManagement.vue';
 import CustomerManagement from '../components/CustomerManagement.vue';
 import axios from 'axios'
-
+import ShoeTypeManagement from '../components/ShoeTypeManagement.vue';
 
 export default {
     components: {
         AllHeader,
-        OrderImport,
-        CustomerManagement
+        OrderManagement,
+        CustomerManagement,
+        ShoeTypeManagement
     },
     data() {
         return {
             UserFilled,
-            currentComponent: 'OrderImport',
+            currentComponent: 'OrderManagement',
             userName: ''
         }
     },
@@ -68,10 +72,13 @@ export default {
                     this.currentComponent = 'Dashboard'
                     break
                 case 2:
-                    this.currentComponent = 'OrderImport'
+                    this.currentComponent = 'OrderManagement'
                     break
                 case 3:
                     this.currentComponent = 'CustomerManagement'
+                    break
+                case 4:
+                    this.currentComponent = 'ShoeTypeManagement'
                     break
                 case 9:
                     this.$router.push('/')

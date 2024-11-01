@@ -15,13 +15,14 @@
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
+            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getMaterialTableData()"
+                @clear="getMaterialTableData()" />
         </el-col>
     </el-row>
     <el-row :gutter="20">
         <el-table :data="materialTableData" border stripe height="500" @sort-change="sortData">
-            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
+            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120"
+                sortable="custom"></el-table-column>
             <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
@@ -37,9 +38,13 @@
             <el-table-column prop="orderRId" label="材料订单号"></el-table-column>
             <el-table-column prop="shoeRId" label="材料鞋型号"></el-table-column>
             <el-table-column prop="status" label="状态"></el-table-column>
-            <el-table-column fixed="right" label="操作">
+            <el-table-column fixed="right" label="操作" width="150">
                 <template #default="scope">
-                    <el-button type="primary" size="small" @click="editMaterial(scope.row)">入库</el-button>
+                    <el-button-group>
+                        <el-button type="primary" size="small" @click="editMaterial(scope.row)">入库</el-button>
+                        <el-button v-if="scope.row.status === '未完成入库'" type="warning" size="small"
+                            @click="finishInbound(scope.row)">完成入库</el-button>
+                    </el-button-group>
                 </template>
             </el-table-column>
         </el-table>
@@ -54,15 +59,15 @@
 
     <el-dialog title="材料搜索" v-model="isMaterialDialogVisible" width="30%" :draggable="true">
         请选择材料类型：
-        <el-select v-model="materialTypeSearch" placeholder="" clearable filterable
-            @change="getMaterialTableData()">
+        <el-select v-model="materialTypeSearch" placeholder="" clearable filterable @change="getMaterialTableData()">
             <el-option v-for="item in materialTypeOptions" :value="item" />
         </el-select>
         请选择材料名称：
-        <el-input v-model="materialNameSearch" clearable @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
+        <el-input v-model="materialNameSearch" clearable @keypress.enter="getMaterialTableData()"
+            @clear="getMaterialTableData()" />
         请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" clearable
-            @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()"/>
+        <el-input v-model="materialSpecificationSearch" clearable @keypress.enter="getMaterialTableData()"
+            @clear="getMaterialTableData()" />
         请选择材料供应商：
         <el-select v-model="materialSupplierSearch" placeholder="" clearable filterable
             @change="getMaterialTableData()">
@@ -76,17 +81,17 @@
     </el-dialog>
 
     <el-dialog title="入库对话框" v-model="isInboundDialogVisible" width="30%">
-        <el-form-item label="入库数量">
-            <el-input v-model="inboundForm.quantity" placeholder="请输入入库数量"></el-input>
-        </el-form-item>
         <el-form-item label="入库日期">
             <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
                 value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
         </el-form-item>
+        <el-form-item label="入库数量">
+            <el-input v-model="inboundForm.quantity" placeholder="请输入入库数量"></el-input>
+        </el-form-item>
         <el-form-item label="入库类型">
             <el-radio-group v-model="inboundForm.inboundType">
-                <el-radio :disabled="isPurchaseInboundDisabled" value="1">采购入库</el-radio>
-                <el-radio value="2">生产剩余</el-radio>
+                <el-radio :value="0">采购入库</el-radio>
+                <el-radio :value="1">生产剩余</el-radio>
             </el-radio-group>
         </el-form-item>
         <template #footer>
@@ -117,8 +122,8 @@
         </el-form-item>
         <el-form-item label="入库类型">
             <el-radio-group v-model="inboundForm.inboundType">
-                <el-radio :disabled="isPurchaseInboundDisabled" value="1">采购入库</el-radio>
-                <el-radio value="2">生产剩余</el-radio>
+                <el-radio :value="0">采购入库</el-radio>
+                <el-radio :value="1">生产剩余</el-radio>
             </el-radio-group>
         </el-form-item>
         <template #footer>
@@ -131,6 +136,7 @@
 </template>
 <script>
 import axios from 'axios';
+import { ElMessage, ElMessageBox } from 'element-plus';
 export default {
     data() {
         return {
@@ -156,7 +162,6 @@ export default {
             materialTableData: [],
             currentRow: {},
             totalRows: 0,
-            isPurchaseInboundDisabled: false
         }
     },
     mounted() {
@@ -218,27 +223,26 @@ export default {
             // }
         },
         async submitSizeInboundForm() {
-            let data = {
-                "sizeMaterialStorageId": this.currentRow.materialStorageId,
-                "date": this.inboundForm.date,
-                "type": this.inboundForm.inboundType
-            }
-            this.multipleInboundForm.forEach(row => {
-                if (row.inboundQuantity) {
-                    data["size" + row.shoeSize + "Amount"] = row.inboundQuantity
-                } else {
-                    data["size" + row.shoeSize + "Amount"] = 0
+            try {
+                let data = {
+                    "sizeMaterialStorageId": this.currentRow.materialStorageId,
+                    "date": this.inboundForm.date,
+                    "type": this.inboundForm.inboundType
                 }
+                this.multipleInboundForm.forEach(row => {
+                    if (row.inboundQuantity) {
+                        data["size" + row.shoeSize + "Amount"] = row.inboundQuantity
+                    } else {
+                        data["size" + row.shoeSize + "Amount"] = 0
+                    }
 
-            })
-            let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
-            if (response.status == 200) {
+                })
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
                 ElMessage.success("入库成功")
             }
-            else {
+            catch (error) {
                 ElMessage.error("入库失败")
             }
-            this.isMultiInboundDialogVisible = false
             this.getMaterialTableData()
 
             // let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
@@ -263,12 +267,9 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async editMaterial(row) {
-            let params = {"orderShoeId": row.orderShoeId}
-            let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/checkinboundoptions`, { params })
-            this.isPurchaseInboundDisabled = !response.data[1]
             if (row.materialCategory == 1) {
-                params = { "sizeMaterialStorageId": row.materialStorageId }
-                response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
+                let params = { "sizeMaterialStorageId": row.materialStorageId }
+                let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
                 this.multipleInboundForm = response.data
                 this.isMultiInboundDialogVisible = true
                 this.currentRow = row
@@ -277,7 +278,25 @@ export default {
                 this.currentRow = row
             }
         },
-        async sortData({prop, order}) {
+        async finishInbound(row) {
+            ElMessageBox.alert('该操作完成对此鞋型材料入库，是否继续？', '警告', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                cancelButtonText: '取消'
+            }).then(async () => {
+                const data = { "storageId": row.materialStorageId, "materialCategory":  row.materialCategory}
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinboundmaterial`, data)
+                try {
+                    ElMessage.success("操作成功")
+                }
+                catch (error) {
+                    console.log(error)
+                    ElMessage.error("操作异常")
+                }
+                this.getMaterialTableData()
+            })
+        },
+        async sortData({ prop, order }) {
             await this.getMaterialTableData(prop, order)
         }
     }

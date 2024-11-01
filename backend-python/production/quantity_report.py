@@ -31,28 +31,35 @@ def get_quantity_report_tasks():
     teams = request.args.get("teams").split(",")
     queries = []
     for team in teams:
+        teamId = -1
         if team == "裁断":
             start_date = OrderShoeProductionInfo.cutting_start_date
             end_date = OrderShoeProductionInfo.cutting_end_date
             produced_amount = OrderShoeBatchInfo.cutting_amount
+            teamId = 0
         elif team == "针车预备":
             start_date = OrderShoeProductionInfo.pre_sewing_start_date
             end_date = OrderShoeProductionInfo.pre_sewing_end_date
             produced_amount = OrderShoeBatchInfo.pre_sewing_amount
+            teamId = 1
         elif team == "针车":
             start_date = OrderShoeProductionInfo.sewing_start_date
             end_date = OrderShoeProductionInfo.sewing_end_date
             produced_amount = OrderShoeBatchInfo.sewing_amount
+            teamId = 1
         elif team == "成型":
             start_date = OrderShoeProductionInfo.molding_start_date
             end_date = OrderShoeProductionInfo.molding_end_date
             produced_amount = OrderShoeBatchInfo.molding_amount
+            teamId = 2
         else:
             return jsonify({"message": "invalid team name"}), 400
         amount_table = (
             db.session.query(
                 OrderShoe.order_shoe_id,
-                func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
+                func.sum(OrderShoeProductionAmount.total_production_amount).label(
+                    "total_amount"
+                ),
                 func.sum(produced_amount).label("produced_amount"),
             )
             .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
@@ -61,6 +68,12 @@ def get_quantity_report_tasks():
                 OrderShoeBatchInfo.order_shoe_type_id
                 == OrderShoeType.order_shoe_type_id,
             )
+            .join(
+                OrderShoeProductionAmount,
+                OrderShoeProductionAmount.order_shoe_batch_info_id
+                == OrderShoeBatchInfo.order_shoe_batch_info_id,
+            )
+            .filter(OrderShoeProductionAmount.production_team == teamId)
             .group_by(OrderShoe.order_shoe_id)
         ).subquery()
         query = (
@@ -73,7 +86,7 @@ def get_quantity_report_tasks():
                 end_date.label("end_date"),
                 literal(team).label("team"),
                 amount_table.c.produced_amount,
-                amount_table.c.total_amount
+                amount_table.c.total_amount,
             )
             .join(OrderShoe, OrderShoe.order_id == Order.order_id)
             .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -130,7 +143,7 @@ def get_quantity_report_tasks():
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
             "team": team,
-            "progress": str(produced_amount) + '/' + str(total_amount)
+            "progress": str(produced_amount) + "/" + str(total_amount),
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
@@ -241,11 +254,21 @@ def create_quantity_report_detail():
 @quantity_report_bp.route("/production/getquantityreportdetail", methods=["GET"])
 def get_quantity_report_detail():
     report_id = request.args.get("reportId")
+    # 0: 裁断，1：针车预备，2：针车，3：成型
+    team = request.args.get("team", type=int)
+    mapping = {0: 0, 1: 1, 2: 1, 3: 2}
     response = (
-        db.session.query(OrderShoeBatchInfo, Color, QuantityReportItem)
+        db.session.query(
+            OrderShoeBatchInfo, OrderShoeProductionAmount, Color, QuantityReportItem
+        )
         .join(
             OrderShoeType,
             OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
+        )
+        .join(
+            OrderShoeProductionAmount,
+            OrderShoeProductionAmount.order_shoe_batch_info_id
+            == OrderShoeBatchInfo.order_shoe_batch_info_id,
         )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
@@ -254,22 +277,33 @@ def get_quantity_report_detail():
             QuantityReportItem.order_shoe_batch_info_id
             == OrderShoeBatchInfo.order_shoe_batch_info_id,
         )
-        .filter(QuantityReportItem.report_id == report_id)
+        .filter(
+            QuantityReportItem.report_id == report_id,
+            OrderShoeProductionAmount.production_team == mapping[team],
+        )
         .all()
     )
     result = []
     for row in response:
-        batch_info, color, report_item = row
-        obj = {
-            "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
-            "colorName": color.color_name,
-            "name": batch_info.name,
-            "amount": report_item.amount,
-            "totalAmount": batch_info.total_amount,
-            "cuttingAmount": batch_info.cutting_amount,
-            "preSewingAmount": batch_info.pre_sewing_amount,
-            "sewingAmount": batch_info.sewing_amount,
-            "moldingAmount": batch_info.molding_amount,
-        }
-        result.append(obj)
+        batch_info, production_amount, color, report_item = row
+        produced_amount = 0
+        if team == 0:
+            produced_amount = batch_info.cutting_amount
+        elif team == 1:
+            produced_amount = batch_info.pre_sewing_amount
+        elif team == 2:
+            produced_amount = batch_info.sewing_amount
+        elif team == 3:
+            produced_amount = batch_info.molding_amount
+        if production_amount.total_production_amount > 0:
+            obj = {
+                "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
+                "colorName": color.color_name,
+                "name": batch_info.name,
+                "amount": report_item.amount,
+                "totalAmount": production_amount.total_production_amount,
+                "producedAmount": produced_amount,
+            }
+            result.append(obj)
+    print(result)
     return result

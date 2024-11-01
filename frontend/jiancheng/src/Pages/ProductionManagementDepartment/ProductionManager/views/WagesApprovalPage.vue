@@ -20,7 +20,7 @@
             <el-row :gutter="20" style="margin-top: 20px">
                 <el-col :span="24" :offset="0">
                     鞋型配码信息
-                    <el-table :data="shoeInfo" border stripe :max-height="200">
+                    <el-table :data="shoeInfo" :span-method="spanMethod" border stripe :max-height="200">
                         <el-table-column prop="colorName" label="颜色"></el-table-column>
                         <el-table-column prop="batchName" label="配码编号"></el-table-column>
                         <el-table-column prop="size34" label="34"></el-table-column>
@@ -103,6 +103,7 @@
 import axios from 'axios'
 import AllHeader from '@/components/AllHeader.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { shoeBatchInfoTableSpanMethod } from '../../utils';
 export default {
     components: {
         AllHeader
@@ -116,7 +117,8 @@ export default {
             shoeInfo: [],
             priceReports: [],
             isWagesApprovalVis: false,
-            currentRow: {}
+            currentRow: {},
+            spanMethod: null
         }
     },
     async mounted() {
@@ -129,6 +131,7 @@ export default {
                 const params = { "orderShoeId": this.$props.orderShoeId }
                 const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
                 this.shoeInfo = response.data
+                this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeInfo)
             }
             catch(error) {
                 console.log(error)
