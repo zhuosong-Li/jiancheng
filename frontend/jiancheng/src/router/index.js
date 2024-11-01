@@ -28,6 +28,7 @@ import DeputyGeneral from '@/Pages/ProductionManagementDepartment/ProductionMana
 import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalculation'
 import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
 import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
+import BusinessManagerRoutes from '../Pages/BussinessManager/routers/business'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -177,8 +178,8 @@ const router = createRouter({
     ...DeputyGeneral,
     ...UsageCalculationRoutes,
     ...DevelopmentManagerRoutes,
-    ...TechnicalManagerRoutes
-
+    ...TechnicalManagerRoutes,
+    ...BusinessManagerRoutes
   ]
 })
 import axios from 'axios'

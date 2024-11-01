@@ -50,6 +50,9 @@
                     <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
                         >查看详情</el-button
                     >
+                    <el-button type="primary" size="default" @click="openOrderDetail(scope.row.orderDbId)"
+                        >查看订单详情</el-button
+                    >
                 </template>
             </el-table-column>
         </el-table>
@@ -559,6 +562,7 @@
         <span>
             <el-button @click="closeAddBatchInfoDialog()">取消</el-button>
             <el-button @click="addShoeTypeBatchInfo()"> 添加配码</el-button>
+            <el-button @click="openAddCustomerBatchDialog()"> 添加新配码</el-button>
         </span>
     </el-dialog>
 
@@ -566,6 +570,67 @@
         batch quantity todo
 
     </el-dialog>
+    <el-dialog
+        title="添加配码"
+        v-model="addCustomerBatchDialogVisible"
+        width="30%">
+        <el-form :model="batchForm" label-width="120px" :inline="false" size="normal">
+            <el-form-item label="配码名称">
+                <el-input v-model="batchForm.packagingInfoName"></el-input>
+            </el-form-item>
+            <el-form-item label="配码地区">
+                <el-input v-model="batchForm.packagingInfoLocale"></el-input>
+            </el-form-item>
+            <el-form-item label="34">
+                <el-input v-model="batchForm.size34Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="35">
+                <el-input v-model="batchForm.size35Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="36">
+                <el-input v-model="batchForm.size36Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="37">
+                <el-input v-model="batchForm.size37Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="38">
+                <el-input v-model="batchForm.size38Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="39">
+                <el-input v-model="batchForm.size39Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="40">
+                <el-input v-model="batchForm.size40Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="41">
+                <el-input v-model="batchForm.size41Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="42">
+                <el-input v-model="batchForm.size42Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="43">
+                <el-input v-model="batchForm.size43Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="44">
+                <el-input v-model="batchForm.size44Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="45">
+                <el-input v-model="batchForm.size45Ratio"></el-input>
+            </el-form-item>
+            <el-form-item label="46">
+                <el-input v-model="batchForm.size46Ratio"></el-input>
+            </el-form-item>
+
+        </el-form>
+        
+        <template #footer>
+        <span>
+            <el-button @click="addCustomerDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitAddCustomerBatchForm">确认提交</el-button>
+        </span>
+        </template>
+    </el-dialog>
+
 </template>
 
 <script>
@@ -589,6 +654,7 @@ export default {
             orderStatusList: [],
             currentBatch:[],
             expandedRowKeys:[],
+            addCustomerBatchDialogVisible:false,
             previewOrderVis: false,
             orderInfoVis: false,
             fileList: [],
@@ -636,7 +702,27 @@ export default {
                 orderShoeTypes:[],
                 batchInfoQuantity:[],
                 customerShoeName:{}
-            }
+            },
+            batchForm: {
+                customerId:'',
+                packagingInfoName: '',
+                packagingInfoLocale: '',
+                size34Ratio: 0,
+                size35Ratio: 0,
+                size36Ratio: 0,
+                size37Ratio: 0,
+                size38Ratio: 0,
+                size39Ratio: 0,
+                size40Ratio: 0,
+                size41Ratio: 0,
+                size42Ratio: 0,
+                size43Ratio: 0,
+                size44Ratio: 0,
+                size45Ratio: 0,
+                size46Ratio: 0,
+                totalQuantityInRatio:0
+                },
+
         }
     },
     computed: {
@@ -703,6 +789,30 @@ export default {
             const idField = 'packagingInfoId'
             this.reselectSelected(this.$refs.batchInfoSelectionTable,
                 row.orderShoeTypeBatchInfo, this.customerDisplayBatchData, idField)
+        },
+        openAddCustomerBatchDialog() {
+            this.batchForm.customerId = this.newOrderForm.customerId
+            this.addCustomerBatchDialogVisible = true
+        },
+        submitAddCustomerBatchForm() {
+            console.log(this.batchForm)
+            this.$confirm('确认添加客户配码信息？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const result = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
+            }).then(async () => {
+                const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{params: {
+                customerid: this.newOrderForm.customerId}
+                
+            })
+                this.customerBatchData = response.data
+                this.customerDisplayBatchData = response.data
+                console.log(response.data)
+
+            })
+            this.addCustomerBatchDialogVisible = false
         },
         closeAddBatchInfoDialog(){
             this.addBatchInfoDialogVis = false
@@ -820,7 +930,6 @@ export default {
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
         closeAddBatchInfodialog(){
-            addBatchInfoDialogVis = false
         },
         async getAllOrders() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
@@ -1161,6 +1270,13 @@ export default {
 
             })
         },
+        openOrderDetail(orderId) {
+            console.log(this.displayData)
+            let url = ""
+            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}`;
+            window.open(url,'_blank')
+
+        }
     }
 }
 </script>
