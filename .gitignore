@@ -1,9 +1,0 @@
-.idea
-__pycache__
-.venv
-.vscode
-.idea
-backend-python\backend_config.json
-backend-python\constants.py
-backend-python\main.py
-frontend\jiancheng\frontend_config.json
