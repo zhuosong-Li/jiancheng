@@ -133,15 +133,16 @@ def create_new_order():
 			new_entity = OrderShoeType(
 				order_shoe_id = order_shoe_id,
 				shoe_type_id = shoe_type_id)
-			db.session.add()
+			db.session.add(new_entity)
 			db.session.flush()
-
+		else:
+			new_entity = existing_entity
 		batch_info_entity_array = []
 		for batch in batch_info:
 			print(batch)
 			quantity_per_ratio = int(quantity_mapping[str(batch['packagingInfoId'])])
 			new_entity = OrderShoeBatchInfo(
-				order_shoe_type_id = shoe_type_id,
+				order_shoe_type_id = new_entity.order_shoe_type_id,
 				name = batch['packagingInfoName'],
 				size_34_amount = batch['size34Ratio']*quantity_per_ratio,
 				size_35_amount = batch['size35Ratio']*quantity_per_ratio,

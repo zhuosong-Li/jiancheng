@@ -14,15 +14,12 @@
                     <el-descriptions-item label="客户订单" align="center">{{
                         orderData.orderCid
                     }}</el-descriptions-item>
-
-                 <el-descriptions title="" :column="2" border>
                     <el-descriptions-item label="客户名称" align="center">{{
                         orderData.customerName
                     }}</el-descriptions-item>
                     <el-descriptions-item label="客户商标" align="center">{{
                         orderData.customerBrand
                     }}</el-descriptions-item>
-                	</el-descriptions>
                     <el-descriptions-item label="订单创建时间" align="center">{{
                         orderData.startDate
                     }}</el-descriptions-item>
@@ -98,23 +95,24 @@
                     </el-table>
                 </template>
             </el-table-column>
-            <el-table-column prop = "shoeRId" label = "鞋型编号" sortable/>
+            <el-table-column prop = "shoeRid" label = "鞋型编号" sortable/>
+			<el-table-column prop = "shoeCid" label = "客户鞋型编号" sortable/>
             <el-table-column prop = "shoeColor" label = "鞋型颜色" />
             <el-table-column prop = "shoeImage" label = "鞋型图片" />
             <el-table-column>
             <template #default="scope">
-                    <el-button type="primary" size="default" @click="openAddBatchInfoDialog(scope.row)"
-                        >添加配码</el-button
-                    >
+                    <el-button type="primary" size="default" 
+                        >添加备注
+                    </el-button>
             </template>
             </el-table-column>
-            <el-table-column label = "添加客户鞋型编号">
+            <<!-- el-table-column label = "添加客户鞋型编号">
             <template #default="scope">
                     <el-input size="default" v-model = "this.orderShoeData.customerShoeName[scope.row.shoeRId]"
                         ></el-input
                     >
             </template>
-            </el-table-column>
+            </el-table-column> -->
 
         </el-table>
 			</el-main>
@@ -189,8 +187,9 @@ export default {
           const response = await axios.get(
               `${this.$apiBaseUrl}/order/getbusinessorderinfo?orderid=${this.orderId}`
           )
+          console.log(response.data)
           this.orderData = response.data
-          this.orderShoeData = response.data["orderShoeAllData"]
+          this.orderShoeData = response.data.orderShoeAllData
           console.log(this.orderData)
       	},
       	expandOpen(row, expand){
