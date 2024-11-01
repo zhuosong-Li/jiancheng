@@ -235,7 +235,7 @@ def get_price_report_detail_by_order_shoe_id():
         )
     )
     if status:
-        query = query.filter(UnitPriceReport.status == 2)
+        query = query.filter(UnitPriceReport.status == status)
     report = query.first()
     if not report:
         return jsonify({"message": "Report not found"}), 400

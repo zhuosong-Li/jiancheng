@@ -9,9 +9,91 @@ from flask import Blueprint, current_app, jsonify, request
 from models import *
 from sqlalchemy import func, or_
 from sqlalchemy.dialects.mysql import insert
+from constants import OUTSOURCE_STATUS_MAPPING
 
 production_manager_bp = Blueprint("production_manager_bp", __name__)
 
+
+@production_manager_bp.route(
+    "/production/productionmanager/getorderamount", methods=["GET"]
+)
+def get_order_amount():
+    order_id = request.args.get("orderId")
+    query = (
+        db.session.query(
+            Order,
+            func.sum(OrderShoeBatchInfo.total_amount),
+        )
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            OrderShoeBatchInfo,
+            OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
+        )
+        .filter(Order.order_id == order_id)
+        .group_by(Order.order_id)
+    )
+    response = query.first()
+    order, total_amount = response
+    result = {
+        "orderId": order.order_id,
+        "orderTotalShoes": total_amount,
+    }
+    return jsonify(result)
+
+
+@production_manager_bp.route(
+    "/production/productionmanager/getorderinfo", methods=["GET"]
+)
+def get_order_info():
+    order_id = request.args.get("orderId")
+    order_shoe_id = request.args.get("orderShoeId")
+    query = (
+        db.session.query(
+            Order,
+            Customer,
+        )
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(Order.order_id == order_id)
+    )
+    if order_shoe_id and order_shoe_id != "":
+        response = query.add_columns(OrderShoe, Shoe).join(
+            OrderShoe, Order.order_id == OrderShoe.order_id
+        ).join(
+            OrderShoeProductionInfo,
+            OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
+        ).join(
+            OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id
+        ).join(
+            ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id
+        ).join(
+            Shoe, Shoe.shoe_id == ShoeType.shoe_id
+        ).filter(
+            OrderShoe.order_shoe_id == order_shoe_id
+        ).first()
+        order, customer, order_shoe, shoe = response
+        result = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
+            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name
+        }
+    else:
+        response = query.first()
+        order, customer = response
+        result = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
+            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+        }
+    return jsonify(result)
 
 @production_manager_bp.route(
     "/production/productionmanager/getinprogressorders", methods=["GET"]
@@ -609,149 +691,229 @@ def check_date_production_status():
 
 
 @production_manager_bp.route(
+    "/production/productionmanager/getordershoestatus", methods=["GET"]
+)
+def get_order_shoe_status():
+    order_shoe_id = request.args.get("orderShoeId")
+    order_shoe_status = (
+        db.session.query(func.group_concat(OrderShoeStatus.current_status))
+        .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
+        .first()
+    )
+    arr = order_shoe_status[0].split(",")
+    return arr
+
+
+@production_manager_bp.route(
     "/production/productionmanager/editordershoestatus", methods=["PATCH"]
 )
 def edit_order_shoe_status():
     data = request.get_json()
     order_shoe_id = data["orderShoeId"]
-    status_name = data["nodeName"]
     arr = []
-    # if the order shoe has outsource info
-    # outsource_info = (
-    #     db.session.query(OutsourceInfo).filter_by(order_shoe_id=order_shoe_id).all()
-    # )
-    # outsource_operation_id = -1
-    # outsource_lines = []
-    # outsource_dict = {}
-    # for row in outsource_info:
-    #     temp = row.outsource_type.split(",")
-    #     outsource_lines.extend(temp)
-    #     for line in temp:
-    #         if line not in outsource_dict:
-    #             outsource_dict[line] = [row.outsource_info_id]
-    #         else:
-    #             outsource_dict[line].append(row.outsource_info_id)
-    # outsource_lines.sort()
-    # if outsource_lines[-1] == "0" and status_name == "生产开始":
-    #     outsource_operation_id = 84
-    #     arr.append(
-    #         SemifinishedShoeStorage(
-    #             order_shoe_id=order_shoe_id,
-    #             semifinished_type=1,
-    #             semifinished_status=0,
-    #             semifinished_object=0,
-    #         )
-    #     )
-    # elif outsource_lines[-1] == "1" and (
-    #     status_name == "生产开始" or status_name == "裁断结束"
-    # ):
-    #     outsource_operation_id = 102
-    #     arr.append(
-    #         SemifinishedShoeStorage(
-    #             order_shoe_id=order_shoe_id,
-    #             semifinished_type=1,
-    #             semifinished_status=0,
-    #             semifinished_object=1,
-    #         )
-    #     )
-    # elif outsource_lines[-1] == "2" and (
-    #     status_name == "生产开始"
-    #     or status_name == "裁断结束"
-    #     or status_name == "针车结束"
-    # ):
-    #     outsource_operation_id = 118
-    #     arr.append(
-    #         FinishedShoeStorage(
-    #             order_shoe_id=order_shoe_id,
-    #             finished_type=1,
-    #             finished_status=0,
-    #         )
-    #     )
-    # else:
-    # 0: 裁断，1：针车，2：成型
-    if status_name == "生产开始":
-        report1 = UnitPriceReport(
-            order_shoe_id=order_shoe_id, team="裁断", status=0
+    order_shoe_status, status_value = (
+        db.session.query(
+            func.group_concat(OrderShoeStatus.current_status),
+            func.group_concat(OrderShoeStatus.current_status_value),
         )
-        arr.append(report1)
+        .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
+        .first()
+    )
+    status_arr: list = order_shoe_status.split(",")
+    status_value_arr: list = status_value.split(",")
+
+    # 相关外包完成才能推进生产线完成
+    outsource_info = (
+        db.session.query(OutsourceInfo).filter_by(order_shoe_id=order_shoe_id).all()
+    )
+    for info in outsource_info:
+        if (
+            (
+                "24" in status_arr
+                and info.outsource_type[-1] == "0"
+                and info.outsource_status != 7
+            )
+            or (
+                "33" in status_arr
+                and info.outsource_type[-1] == "1"
+                and info.outsource_status != 7
+            )
+            or (
+                "41" in status_arr
+                and info.outsource_type[-1] == "2"
+                and info.outsource_status != 7
+            )
+        ):
+            return jsonify({"message": "外包尚未完成"}), 400
+
+    # 半成品或成品入库完成才能推进生产线完成
+    storage_status = None
+    if "24" in status_arr:
+        storage_status = (
+            db.session.query(
+                SemifinishedShoeStorage.semifinished_status.label("storage_status")
+            )
+            .filter_by(order_shoe_id=order_shoe_id, semifinished_object=0)
+            .scalar()
+        )
+    elif "33" in status_arr:
+        storage_status = (
+            db.session.query(
+                SemifinishedShoeStorage.semifinished_status.label("storage_status")
+            )
+            .filter_by(order_shoe_id=order_shoe_id, semifinished_object=1)
+            .scalar()
+        )
+    elif "41" in status_arr:
+        storage_status = (
+            db.session.query(
+                FinishedShoeStorage.finished_status.label("storage_status")
+            )
+            .filter_by(order_shoe_id=order_shoe_id)
+            .scalar()
+        )
+    if storage_status and storage_status != 1:
+        return jsonify({"message": "制品尚未入库"}), 400
+
+    team = -1
+    if "18" in status_arr:
+        team = 0
         arr.append(
             SemifinishedShoeStorage(
                 order_shoe_id=order_shoe_id,
-                semifinished_type=0,
                 semifinished_status=0,
                 semifinished_object=0,
             )
         )
-    elif status_name == "裁断开始":
-        report1 = UnitPriceReport(
-            order_shoe_id=order_shoe_id, team="针车预备", status=0
-        )
-        report2 = UnitPriceReport(
-            order_shoe_id=order_shoe_id, team="针车", status=0
-        )
-        arr.append(report1)
-        arr.append(report2)
+    elif "24" in status_arr:
+        team = 1
         arr.append(
             SemifinishedShoeStorage(
                 order_shoe_id=order_shoe_id,
-                semifinished_type=0,
                 semifinished_status=0,
                 semifinished_object=1,
             )
         )
-    elif status_name == "针车开始":
-        report = UnitPriceReport(order_shoe_id=order_shoe_id, team="成型", status=0)
-        arr.append(report)
+    elif "33" in status_arr:
+        team = 2
         arr.append(
             FinishedShoeStorage(
                 order_shoe_id=order_shoe_id,
-                finished_type=0,
                 finished_status=0,
             )
         )
-    if len(arr) > 0:
-        db.session.add_all(arr)
+    if team > -1:
+        # 如果没有自产，直接跳至工组结束
+        production_amount = (
+            db.session.query(
+                func.sum(OrderShoeProductionAmount.total_production_amount)
+            )
+            .join(
+                OrderShoeBatchInfo,
+                OrderShoeBatchInfo.order_shoe_batch_info_id
+                == OrderShoeProductionAmount.order_shoe_batch_info_id,
+            )
+            .join(
+                OrderShoeType,
+                OrderShoeBatchInfo.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id,
+            )
+            .join(OrderShoe, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+            .filter(
+                OrderShoe.order_shoe_id == order_shoe_id,
+                OrderShoeProductionAmount.production_team == team,
+            )
+            .group_by(
+                OrderShoe.order_shoe_id, OrderShoeProductionAmount.production_team
+            )
+            .scalar()
+        )
+        if production_amount == 0:
+            current_status_id = -1
+            next_status_id = -1
+            if "18" in status_arr:
+                current_status_id = 18
+                next_status_id = 24
+            elif "24" in status_arr:
+                current_status_id = 24
+                next_status_id = 33
+            elif "33" in status_arr:
+                current_status_id = 33
+                next_status_id = 41
+            else:
+                return (
+                    jsonify({"message": "Invalid status"}),
+                    400,
+                )
+            status_obj = (
+                db.session.query(OrderShoeStatus)
+                .filter_by(
+                    order_shoe_id=order_shoe_id, current_status=current_status_id
+                )
+                .first()
+            )
+            status_obj.current_status = next_status_id
+            status_obj.current_status_value = 0
+            db.session.add_all(arr)
+            db.session.commit()
+            return jsonify({"message": "跳至下一生产线结束"}), 200
+    production_nodes = ["18", "23", "24", "30", "31", "32", "33", "40", "41", "42"]
+    matching_status = next((num for num in status_arr if num in production_nodes), None)
+    if not matching_status:
+        return (
+            jsonify({"message": "You cannot progress the production in this state"}),
+            400,
+        )
+    # 生产线开始要等工价审批完才能结束
+    if "23" in status_arr and (
+        "22" not in status_arr or (status_value_arr[status_arr.index("22")] != "2")
+    ):
+        return jsonify({"message": "裁断工价单尚未审批"}), 400
+    if "32" in status_arr and (
+        "29" not in status_arr or (status_value_arr[status_arr.index("29")] != "2")
+    ):
+        return jsonify({"message": "针车工价单尚未审批"}), 400
+    if "40" in status_arr and (
+        "39" not in status_arr or (status_value_arr[status_arr.index("39")] != "2")
+    ):
+        return jsonify({"message": "成型工价单尚未审批"}), 400
+    if "18" in status_arr:
+        report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="裁断", status=0)
+        arr.append(report1)
+    elif "24" in status_arr:
+        report1 = UnitPriceReport(
+            order_shoe_id=order_shoe_id, team="针车预备", status=0
+        )
+        report2 = UnitPriceReport(order_shoe_id=order_shoe_id, team="针车", status=0)
+        arr.append(report1)
+        arr.append(report2)
+    elif "33" in status_arr:
+        report = UnitPriceReport(order_shoe_id=order_shoe_id, team="成型", status=0)
+        arr.append(report)
     try:
         processor: EventProcessor = current_app.config["event_processor"]
-        outsource_operation_id = -1
-        if outsource_operation_id != -1:
+        # find operation id
+        operations = (
+            db.session.query(Operation)
+            .filter_by(operation_type=2, operation_modified_status=int(matching_status))
+            .all()
+        )
+        operation_ids = [row.operation_id for row in operations]
+        for op in operation_ids:
             event = Event(
                 staff_id=1,
                 handle_time=datetime.now(),
-                operation_id=outsource_operation_id,
+                operation_id=op,
                 event_order_id=data["orderId"],
                 event_order_shoe_id=order_shoe_id,
-                event_type=1,
             )
             processor.processEvent(event)
-        else:
-            next_operations = {
-                "生产开始": [74, 75],
-                "裁断开始": [84, 85],
-                "针车预备开始": [98, 99],
-                "针车预备结束": [100, 101],
-                "针车开始": [102, 103],
-                "成型开始": [118, 119],
-                "生产结束": [122, 123, 19],
-                "裁断结束": [86, 87],
-                "针车结束": [104, 105],
-                "成型结束": [120, 121],
-                "生产结束": [122, 123, 19],
-            }
-            for op in next_operations[status_name]:
-                event = Event(
-                    staff_id=1,
-                    handle_time=datetime.now(),
-                    operation_id=op,
-                    event_order_id=data["orderId"],
-                    event_order_shoe_id=order_shoe_id,
-                )
-                processor.processEvent(event)
     except Exception as e:
         print(e)
         return jsonify({"message": "failed"}), 400
+    db.session.add_all(arr)
     db.session.commit()
-    return jsonify({"message": "succeed"})
+    return jsonify({"message": "success"})
 
 
 @production_manager_bp.route(
@@ -821,10 +983,15 @@ def get_order_outsource_overview():
 def get_order_shoe_batch_estimated_amount():
     order_shoe_id = request.args.get("orderShoeId")
     entities = (
-        db.session.query(OrderShoeBatchInfo, Color)
+        db.session.query(OrderShoeBatchInfo, OrderShoeProductionAmount, Color)
         .join(
             OrderShoeType,
             OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+        )
+        .join(
+            OrderShoeProductionAmount,
+            OrderShoeProductionAmount.order_shoe_batch_info_id
+            == OrderShoeBatchInfo.order_shoe_batch_info_id,
         )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
@@ -836,40 +1003,49 @@ def get_order_shoe_batch_estimated_amount():
 
     # First loop to accumulate total amounts for each color
     for entity in entities:
-        order_shoe_batch_info, color = entity
-        if color.color_name not in color_totals:
-            color_totals[color.color_name] = 0
-        if order_shoe_batch_info.actual_total_amount:
-            color_totals[color.color_name] += order_shoe_batch_info.actual_total_amount
+        order_shoe_batch_info, order_shoe_production_amount, color = entity
+        team = order_shoe_production_amount.production_team
+        if team not in color_totals:
+            color_totals[team] = {}
+        else:
+            if color.color_name not in color_totals[team]:
+                color_totals[team][color.color_name] = 0
+            if order_shoe_production_amount.total_production_amount:
+                color_totals[team][
+                    color.color_name
+                ] += order_shoe_production_amount.total_production_amount
     # Second loop to build the result list and include the color totals
-    result = []
+    result = {}
     for entity in entities:
-        order_shoe_batch_info, color = entity
-        actual_total_amount = order_shoe_batch_info.actual_total_amount
+        order_shoe_batch_info, order_shoe_production_amount, color = entity
+        team = order_shoe_production_amount.production_team
+        actual_total_amount = order_shoe_production_amount.total_production_amount
+        if team not in result:
+            result[team] = []
         if not actual_total_amount:
             actual_total_amount = 0
-        result.append(
+        result[team].append(
             {
+                "productionAmountId": order_shoe_production_amount.order_shoe_production_amount_id,
                 "orderShoeBatchInfoId": order_shoe_batch_info.order_shoe_batch_info_id,
                 "batchName": order_shoe_batch_info.name,
-                "size34": order_shoe_batch_info.size_34_actual_amount,
-                "size35": order_shoe_batch_info.size_35_actual_amount,
-                "size36": order_shoe_batch_info.size_36_actual_amount,
-                "size37": order_shoe_batch_info.size_37_actual_amount,
-                "size38": order_shoe_batch_info.size_38_actual_amount,
-                "size39": order_shoe_batch_info.size_39_actual_amount,
-                "size40": order_shoe_batch_info.size_40_actual_amount,
-                "size41": order_shoe_batch_info.size_41_actual_amount,
-                "size42": order_shoe_batch_info.size_42_actual_amount,
-                "size43": order_shoe_batch_info.size_43_actual_amount,
-                "size44": order_shoe_batch_info.size_44_actual_amount,
-                "size45": order_shoe_batch_info.size_45_actual_amount,
-                "size46": order_shoe_batch_info.size_46_actual_amount,
+                "size34": order_shoe_production_amount.size_34_production_amount,
+                "size35": order_shoe_production_amount.size_35_production_amount,
+                "size36": order_shoe_production_amount.size_36_production_amount,
+                "size37": order_shoe_production_amount.size_37_production_amount,
+                "size38": order_shoe_production_amount.size_38_production_amount,
+                "size39": order_shoe_production_amount.size_39_production_amount,
+                "size40": order_shoe_production_amount.size_40_production_amount,
+                "size41": order_shoe_production_amount.size_41_production_amount,
+                "size42": order_shoe_production_amount.size_42_production_amount,
+                "size43": order_shoe_production_amount.size_43_production_amount,
+                "size44": order_shoe_production_amount.size_44_production_amount,
+                "size45": order_shoe_production_amount.size_45_production_amount,
+                "size46": order_shoe_production_amount.size_46_production_amount,
                 "colorName": color.color_name,
                 "pairAmount": actual_total_amount,
-                "totalAmount": color_totals[
-                    color.color_name
-                ],  # Add total amount for the color
+                "totalAmount": color_totals[team][color.color_name],
+                "productionTeam": team,
             }
         )
     return jsonify(result)
@@ -936,24 +1112,24 @@ def get_order_shoe_batch_info():
 )
 def save_production_amount():
     data = request.get_json()
-    arr = []
-    info_dict = {}
     for row in data:
-        arr.append(row["orderShoeBatchInfoId"])
-        info_dict[row["orderShoeBatchInfoId"]] = row
-    response = (
-        db.session.query(OrderShoeBatchInfo)
-        .filter(OrderShoeBatchInfo.order_shoe_batch_info_id.in_(arr))
-        .all()
-    )
-    for row in response:
-        row.actual_total_amount = 0
+        obj = {}
+        # set production_amount_id
+        if "productionAmountId" in row:
+            obj["order_shoe_production_amount_id"] = row["productionAmountId"]
+        obj["total_production_amount"] = 0
+        obj["order_shoe_batch_info_id"] = row["orderShoeBatchInfoId"]
+        obj["production_team"] = row["productionTeam"]
         for i in range(34, 47):
-            val = 0
-            if info_dict[row.order_shoe_batch_info_id][f"size{i}"]:
-                val = int(info_dict[row.order_shoe_batch_info_id][f"size{i}"])
-            setattr(row, f"size_{i}_actual_amount", val)
-            row.actual_total_amount += val
+            obj[f"size_{i}_production_amount"] = 0
+            if f"size{i}" in row:
+                if not row[f"size{i}"]:
+                    row[f"size{i}"] = 0
+                obj[f"size_{i}_production_amount"] = int(row[f"size{i}"])
+                obj["total_production_amount"] += int(row[f"size{i}"])
+        stmt = insert(OrderShoeProductionAmount).values(**obj)
+        stmt = stmt.on_duplicate_key_update(**obj)
+        db.session.execute(stmt)
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -998,7 +1174,7 @@ def get_order_shoe_outsource_info():
                 "%Y-%m-%d"
             ),
             "outsourceEndDate": outsource_info.outsource_end_date.strftime("%Y-%m-%d"),
-            "approvalStatus": outsource_info.approval_status,
+            "outsourceStatus": outsource_info.outsource_status,
             "deadlineDate": outsource_info.deadline_date.strftime("%Y-%m-%d"),
             "semifinishedRequired": outsource_info.semifinished_required,
             "materialEstimatedOutboundDate": outsource_info.material_estimated_outbound_date.strftime(
@@ -1019,7 +1195,6 @@ def get_order_shoe_outsource_info():
 def get_outsource_batch_info():
     order_shoe_id = request.args.get("orderShoeId")
     outsource_info_id = request.args.get("outsourceInfoId")
-    print(outsource_info_id)
     entities = (
         db.session.query(OrderShoeBatchInfo, OutsourceBatchInfo, Color)
         .join(
@@ -1033,7 +1208,10 @@ def get_outsource_batch_info():
         )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
-        .filter(OrderShoeType.order_shoe_id == order_shoe_id, OutsourceBatchInfo.outsource_info_id == outsource_info_id)
+        .filter(
+            OrderShoeType.order_shoe_id == order_shoe_id,
+            OutsourceBatchInfo.outsource_info_id == outsource_info_id,
+        )
         .all()
     )
     # Dictionary to accumulate total amounts by color
@@ -1103,7 +1281,7 @@ def store_outsource_for_order_shoe():
             "materialEstimatedOutboundDate"
         ],
         "outsource_amount": 0,
-        "approval_status": False,
+        "outsource_status": 0,
         "order_shoe_id": outsource_input["orderShoeId"],
     }
     obj["semifinished_required"] = outsource_input["semifinishedRequired"]
@@ -1213,7 +1391,19 @@ def submit_outsource_info():
         .filter(OutsourceInfo.outsource_info_id == info_id)
         .first()
     )
-    response.approval_status = 1
+    response.outsource_status = 1
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@production_manager_bp.route(
+    "/production/productionmanager/editoutsourcestatus", methods=["PATCH"]
+)
+def edit_outsource_status():
+    data = request.get_json()
+    outsource_info_id = data["outsourceInfoId"]
+    outsource_obj = db.session.query(OutsourceInfo).get(outsource_info_id)
+    outsource_obj.outsource_status = data["outsourceStatus"]
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -1519,14 +1709,15 @@ def approve_quantity_report():
     )
     for row in response:
         report_item, batch_info = row
-        if report.team == "裁断":
-            batch_info.cutting_amount += report_item.amount
-        elif report.team == "针车预备":
-            batch_info.pre_sewing_amount += report_item.amount
-        elif report.team == "针车":
-            batch_info.sewing_amount += report_item.amount
-        elif report.team == "成型":
-            batch_info.molding_amount += report_item.amount
+        if report_item.amount:
+            if report.team == "裁断":
+                batch_info.cutting_amount += report_item.amount
+            elif report.team == "针车预备":
+                batch_info.pre_sewing_amount += report_item.amount
+            elif report.team == "针车":
+                batch_info.sewing_amount += report_item.amount
+            elif report.team == "成型":
+                batch_info.molding_amount += report_item.amount
     db.session.commit()
     return jsonify({"message": "success"})
 

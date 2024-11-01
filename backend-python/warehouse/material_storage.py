@@ -90,6 +90,7 @@ def get_all_material_info():
             MaterialStorage.unit_price,
             MaterialStorage.material_estimated_arrival_date,
             MaterialStorage.material_model,
+            MaterialStorage.material_storage_status,
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
@@ -130,6 +131,7 @@ def get_all_material_info():
             SizeMaterialStorage.unit_price,
             SizeMaterialStorage.material_estimated_arrival_date,
             SizeMaterialStorage.size_material_model.label("size_material"),
+            SizeMaterialStorage.material_storage_status,
             Material.material_name,
             Material.material_unit,
             MaterialType.material_type_name,
@@ -201,6 +203,7 @@ def get_all_material_info():
             unit_price,
             material_estimated_arrival_date,
             material_model,
+            material_storage_status,
             material_name,
             material_unit,
             material_type_name,
@@ -210,10 +213,12 @@ def get_all_material_info():
             purchase_divide_order_rid,
             purchase_order_issue_date,
         ) = row
-        if actual_inbound_amount >= estimated_inbound_amount:
-            status = "已完成入库"
-        else:
+        if material_storage_status == 0:
             status = "未完成入库"
+        elif material_storage_status == 1:
+            status = "已完成入库"
+        elif material_storage_status == 2:
+            status = "已完成出库"
         if not material_estimated_arrival_date:
             date_value = ""
         else:
@@ -243,35 +248,34 @@ def get_all_material_info():
             "materialModel": material_model
         }
         result.append(obj)
-    print(result)
     return {"result": result, "total": count_result}
 
 
-@material_storage_bp.route(
-    "/warehouse/warehousemanager/checkinboundoptions", methods=["GET"]
-)
-def check_inbound_options():
-    """
-    1: 采购入库
-    2: 生产剩余
-    """
-    order_shoe_id = request.args.get("orderShoeId")
-    if not order_shoe_id:
-        return {1: True, 2: True}
-    status_list = (
-        db.session.query(OrderShoeStatus)
-        .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
-        .all()
-    )
-    result = {1: False, 2: True}
-    for status_obj in status_list:
-        if status_obj.current_status in [8, 15] and status_obj.current_status_value in [
-            0,
-            1,
-        ]:
-            result[1] = True
-            break
-    return result
+# @material_storage_bp.route(
+#     "/warehouse/warehousemanager/checkinboundoptions", methods=["GET"]
+# )
+# def check_inbound_options():
+#     """
+#     1: 采购入库
+#     2: 生产剩余
+#     """
+#     order_shoe_id = request.args.get("orderShoeId")
+#     if not order_shoe_id:
+#         return {1: True, 2: True}
+#     status_list = (
+#         db.session.query(OrderShoeStatus)
+#         .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
+#         .all()
+#     )
+#     result = {1: False, 2: True}
+#     for status_obj in status_list:
+#         if status_obj.current_status in [8, 15] and status_obj.current_status_value in [
+#             0,
+#             1,
+#         ]:
+#             result[1] = True
+#             break
+#     return result
 
 
 @material_storage_bp.route(
@@ -588,3 +592,41 @@ def get_material_in_out_bound_records():
             obj["amount"] = row.outbound_amount
         result.append(obj)
     return result
+
+
+@material_storage_bp.route(
+    "/warehouse/warehousemanager/finishinboundmaterial", methods=["PATCH"]
+)
+def finish_inbound_material():
+    data = request.get_json()
+    storage = None
+    if data["materialCategory"] == 0:
+        storage = MaterialStorage.query.get(data["storageId"])
+    elif data["materialCategory"] == 1:
+        storage = SizeMaterialStorage.query.get(data["storageId"])
+    else:
+        return jsonify({"message": "Invalid material category"}), 400
+    if not storage:
+        return jsonify({"message": "order shoe storage not found"}), 400
+    storage.material_storage_status = 1
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@material_storage_bp.route(
+    "/warehouse/warehousemanager/finishoutboundmaterial", methods=["PATCH"]
+)
+def finish_outbound_material():
+    data = request.get_json()
+    storage = None
+    if data["materialCategory"] == 0:
+        storage = MaterialStorage.query.get(data["storageId"])
+    elif data["materialCategory"] == 1:
+        storage = SizeMaterialStorage.query.get(data["storageId"])
+    else:
+        return jsonify({"message": "Invalid material category"}), 400
+    if not storage:
+        return jsonify({"message": "order shoe storage not found"}), 400
+    storage.material_storage_status = 2
+    db.session.commit()
+    return jsonify({"message": "success"})

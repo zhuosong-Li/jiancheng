@@ -36,7 +36,7 @@ export function exportTableToExcel(data, columns, filename = 'table.xlsx') {
 export function shoeBatchInfoTableSpanMethod(tableData) {
     return function spanMethod({ row, column, rowIndex, columnIndex }) {
         // Merging 'colorName' and 'totalAmount' columns
-        if (columnIndex === 0 || columnIndex === 15) { // colorName and totalAmount columns
+        if (columnIndex === 0 || columnIndex === 16) { // colorName and totalAmount columns
             const currentColor = tableData[rowIndex].colorName;
 
             // Skip rows already merged
@@ -57,4 +57,60 @@ export function shoeBatchInfoTableSpanMethod(tableData) {
             return [rowspan, 1]; // Set the rowspan for merging, and colspan = 1
         }
     }
+}
+
+export function checkProductionStatus(array) {
+    let result = -1
+    if (array.includes("18")) {
+        result = 0
+    }
+    else if (array.includes("23")) {
+        result = 1
+    }
+    else if (array.includes("24")) {
+        result = 2
+    }
+    else if (array.includes("30")) {
+        result = 3
+    }
+    else if (array.includes("31")) {
+        result = 4
+    }
+    else if (array.includes("32")) {
+        result = 5
+    }
+    else if (array.includes("33")) {
+        result = 6
+    }
+    else if (array.includes("40")) {
+        result = 7
+    }
+    else if (array.includes("41")) {
+        result = 8
+    }
+    else if (array.includes("42")) {
+        result = 9
+    }
+    return result
+}
+
+export function checkOutsourceStatus(status) {
+    console.log(status, typeof(status))
+    let result = -1
+    if (status < 4) {
+        result = 0
+    }
+    else if (status == 4) {
+        result = 1
+    }
+    else if (status == 5) {
+        result = 2
+    }
+    else if (status== 6) {
+        result = 3
+    }
+    else if (status== 7) {
+        result = 4
+    }
+    return result
 }

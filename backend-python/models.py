@@ -216,6 +216,7 @@ class MaterialStorage(db.Model):
     material_storage_color = db.Column(db.Integer)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
+    material_storage_status = db.Column(db.SmallInteger, default=0)
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
@@ -369,7 +370,37 @@ class OrderShoeBatchInfo(db.Model):
 
     def __name__(self):
         return "OrderShoeBatchInfo"
+    
 
+class OrderShoeProductionAmount(db.Model):
+    __tablename__ = "order_shoe_production_amount"
+    order_shoe_production_amount_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
+    size_34_production_amount = db.Column(db.Integer, default=0)
+    size_35_production_amount = db.Column(db.Integer, default=0)
+    size_36_production_amount = db.Column(db.Integer, default=0)
+    size_37_production_amount = db.Column(db.Integer, default=0)
+    size_38_production_amount = db.Column(db.Integer, default=0)
+    size_39_production_amount = db.Column(db.Integer, default=0)
+    size_40_production_amount = db.Column(db.Integer, default=0)
+    size_41_production_amount = db.Column(db.Integer, default=0)
+    size_42_production_amount = db.Column(db.Integer, default=0)
+    size_43_production_amount = db.Column(db.Integer, default=0)
+    size_44_production_amount = db.Column(db.Integer, default=0)
+    size_45_production_amount = db.Column(db.Integer, default=0)
+    size_46_production_amount = db.Column(db.Integer, default=0)
+    total_production_amount = db.Column(db.Integer, default=0)
+    production_team = db.Column(db.SmallInteger, nullable=False)
+    order_shoe_batch_info_id = db.Column(
+        db.BigInteger,
+    )
+
+    def __repr__(self):
+        return f"<OrderShoeProductionAmount(order_shoe_production_amount_id={self.order_shoe_production_amount_id})>"
+
+    def __name__(self):
+        return "OrderShoeProductionAmount"
 
 class OrderShoe(db.Model):
     __tablename__ = "order_shoe"
@@ -401,7 +432,7 @@ class OutsourceInfo(db.Model):
     outsource_amount = db.Column(db.Integer, nullable=False)
     outsource_start_date = db.Column(db.Date, nullable=True)
     outsource_end_date = db.Column(db.Date, nullable=True)
-    approval_status = db.Column(db.Boolean, nullable=False)
+    outsource_status = db.Column(db.SmallInteger, nullable=False)
     deadline_date = db.Column(db.Date, nullable=True)
     semifinished_estimated_outbound_date = db.Column(db.Date, nullable=True)
     semifinished_required = db.Column(db.Boolean, nullable=True)
@@ -609,7 +640,6 @@ class SemifinishedShoeStorage(db.Model):
     semifinished_inbound_datetime = db.Column(db.DateTime)
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
     semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
-    semifinished_type = db.Column(db.SmallInteger, nullable=False)
     semifinished_status = db.Column(db.SmallInteger)
     semifinished_object = db.Column(db.SmallInteger)
 
@@ -635,9 +665,7 @@ class ShoeInboundRecord(db.Model):
     shoe_inbound_rid = db.Column(db.String(60), nullable=True)
     inbound_amount = db.Column(db.Integer, nullable=True)
     inbound_datetime = db.Column(db.DateTime, nullable=False)
-    inbound_type = db.Column(
-        db.CHAR(1), nullable=False, default="P", comment="P: 自产\nO: 外包"
-    )
+    inbound_type = db.Column(db.SmallInteger, nullable=False, default=0)
     semifinished_shoe_storage_id = db.Column(
         db.BigInteger,
         nullable=True,
@@ -767,6 +795,7 @@ class SizeMaterialStorage(db.Model):
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
+    material_storage_status = db.Column(db.SmallInteger, default=0)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
@@ -835,7 +864,6 @@ class FinishedShoeStorage(db.Model):
         db.BigInteger,
     )
     finished_amount = db.Column(db.Integer, default=0, nullable=False)
-    finished_type = db.Column(db.CHAR(1), nullable=False)
     finished_status = db.Column(
         db.SmallInteger,
         nullable=True,
@@ -861,7 +889,7 @@ class InboundRecord(db.Model):
     size_45_inbound_amount = db.Column(db.Integer, nullable=True)
     size_46_inbound_amount = db.Column(db.Integer, nullable=True)
     inbound_datetime = db.Column(db.DateTime, nullable=False)
-    inbound_type = db.Column(db.String(1), nullable=False)
+    inbound_type = db.Column(db.SmallInteger, nullable=False)
     material_storage_id = db.Column(
         db.BigInteger,
         nullable=True,
@@ -894,7 +922,7 @@ class OutboundRecord(db.Model):
     size_45_outbound_amount = db.Column(db.Integer, nullable=True)
     size_46_outbound_amount = db.Column(db.Integer, nullable=True)
     outbound_datetime = db.Column(db.DateTime, nullable=False)
-    outbound_type = db.Column(db.String(1), nullable=False)
+    outbound_type = db.Column(db.SmallInteger, nullable=False)
     outbound_department = db.Column(db.String(1), nullable=True)
     picker = db.Column(db.String(15), nullable=True)
     outbound_address = db.Column(db.String(100), nullable=True)

@@ -9,18 +9,21 @@
 			</el-row>
 			<el-row :gutter="20">
 				<el-col :span="24" :offset="0">
-					<el-descriptions title="订单信息" border column="2">
-						<el-descriptions-item label="订单号">{{ $props.orderRId }}</el-descriptions-item>
-						<el-descriptions-item label="鞋型号">{{ $props.shoeRId }}</el-descriptions-item>
-						<el-descriptions-item label="客户号">{{ $props.customerName }}</el-descriptions-item>
-						<el-descriptions-item label="出货日期">{{ $props.orderEndDate }}</el-descriptions-item>
+					<el-descriptions title="订单信息" :column="3" border>
+						<el-descriptions-item label="客户名称">{{ orderInfo.customerName }}</el-descriptions-item>
+						<el-descriptions-item label="鞋型号">{{ orderInfo.shoeRId }}</el-descriptions-item>
+						<el-descriptions-item label="订单编号">{{ orderInfo.orderRId }}</el-descriptions-item>
+						<el-descriptions-item label="订单创建日期">{{ orderInfo.orderStartDate }}</el-descriptions-item>
+						<el-descriptions-item label="订单截止日期">{{ orderInfo.orderEndDate }}</el-descriptions-item>
+						<el-descriptions-item label="订单总数量">{{ orderInfo.orderTotalShoes }}</el-descriptions-item>
 					</el-descriptions>
 				</el-col>
 			</el-row>
 			<el-row :gutter="20" style="margin-top: 20px">
 				<el-col :span="24" :offset="0">
 					鞋型配码信息
-					<el-table :data="shoeInfo" :span-method="shoeBatchInfoTableSpanMethod" border stripe :max-height="500">
+					<el-table :data="shoeInfo" :span-method="shoeBatchInfoTableSpanMethod" border stripe
+						:max-height="500">
 						<el-table-column prop="colorName" label="颜色"></el-table-column>
 						<el-table-column prop="batchName" label="配码编号"></el-table-column>
 						<el-table-column prop="size34" label="34"></el-table-column>
@@ -35,6 +38,7 @@
 						<el-table-column prop="size43" label="43"></el-table-column>
 						<el-table-column prop="size44" label="44"></el-table-column>
 						<el-table-column prop="size45" label="45"></el-table-column>
+						<el-table-column prop="size46" label="46"></el-table-column>
 						<el-table-column prop="pairAmount" label="双数"></el-table-column>
 						<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
 					</el-table>
@@ -48,14 +52,15 @@
 					<el-table-column prop="outsourceAmount" label="外包数量"></el-table-column>
 					<el-table-column prop="outsourceStartDate" label="外包开始日期"></el-table-column>
 					<el-table-column prop="outsourceEndDate" label="外包结束日期"></el-table-column>
-					<el-table-column prop="approvalStatus" label="审批状态"></el-table-column>
+					<el-table-column prop="outsourceStatus" label="状态"></el-table-column>
 					<el-table-column label="操作" fixed="right" width="180">
 						<template #default="scope">
 							<el-button-group>
 								<el-button type="primary" size="small"
 									@click="checkOutboundInfo(scope.row)">发货情况</el-button>
 								<el-button type="primary" size="small" @click="editRow(scope.row)">编辑</el-button>
-								<el-button type="warning" size="small" @click="submitOutsourceInfo(scope.row)">提交</el-button>
+								<el-button type="warning" size="small"
+									@click="submitOutsourceInfo(scope.row)">提交</el-button>
 								<el-button size="small" type="danger" @click="deleteRow(scope.row)">删除</el-button>
 							</el-button-group>
 						</template>
@@ -134,7 +139,8 @@
 			<el-col :span="4" :offset="1">外包数量</el-col></el-row>
 		<el-row :gutter="20">
 			<el-col :span="23" :offset="1">
-				<el-table :data="outsourceShoeBatchInfo" :span-method="outsourceShoeBatchInfoTableSpanMethod" border stripe :max-height="500">
+				<el-table :data="outsourceShoeBatchInfo" :span-method="outsourceShoeBatchInfoTableSpanMethod" border
+					stripe :max-height="500">
 					<el-table-column prop="colorName" label="颜色"></el-table-column>
 					<el-table-column prop="batchName" label="配码编号"></el-table-column>
 					<el-table-column prop="size34" label="34">
@@ -197,6 +203,11 @@
 							<el-input v-model="scope.row.size45" />
 						</template>
 					</el-table-column>
+					<el-table-column prop="size46" label="46">
+						<template v-slot="scope">
+							<el-input v-model="scope.row.size46" />
+						</template>
+					</el-table-column>
 					<el-table-column prop="pairAmount" label="双数"></el-table-column>
 					<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
 				</el-table>
@@ -246,7 +257,7 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus';
 import { shoeBatchInfoTableSpanMethod } from '../../utils';
 export default {
-	props: ['orderId', 'orderRId', 'orderStartDate', 'orderEndDate', 'customerName', 'orderShoeId', 'shoeRId'],
+	props: ['orderId', 'orderShoeId'],
 	components: {
 		AllHeader
 	},
@@ -266,15 +277,30 @@ export default {
 			currentRow: {},
 			outsourceShoeBatchInfoTableSpanMethod: null,
 			shoeBatchInfoTableSpanMethod: null,
+			orderInfo: {
+				customerName: '',
+				orderRId: '',
+				orderStartDate: '',
+				orderEndDate: '',
+				orderTotalShoes: '',
+			}
 		}
 	},
 	mounted() {
+		this.getOrderShoeInfo()
 		this.getProductionDepartments()
 		this.getAllOutsourceFactories()
 		this.getOrderShoeBatchInfo()
 		this.getOutsourceInfo()
 	},
 	methods: {
+		async getOrderShoeInfo() {
+			let params = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId }
+			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
+			this.orderInfo = response.data
+			response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderamount`, { params })
+			this.orderInfo.orderTotalShoes = response.data.orderTotalShoes
+		},
 		async editRow(rowData) {
 			this.outsourceShoeBatchInfo = JSON.parse(JSON.stringify(this.shoeInfo));
 			if (rowData === null) {
@@ -287,8 +313,8 @@ export default {
 			}
 			else {
 				this.currentRow = rowData
-				let params = {"orderShoeId": this.$props.orderShoeId, "outsourceInfoId": rowData.outsourceInfoId}
-				let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, {params})
+				let params = { "orderShoeId": this.$props.orderShoeId, "outsourceInfoId": rowData.outsourceInfoId }
+				let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, { params })
 				this.outsourceShoeBatchInfo = response.data
 			}
 			this.outsourceShoeBatchInfoTableSpanMethod = shoeBatchInfoTableSpanMethod(this.outsourceShoeBatchInfo)
@@ -327,18 +353,6 @@ export default {
 			this.outsourceInfo = response.data
 			this.outsourceInfo.forEach(row => {
 				row.outsourcePeriodArr = [row.outsourceStartDate, row.outsourceEndDate]
-				if (row.approvalStatus == 1) {
-					row.approvalStatus = "已提交"
-				}
-				else if (row.approvalStatus == 2) {
-					row.approvalStatus = '已审批'
-				}
-				else if (row.approvalStatus == 3) {
-					row.approvalStatus = "被驳回"
-				}
-				else {
-					row.approvalStatus = "未提交"
-				}
 			})
 		},
 		createOutsource() {

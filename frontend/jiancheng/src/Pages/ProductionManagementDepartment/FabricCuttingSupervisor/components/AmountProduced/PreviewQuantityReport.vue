@@ -28,10 +28,10 @@ const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
 onMounted(async () => {
     console.log(props.currentReport)
     currentTitle.value = "鞋型号_" + props.shoeRId + "_生产数量单_" + props.currentReport.creationDate
-    let params = { reportId: props.currentReport.reportId }
+    let params = { reportId: props.currentReport.reportId, team: 0 }
     const response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["cuttingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
         tableData.value.push(row)
     })
     let obj = [
