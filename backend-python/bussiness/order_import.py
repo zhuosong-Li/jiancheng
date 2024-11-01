@@ -304,7 +304,6 @@ def confirm_import_order():
 
             db.session.add_all(arr)
         db.session.commit()
-
         result = jsonify({"message": "Order imported successfully"}), 200
 
     except Exception as e:
