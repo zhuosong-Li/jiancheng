@@ -83,6 +83,7 @@ def add_customer():
     
 @customer_bp.route("/customer/addcustomerbatchinfo", methods=["POST"])
 def add_customer_batch_info():
+    
     customer_id = request.json.get("customerId")
     packaging_info_name = request.json.get("packagingInfoName")
     packaging_info_locale = request.json.get("packagingInfoLocale")
@@ -190,3 +191,24 @@ def edit_customer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@customer_bp.route("/customer/deletebatchinfo", methods = ["DELETE"])
+def delete_customer_batch():
+    try:
+        customer_id = request.args.get("customerId")
+        packaging_info_id = request.args.get("packagingInfoId")
+        batch_info_entity = db.session.query(PackagingInfo).filter(
+            PackagingInfo.customer_id == customer_id,
+            PackagingInfo.packaging_info_id == packaging_info_id).first()
+        if not batch_info_entity:
+            return jsonify({"status":"error", "message":"packaging info doesnt exist"})
+
+        db.session.delete(batch_info_entity)
+        db.session.commit()
+        return jsonify({'status':'success'})
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error:{e}")
+        return jsonify({"status":"error", "message" :str(e)}), 500
+    finally:
+        db.session.close()

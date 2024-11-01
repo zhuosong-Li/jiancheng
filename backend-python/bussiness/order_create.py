@@ -58,6 +58,9 @@ def create_new_order():
 
 	db.session.add(new_order)
 	db.session.flush()
+	### os mkdir 
+	os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid))
+
 	new_order_id = Order.query.filter_by(order_rid = order_rid).first().order_id
 	new_order_status = OrderStatus(
 		order_id = new_order_id,
@@ -93,6 +96,8 @@ def create_new_order():
 				adjust_staff = "")
 			db.session.add(new_order_shoe_entity)
 			db.session.flush()
+
+			os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, shoe_id_to_rid[shoe_id]))
 
 			new_order_shoe_status_entity = OrderShoeStatus(
 				order_shoe_id = new_order_shoe_entity.order_shoe_id,
@@ -133,6 +138,7 @@ def create_new_order():
 
 		batch_info_entity_array = []
 		for batch in batch_info:
+			print(batch)
 			quantity_per_ratio = int(quantity_mapping[str(batch['packagingInfoId'])])
 			new_entity = OrderShoeBatchInfo(
 				order_shoe_type_id = shoe_type_id,
@@ -157,7 +163,9 @@ def create_new_order():
 				sewing_amount = 0, 
 				pre_sewing_amount = 0,
 				molding_amount = 0,
-				total_amount = 0)
+				total_amount = 0,
+				packaging_info_id = batch['packagingInfoId'],
+				packaging_info_quantity = quantity_per_ratio)
 			print(new_entity.size_34_amount)
 			batch_info_entity_array.append(new_entity)
 		db.session.add_all(batch_info_entity_array)

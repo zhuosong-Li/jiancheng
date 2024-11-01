@@ -73,7 +73,7 @@
     <el-dialog
         title = "配码管理"
         v-model="editCustomerBatchDialogVisible"
-        width = "90%">
+        width = "100%">
         <el-col :span="4" :offset="15"
             ><el-input
                 v-model="batchNameFilter"
@@ -98,7 +98,6 @@
         </el-row>
         <el-row :gutter="20">
             <el-table :data="customerDisplayBatchData" border stripe height="500">
-
                 <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
                 <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
                 <el-table-column prop="size34Ratio" label="34" />
@@ -120,6 +119,8 @@
                         <el-button type="primary" size="default" @click="editBatchInfo(scope.row)"
                             >查看详情</el-button
                         >
+                        <el-button type="primary" size = "default" @click="deleteBatchInfo(scope.row)">
+                        删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -351,10 +352,41 @@ export default {
             }
         },
         editBatchInfo(row){
+           
             this.editBatchDialogVisible = true
             this.batchForm = row
             console.log(row)
 
+        },
+        deleteBatchInfo(row){
+            this.$confirm('确定删除此配码吗？', '提示', {
+                confirmButtonText:'确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then( async () => {
+                const response = await axios.delete(
+                    `${this.$apiBaseUrl}/customer/deletebatchinfo`,
+                    {
+                        params:{
+                            customerId:this.batchDialogCurCustomerId,
+                            packagingInfoId:row.packagingInfoId
+                        }
+                    })
+                if (response.status === 200){
+                    this.$message({
+                        type:'success',
+                        message:'删除成功'
+                    })
+                    this.getCustomerBatchInfo(this.batchDialogCurCustomerId)
+                }
+                else {
+                    this.$message({
+                        type:'error',
+                        message:'删除失败'
+                    })
+                }
+            })
+            this.batchDialogCurCustomerId
         },
         openAddCustomerDialog() {
             this.addCustomerDialogVisible = true
@@ -417,10 +449,9 @@ export default {
                 type: 'warning'
             }).then(async () => {
                 const response = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
-                
-        }).catch(() => {})
-
-
+            }).then( async () => {
+                this.getCustomerBatchInfo(this.batchDialogCurCustomerId)})
+            this.addCustomerBatchDialogVisible = false
         },
         submitEditCustomerBatchForm(){
             console.log(this.batchForm)

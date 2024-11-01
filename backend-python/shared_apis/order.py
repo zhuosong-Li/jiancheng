@@ -152,6 +152,63 @@ def get_order_info():
     return jsonify(result)
 
 
+@order_bp.route("/order/getbusinessorderinfo", methods=["GET"])
+def get_order_info_business():
+    result = {}
+    order_id = request.args.get("orderid")
+    print(order_id)
+    entity = (
+        db.session.query(Order, Customer, OrderStatus)
+        .filter(Order.order_id == order_id)
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .first()
+        )
+    formatted_start_date = entity.Order.start_date.strftime("%Y-%m-%d")
+    formatted_end_date = entity.Order.end_date.strftime("%Y-%m-%d")
+
+    order_shoe_entities = (
+        db.session.query(Order, OrderShoe,Shoe)
+        .filter(Order.order_id == order_id)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        # .join(Color, Color.shoe_id )
+        .all()
+        )
+    print(order_shoe_entities)
+    result = {
+        "orderRid":entity.Order.order_rid,
+        "orderCid":entity.Order.order_cid,
+        "startDate":formatted_start_date,
+        "endDate":formatted_end_date,
+        "customerName":entity.Customer.customer_name,
+        "customerBrand":entity.Customer.customer_brand,
+        "wrapRequirementUploadStatus":entity.Order.production_list_upload_status,
+        "orderStatus":(
+            entity.OrderStatus.order_current_status if entity.OrderStatus else "N/A"
+        ),
+        "orderShoeAllData":[],
+        # 备注
+    }
+    order_shoe_ids = []
+    for order_shoe in order_shoe_entities:
+        response = {}
+        response["shoeId"] = order_shoe.OrderShoe.order_shoe_id
+        response["shoeRid"] = order_shoe.Shoe.shoe_rid
+        response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
+        # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
+        # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
+        result["orderShoeAllData"].append(response)
+        order_shoe_id = order_shoe.OrderShoe.order_shoe_id
+        if order_shoe_id not in order_shoe_ids:
+            order_shoe_ids.append(order_shoe_id)
+
+    print(result)
+
+    return jsonify(result)
+
+
+
 @order_bp.route("/order/getordershoesizetotal", methods=["GET"])
 def get_order_shoe_size_total():
     order_id = request.args.get("orderid")
@@ -309,6 +366,7 @@ def get_all_orders():
         formatted_end_date = order.end_date.strftime("%Y-%m-%d")
         result.append(
             {
+                "orderDbId":order.order_id,
                 "orderRid": order.order_rid,
                 "orderCid": order.order_cid,
                 "customerName": customer.customer_name,
