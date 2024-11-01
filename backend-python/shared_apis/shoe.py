@@ -29,6 +29,7 @@ def get_all_shoes():
     for shoe, shoe_type, color in shoes:
         result.append(
             {
+                "shoeTypeId": shoe_type.shoe_type_id,
                 "shoeRId": shoe.shoe_rid,
                 "shoeImage": shoe_type.shoe_image_url,
                 "shoeDesigner": shoe.shoe_designer,
@@ -40,4 +41,5 @@ def get_all_shoes():
                 ),
             }
         )
+    print(result)
     return jsonify(result)

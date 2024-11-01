@@ -243,6 +243,7 @@ class Order(db.Model):
     __tablename__ = "order"
     order_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     order_rid = db.Column(db.String(40), nullable=False, unique=True)
+    order_cid = db.Column(db.String(40), nullable=False, unique=True)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     customer_id = db.Column(
@@ -297,6 +298,38 @@ class OutsourceBatchInfo(db.Model):
     size_46_outsource_amount = db.Column(db.Integer, default=0)
     outsource_info_id = db.Column(db.BigInteger, nullable=False)
 
+class PackagingInfo(db.Model):
+    __tablename__ = "packaging_info"
+
+    customer_id = db.Column(db.Integer, nullable=False)
+    packaging_info_name = db.Column(db.String(10), nullable=False,unique=True)
+    packaging_info_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
+    packaging_info_locale = db.Column(db.String(10), nullable=False)
+    info_mapping_id = db.Column(db.Integer, nullable=True)
+    size_34_ratio = db.Column(db.Integer, nullable=True)
+    size_35_ratio = db.Column(db.Integer, nullable=True)
+    size_36_ratio = db.Column(db.Integer, nullable=True)
+    size_37_ratio = db.Column(db.Integer, nullable=True)
+    size_38_ratio = db.Column(db.Integer, nullable=True)
+    size_39_ratio = db.Column(db.Integer, nullable=True)
+    size_40_ratio = db.Column(db.Integer, nullable=True)
+    size_41_ratio = db.Column(db.Integer, nullable=True)
+    size_42_ratio = db.Column(db.Integer, nullable=True)
+    size_43_ratio = db.Column(db.Integer, nullable=True)
+    size_44_ratio = db.Column(db.Integer, nullable=True)
+    size_45_ratio = db.Column(db.Integer, nullable=True)
+    size_46_ratio = db.Column(db.Integer, nullable=True)
+    total_quantity_ratio = db.Column(db.Integer, nullable=True)
+
+
+    def __repr__(self):
+        return f"<PackagingInfo(packaging_info_id={self.packaging_info_id})>"
+
+    def __name__(self):
+        return "PackagingInfo"
+    
 
 class OrderShoeBatchInfo(db.Model):
     __tablename__ = "order_shoe_batch_info"
