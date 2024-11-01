@@ -244,7 +244,7 @@ class Order(db.Model):
     __tablename__ = "order"
     order_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     order_rid = db.Column(db.String(40), nullable=False, unique=True)
-    order_cid = db.Column(db.String(40), nullable=False, unique=True)
+    order_cid = db.Column(db.String(40), nullable=True, unique=True)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     customer_id = db.Column(

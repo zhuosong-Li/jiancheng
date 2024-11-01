@@ -566,10 +566,6 @@
         </span>
     </el-dialog>
 
-    <el-dialog>
-        batch quantity todo
-
-    </el-dialog>
     <el-dialog
         title="添加配码"
         v-model="addCustomerBatchDialogVisible"
@@ -1267,7 +1263,21 @@ export default {
                         }
                 )
                 loadingInstance.close()
-
+                this.orderCreationSecondInfoVis = false
+                this.newOrderForm = 
+                {
+                orderRId:'',
+                orderCid: '',
+                customerId: null,
+                orderStartDate: '',
+                orderEndDate: '',
+                status: '',
+                salesman: '',
+                orderShoeTypes:[],
+                batchInfoQuantity:[],
+                customerShoeName:{}
+                }
+                this.getAllOrders()
             })
         },
         openOrderDetail(orderId) {
