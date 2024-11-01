@@ -1,8 +1,8 @@
 {
-    "db_username": "jiancheng_dev1",
-    "db_password": "123456Ab",
+    "db_username": "root",
+    "db_password": "78uuii",
     "db_name": "jiancheng",
-    "db_host": "rm-wz9e6065n2281l3i56o.mysql.rds.aliyuncs.com",
+    "db_host": "127.0.0.1",
     "secret_key": "EC63AF9BA57B9F20",
     "jwt_secret_key": "EC63AF9BA57B9F20",
     "redis_host": "localhost",
