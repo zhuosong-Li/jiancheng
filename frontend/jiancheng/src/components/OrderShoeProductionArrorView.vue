@@ -1,20 +1,20 @@
 <template>
     <div class="order-lifecycle">
-        <div v-for="(status, index) in productionWorkflow" :key="index" class="status-item">
+        <div v-for="(status, index) in currentWorkflow" :key="index" class="status-item">
             <div :class="[
                 'status-circle',
-                { completed: currentStatus > index, current: currentStatus === index }
+                { completed: this.$props.status > index, current: this.$props.status === index }
             ]">
             </div>
             <div :class="[
                 'status-text',
-                { completed: currentStatus > index, current: currentStatus === index }
+                { completed: this.$props.status > index, current: this.$props.status === index }
             ]">
                 {{ status.stage }}<br />
             </div>
             <div v-if="index < productionWorkflow.length" :class="[
                 'status-arrow',
-                { completed: currentStatus > index, current: currentStatus === index }
+                { completed: this.$props.status > index, current: this.$props.status === index }
             ]">
                 →
             </div>
@@ -24,9 +24,10 @@
 
 <script>
 export default {
-    props: ['status'],
+    props: ['status', 'workflowType'],
     data() {
         return {
+            currentWorkflow: [],
             productionWorkflow: [
                 { stage: '生产开始', department: '生产部' },
                 { stage: '裁断开始', department: '生产部' },
@@ -39,9 +40,23 @@ export default {
                 { stage: '成型结束', department: '生产部' },
                 { stage: '生产结束', department: '生产部' }
             ],
-            currentStatus: this.$props.status // Example: the current status index
+            outsourceWorkflow: [
+                { stage: '外包开始' },
+                { stage: '材料出库' },
+                { stage: '生产中' },
+                { stage: '成品入库' },
+                { stage: '外包结束' },
+            ],
         };
-    }
+    },
+    mounted() {
+        if (this.$props.workflowType == 1) {
+            this.currentWorkflow = this.productionWorkflow
+        }
+        else {
+            this.currentWorkflow = this.outsourceWorkflow
+        }
+    },
 };
 </script>
 

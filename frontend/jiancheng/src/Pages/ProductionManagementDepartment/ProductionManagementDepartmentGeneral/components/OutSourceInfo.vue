@@ -24,7 +24,7 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default"
-                            @click="startOutSourceFlow(scope.row)">打开鞋型外包页面</el-button>
+                            @click="openOutsourceFlow(scope.row)">打开鞋型外包页面</el-button>
 
                     </template>
                 </el-table-column>
@@ -93,16 +93,12 @@ export default {
             console.log(this.orderTableData)
             this.totalRows = response.data.totalLength
         },
-		startOutSourceFlow(rowData) {
-            console.log(rowData)
+		openOutsourceFlow(rowData) {
 			const params = {
 				"orderId": rowData.orderId,
 				"orderRId": rowData.orderRId,
 				"orderShoeId": rowData.orderShoeId,
 				"shoeRId": rowData.shoeRId,
-				"orderStartDate": rowData.orderStartDate,
-				"orderEndDate": rowData.orderEndDate,
-				"customerName": rowData.customerName,
 			}
 			const queryString = new URLSearchParams(params).toString();
 			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`

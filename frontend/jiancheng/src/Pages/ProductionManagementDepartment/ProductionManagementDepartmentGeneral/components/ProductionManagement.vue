@@ -40,8 +40,7 @@
             <el-table-column prop="nodeName" label="需确认状态点"></el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="handleConfirmation(scope.row)">确认状态完成</el-button>
-                    <el-button type="primary" size="default" @click="openConfirmationPage(scope.row)">新版状态完成</el-button>
+                    <el-button type="primary" size="default" @click="openConfirmationPage(scope.row)">确认状态完成</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -53,33 +52,6 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
-    <el-dialog title="生产节点状态确认" v-model="isProductionConfirmVis" width="80%">
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-descriptions title="鞋型信息" border column="2">
-                    <el-descriptions-item label="订单号">{{ currentRow.orderRId }}</el-descriptions-item>
-                    <el-descriptions-item label="鞋型号">{{ currentRow.shoeRId }}</el-descriptions-item>
-                    <el-descriptions-item label="客户型号">{{ currentRow.customerProductName }}</el-descriptions-item>
-                    <el-descriptions-item label="目前工段">{{ currentRow.currentStage }}</el-descriptions-item>
-                </el-descriptions>
-            </el-col>
-        </el-row>
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                鞋型配码信息
-                <el-table :data="shoeInfo" border stripe :max-height="200">
-                    <el-table-column prop="color" label="颜色"></el-table-column>
-                    <el-table-column prop="batchInfoName" label="配码编号"></el-table-column>
-                    <el-table-column prop="totalAmount" label="双数"></el-table-column>
-                    <el-table-column prop="finishedAmount" label="完成数"></el-table-column>
-                </el-table>
-            </el-col>
-        </el-row>
-        <template #footer>
-            <el-button @click="isProductionConfirmVis = false">取消</el-button>
-            <el-button type="success" @click="confirmNode">确认推进流程</el-button>
-        </template>
-    </el-dialog>
 </template>
 <script>
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -90,14 +62,10 @@ export default {
             currentPage: 1,
             pageSize: 10,
             totalRows: 0,
-            isProductionConfirmVis: false,
             orderRIdSearch: '',
             shoeRIdSearch: '',
             nodeNameSearch: '',
             orderTableData: [],
-            currentRow: {},
-            shoeInfo: [],
-            outsourcedLines: ''
         }
     },
     mounted() {
@@ -123,49 +91,6 @@ export default {
             const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getfinishednodes`, { params })
             this.orderTableData = response.data.result
             this.totalRows = response.data.totalLength
-        },
-        async handleConfirmation(rowData) {
-            this.currentRow = rowData
-            if (this.currentRow.nodeName === '生产开始') {
-                this.currentRow.currentStage = '生产前'
-            }
-            else if (this.currentRow.nodeName === '裁断开始') {
-                this.currentRow.currentStage = '裁断'
-            }
-            else if (this.currentRow.nodeName === '针车预备开始') {
-                this.currentRow.currentStage = '针车预备'
-            }
-            else if (this.currentRow.nodeName === '针车开始') {
-                this.currentRow.currentStage = '针车'
-            }
-            else if (this.currentRow.nodeName === '成型开始') {
-                this.currentRow.currentStage = '成型'
-            }
-            else if (this.currentRow.nodeName === '生产结束') {
-                this.currentRow.currentStage = '生产结束'
-            }
-            const params = {"orderShoeId": rowData.orderShoeId, "nodeName": rowData.nodeName}
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfoforproduction`, { params })
-            this.shoeInfo = response.data
-            this.isProductionConfirmVis = true
-        },
-        confirmNode() {
-            ElMessageBox.alert('请再次确认推进流程，此操作不可撤回！', '警告', {
-                confirmButtonText: '确认',
-                showCancelButton: true,
-                cancelButtonText: '取消'
-            }).then(async () => {
-                const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId, "nodeName": this.currentRow.nodeName }
-                const response = await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editordershoestatus`, data)
-                if (response.status == 200) {
-                    ElMessage.success("推进流程成功")
-                }
-                else {
-                    ElMessage.error("推进流程失败")
-                }
-                this.isProductionConfirmVis = false
-                this.getOrderTableData()
-            })
         },
         async openConfirmationPage(rowData) {
 			const params = {

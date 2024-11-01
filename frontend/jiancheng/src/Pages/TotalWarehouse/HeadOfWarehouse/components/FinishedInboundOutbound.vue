@@ -22,16 +22,16 @@
                 <el-table-column prop="customerProductName" label="客人号"></el-table-column>
                 <el-table-column prop="inboundAmount" label="鞋型应入库数量"></el-table-column>
                 <el-table-column prop="currentAmount" label="鞋型库存"></el-table-column>
-                <el-table-column prop="storageType" label="自产/外包"></el-table-column>
+                <el-table-column prop="statusName" label="状态"></el-table-column>
                 <el-table-column label="操作" width="300">
                     <template #default="scope">
                         <el-button-group>
-                            <el-button type="primary" size="small"
-                                @click="inboundFinished(scope.row)">入库</el-button>
-                            <el-button type="success" size="small"
-                                @click="outboundFinished(scope.row)">出库</el-button>
-                            <el-button type="warning" size="small"
-                                @click="finishInoutbound(scope.row)">完成出入库</el-button>
+                            <el-button type="primary" size="small" @click="openInboundDialog(scope.row)">入库</el-button>
+                            <el-button type="success" size="small" @click="openOutboundDialog(scope.row)">出库</el-button>
+                            <el-button v-if="scope.row.statusName === '未完成入库'" type="warning" size="small"
+                                @click="finishInbound(scope.row)">完成入库</el-button>
+                            <el-button v-if="scope.row.statusName === '已完成入库'" type="warning" size="small"
+                                @click="finishOutbound(scope.row)">完成出库</el-button>
                         </el-button-group>
                     </template>
                 </el-table-column>
@@ -45,17 +45,41 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
-    <el-dialog title="成品入库" v-model="inboundDialogVisible" width="30%">
+    <el-dialog title="成品入库" v-model="inboundDialogVisible" width="35%">
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
                 <el-form label-position="right" label-width="100px">
                     <el-form-item label="入库时间">
-                        <el-date-picker v-model="inboundDate" type="datetime" placeholder="选择日期时间" style="width: 100%"
+                        <el-date-picker v-model="inboundForm.inboundDate" type="datetime" placeholder="选择日期时间" style="width: 100%"
                             value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
                     <el-form-item label="入库数量">
-                        <el-input v-model="actualInboundAmount"></el-input>
+                        <el-input v-model="inboundForm.actualInboundAmount"></el-input>
                     </el-form-item>
+                    <el-form-item label="入库类型">
+                        <el-radio-group v-model="inboundForm.inboundType">
+                            <el-radio :value="0">自产</el-radio>
+                            <el-radio :value="1">外包</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                    <el-table v-if="inboundForm.inboundType == 1" :data="inboundForm.outsourceInfo" style="width: 100%">
+                        <el-table-column width="55">
+                            <template #default="scope">
+                                <el-radio v-model="inboundForm.selectedOutsource" :value="scope.row.outsourceInfoId" />
+                            </template>
+                        </el-table-column>
+                        <el-table-column prop="outsourceFactory.value" label="工厂名称" />
+                        <el-table-column prop="outsourceAmount" label="外包数量" />
+                        <el-table-column prop="outsourceType" label="外包类型" />
+                        <el-table-column label="操作">
+                            <template #default="scope">
+                                <el-button :disabled="inboundForm.selectedOutsource !== scope.row.outsourceInfoId"
+                                    type="warning" size="small" @click="finishOutsourceInbound(scope.row)">
+                                    完成外包入库
+                                </el-button>
+                            </template>
+                        </el-table-column>
+                    </el-table>
                 </el-form>
             </el-col>
         </el-row>
@@ -97,12 +121,17 @@
 </template>
 <script>
 import axios from 'axios'
-import { ElMessage } from 'element-plus';
+import { ElMessage, ElMessageBox } from 'element-plus';
 export default {
     data() {
         return {
-            actualInboundAmount: '',
-            inboundDate: '',
+            inboundForm: {
+                inboundDate: '',
+                actualInboundAmount: '',
+                outsourceInfo: [],
+                selectedOutsource: null,
+                inboundType: 0
+            },
             currentPage: 1,
             pageSize: 10,
             outboundForm: {
@@ -144,14 +173,14 @@ export default {
                 "orderId": this.currentRow.orderId,
                 "orderShoeId": this.currentRow.orderShoeId,
                 "storageId": this.currentRow.storageId,
-                "inboundDate": this.inboundDate,
-                "amount": this.actualInboundAmount
+                "inboundDate": this.inboundForm.inboundDate,
+                "amount": this.inboundForm.actualInboundAmount
             }
             await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
             try {
                 ElMessage.success("入库成功")
             }
-            catch(error) {
+            catch (error) {
                 console.log(error)
                 ElMessage.error("入库失败")
             }
@@ -185,11 +214,76 @@ export default {
             this.page = val
             this.getTableData()
         },
-        inboundFinished(row) {
-            this.inboundDialogVisible = true
-            this.currentRow = row
+        async getOutsourceInfoForInbound() {
+            let params = { "orderShoeId": this.currentRow.orderShoeId }
+            let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
+            this.inboundForm.outsourceInfo = []
+            response.data.forEach(element => {
+                let length = element.outsourceType.length
+                if (element.outsourceStatus == 5 || element.outsourceStatus == 6) {
+                    if (element.outsourceType[length - 1] === '成型') {
+                        this.inboundForm.outsourceInfo.push(element)
+                    }
+                }
+            });
+            if (this.inboundForm.outsourceInfo.length > 0) {
+                this.inboundForm.selectedOutsource = this.inboundForm.outsourceInfo[0].outsourceInfoId
+            }
         },
-        outboundFinished(row) {
+        async openInboundDialog(row) {
+            this.currentRow = row
+            await this.getOutsourceInfoForInbound()
+            this.inboundDialogVisible = true
+        },
+        async finishInbound(row) {
+            ElMessageBox.alert('该操作完成对此鞋型成品入库，是否继续？', '警告', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                cancelButtonText: '取消'
+            }).then(async () => {
+                const data = { "storageId": row.storageId }
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/completeinboundfinished`, data)
+                try {
+                    ElMessage.success("操作成功")
+                }
+                catch (error) {
+                    console.log(error)
+                    ElMessage.error("操作异常")
+                }
+                this.getTableData()
+            })
+        },
+        async finishOutsourceInbound(row) {
+            try {
+                let data = { "outsourceInfoId": row.outsourceInfoId }
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishoutsourceinbound`, data)
+                ElMessage.success("外包入库成功")
+                await this.getOutsourceInfoForInbound()
+            }
+            catch (error) {
+                console.log(error)
+                ElMessage.error("外包入库失败")
+            }
+        },
+        async finishOutbound(row) {
+            ElMessageBox.alert('该操作完成对此鞋型成品出库，是否继续？', '警告', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                cancelButtonText: '取消'
+            }).then(async () => {
+                const data = { "storageId": row.storageId }
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/completeoutboundfinished`, data)
+                try {
+                    ElMessage.success("操作成功")
+                }
+                catch (error) {
+                    console.log(error)
+                    ElMessage.error("操作异常")
+                }
+                this.getTableData()
+            })
+        },
+        openOutboundDialog(row) {
             this.outboundDialogVisible = true
             this.currentRow = row
         }

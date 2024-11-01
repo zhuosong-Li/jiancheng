@@ -5,13 +5,13 @@
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getOrderTableData()" @clear="getOrderTableData()"/>
+            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getOrderTableData()"
+                @clear="getOrderTableData()" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getOrderTableData()" @clear="getOrderTableData()"/>
+            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getOrderTableData()"
+                @clear="getOrderTableData()" />
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -71,7 +71,7 @@ export default {
                 "orderRId": this.orderRIdSearch,
                 "shoeRId": this.shoeRIdSearch
             }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallquantityreportsoverview`, {params})
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallquantityreportsoverview`, { params })
             this.orderTableData = response.data.result
             this.totalRows = response.data.totalLength
         },
@@ -96,27 +96,37 @@ export default {
         },
         currentDate() {
             const date = new Date()
-            return date.toDateString()
+            const chineseFormattedDate = new Intl.DateTimeFormat('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            }).format(date);
+            return chineseFormattedDate
         },
         daysBefore(num) {
             const date = new Date()
             const returnDate = new Date()
             returnDate.setDate(date.getDate() - num)
-            return returnDate.toDateString()
+            const chineseFormattedDate = new Intl.DateTimeFormat('zh-CN', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+            }).format(returnDate);
+            return chineseFormattedDate
         },
         openAmountApproval(rowData) {
-			const params = {
-				"orderId": rowData.orderId,
-				"orderRId": rowData.orderRId,
-				"orderShoeId": rowData.orderShoeId,
-				"shoeRId": rowData.shoeRId,
-				"orderStartDate": rowData.orderStartDate,
-				"orderEndDate": rowData.orderEndDate,
-				"customerProductName": rowData.customerProductName,
-			}
-			const queryString = new URLSearchParams(params).toString();
-			const url = `${window.location.origin}/productiongeneral/productionamountapproval?${queryString}`
-			window.open(url, '_blank')
+            const params = {
+                "orderId": rowData.orderId,
+                "orderRId": rowData.orderRId,
+                "orderShoeId": rowData.orderShoeId,
+                "shoeRId": rowData.shoeRId,
+                "orderStartDate": rowData.orderStartDate,
+                "orderEndDate": rowData.orderEndDate,
+                "customerProductName": rowData.customerProductName,
+            }
+            const queryString = new URLSearchParams(params).toString();
+            const url = `${window.location.origin}/productiongeneral/productionamountapproval?${queryString}`
+            window.open(url, '_blank')
         }
     }
 }

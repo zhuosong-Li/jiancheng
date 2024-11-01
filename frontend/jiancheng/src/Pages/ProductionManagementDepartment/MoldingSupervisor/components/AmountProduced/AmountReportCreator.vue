@@ -46,13 +46,13 @@ onMounted(async () => {
         priceReport.value = response.data.detail
     }
     catch(error) {
-        console.log("error")
+        console.log(error)
     }
     // get quantity report detail
-    params = { "reportId": props.currentReport.reportId }
+    params = { "reportId": props.currentReport.reportId, team: 3 }
     let response2 = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     response2.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["moldingAmount"]
+        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
         tableData.value.push(row)
         producedAmount.value += row["amount"]
     })

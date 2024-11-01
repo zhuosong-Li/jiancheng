@@ -11,6 +11,7 @@
 			default-expand-all>
 			<el-table-column label="订单信息">
 				<el-table-column prop="orderRId" label="订单编号" sortable />
+				<el-table-column prop="customerName" label="客户名称" sortable />
 				<el-table-column prop="orderTotalShoes" label="订单总数量" sortable />
 				<el-table-column prop="finishedShoes" label="已生产数量" sortable />
 				<el-table-column prop="startDate" label="生产开始日期" sortable />
@@ -71,7 +72,11 @@ export default {
 		},
 		openNewWindow(rowData) {
 			let url = ""
-			const queryString = new URLSearchParams(rowData).toString();
+			let params = {
+				"orderId": rowData.orderId,
+				"orderRId": rowData.orderRId
+			}
+			const queryString = new URLSearchParams(params).toString();
 			url = `${window.location.origin}/productiongeneral/productiondetail?${queryString}`
 			window.open(url, '_blank')
 		},
