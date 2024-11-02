@@ -28,6 +28,7 @@
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
             <el-table-column prop="actualInboundAmount" label="材料实入库数量" :formatter="formatDecimal"></el-table-column>
@@ -84,6 +85,9 @@
         <el-form-item label="入库日期">
             <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
                 value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
+        </el-form-item>
+        <el-form-item label="材料单价">
+            <el-input v-model="inboundForm.unitPrice" placeholder="请输入单价"></el-input>
         </el-form-item>
         <el-form-item label="入库数量">
             <el-input v-model="inboundForm.quantity" placeholder="请输入入库数量"></el-input>
@@ -157,7 +161,8 @@ export default {
             inboundForm: {
                 quantity: '',
                 date: '',
-                inboundType: ''
+                inboundType: '',
+                unitPrice: 0,
             },
             materialTableData: [],
             currentRow: {},
@@ -201,7 +206,8 @@ export default {
                 "materialStorageId": this.currentRow.materialStorageId,
                 "date": this.inboundForm.date,
                 "amount": this.inboundForm.quantity,
-                "type": this.inboundForm.inboundType
+                "type": this.inboundForm.inboundType,
+                "unitPrice": this.inboundForm.unitPrice
             }
             let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
             if (response.status == 200) {
@@ -267,6 +273,7 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async editMaterial(row) {
+            this.inboundForm.unitPrice = row.unitPrice
             if (row.materialCategory == 1) {
                 let params = { "sizeMaterialStorageId": row.materialStorageId }
                 let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })

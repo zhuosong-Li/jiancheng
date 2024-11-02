@@ -1,9 +1,17 @@
-.idea
-__pycache__
-.venv
-.vscode
-.idea
+# Ignore Python cache files
+__pycache__/
+
+# Ignore virtual environment directories
+.venv/
+
+# Ignore IDE and editor settings
+.idea/
+.vscode/
+
+# Ignore backend and frontend dependencies and configuration files
 backend-python/backend_config.json
-backend-python/constants.py
-backend-python/main.py
 frontend/jiancheng/frontend_config.json
+frontend/jiancheng/node_modules/
+
+# Node modules in general
+node_modules/

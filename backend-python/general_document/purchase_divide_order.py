@@ -14,13 +14,15 @@ def load_template(template_path, new_file_path):
 def insert_series_data(ws, series_data, start_row=4):
     for i, item in enumerate(series_data):
         row = start_row + i
+        print(f"Inserting series data into row {row}")
+        print(item)
         ws[f"C{row}"] = item.get("物品名称", "")
         ws[f"D{row}"] = item.get("单位", "")
         ws[f"E{row}"] = item.get("数量", "")
         ws[f"F{row}"] = item.get("单价", "")
         ws[f"G{row}"] = item.get("用途说明", "")
         ws[f"H{row}"] = item.get("备注", "")
-        if row >= 9:  # Stop if the row exceeds row 9
+        if row >= 8:  # Stop if the row exceeds row 9
             break
 
 # Function to save the workbook after modification
