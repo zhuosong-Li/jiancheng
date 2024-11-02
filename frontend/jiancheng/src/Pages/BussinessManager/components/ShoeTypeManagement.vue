@@ -23,10 +23,12 @@
                 <el-table-column
                     prop="shoeRId"
                     label="鞋型编号"
+                    width = "100"
                 ></el-table-column>
                 <el-table-column
                     prop="shoeColor"
                     label="鞋型颜色"
+                    width = "100"
                 ></el-table-column>
                 <el-table-column
                     prop="shoeImage"
@@ -39,6 +41,7 @@
                 <el-table-column
                     prop="shoeDesigner"
                     label="设计师"
+                    width = 100
                 ></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
@@ -153,6 +156,7 @@
 <script>
 import axios from 'axios';
 import { Search } from '@element-plus/icons-vue';
+import { ElMessage } from 'element-plus'
 
 export default {
     data() {

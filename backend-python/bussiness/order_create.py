@@ -29,6 +29,7 @@ def allowed_file(filename):
 def create_new_order():
 	time_s = time.time()
 	order_info = request.json.get("orderInfo")
+	print(order_info)
 	if not order_info:
 		return jsonify({'error': 'invalid request'}),400
 	order_rid = order_info["orderRId"]
@@ -164,7 +165,7 @@ def create_new_order():
 				sewing_amount = 0, 
 				pre_sewing_amount = 0,
 				molding_amount = 0,
-				total_amount = 0,
+				total_amount = batch['totalQuantityInRatio']*quantity_per_ratio,
 				packaging_info_id = batch['packagingInfoId'],
 				packaging_info_quantity = quantity_per_ratio)
 			print(new_entity.size_34_amount)
@@ -209,4 +210,28 @@ def create_new_order():
 
     # db.session.add_all(arr)
     # db.session.commit()
-	return
+@order_create_bp.route("/ordercreate/updateprice", methods=["POST"])
+def order_price_update():
+	unit_price_form = request.json.get('unitPriceForm')
+	currency_type_form = request.json.get('currencyTypeForm')
+	print(currency_type_form)
+	for order_shoe_type_id in unit_price_form.keys():
+		unit_price = float(unit_price_form[order_shoe_type_id])
+		entities = (db.session.query(OrderShoeBatchInfo)
+			.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+			.all())
+		for entity in entities:
+			entity.price_per_pair = unit_price
+			entity.total_price = unit_price * entity.total_amount
+			db.session.commit()
+
+	for order_shoe_type_id in currency_type_form.keys():
+		currency_type = str(currency_type_form[order_shoe_type_id])
+		entities = (db.session.query(OrderShoeBatchInfo)
+			.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+			.all())
+		for entity in entities:
+			entity.currency_type = currency_type
+			db.session.commit()
+
+	return jsonify({'msg':"ok"}), 200
