@@ -177,20 +177,23 @@ def get_order_info_business():
         )
     print(order_shoe_entities)
     result = {
+        "orderId":entity.Order.order_id,
         "orderRid":entity.Order.order_rid,
         "orderCid":entity.Order.order_cid,
         "startDate":formatted_start_date,
         "endDate":formatted_end_date,
         "customerName":entity.Customer.customer_name,
         "customerBrand":entity.Customer.customer_brand,
-        "wrapRequirementUploadStatus":entity.Order.production_list_upload_status,
         "orderStatus":(
             entity.OrderStatus.order_current_status if entity.OrderStatus else "N/A"
         ),
         "orderShoeAllData":[],
         # 备注
     }
-    
+    if entity.Order.production_list_upload_status:
+        result["wrapRequirementUploadStatus"] = "已上传包装文件"
+    else:
+        result["wrapRequirementUploadStatus"] = "未上传包装文件"
     order_shoe_ids = []
     for order_shoe in order_shoe_entities:
         response = {}
@@ -222,21 +225,88 @@ def get_order_info_business():
             .join(Color, Color.color_id == ShoeType.color_id)
             ).all()
 
+
+        order_shoe_type_ids = [entity.OrderShoeType.order_shoe_type_id for entity in order_shoe_type_entities]
+
         for entity in order_shoe_type_entities:
-            print(entity)
-            order_shoe_id_to_order_shoe_types[order_shoe_id].append(
-                {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
-                    "shoeTypeColorName":entity.Color.color_name,
-                   "shoeTypeColorId":entity.Color.color_id,
-                   "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url
-                })
-            print(order_shoe_id_to_order_shoe_types[order_shoe_id])
-    print(123)
-    print(order_shoe_id_to_order_shoe_types)
+                response_order_shoe = {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
+                        "shoeTypeColorName":entity.Color.color_name,
+                       "shoeTypeColorId":entity.Color.color_id,
+                       "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url,
+                    }
+                
+                shoe_type_batch_infos = (db.session.query(OrderShoeBatchInfo)
+                    .filter(OrderShoeBatchInfo.order_shoe_type_id == entity.OrderShoeType.order_shoe_type_id)
+                    ).all()
+                total_size_34 = 0
+                total_size_35 = 0
+                total_size_36 = 0
+                total_size_37 = 0
+                total_size_38 = 0
+                total_size_39 = 0
+                total_size_40 = 0
+                total_size_41 = 0
+                total_size_42 = 0
+                total_size_43 = 0
+                total_size_44 = 0
+                total_size_45 = 0
+                total_size_46 = 0
+                overall_total = 0
+                unit_price = 0
+                total_price = 0
+                currency_type = ''
+                for entity in shoe_type_batch_infos:
+                    total_size_34 += entity.size_34_amount
+                    total_size_35 += entity.size_35_amount
+                    total_size_36 += entity.size_36_amount
+                    total_size_37 += entity.size_37_amount
+                    total_size_38 += entity.size_38_amount
+                    total_size_39 += entity.size_39_amount
+                    total_size_40 += entity.size_40_amount
+                    total_size_41 += entity.size_41_amount
+                    total_size_42 += entity.size_42_amount
+                    total_size_43 += entity.size_43_amount
+                    total_size_44 += entity.size_44_amount
+                    total_size_45 += entity.size_45_amount
+                    total_size_46 += entity.size_46_amount
+                    overall_total += entity.total_amount
+                    unit_price = entity.price_per_pair
+                    total_price = entity.total_price
+                    currency_type = entity.currency_type
+
+                shoeTypeBatchData = {
+                    "size34Amount":total_size_34,
+                    "size35Amount":total_size_35,
+                    "size36Amount":total_size_36,
+                    "size37Amount":total_size_37,
+                    "size38Amount":total_size_38,
+                    "size39Amount":total_size_39,
+                    "size40Amount":total_size_40,
+                    "size41Amount":total_size_41,
+                    "size42Amount":total_size_42,
+                    "size43Amount":total_size_43,
+                    "size44Amount":total_size_44,
+                    "size45Amount":total_size_45,
+                    "size46Amount":total_size_46,
+                    "totalAmount":overall_total,
+                    "unitPrice":int(unit_price),
+                    "totalPrice":int(total_price),
+                    "currencyType":currency_type
+                }
+                response_order_shoe["shoeTypeBatchData"] = shoeTypeBatchData
+                order_shoe_id_to_order_shoe_types[order_shoe_id].append(response_order_shoe)
+            # for entity in order_shoe_type_entities:
+            #     order_shoe_id_to_order_shoe_types[order_shoe_id].append(
+            #         {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
+            #             "shoeTypeColorName":entity.Color.color_name,
+            #            "shoeTypeColorId":entity.Color.color_id,
+            #            "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url,
+            #            "shoeTypeBatchData":shoeTypeBatchData
+            #         })
+
     for order_shoe in result['orderShoeAllData']:
         order_shoe["currentStatus"] = order_shoe_id_to_status[order_shoe["orderShoeId"]]
         order_shoe["orderShoeTypes"] = order_shoe_id_to_order_shoe_types[order_shoe["orderShoeId"]]
-    print(order_shoe_id_to_status)
     print(result)
 
     return jsonify(result)
