@@ -15,3 +15,5 @@ frontend/jiancheng/node_modules/
 
 # Node modules in general
 node_modules/
+# script
+dev.sh
