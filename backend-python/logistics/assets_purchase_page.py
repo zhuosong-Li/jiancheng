@@ -94,6 +94,7 @@ def get_material_type_and_name():
     for row in query:
         result.append(
             {
+                "materialId": row.Material.material_id,
                 "materialType": row.MaterialType.material_type_name,
                 "materialName": row.Material.material_name,
                 "warehouseName": row.MaterialWarehouse.material_warehouse_name,

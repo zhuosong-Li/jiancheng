@@ -20,6 +20,7 @@ from models import (
     Shoe,
     Color,
     Bom,
+    TotalBom,
 )
 from sqlalchemy import or_, text
 from datetime import datetime
@@ -251,11 +252,13 @@ def get_order_shoe_size_total():
 
     # Fetch the order_shoe_type_id based on filters
     order_shoe_type_id = (
-        db.session.query(OrderShoe, OrderShoeType, Shoe, ShoeType, Color)
+        db.session.query(Order, OrderShoe, OrderShoeType, Shoe, ShoeType, Color)
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
         .join(Color, ShoeType.color_id == Color.color_id)
+        .filter(Order.order_rid == order_id)
         .filter(Shoe.shoe_rid == order_shoe_rid)
         .filter(Color.color_name == color)
         .first()
@@ -564,8 +567,8 @@ def get_order_full_info():
         )
         .outerjoin(Customer, Order.customer_id == Customer.customer_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .outerjoin(Bom, Bom.order_shoe_id == OrderShoe.order_shoe_id)
-        .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == Bom.bom_id)
+        .outerjoin(TotalBom, TotalBom.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(
             or_(
                 Order.order_rid.like(f"%{order_search}%"),

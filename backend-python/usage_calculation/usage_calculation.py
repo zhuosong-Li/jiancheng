@@ -402,17 +402,25 @@ def issue_bom_usage():
     order_id = (
         db.session.query(Order).filter(Order.order_rid == order_rid).first().order_id
     )
-    current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
-    random_string = randomIdGenerater(6)
-    total_bom_rid = current_time_stamp + random_string + "TF"
-    total_bom = TotalBom(total_bom_rid=total_bom_rid)
-    db.session.add(total_bom)
-    db.session.flush()
     material_dict = defaultdict(lambda: {"total_usage": 0})
     series_data = []
     for order_shoe_rid in order_shoes:
         index = order_shoes.index(order_shoe_rid)
         color = colors[index]
+        order_shoe_id = (
+            db.session.query(OrderShoe, Shoe)
+            .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+            .filter(OrderShoe.order_id == order_id, Shoe.shoe_rid == order_shoe_rid)
+            .first()
+            .OrderShoe.order_shoe_id
+        )
+
+        current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
+        random_string = randomIdGenerater(6)
+        total_bom_rid = current_time_stamp + random_string + "TF"
+        total_bom = TotalBom(total_bom_rid=total_bom_rid, order_shoe_id=order_shoe_id)
+        db.session.add(total_bom)
+        db.session.flush()
         for color_item in color:
             order_shoe_type_id = (
                 db.session.query(Order, OrderShoe, Shoe, ShoeType, OrderShoeType, Color)
@@ -463,6 +471,7 @@ def issue_bom_usage():
                     bom_item.BomItem.material_model,
                     bom_item.BomItem.material_specification,
                     bom_item.Supplier.supplier_name,
+                    bom_item.BomItem.bom_item_color,
                 )
                 
                 # Update the dictionary: sum the total_usage and add other details
