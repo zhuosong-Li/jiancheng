@@ -86,6 +86,9 @@
             <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
                 value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
         </el-form-item>
+        <el-form-item label="材料单价">
+            <el-input v-model="inboundForm.unitPrice" placeholder="请输入单价"></el-input>
+        </el-form-item>
         <el-form-item label="入库数量">
             <el-input v-model="inboundForm.quantity" placeholder="请输入入库数量"></el-input>
         </el-form-item>
@@ -158,7 +161,8 @@ export default {
             inboundForm: {
                 quantity: '',
                 date: '',
-                inboundType: ''
+                inboundType: '',
+                unitPrice: 0,
             },
             materialTableData: [],
             currentRow: {},
@@ -202,7 +206,8 @@ export default {
                 "materialStorageId": this.currentRow.materialStorageId,
                 "date": this.inboundForm.date,
                 "amount": this.inboundForm.quantity,
-                "type": this.inboundForm.inboundType
+                "type": this.inboundForm.inboundType,
+                "unitPrice": this.inboundForm.unitPrice
             }
             let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
             if (response.status == 200) {
@@ -268,6 +273,7 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async editMaterial(row) {
+            this.inboundForm.unitPrice = row.unitPrice
             if (row.materialCategory == 1) {
                 let params = { "sizeMaterialStorageId": row.materialStorageId }
                 let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })

@@ -196,7 +196,6 @@ def submit_quantity_report():
 def delete_quantity_report():
     report_id = request.args.get("reportId")
     items = QuantityReportItem.query.filter_by(report_id=report_id).all()
-    print(report_id)
     for item in items:
         db.session.delete(item)
     row = QuantityReport.query.get(report_id)
@@ -305,5 +304,4 @@ def get_quantity_report_detail():
                 "producedAmount": produced_amount,
             }
             result.append(obj)
-    print(result)
     return result
