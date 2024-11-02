@@ -105,8 +105,7 @@ def get_all_material_info():
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == MaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
-        .outerjoin(OrderShoeType, MaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
-        .outerjoin(OrderShoe, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
+        .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
@@ -145,8 +144,7 @@ def get_all_material_info():
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
         .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == SizeMaterialStorage.purchase_divide_order_id)
         .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
-        .outerjoin(OrderShoeType, SizeMaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
-        .outerjoin(OrderShoe, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
+        .outerjoin(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
@@ -308,6 +306,7 @@ def get_size_material_info_by_id():
 def inbound_material():
     data = request.get_json()
     storage = MaterialStorage.query.get(data["materialStorageId"])
+    storage.unit_price = data["unitPrice"]
     storage.actual_inbound_amount += Decimal(data["amount"])
     storage.current_amount += Decimal(data["amount"])
     record = InboundRecord(
