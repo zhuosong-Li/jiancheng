@@ -43,7 +43,7 @@
 	                            @click="openSubmitDialog()"
 	                            >上传</el-button
 	                        >
-	                        <el-button v-if="orderData.wrapRequirementUploadStatus === 1" type="primary" size="default" @click="download(2)">查看</el-button>
+	                        <el-button v-if="orderData.wrapRequirementUploadStatus === '已上传包装文件'" type="primary" size="default" @click="download(2)">查看</el-button>
 	                    </el-descriptions-item>
 	                    <!-- <el-descriptions-item label="生产数量单上传状态" align="center"
 	                        >{{ orderDocData.amountDoc }}
@@ -53,17 +53,40 @@
 	                            @click="openSubmitDocDialog(1)"
 	                            >上传</el-button
 	                        >
-	                        <el-button v-if="orderDocData.amountDoc === '已上传'" type="primary" size="default" @click="downloadDoc(1)">查看</el-button>
+	                        <el-button v-if="orderDocData.amountDoc === '已上传包装文件'" type="primary" size="default" @click="downloadDoc(1)">查看</el-button>
 	                    </el-descriptions-item> -->
 	                </el-descriptions>
 	            </el-col>
 	        </el-row>
 	        <el-table :data="this.orderShoeData" border stripe height = "900"
-        	:row-key = "(row) => {return row.orderShoeTypeId}"
-                @expand-change = "expandOpen" :expand-row-keys = "expandedRowKeys" >
+        	:row-key = "(row) => {return row.orderShoeTypeId}">
             <el-table-column type = "expand" >
                 <template #default = "props">
                     <el-table :data = "props.row.orderShoeTypes" border>
+                        <el-table-column type="expand">
+                            <template #default="scope">
+                                <el-table :data = "scope.row.shoeTypeBatchInfoList">
+                                    <el-table-column prop="packaginginfolocale" label ="地区"/>
+                                    <el-table-column prop="packaginginfoname" label ="名称"/>
+                                    <el-table-column prop="size34ratio" label ="34"/>
+                                    <el-table-column prop="size35ratio" label ="35"/>
+                                    <el-table-column prop="size36ratio" label ="36"/>
+                                    <el-table-column prop="size37ratio" label ="37"/>
+                                    <el-table-column prop="size38ratio" label ="38"/>
+                                    <el-table-column prop="size39ratio" label ="39"/>
+                                    <el-table-column prop="size40ratio" label ="40"/>
+                                    <el-table-column prop="size41ratio" label ="41"/>
+                                    <el-table-column prop="size42ratio" label ="42"/>
+                                    <el-table-column prop="size43ratio" label ="43"/>
+                                    <el-table-column prop="size44ratio" label ="44"/>
+                                    <el-table-column prop="size45ratio" label ="45"/>
+                                    <el-table-column prop="size46ratio" label ="46"/>
+                                    <el-table-column prop="totalquantityratio" label ="比例和"/>
+                                    <el-table-column prop="unitPerRatio" label ="比例单位数量"/>
+
+                                </el-table>
+                            </template>
+                        </el-table-column>
                         <el-table-column prop="shoeTypeColorName" label="颜色名称" sortable/>
                         <el-table-column prop="shoeTypeBatchData.size34Amount" label="34" />
                         <el-table-column prop="shoeTypeBatchData.size35Amount" label="35" />
@@ -85,7 +108,8 @@
                             <el-input size = small
                             controls-position = "right"
                             @change="updateValue(scope.row)"
-                            v-model = "scope.row.shoeTypeBatchData.unitPrice">
+                            v-model = "scope.row.shoeTypeBatchData.unitPrice"
+                            :disabled="false">
                             </el-input>
                         </template> 
                         </el-table-column>
@@ -95,18 +119,12 @@
                             controls-position = "right"
                             @change = "updateCurrencyValue(scope.row)"
                             v-model = "scope.row.shoeTypeBatchData.currencyType"
+                            :disabled="false"
                             >
                             </el-input>
                         </template> 
                         </el-table-column>
-                        <el-table-column label="总金额">
-                        <template #default="scope">
-                            <el-input size = small
-                            controls-position = "right"
-                            v-model = "scope.row.shoeTypeBatchData.totalPrice">
-                            </el-input>
-                        </template> 
-                        </el-table-column>
+                        <el-table-column prop = "shoeTypeBatchData.totalPrice" label="总金额"/>
 
 
                     </el-table>
@@ -146,6 +164,7 @@
         title="包装资料上传"
         v-model="isSubmitDocVis"
         width="30%"
+        @close="handleDialogClose"
     >
         <el-upload
             ref="uploadDoc"
@@ -238,7 +257,9 @@ export default {
             expandedRowKeys:[],
             orderShoeTypeIdToUnitPrice:{},
             orderShoeTypeIdToCurrencyType:{},
-            isSubmitDocVis:false
+            isSubmitDocVis:false,
+            priceChangeNotAllowed:false,
+            unitChangeNotAllowed:false,
 
         }
     },
@@ -255,7 +276,6 @@ export default {
           console.log(response.data)
           this.orderData = response.data
           this.orderShoeData = response.data.orderShoeAllData
-          console.log(this.orderData)
       	},
       	expandOpen(row, expand){
             console.log(this.expandedRowKeys)
@@ -315,9 +335,9 @@ export default {
                         background: 'rgba(0, 0, 0, 0.7)'
                     })
                 // Manually submit the file without reopening the dialog
-                await this.$refs.uploadDoc.submit().then(() => {
-                    loadingInstance.close()
-                })
+                console.log(this.$refs.uploadDoc)
+                await this.$refs.uploadDoc.submit()
+                loadingInstance.close()
             }
             catch (error) {
                 console.error('Upload error:', error)
@@ -352,7 +372,9 @@ export default {
     	downloadDoc(){
 
     	},
-
+        handleDialogClose(){
+            console.log("TODO handle dialog close in OrderManagement.Vue")
+        },
 
 	}
 }

@@ -21,6 +21,7 @@ from models import (
     Color,
     Bom,
     TotalBom,
+    PackagingInfo
 )
 from sqlalchemy import or_, text
 from datetime import datetime
@@ -191,7 +192,7 @@ def get_order_info_business():
         "orderShoeAllData":[],
         # 备注
     }
-    if entity.Order.production_list_upload_status:
+    if entity.Order.production_list_upload_status == '2':
         result["wrapRequirementUploadStatus"] = "已上传包装文件"
     else:
         result["wrapRequirementUploadStatus"] = "未上传包装文件"
@@ -202,12 +203,21 @@ def get_order_info_business():
         response["shoeId"] = order_shoe.Shoe.shoe_id
         response["shoeRid"] = order_shoe.Shoe.shoe_rid
         response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
+        response["orderShoeStatusList"] = []
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
         # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
         result["orderShoeAllData"].append(response)
         order_shoe_id = order_shoe.OrderShoe.order_shoe_id
         if order_shoe_id not in order_shoe_ids:
             order_shoe_ids.append(order_shoe_id)
+        
+        # order_shoe_status_entities = (db.session.query(OrderShoe, OrderShoeStatus, OrderShoeStatusReference)
+        # .filter(OrderShoe.order_shoe_id == order_shoe_id)
+        # .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
+        # .join(OrderShoeStatusReference, OrderShoeStatus.current_status == OrderShoeStatusReference.status_id)
+        # .all())
+        # print(order_shoe_status_entities)
+        # print(order_shoe_id)
 
     order_shoe_id_to_status = {order_shoe_id:"" for order_shoe_id in order_shoe_ids}
     order_shoe_id_to_order_shoe_types = {order_shoe_id:[] for order_shoe_id in order_shoe_ids}
@@ -233,11 +243,13 @@ def get_order_info_business():
                 response_order_shoe = {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
                         "shoeTypeColorName":entity.Color.color_name,
                        "shoeTypeColorId":entity.Color.color_id,
-                       "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url,
+                       "shoeTypeImgUrl":entity.ShoeType.shoe_image_url,
+                       "shoeTypeBatchInfoList":[]
                     }
                 
-                shoe_type_batch_infos = (db.session.query(OrderShoeBatchInfo)
+                shoe_type_batch_infos = (db.session.query(OrderShoeBatchInfo, PackagingInfo)
                     .filter(OrderShoeBatchInfo.order_shoe_type_id == entity.OrderShoeType.order_shoe_type_id)
+                    .join(PackagingInfo, OrderShoeBatchInfo.packaging_info_id == PackagingInfo.packaging_info_id)
                     ).all()
                 total_size_34 = 0
                 total_size_35 = 0
@@ -256,25 +268,42 @@ def get_order_info_business():
                 unit_price = 0
                 total_price = 0
                 currency_type = ''
+                database_attr_list = ["packaging_info_name", "packaging_info_locale", "size_34_ratio",
+                "size_35_ratio","size_36_ratio","size_37_ratio","size_38_ratio","size_39_ratio","size_40_ratio",
+                "size_41_ratio","size_42_ratio","size_43_ratio","size_44_ratio","size_45_ratio","size_46_ratio",
+                "total_quantity_ratio"]
+                db_attr_to_froend_key = {}
                 for entity in shoe_type_batch_infos:
-                    total_size_34 += entity.size_34_amount
-                    total_size_35 += entity.size_35_amount
-                    total_size_36 += entity.size_36_amount
-                    total_size_37 += entity.size_37_amount
-                    total_size_38 += entity.size_38_amount
-                    total_size_39 += entity.size_39_amount
-                    total_size_40 += entity.size_40_amount
-                    total_size_41 += entity.size_41_amount
-                    total_size_42 += entity.size_42_amount
-                    total_size_43 += entity.size_43_amount
-                    total_size_44 += entity.size_44_amount
-                    total_size_45 += entity.size_45_amount
-                    total_size_46 += entity.size_46_amount
-                    overall_total += entity.total_amount
-                    unit_price = entity.price_per_pair
-                    total_price = entity.total_price
-                    currency_type = entity.currency_type
+                    total_size_34 += entity.OrderShoeBatchInfo.size_34_amount
+                    total_size_35 += entity.OrderShoeBatchInfo.size_35_amount
+                    total_size_36 += entity.OrderShoeBatchInfo.size_36_amount
+                    total_size_37 += entity.OrderShoeBatchInfo.size_37_amount
+                    total_size_38 += entity.OrderShoeBatchInfo.size_38_amount
+                    total_size_39 += entity.OrderShoeBatchInfo.size_39_amount
+                    total_size_40 += entity.OrderShoeBatchInfo.size_40_amount
+                    total_size_41 += entity.OrderShoeBatchInfo.size_41_amount
+                    total_size_42 += entity.OrderShoeBatchInfo.size_42_amount
+                    total_size_43 += entity.OrderShoeBatchInfo.size_43_amount
+                    total_size_44 += entity.OrderShoeBatchInfo.size_44_amount
+                    total_size_45 += entity.OrderShoeBatchInfo.size_45_amount
+                    total_size_46 += entity.OrderShoeBatchInfo.size_46_amount
+                    overall_total += entity.OrderShoeBatchInfo.total_amount
+                    unit_price = entity.OrderShoeBatchInfo.price_per_pair
+                    total_price = entity.OrderShoeBatchInfo.total_price
+                    currency_type = entity.OrderShoeBatchInfo.currency_type
 
+
+                    # batchInfoEntity = {}
+                    # for db_attr in database_attr_list:
+                    #     print("getting this db_attr " + db_attr)
+                    #     parsed_key = "".join(db_attr.rsplit(db_attr))
+                    #     print(parsed_key)
+                    #     batchInfoEntity[parsed_key] = getattr(entity.PackagingInfo, db_attr)
+                    # response_order_shoe['shoeTypeBatchInfoList'].append(batchInfoEntity)
+                    temp_obj = { "".join(db_attr.rsplit("_")) : getattr(entity.PackagingInfo, db_attr) for db_attr in database_attr_list}
+                    temp_obj["unitPerRatio"] = entity.OrderShoeBatchInfo.packaging_info_quantity
+                    response_order_shoe['shoeTypeBatchInfoList'].append(temp_obj)
+                        
                 shoeTypeBatchData = {
                     "size34Amount":total_size_34,
                     "size35Amount":total_size_35,
@@ -294,6 +323,7 @@ def get_order_info_business():
                     "totalPrice":int(total_price),
                     "currencyType":currency_type
                 }
+
                 response_order_shoe["shoeTypeBatchData"] = shoeTypeBatchData
                 order_shoe_id_to_order_shoe_types[order_shoe_id].append(response_order_shoe)
             # for entity in order_shoe_type_entities:
