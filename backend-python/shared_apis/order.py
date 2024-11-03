@@ -204,6 +204,8 @@ def get_order_info_business():
         response["shoeRid"] = order_shoe.Shoe.shoe_rid
         response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
         response["orderShoeStatusList"] = []
+        response["orderShoeRemark"] = "工艺备注:" + order_shoe.OrderShoe.business_technical_remark + " \n" + "材料备注:" + order_shoe.OrderShoe.business_material_remark 
+        response["orderShoeRemarkExist"] = not (order_shoe.OrderShoe.business_technical_remark == "" or order_shoe.OrderShoe.business_material_remark == "")
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
         # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
         result["orderShoeAllData"].append(response)
@@ -341,8 +343,6 @@ def get_order_info_business():
     print(result)
 
     return jsonify(result)
-
-
 
 @order_bp.route("/order/getordershoesizetotal", methods=["GET"])
 def get_order_shoe_size_total():

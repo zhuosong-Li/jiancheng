@@ -4,8 +4,8 @@
 			<AllHeader></AllHeader>
 		</el-header>
 		<el-container>
-			<el-main>
-			<el-row :gutter="20">
+			<el-main >
+			<el-row :gutter="0">
             <el-col :span="24" :offset="0">
                 <el-descriptions title="" :column="2" border>
                     <el-descriptions-item label="订单编号" align="center">{{
@@ -58,11 +58,10 @@
 	                </el-descriptions>
 	            </el-col>
 	        </el-row>
-	        <el-table :data="this.orderShoeData" border stripe height = "900"
-        	:row-key = "(row) => {return row.orderShoeTypeId}">
+	        <el-table :data="this.orderShoeData" border stripe height = "900" :row-key = "(row) => {return row.orderShoeTypeId}">
             <el-table-column type = "expand" >
                 <template #default = "props">
-                    <el-table :data = "props.row.orderShoeTypes" border>
+                    <el-table :data = "props.row.orderShoeTypes" border :row-key = "(row) => {return row.packagingInfoId}">
                         <el-table-column type="expand">
                             <template #default="scope">
                                 <el-table :data = "scope.row.shoeTypeBatchInfoList">
@@ -109,7 +108,7 @@
                             controls-position = "right"
                             @change="updateValue(scope.row)"
                             v-model = "scope.row.shoeTypeBatchData.unitPrice"
-                            :disabled="false">
+                            :disabled="priceChangeNotAllowed">
                             </el-input>
                         </template> 
                         </el-table-column>
@@ -119,7 +118,7 @@
                             controls-position = "right"
                             @change = "updateCurrencyValue(scope.row)"
                             v-model = "scope.row.shoeTypeBatchData.currencyType"
-                            :disabled="false"
+                            :disabled="unitChangeNotAllowed"
                             >
                             </el-input>
                         </template> 
@@ -134,11 +133,12 @@
 			<el-table-column prop = "shoeCid" label = "客户鞋型编号" sortable/>
             <el-table-column prop = "currentStatus" label = "订单状态" />
 
-            <el-table-column>
-            <template #default="scope">
-                    <el-button type="primary" size="default" 
+            <el-table-column label="备注">
+            <template #default="scope" >
+                    <el-button v-if="!scope.row.orderShoeRemarkExist" type="primary" size="default" @click="oprenRemarkDialog(scope.row)"
                         >添加备注
                     </el-button>
+                    <el-text v-if="scope.row.orderShoeRemarkExist">{{scope.row.orderShoeRemark}}</el-text>
             </template>
             </el-table-column>
             <<!-- el-table-column label = "添加客户鞋型编号">
@@ -153,13 +153,42 @@
         <span>
             <el-button @click="submitPriceForm">保存财务信息</el-button>
             <!-- <el-button @click="submitNewOrder">  </el-button> -->
+             <el-button @click="togglePriceChange"> 改变价格修改权限 </el-button>
+             <el-button @click="toggleUnitChange"> 改变货币单位修改权限 </el-button>
         </span>
 
 			</el-main>
 		</el-container>
 	</el-container>
 
+    <el-dialog 
+        title="鞋型备注"
+        v-model="remarkDialogVis"
+        width = "50%"
+        >
+        <el-form>
+            <el-form-item label="工艺备注">
+                <el-input type = "textarea" :rows=2 v-model="this.remarkForm.technicalRemark"></el-input>
+            </el-form-item>
 
+            <el-form-item label="材料备注">
+                <el-input type="textarea" :rows=2 v-model="this.remarkForm.materialRemark"></el-input>
+            </el-form-item>
+        </el-form>
+        
+        <template #footer>
+            <span>
+                <el-button @click="remarkDialogVis=false">取消</el-button>
+
+                <el-button type="primary" @click="submitRemarkForm">提交备注</el-button>
+                
+            </span>
+
+        </template>
+        
+        
+    
+    </el-dialog>
     <el-dialog
         title="包装资料上传"
         v-model="isSubmitDocVis"
@@ -258,8 +287,14 @@ export default {
             orderShoeTypeIdToUnitPrice:{},
             orderShoeTypeIdToCurrencyType:{},
             isSubmitDocVis:false,
+            remarkDialogVis:false,
             priceChangeNotAllowed:false,
             unitChangeNotAllowed:false,
+            remarkForm:{
+                        orderShoeId:'',
+                        technicalRemark:'',
+                        materialRemark:''
+            }
 
         }
     },
@@ -277,6 +312,20 @@ export default {
           this.orderData = response.data
           this.orderShoeData = response.data.orderShoeAllData
       	},
+        togglePriceChange()
+        {
+            this.priceChangeNotAllowed = !this.priceChangeNotAllowed
+        },
+        toggleUnitChange()
+        {
+            this.unitChangeNotAllowed = !this.unitChangeNotAllowed
+        },
+        oprenRemarkDialog(row)
+        {
+            console.log(row.orderShoeId)
+            this.remarkForm.orderShoeId = row.orderShoeId
+            this.remarkDialogVis = true
+        },
       	expandOpen(row, expand){
             console.log(this.expandedRowKeys)
             this.expandedRowKeys.push(row.shoeTypeId)
@@ -301,9 +350,31 @@ export default {
                     "unitPriceForm":this.orderShoeTypeIdToUnitPrice,
                     "currencyTypeForm":this.orderShoeTypeIdToCurrencyType
                 })
+            if (response.status === 200)
+            {
+                ElMessage.success('变更成功')
+                this.getOrderInfo()
+            }
+            else
+            {
+                ElMessage.error('备注变更失败')
+            }
             console.log(this.orderShoeTypeIdToUnitPrice)
 
             return
+        },
+        async submitRemarkForm(){
+            console.log(this.remarkForm)
+            const response = await axios.post(
+                `${this.$apiBaseUrl}/ordercreate/updateremark`, {
+                    "orderShoeRemarkForm":this.remarkForm
+            })
+            if (response.status === 200)
+            {
+                ElMessage.success('信息变更成功')
+                this.getOrderInfo()
+                this.remarkDialogVis = false
+            }
         },
         openSubmitDialog(){
             this.isSubmitDocVis = true
@@ -379,6 +450,9 @@ export default {
 	}
 }
 </script>
-<style scoped>
+<style >
 /* Add your styles here */
+.el-table .cell {
+    white-space: pre-line !important;
+}
 </style>

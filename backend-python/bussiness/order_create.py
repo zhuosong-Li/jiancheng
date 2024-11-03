@@ -94,7 +94,9 @@ def create_new_order():
 				customer_product_name = customer_product_name,
 				production_order_upload_status = "0",
 				process_sheet_upload_status = "0",
-				adjust_staff = "")
+				adjust_staff = "",
+				business_material_remark = "",
+				business_technical_remark = "")
 			db.session.add(new_order_shoe_entity)
 			db.session.flush()
 
@@ -233,5 +235,22 @@ def order_price_update():
 		for entity in entities:
 			entity.currency_type = currency_type
 			db.session.commit()
+
+	return jsonify({'msg':"ok"}), 200
+
+
+@order_create_bp.route("/ordercreate/updateremark", methods=['POST'])
+def order_remark_update():
+	print(request.json)
+	remark_form = request.json.get('orderShoeRemarkForm')
+	order_shoe_id = remark_form['orderShoeId']
+	business_technical_remark = remark_form['technicalRemark']
+	business_material_remark = remark_form['materialRemark']
+	order_shoe_entity = (db.session.query(OrderShoe)
+		.filter(OrderShoe.order_shoe_id == order_shoe_id)
+		.first())
+	order_shoe_entity.business_material_remark = business_material_remark
+	order_shoe_entity.business_technical_remark = business_technical_remark
+	db.session.commit()
 
 	return jsonify({'msg':"ok"}), 200
