@@ -14,8 +14,9 @@ def get_order_list():
     order_id = request.args.get("orderid")
     order_shoes = (
         db.session.query(OrderShoe, Shoe, ShoeType)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .join(ShoeType, ShoeType.shoe_id == Shoe.shoe_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Shoe, ShoeType.shoe_id == Shoe.shoe_id)
         .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(OrderShoe.order_id == order_id)
         .all()
@@ -50,6 +51,7 @@ def get_order_list():
                 "status": status,
             }
         )
+    print(result)
     return jsonify(result)
 
 
