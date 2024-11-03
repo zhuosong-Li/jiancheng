@@ -1318,6 +1318,7 @@ def store_outsource_for_order_shoe():
 
     total_outsource_amount = 0
     for row in outsource_input["outsourceAmount"]:
+        print(row)
         outsource_obj = {}
 
         # set outsource_batch_info_id
@@ -1326,9 +1327,9 @@ def store_outsource_for_order_shoe():
         outsource_obj["batch_outsource_amount"] = 0
         for i in range(34, 47):
             outsource_obj[f"size_{i}_outsource_amount"] = 0
-            if f"size{i}Val" in row:
-                outsource_obj[f"size_{i}_outsource_amount"] = int(row[f"size{i}Val"])
-                outsource_obj["batch_outsource_amount"] += int(row[f"size{i}Val"])
+            if f"size{i}" in row:
+                outsource_obj[f"size_{i}_outsource_amount"] = int(row[f"size{i}"])
+                outsource_obj["batch_outsource_amount"] += int(row[f"size{i}"])
 
         # set outsource_info_id
         outsource_obj["outsource_info_id"] = outsource_info_id
@@ -1342,6 +1343,7 @@ def store_outsource_for_order_shoe():
         total_outsource_amount += outsource_obj["batch_outsource_amount"]
 
     # set amount
+    print(total_outsource_amount)
     outsource_info = db.session.query(OutsourceInfo).get(outsource_info_id)
     outsource_info.outsource_amount = total_outsource_amount
     db.session.commit()
@@ -1454,16 +1456,15 @@ def get_outsource_material_shipping():
             OutsourceInfo,
             MaterialStorage.material_outsource_status,
             MaterialStorage.current_amount,
+            MaterialStorage.material_storage_color,
             Material,
             MaterialType,
             OutboundRecord,
-            Color,
         )
         .join(OrderShoe, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             MaterialStorage,
-            MaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+            MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id,
         )
         .join(
             Material,
@@ -1474,7 +1475,6 @@ def get_outsource_material_shipping():
             OutboundRecord,
             OutboundRecord.material_storage_id == MaterialStorage.material_storage_id,
         )
-        .join(Color, Color.color_id == MaterialStorage.material_storage_color)
         .filter(
             OutsourceInfo.outsource_info_id == outsource_info_id,
         )
@@ -1484,16 +1484,15 @@ def get_outsource_material_shipping():
             OutsourceInfo,
             SizeMaterialStorage.material_outsource_status,
             SizeMaterialStorage.total_current_amount.label("current_amount"),
+            SizeMaterialStorage.size_material_color,
             Material,
             MaterialType,
             OutboundRecord,
-            Color,
         )
         .join(OrderShoe, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
             SizeMaterialStorage,
-            SizeMaterialStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+            SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id,
         )
         .join(
             Material,
@@ -1505,7 +1504,6 @@ def get_outsource_material_shipping():
             OutboundRecord.size_material_storage_id
             == SizeMaterialStorage.size_material_storage_id,
         )
-        .join(Color, Color.color_id == SizeMaterialStorage.size_material_color)
         .filter(
             OutsourceInfo.outsource_info_id == outsource_info_id,
         )
@@ -1517,10 +1515,10 @@ def get_outsource_material_shipping():
             outsource_info,
             material_outsource_status,
             current_amount,
+            color_name,
             material,
             material_type,
             record,
-            color,
         ) = row
         obj = {
             "materialType": material_type.material_type_name,
@@ -1530,7 +1528,7 @@ def get_outsource_material_shipping():
             "outboundAmount": current_amount,
             "materialEstimateOutboundDate": outsource_info.material_estimated_outbound_date,
             "outboundDatetime": record.outbound_datetime,
-            "colorName": color.color_name,
+            "colorName": color_name,
         }
         result.append(obj)
     return result

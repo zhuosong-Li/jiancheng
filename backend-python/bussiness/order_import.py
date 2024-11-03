@@ -334,13 +334,19 @@ def submit_doc():
         print(file_path)
         file.save(file_path)
         order = db.session.query(Order).filter_by(order_rid=order_rid).first()
-        order.production_list_upload_status = "1"
+        # order.production_list_upload_status = "0"
         db.session.commit()
     elif file_type == "1":
         file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "生产数量表.xlsx")
         file.save(file_path)
         order = db.session.query(Order).filter_by(order_rid=order_rid).first()
         order.amount_list_upload_status = "1"
+        db.session.commit()
+    elif file_type == "2":
+        file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "包装资料.xlsx")
+        file.save(file_path)
+        order = db.session.query(Order).filter_by(order_rid=order_rid).first()
+        order.production_list_upload_status = "1"
         db.session.commit()
     return jsonify({"message": "File submitted successfully"}), 200
 

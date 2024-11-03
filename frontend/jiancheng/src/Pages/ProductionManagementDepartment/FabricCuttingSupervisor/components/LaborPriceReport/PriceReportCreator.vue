@@ -59,41 +59,31 @@ const deleteRow = (tableData, index) => {
     })
 }
 
-const handleSaveData = () => {
-    ElMessageBox.confirm('确定保存数据吗？', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-    }).then(async () => {
-        // insert price to table data
-        props.tableData.forEach(row => {
-            row["price"] = props.procedureInfo[row.procedure]["price"]
-            row["procedureId"] = props.procedureInfo[row.procedure]["id"]
-        })
-        await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
-            { reportId: props.reportId, newData: props.tableData })
-        ElMessage({
-            type: 'success',
-            message: '保存成功!'
-        });
-        window.location.reload()
-    }).catch(() => {
-        ElMessage({
-            type: 'info',
-            message: '已取消保存'
-        });
-        window.location.reload()
-    });
+const handleSaveData = async () => {
+    // insert price to table data
+    props.tableData.forEach(row => {
+        row["price"] = props.procedureInfo[row.procedure]["price"]
+        row["procedureId"] = props.procedureInfo[row.procedure]["id"]
+    })
+    await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
+        { reportId: props.reportId, newData: props.tableData })
+    ElMessage.success("保存成功")
 }
 const handleSubmit = async (rowData) => {
-    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
-    { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [props.reportId] })
-    if (response.status == 200) {
-        ElMessage.success("提交成功")
+    if (props.tableData.length == 0) {
+        ElMessage.error("内容不能为空")
     }
     else {
-        ElMessage.error("提交失败")
+        await handleSaveData()
+        const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
+        { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [props.reportId] })
+        if (response.status == 200) {
+            ElMessage.success("提交成功")
+            window.location.reload()
+        }
+        else {
+            ElMessage.error("提交失败")
+        }
     }
-    router.push(`/fabriccutting`)
 }
 </script>

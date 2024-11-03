@@ -204,7 +204,7 @@ class MaterialStorage(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
     material_model = db.Column(db.String(50), nullable=True)
-    order_shoe_type_id = db.Column(db.BigInteger)
+    order_shoe_id = db.Column(db.BigInteger)
     material_id = db.Column(db.BigInteger, nullable=False)
     estimated_inbound_amount = db.Column(db.DECIMAL(10, 5))
     actual_inbound_amount = db.Column(db.DECIMAL(10, 5))
@@ -787,9 +787,7 @@ class SizeMaterialStorage(db.Model):
         db.BigInteger,
     )
     size_material_color = db.Column(db.String(40), nullable=True)
-    order_shoe_type_id = db.Column(
-        db.BigInteger,
-    )
+    order_shoe_id = db.Column(db.BigInteger)
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)

@@ -14,8 +14,10 @@
                         <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
                         <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
                         <el-descriptions-item label="工价单状态">{{ statusName }}</el-descriptions-item>
-                        <el-descriptions-item label="针车预备开始日期">{{ props.preSewingProductionStartDate }}</el-descriptions-item>
-                        <el-descriptions-item label="针车预备结束日期">{{ props.preSewingProductionEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="针车预备开始日期">{{ props.preSewingProductionStartDate
+                            }}</el-descriptions-item>
+                        <el-descriptions-item label="针车预备结束日期">{{ props.preSewingProductionEndDate
+                            }}</el-descriptions-item>
                         <el-descriptions-item label="针车开始日期">{{ props.productionStartDate }}</el-descriptions-item>
                         <el-descriptions-item label="针车结束日期">{{ props.productionEndDate }}</el-descriptions-item>
                     </el-descriptions>
@@ -31,8 +33,8 @@
                             <SewingPriceReportTable :tableData="preSewingTableData"
                                 :procedureInfo="preSewingProcedureInfo" />
                         </div>
-                        <div v-else-if="item.key === 2 && tableData !== null">
-                            <SewingPriceReportTable :tableData="tableData" :procedureInfo="procedureInfo" />
+                        <div v-else-if="item.key === 2 && sewingTableData !== null">
+                            <SewingPriceReportTable :tableData="sewingTableData" :procedureInfo="procedureInfo" />
                         </div>
                     </el-tab-pane>
                 </el-tabs>
@@ -48,8 +50,8 @@
                         <div v-if="item.key === 1 && preSewingTableData !== null">
                             <PreviewReportPage :tableData="preSewingTableData" />
                         </div>
-                        <div v-else-if="item.key === 2 && tableData !== null">
-                            <PreviewReportPage :tableData="tableData" />
+                        <div v-else-if="item.key === 2 && sewingTableData !== null">
+                            <PreviewReportPage :tableData="sewingTableData" />
                         </div>
                     </el-tab-pane>
                 </el-tabs>
@@ -72,8 +74,8 @@ const preSewingTableData = ref(null)
 const pewSewingReportId = ref(null)
 const preSewingProcedureInfo = ref({})
 
-const tableData = ref(null)
-const reportId = ref(null)
+const sewingTableData = ref(null)
+const sewingReportId = ref(null)
 const procedureInfo = ref({})
 const statusName = ref('')
 const rejectionReason = ref('')
@@ -135,14 +137,14 @@ const getPriceReportDetail = async () => {
     }
     const response = await axios.get(`${apiBaseUrl}/production/getpricereportdetailbyordershoeid`, { params })
     if (response.status == 200) {
-        tableData.value = response.data.detail
-        reportId.value = response.data.metaData.reportId
+        sewingTableData.value = response.data.detail
+        sewingReportId.value = response.data.metaData.reportId
         statusName.value = response.data.metaData.statusName
     }
 }
 
 const handleSaveData = async () => {
-    console.log(preSewingTableData.value, tableData.value)
+    console.log(preSewingTableData.value, sewingTableData.value)
     console.log(preSewingProcedureInfo.value, procedureInfo.value)
     preSewingTableData.value.forEach(row => {
         row["price"] = preSewingProcedureInfo.value[row.procedure]["price"]
@@ -151,12 +153,12 @@ const handleSaveData = async () => {
     const response1 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
         { reportId: pewSewingReportId.value, newData: preSewingTableData.value })
 
-    tableData.value.forEach(row => {
+    sewingTableData.value.forEach(row => {
         row["price"] = procedureInfo.value[row.procedure]["price"]
         row["procedureId"] = procedureInfo.value[row.procedure]["id"]
     })
     const response2 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
-        { reportId: reportId.value, newData: tableData.value })
+        { reportId: sewingReportId.value, newData: sewingTableData.value })
 
     if (response1.status == 200 && response2.status == 200) {
         ElMessage.success("保存成功")
@@ -167,14 +169,20 @@ const handleSaveData = async () => {
 }
 
 const handleSubmit = async () => {
-    const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`,
-        { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [pewSewingReportId.value, reportId.value] })
-    if (response.status == 200) {
-        ElMessage.success("提交成功")
+    if (preSewingTableData.value.length == 0 || sewingTableData.value == 0) {
+        ElMessage.error("内容不能为空")
     }
     else {
-        ElMessage.error("提交失败")
+        await handleSaveData()
+        try {
+            await axios.post(`${apiBaseUrl}/production/submitpricereport`,
+                { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [pewSewingReportId.value, sewingReportId.value] })
+            ElMessage.success("提交成功")
+        }
+        catch (error) {
+            ElMessage.error("提交失败")
+        }
     }
-    router.push(`/sewingmachine`)
+
 }
 </script>

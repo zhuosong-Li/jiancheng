@@ -5,7 +5,7 @@
         >
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="4" :offset="0"
+        <el-col :span="8" :offset="0"
             >
             <el-button size="default" type="primary" @click="openImportDialog"
                 >通过EXCEL上传订单</el-button
@@ -14,7 +14,7 @@
                 >创建订单</el-button
             >
         </el-col>
-        <el-col :span="4" :offset="15"
+        <el-col :span="4" :offset="5"
             ><el-input
                 v-model="orderRidFilter"
                 placeholder="请输入订单号"
@@ -25,7 +25,7 @@
             ></el-input>
         </el-col>
 
-        <el-col :span="4" :offset="19"
+        <el-col :span="4" :offset="0"
             ><el-input
                 v-model="orderCidFilter"
                 placeholder="请输入客户订单号"
@@ -45,7 +45,7 @@
             <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
             <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
             <el-table-column prop="orderStatus" label="订单状态" />
-            <el-table-column label="操作">
+            <el-table-column label="操作" width = "300">
                 <template #default="scope">
                     <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
                         >查看详情</el-button
@@ -449,7 +449,7 @@
                         <template #default="scope">
                             <el-input size = small
                             v-model = "props.row.quantityMapping[scope.row.packagingInfoId]"
-                            placeholder = '123'controls-position = "right"
+                            controls-position = "right"
                             >
                             </el-input>
                         </template>

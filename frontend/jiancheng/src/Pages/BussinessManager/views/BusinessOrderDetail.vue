@@ -40,12 +40,12 @@
 	                        <el-button
 	                            type="primary"
 	                            size="default"
-	                            @click="openSubmitDocDialog(0)"
+	                            @click="openSubmitDialog()"
 	                            >上传</el-button
 	                        >
-	                        <el-button v-if="orderDocData.productionDoc === '已上传'" type="primary" size="default" @click="downloadDoc(0)">查看</el-button>
+	                        <el-button v-if="orderData.wrapRequirementUploadStatus === 1" type="primary" size="default" @click="download(2)">查看</el-button>
 	                    </el-descriptions-item>
-	                    <el-descriptions-item label="生产数量单上传状态" align="center"
+	                    <!-- <el-descriptions-item label="生产数量单上传状态" align="center"
 	                        >{{ orderDocData.amountDoc }}
 	                        <el-button
 	                            type="primary"
@@ -54,44 +54,61 @@
 	                            >上传</el-button
 	                        >
 	                        <el-button v-if="orderDocData.amountDoc === '已上传'" type="primary" size="default" @click="downloadDoc(1)">查看</el-button>
-	                    </el-descriptions-item>
+	                    </el-descriptions-item> -->
 	                </el-descriptions>
 	            </el-col>
-	            <el-button type = primary size = 'default' @click="checkdata">CHECK</el-button>
 	        </el-row>
 	        <el-table :data="this.orderShoeData" border stripe height = "900"
-        	:row-key = "(row) => {return row.shoeId}"
+        	:row-key = "(row) => {return row.orderShoeTypeId}"
                 @expand-change = "expandOpen" :expand-row-keys = "expandedRowKeys" >
             <el-table-column type = "expand" >
                 <template #default = "props">
-                    <el-table :data = "props.row.orderShoeTypeBatchInfo" border>
-                        <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
-                        <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                        <el-table-column prop="size34Ratio" label="34" />
-                        <el-table-column prop="size35Ratio" label="35" />
-                        <el-table-column prop="size36Ratio" label="36" />
-                        <el-table-column prop="size37Ratio" label="37" />
-                        <el-table-column prop="size38Ratio" label="38" />
-                        <el-table-column prop="size39Ratio" label="39" />
-                        <el-table-column prop="size40Ratio" label="40" />
-                        <el-table-column prop="size41Ratio" label="41" />
-                        <el-table-column prop="size42Ratio" label="42" />
-                        <el-table-column prop="size43Ratio" label="43" />
-                        <el-table-column prop="size44Ratio" label="44" />
-                        <el-table-column prop="size45Ratio" label="45" />
-                        <el-table-column prop="size46Ratio" label="46" />
-                        <el-table-column prop="totalQuantityInRatio" label="比例和"/>
-                        <el-table-column label="单位数量">
+                    <el-table :data = "props.row.orderShoeTypes" border>
+                        <el-table-column prop="shoeTypeColorName" label="颜色名称" sortable/>
+                        <el-table-column prop="shoeTypeBatchData.size34Amount" label="34" />
+                        <el-table-column prop="shoeTypeBatchData.size35Amount" label="35" />
+                        <el-table-column prop="shoeTypeBatchData.size36Amount" label="36" />
+                        <el-table-column prop="shoeTypeBatchData.size37Amount" label="37" />
+                        <el-table-column prop="shoeTypeBatchData.size38Amount" label="38" />
+                        <el-table-column prop="shoeTypeBatchData.size39Amount" label="39" />
+                        <el-table-column prop="shoeTypeBatchData.size40Amount" label="40" />
+                        <el-table-column prop="shoeTypeBatchData.size41Amount" label="41" />
+                        <el-table-column prop="shoeTypeBatchData.size42Amount" label="42" />
+                        <el-table-column prop="shoeTypeBatchData.size43Amount" label="43" />
+                        <el-table-column prop="shoeTypeBatchData.size44Amount" label="44" />
+                        <el-table-column prop="shoeTypeBatchData.size45Amount" label="45" />
+                        <el-table-column prop="shoeTypeBatchData.size46Amount" label="46" />
+                        <el-table-column prop = "shoeTypeBatchData.totalAmount" label="总数量"/>
+                        
+                        <el-table-column label="金额">
                         <template #default="scope">
                             <el-input size = small
-                            v-model = "props.row.quantityMapping[scope.row.packagingInfoId]"
-                            placeholder = '123'controls-position = "right"
+                            controls-position = "right"
+                            @change="updateValue(scope.row)"
+                            v-model = "scope.row.shoeTypeBatchData.unitPrice">
+                            </el-input>
+                        </template> 
+                        </el-table-column>
+                        <el-table-column label="金额单位">
+                        <template #default="scope">
+                            <el-input size = small
+                            controls-position = "right"
+                            @change = "updateCurrencyValue(scope.row)"
+                            v-model = "scope.row.shoeTypeBatchData.currencyType"
                             >
                             </el-input>
-                        </template>
+                        </template> 
                         </el-table-column>
-                        <el-table-column label="总数量">
+                        <el-table-column label="总金额">
+                        <template #default="scope">
+                            <el-input size = small
+                            controls-position = "right"
+                            v-model = "scope.row.shoeTypeBatchData.totalPrice">
+                            </el-input>
+                        </template> 
                         </el-table-column>
+
+
                     </el-table>
                 </template>
             </el-table-column>
@@ -115,10 +132,44 @@
             </el-table-column> -->
 
         </el-table>
+        <span>
+            <el-button @click="submitPriceForm">保存财务信息</el-button>
+            <!-- <el-button @click="submitNewOrder">  </el-button> -->
+        </span>
+
 			</el-main>
 		</el-container>
 	</el-container>
 
+
+    <el-dialog
+        title="包装资料上传"
+        v-model="isSubmitDocVis"
+        width="30%"
+    >
+        <el-upload
+            ref="uploadDoc"
+            :action="`${this.$apiBaseUrl}/orderimport/submitdoc`"
+            :headers="uploadHeaders"
+            :auto-upload="false"
+            accept=".xls,.xlsx"
+            :file-list="fileList"
+            :limit="1"
+            :data="{ fileType: 2, orderRid: orderData.orderRid }"
+            :on-success="handleUploadSuccess"
+            :on-error="handleUploadError"
+        >
+            <el-button  type="primary">选择文件</el-button>
+        </el-upload>
+
+
+        <template #footer>
+            <span>
+            <el-button @click="handleDialogClose">取消</el-button>
+            <el-button type="primary" @click="submitDoc">上传</el-button>
+        </span>
+        </template>
+    </el-dialog>
 
 	
         <!-- <el-row :gutter="20">
@@ -164,17 +215,31 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
+
 export default {
     props: ['orderId'],
     components: {
     	AllHeader
     },
+    computed:{
+        uploadHeaders() {
+              return {
+                Authorization: `Bearer ${this.token}`
+              };
+            }
+    },
     data() {
         return {
+            token: localStorage.getItem('token'),
             orderData: {},
             orderShoeData:[],
             orderDocData:{},
             expandedRowKeys:[],
+            orderShoeTypeIdToUnitPrice:{},
+            orderShoeTypeIdToCurrencyType:{},
+            isSubmitDocVis:false
+
         }
     },
     mounted() {
@@ -196,6 +261,69 @@ export default {
             console.log(this.expandedRowKeys)
             this.expandedRowKeys.push(row.shoeTypeId)
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
+        },
+        updateValue(row)
+        {
+            row.shoeTypeBatchData.totalPrice = row.shoeTypeBatchData.unitPrice * row.shoeTypeBatchData.totalAmount
+            this.orderShoeTypeIdToUnitPrice[row.orderShoeTypeId] = row.shoeTypeBatchData.unitPrice
+
+        },
+        updateCurrencyValue(row)
+        {
+            this.orderShoeTypeIdToCurrencyType[row.orderShoeTypeId] = row.shoeTypeBatchData.currencyType
+            console.log(this.orderShoeTypeIdToCurrencyType)
+
+        },
+        async submitPriceForm()
+        {   
+            const response = await axios.post(
+                `${this.$apiBaseUrl}/ordercreate/updateprice`, {
+                    "unitPriceForm":this.orderShoeTypeIdToUnitPrice,
+                    "currencyTypeForm":this.orderShoeTypeIdToCurrencyType
+                })
+            console.log(this.orderShoeTypeIdToUnitPrice)
+
+            return
+        },
+        openSubmitDialog(){
+            this.isSubmitDocVis = true
+        },
+        handleUploadSuccess(response, file) {
+            // Handle the successful response
+            console.log('Upload successful:', response)
+            ElMessage.success('上传成功')
+            this.isSubmitDocVis = false
+        },
+        handleUploadError(error, file) {
+            // Handle any errors that occurred during the upload
+            console.error('Upload error:', error)
+            ElMessage.error('上传失败')
+            this.fileList = []
+            this.isSubmitDocVis = false
+
+        },
+        download(type) {
+            window.open(
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${this.orderData.orderRid}&filetype=${type}`
+            )
+        },
+        async submitDoc() {
+            try {
+                const loadingInstance = this.$loading({
+                        lock: true,
+                        text: '等待中，请稍后...',
+                        background: 'rgba(0, 0, 0, 0.7)'
+                    })
+                // Manually submit the file without reopening the dialog
+                await this.$refs.uploadDoc.submit().then(() => {
+                    loadingInstance.close()
+                })
+            }
+            catch (error) {
+                console.error('Upload error:', error)
+                ElMessage.error('上传失败')
+            }
+
         },
       // async getOrderOrderShoe() {
       //       const response = await axios.get(`${this.$apiBaseUrl}/order/getbusinessorderinfo`, {

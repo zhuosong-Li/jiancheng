@@ -1,0 +1,31 @@
+前端
+1. 安装nodejs和npm https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
+2. cd frontend/jiancheng
+3. npm install
+4. npm run dev
+
+后端
+1. 安装python https://www.python.org/
+2. cd backend-python
+3. 虚拟环境 python3 -m venv .venv
+4. .venv/bin/activate
+5. pip install -r requirement.txt
+6. py main.py
+
+数据库
+1. 安装mysql https://dev.mysql.com/downloads/installer/
+2. 打开 mysql workbench，创建连接
+    "db_username": "jiancheng_dev1",
+    "db_password": "123456Ab",
+    "db_name": "jiancheng",
+    "db_host": "rm-wz9e6065n2281l3i56o.mysql.rds.aliyuncs.com",
+
+提交代码
+1. 在local branch把local commit合成1个commit：git rebase -i HEAD~<# of local commit made>
+2. 到main弄最新的改动: git checkout main -> git pull
+3. 在local branch和main rebase: git checkout <your_branch> -> git rebase main
+4. git push --force
+5. 去github repo发pr
+
+打开网页
+1. http://localhost:5173/login

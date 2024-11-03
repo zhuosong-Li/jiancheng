@@ -332,27 +332,39 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async outboundMaterial(row) {
-            await this.getOutsourceInfo(row)
+            this.currentRow = row
+            await this.getOutsourceInfo()
             if (row.materialCategory == 1) {
                 let params = { "sizeMaterialStorageId": row.materialStorageId }
                 let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
                 this.outboundForm.multipleOutboundTable = response.data
                 this.isMultiOutboundDialogVisible = true
-                this.currentRow = row
             } else {
                 this.isOutboundDialogVisible = true
-                this.currentRow = row
             }
         },
-        async getOutsourceInfo(row) {
-            let params = { "orderShoeId": row.orderShoeId }
+        async getOutsourceInfo() {
+            let params = { "orderShoeId": this.currentRow.orderShoeId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
             this.outboundForm.outsourceInfo = []
+            console.log(response.data)
             response.data.forEach(element => {
                 if (element.outsourceStatus == 2 || element.outsourceStatus == 4) {
                     this.outboundForm.outsourceInfo.push(element)
                 }
             });
+        },
+        async finishOutsourceOutbound(row) {
+            try {
+                let data = { "outsourceInfoId": row.outsourceInfoId }
+                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishoutsourceoutbound`, data)
+                await this.getOutsourceInfo()
+                ElMessage.success("外包出库成功")
+            }
+            catch (error) {
+                console.log(error)
+                ElMessage.error("外包出库失败")
+            }
         },
         async finishOutbound(row) {
             ElMessageBox.alert('该操作完成对此鞋型材料出库，是否继续？', '警告', {
