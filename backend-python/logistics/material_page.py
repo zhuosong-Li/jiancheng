@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from datetime import datetime
 from app_config import app, db
 from models import *
+from sqlalchemy import text
 
 material_page_bp = Blueprint("material_page_bp", __name__)
 
@@ -306,6 +307,7 @@ def get_all_material_storage():
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
+
     query2 = (
         db.session.query(
             MaterialType.material_type_name,
@@ -335,25 +337,25 @@ def get_all_material_storage():
     )
 
     query = query1.union(query2)
+
+    # Applying the filters
     if material_type:
         query = query.filter(MaterialType.material_type_name.like(f"%{material_type}%"))
     if material_name:
         query = query.filter(Material.material_name.like(f"%{material_name}%"))
     if material_spec:
-        query = query.filter(
-            specification.material_specification.like(f"%{material_spec}%")
-        )
+        query = query.filter(text("specification LIKE :spec")).params(spec=f"%{material_spec}%")
     if warehouse_name:
-        query = query.filter(
-            MaterialWarehouse.material_warehouse_name.like(f"%{warehouse_name}%")
-        )
+        query = query.filter(MaterialWarehouse.material_warehouse_name.like(f"%{warehouse_name}%"))
     if factory_name:
         query = query.filter(Supplier.supplier_name.like(f"%{factory_name}%"))
     if order_id:
         query = query.filter(Order.order_rid.like(f"%{order_id}%"))
     if order_shoe_id:
         query = query.filter(Shoe.shoe_rid.like(f"%{order_shoe_id}%"))
+
     material_storages = query.all()
+
 
     result = []
     for material_storage in material_storages:

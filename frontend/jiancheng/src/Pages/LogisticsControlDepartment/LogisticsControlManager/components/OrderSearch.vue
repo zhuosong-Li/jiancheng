@@ -13,7 +13,7 @@
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @change=""
+                @change="tableFilter"
             ></el-input>
         </el-col>
         <el-col :span="6" :offset="6" style="white-space: nowrap">
@@ -24,12 +24,12 @@
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @change=""
+                @change="tableFilter"
             ></el-input>
         </el-col>
     </el-row>
     <el-row>
-        <el-table :data="orderData" border stripe height="600">
+        <el-table :data="orderFilterData" border stripe height="600">
             <el-table-column type="expand">
                 <template #default="props">
                     <el-table :data="props.row.shoes" :border="true">
@@ -92,6 +92,13 @@
             <el-table-column prop="createTime" label="订单日期"></el-table-column>
             <el-table-column prop="deadlineTime" label="交货日期"></el-table-column>
             <el-table-column prop="status" label="订单状态"></el-table-column>
+            <el-table-column label="操作" width="350">
+                <template #default="scope">
+                    <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看一次采购订单</el-button>
+                    <el-button type="primary" size="default" @click="handleSecondRowClick(scope.row)">查看二次采购订单</el-button>
+                </template>
+            </el-table-column>
+            
         </el-table>
     </el-row>
     <el-row :gutter="20">
@@ -120,12 +127,15 @@ export default {
             Search,
             orderSearch: '',
             orderData: [],
+            orderFilterData: [],
             customerSearch: '',
             currentPage: 1
         }
     },
-    mounted() {
-        this.getOrderData(this.currentPage)
+    async mounted() {
+        this.$setAxiosToken()
+        await this.getOrderData(this.currentPage)
+        this.orderFilterData = this.orderData
     },
     methods: {
         async getOrderData(page) {
@@ -133,6 +143,29 @@ export default {
                 `${this.$apiBaseUrl}/order/getorderfullinfo?page=${page}&orderSearch=${this.orderSearch}&customerSearch=${this.customerSearch}`
             )
             this.orderData = response.data
+        },
+        handleRowClick(row) {
+            // Use orderRid to open a new page, here using window.open
+            const url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+            window.open(url, '_blank'); // Opens in a new tab
+        },
+        handleSecondRowClick(row) {
+            // Use orderRid to open a new page, here using window.open
+            const url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            window.open(url, '_blank'); // Opens in a new tab
+        },
+        tableFilter() {
+            this.getOrderData(this.currentPage)
+            if (this.orderSearch === '' && this.customerSearch === '') {
+                this.orderFilterData = this.orderData
+            } else {
+                this.orderFilterData = this.orderData.filter((item) => {
+                    return (
+                        item.orderRid.includes(this.orderSearch) &&
+                        item.customerName.includes(this.customerSearch)
+                    )
+                })
+            }
         }
     }
 }

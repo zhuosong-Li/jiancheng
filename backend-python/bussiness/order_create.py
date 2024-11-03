@@ -115,7 +115,8 @@ def create_new_order():
 				is_molding_outsourced = 0,
 				is_material_arrived = 0,
 				order_shoe_id = new_order_shoe_entity.order_shoe_id)
-			db.session.add(new_order_shoe_status_entity)
+			
+			db.session.add(new_order_shoe_production_info_entity)
 			db.session.flush()
 			shoe_id_to_order_shoe_id[shoe_id] = new_order_shoe_entity.order_shoe_id
 

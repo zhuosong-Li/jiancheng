@@ -9,6 +9,7 @@ from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from itertools import groupby
 from operator import itemgetter
 from general_document.purchase_divide_order import generate_excel_file
+from general_document.material_statistics import generate_material_statistics_file
 import os
 import zipfile
 
@@ -19,7 +20,7 @@ first_purchase_bp = Blueprint("first_purrchase_bp", __name__)
 def get_order_shoe_list():
     order_id = request.args.get("orderid")
 
-    # Query the necessary data with joins and filters
+    # Querying the necessary data with joins and filters
     entities = (
         db.session.query(
             Order,
@@ -37,14 +38,18 @@ def get_order_shoe_list():
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, ShoeType.color_id == Color.color_id)
-        .outerjoin(Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id)
+        .outerjoin(
+            Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id
+        )  # Assuming BOM is optional
         .outerjoin(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(Order.order_id == order_id)
         .all()
     )
 
-    # Initialize the result dictionary
+    print(entities)
+
+    # Initialize the result list
     result_dict = {}
 
     # Loop through the entities to build the result
@@ -71,89 +76,113 @@ def get_order_shoe_list():
             .all()
         )
         for status in statuses:
-            status_string += status.OrderShoeStatusReference.status_name + " "
-
+            status_string = (
+                status_string + status.OrderShoeStatusReference.status_name + " "
+            )
+        if purchase_order:
+            if purchase_order.purchase_order_status == "1":
+                current_status = "已保存"
+            elif purchase_order.purchase_order_status == "2":
+                current_status = "已提交"
+        else:
+            current_status = "未填写"
         # Grouping by shoe_rid (inheritId) to avoid duplicate shoes
+        # Initialize the result dictionary for the shoe if not already present
         if shoe.shoe_rid not in result_dict:
             result_dict[shoe.shoe_rid] = {
                 "orderId": order.order_rid,
                 "orderShoeId": order_shoe.order_shoe_id,
                 "inheritId": shoe.shoe_rid,
-                "status": status_string.strip(),
-                "currentStatus": "未填写",  # Default status to 未全部确认
-                "totalBomId": total_bom.total_bom_rid if total_bom else "",
+                "currentStatus": current_status,
+                "totalBomId": total_bom.total_bom_rid if total_bom else "未填写",
                 "purchaseOrderId": (
-                    purchase_order.purchase_order_rid if purchase_order else ""
+                    purchase_order.purchase_order_rid if purchase_order else "未填写"
                 ),
+                "status": status_string,
                 "customerId": order_shoe.customer_product_name,
                 "designer": shoe.shoe_designer,
                 "editter": order_shoe.adjust_staff,
                 "typeInfos": [],  # Initialize list for type info (colors, etc.)
-                "colorSet": set(),  # Initialize a set to track colors for each shoe
+                "colorSet": set(),  # Initialize set to track colors and prevent duplicate entries
             }
 
-        if color.color_name not in result_dict[shoe.shoe_rid]["colorSet"]:
-            # Initialize variables for BOM and PurchaseOrder details
-            first_bom_id, first_bom_status = None, None
-            first_purchase_order_id, first_purchase_order_status = None, None
-            second_bom_id, second_bom_status = None, None
-            second_purchase_order_id, second_purchase_order_status = None, None
+        # Check if this color already exists in typeInfos
+        existing_entry = next(
+            (
+                info
+                for info in result_dict[shoe.shoe_rid]["typeInfos"]
+                if info["color"] == color.color_name
+            ),
+            None,
+        )
 
-            # Attach BOM data if applicable
-            if bom and bom.bom_type == 0:
+        # Prepare BOM and PurchaseOrder details
+        first_bom_id = None
+        first_bom_status = "未填写"
+        first_purchase_order_id = None
+        first_purchase_order_status = "未填写"
+        second_bom_id = None
+        second_bom_status = "未填写"
+        second_purchase_order_id = None
+        second_purchase_order_status = "未填写"
+
+        # Set BOM details based on bom_type
+        if bom:
+            if bom.bom_type == 0:
                 first_bom_id = bom.bom_rid
-                if bom.bom_status == "1":
-                    first_bom_status = "材料已保存"
-                elif bom.bom_status == "2":
-                    first_bom_status = "材料已提交"
-                elif bom.bom_status == "3":
-                    first_bom_status = "等待用量填写"
-                elif bom.bom_status == "4":
-                    first_bom_status = "用量填写已保存"
-                elif bom.bom_status == "5":
-                    first_bom_status = "用量填写已提交"
-                elif bom.bom_status == "6":
-                    first_bom_status = "用量填写已下发"
-
-            # Attach PurchaseOrder data if applicable
-            if purchase_order and purchase_order.purchase_order_type == "F":
-                first_purchase_order_id = purchase_order.purchase_order_rid
-                if purchase_order.purchase_order_status == "1":
-                    first_purchase_order_status = "已保存"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已保存"
-
-                elif purchase_order.purchase_order_status == "2":
-                    first_purchase_order_status = "已提交"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已提交"
-                elif purchase_order.purchase_order_status == "3":
-                    first_purchase_order_status = "已下发"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已下发"
-
-            # Same logic for second BOM and PurchaseOrder
-            if bom and bom.bom_type != 0:
+                first_bom_status = {
+                    "1": "材料已保存",
+                    "2": "材料已提交",
+                    "3": "等待用量填写",
+                    "4": "用量填写已保存",
+                    "5": "用量填写已提交",
+                    "6": "用量填写已下发",
+                }.get(bom.bom_status, "未填写")
+            elif bom.bom_type == 1:
                 second_bom_id = bom.bom_rid
-                if bom.bom_status == "1":
-                    second_bom_status = "已保存"
-                elif bom.bom_status == "2":
-                    second_bom_status = "已提交"
-                elif bom.bom_status == "3":
-                    second_bom_status = "已下发"
+                second_bom_status = {"1": "已保存", "2": "已提交", "3": "已下发"}.get(
+                    bom.bom_status, "未填写"
+                )
 
-            if purchase_order and purchase_order.purchase_order_type == "S":
+        # Set PurchaseOrder details based on purchase_order_type
+        if purchase_order:
+            if purchase_order.purchase_order_type == "F":
+                first_purchase_order_id = purchase_order.purchase_order_rid
+                first_purchase_order_status = {
+                    "1": "已保存",
+                    "2": "已提交",
+                    "3": "已下发",
+                }.get(purchase_order.purchase_order_status, "未填写")
+            elif purchase_order.purchase_order_type == "S":
                 second_purchase_order_id = purchase_order.purchase_order_rid
-                if purchase_order.purchase_order_status == "1":
-                    second_purchase_order_status = "已保存"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已保存"
-                elif purchase_order.purchase_order_status == "2":
-                    second_purchase_order_status = "已提交"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已提交"
-                elif purchase_order.purchase_order_status == "3":
-                    second_purchase_order_status = "已下发"
-                    result_dict[shoe.shoe_rid]["currentStatus"] = "已下发"
+                second_purchase_order_status = {
+                    "1": "已保存",
+                    "2": "已提交",
+                    "3": "已下发",
+                }.get(purchase_order.purchase_order_status, "未填写")
 
-            # Append BOM and PurchaseOrder data to typeInfos
+        # If the color entry already exists, update it with BOM details
+        if existing_entry:
+            print(existing_entry)
+            # Update only if fields are not already filled to prevent overwriting
+            if first_bom_id and existing_entry.get("firstBomId") == "未填写":
+                existing_entry["firstBomId"] = first_bom_id
+                existing_entry["firstBomStatus"] = first_bom_status
+                existing_entry["firstPurchaseOrderId"] = first_purchase_order_id
+                existing_entry["firstPurchaseOrderStatus"] = first_purchase_order_status
+
+            if second_bom_id and existing_entry.get("secondBomId") == "未填写":
+                existing_entry["secondBomId"] = second_bom_id
+                existing_entry["secondBomStatus"] = second_bom_status
+                existing_entry["secondPurchaseOrderId"] = second_purchase_order_id
+                existing_entry["secondPurchaseOrderStatus"] = (
+                    second_purchase_order_status
+                )
+        else:
+            # If the color doesn't exist, create a new entry in typeInfos
             result_dict[shoe.shoe_rid]["typeInfos"].append(
                 {
+                    "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
                     "orderShoeRid": shoe.shoe_rid,
                     "color": color.color_name,
                     "image": (
@@ -162,36 +191,26 @@ def get_order_shoe_list():
                         else None
                     ),
                     "firstBomId": first_bom_id if first_bom_id else "未填写",
-                    "firstBomStatus": first_bom_status if first_bom_id else "未填写",
+                    "firstBomStatus": first_bom_status,
                     "firstPurchaseOrderId": (
                         first_purchase_order_id if first_purchase_order_id else "未填写"
                     ),
-                    "firstPurchaseOrderStatus": (
-                        first_purchase_order_status
-                        if first_purchase_order_id
-                        else "未填写"
-                    ),
+                    "firstPurchaseOrderStatus": first_purchase_order_status,
                     "secondBomId": second_bom_id if second_bom_id else "未填写",
-                    "secondBomStatus": second_bom_status if second_bom_id else "未填写",
+                    "secondBomStatus": second_bom_status,
                     "secondPurchaseOrderId": (
                         second_purchase_order_id
                         if second_purchase_order_id
                         else "未填写"
                     ),
-                    "secondPurchaseOrderStatus": (
-                        second_purchase_order_status
-                        if second_purchase_order_id
-                        else "未填写"
-                    ),
+                    "secondPurchaseOrderStatus": second_purchase_order_status,
                 }
             )
 
-            # Add color to colorSet to prevent future duplicates
-            result_dict[shoe.shoe_rid]["colorSet"].add(color.color_name)
+        # Add the color to colorSet to prevent future duplicates
+        result_dict[shoe.shoe_rid]["colorSet"].add(color.color_name)
 
-    # Determine currentStatus for each shoe
-
-    # Remove colorSet before returning the result
+    # Remove the colorSet before returning the result
     for shoe_rid in result_dict:
         result_dict[shoe_rid].pop("colorSet")
 
@@ -723,6 +742,7 @@ def submit_purchase_divide_orders():
     order_shoe_id = order_info.OrderShoe.order_shoe_id
     order_rid = order_info.Order.order_rid
     order_shoe_rid = order_info.Shoe.shoe_rid
+    materials_data = []
     query = (
         db.session.query(
             PurchaseDivideOrder,
@@ -758,6 +778,17 @@ def submit_purchase_divide_orders():
         material_type,
         supplier,
     ) in query:
+        materials_data.append(
+            {
+                "supplier_name": supplier.supplier_name,
+                "material_name": material.material_name,
+                "model": bom_item.material_model or "",
+                "specification": bom_item.material_specification or "",
+                "approval_amount": bom_item.total_usage,  # Assuming bom_item has approval quantity
+                "purchase_amount": purchase_order_item.purchase_amount,
+            }
+        )
+
         material_id = bom_item.material_id
         material_quantity = purchase_order_item.purchase_amount
         material_specification = bom_item.material_specification
@@ -766,6 +797,7 @@ def submit_purchase_divide_orders():
         size_type = bom_item.size_type
         if purchase_divide_order.purchase_divide_order_type == "N":
             material_storage = MaterialStorage(
+                order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 estimated_inbound_amount=material_quantity,
                 actual_inbound_amount=0,
@@ -792,6 +824,7 @@ def submit_purchase_divide_orders():
             size_45_quantity = purchase_order_item.size_45_purchase_amount
 
             size_material_storage = SizeMaterialStorage(
+                order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 total_estimated_inbound_amount=material_quantity,
                 size_34_estimated_inbound_amount=0,
@@ -919,17 +952,17 @@ def submit_purchase_divide_orders():
             purchase_divide_order_dict[purchase_order_id]["seriesData"].append(
                 {
                     "物品名称": (
-                        material.material_name + " " + (bom_item.material_model
-                        if bom_item.material_model
-                        else "")
+                        material.material_name
                         + " "
-                        + (bom_item.material_specification
-                        if bom_item.material_specification
-                        else "")
+                        + (bom_item.material_model if bom_item.material_model else "")
                         + " "
-                        + (bom_item.bom_item_color
-                        if bom_item.bom_item_color
-                        else "")
+                        + (
+                            bom_item.material_specification
+                            if bom_item.material_specification
+                            else ""
+                        )
+                        + " "
+                        + (bom_item.bom_item_color if bom_item.bom_item_color else "")
                     ),
                     "数量": purchase_order_item.purchase_amount,
                     "单位": material.material_unit,
@@ -937,7 +970,31 @@ def submit_purchase_divide_orders():
                     "用途说明": "",
                 }
             )
+    customer_name = (
+        db.session.query(Order, Customer)
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(Order.order_id == order_id)
+        .first()
+        .Customer.customer_name
+    )
+    template_path = os.path.join(FILE_STORAGE_PATH, "材料统计表模板.xlsx")
 
+    materials_output_path = os.path.join(
+        FILE_STORAGE_PATH,
+        order_rid,
+        order_shoe_rid,
+        "purchase_order",
+        "材料统计表.xlsx",
+    )
+
+    generate_material_statistics_file(
+        template_path=template_path,
+        save_path=materials_output_path,
+        order_rid=order_rid,
+        order_shoe_rid=order_shoe_rid,
+        customer_name=customer_name,
+        materials_data=materials_data,
+    )
     generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单.xlsx")
@@ -1037,4 +1094,18 @@ def download_purchase_order_zip():
         "一次采购订单.zip",
     )
     new_name = order_rid + "_" + order_shoe_rid + "_一次采购订单.zip"
-    return send_file(zip_file_path, as_attachment=True)
+    return send_file(zip_file_path, as_attachment=True, download_name=new_name)
+
+@first_purchase_bp.route("/firstpurchase/downloadmaterialstatistics", methods=["GET"])
+def download_material_statistics():
+    order_rid = request.args.get("orderrid")
+    order_shoe_rid = request.args.get("ordershoerid")
+    file_path = os.path.join(
+        FILE_STORAGE_PATH,
+        order_rid,
+        order_shoe_rid,
+        "purchase_order",
+        "材料统计表.xlsx",
+    )
+    new_name = order_rid + "_" + order_shoe_rid + "_材料统计表.xlsx"
+    return send_file(file_path, as_attachment=True, download_name=new_name)

@@ -4,7 +4,13 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from itsdangerous import URLSafeTimedSerializer
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, verify_jwt_in_request
+from flask_jwt_extended import (
+    JWTManager,
+    create_access_token,
+    jwt_required,
+    get_jwt_identity,
+    verify_jwt_in_request,
+)
 import redis
 import os
 
@@ -12,9 +18,9 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Database configuration
-config_path = os.path.join(os.path.dirname(__file__), 'backend_config.json')
+config_path = os.path.join(os.path.dirname(__file__), "backend_config.json")
 
-with open(config_path, 'r') as config_file:
+with open(config_path, "r") as config_file:
     config = json.load(config_file)
 
 # Set up database URI
@@ -30,7 +36,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
 # Set secret keys and other app configurations
 app.secret_key = config["secret_key"]
-app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=config["session_lifetime_days"])
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(
+    days=config["session_lifetime_days"]
+)
 
 # Serializer for URL-safe tokens
 serializer = URLSafeTimedSerializer(app.secret_key)
@@ -41,17 +49,29 @@ jwt = JWTManager(app)
 
 # Set up Redis client
 redis_client = redis.StrictRedis(
-    host=config["redis_host"], 
-    port=config["redis_port"], 
-    db=config["redis_db"], 
-    decode_responses=True
+    host=config["redis_host"],
+    port=config["redis_port"],
+    db=config["redis_db"],
+    decode_responses=True,
 )
 
 # Initialize database
 db = SQLAlchemy(app)
 
 # List of public routes that do not require authentication
-open_routes = ['/login',"/devproductionorder/download", '/orderimport/downloadorderdoc','/processsheet/download','/firstbom/download','/secondbom/download', '/firstpurchase/downloadpurchaseorderzip']
+open_routes = [
+    "/login",
+    "/devproductionorder/download",
+    "/orderimport/downloadorderdoc",
+    "/processsheet/download",
+    "/firstbom/download",
+    "/secondbom/download",
+    "/firstpurchase/downloadpurchaseorderzip",
+    "/firstpurchase/downloadmaterialstatistics",
+    "/secondpurchase/downloadpurchaseorderzip",
+    "/secondpurchase/downloadmaterialstatistics",
+]
+
 
 @app.before_request
 def authenticate():
@@ -64,14 +84,13 @@ def authenticate():
             # Handle failed authentication (e.g., invalid or expired token)
             return jsonify({"msg": "Authentication required", "error": str(e)}), 401
 
+
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload["jti"]
-    
+
     # Check if the `jti` exists in Redis
     token_in_redis = redis_client.get(jti)
-    
+
     # If the token is not found in Redis, it's considered revoked
     return token_in_redis is None
-
-
