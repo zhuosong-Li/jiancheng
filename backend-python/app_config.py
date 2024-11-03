@@ -68,6 +68,8 @@ open_routes = [
     "/secondbom/download",
     "/firstpurchase/downloadpurchaseorderzip",
     "/firstpurchase/downloadmaterialstatistics",
+    "/secondpurchase/downloadpurchaseorderzip",
+    "/secondpurchase/downloadmaterialstatistics",
 ]
 
 

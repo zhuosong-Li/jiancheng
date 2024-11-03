@@ -625,57 +625,6 @@ def submit_bom():
     bom_id = bom.Bom.bom_id
     bom.Bom.bom_status = 2
     db.session.commit()
-    bom_items = (
-        db.session.query(BomItem, Material, MaterialType, Supplier, Color, Department)
-        .join(Material, Material.material_id == BomItem.material_id)
-        .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
-        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .outerjoin(Color, Color.color_id == BomItem.bom_item_color)
-        .outerjoin(Department, Department.department_id == BomItem.department_id)
-        .filter(BomItem.bom_id == bom_id)
-        .all()
-    )
-    if os.path.exists(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom")) == False:
-        os.mkdir(os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom"))
-    series_data = []
-    for bom_item in bom_items:
-        index = 1
-        series_data.append(
-            {
-                "序号": index,
-                "材料类型": bom_item.MaterialType.material_type_name,
-                "材料名称": bom_item.Material.material_name,
-                "材料型号": bom_item.BomItem.material_model,
-                "材料规格": bom_item.BomItem.material_specification,
-                "颜色": bom_item.Color.color_name if bom_item.Color else "",
-                "单位": bom_item.Material.material_unit,
-                "厂家名称": bom_item.Material.material_supplier,
-                "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
-                "核定用量": bom_item.BomItem.total_usage,
-                "使用工段": bom_item.Department.department_name if bom_item.Department else "",
-                "备注": bom_item.BomItem.remark,
-            }
-        )
-        index += 1
-    image_save_path = os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom", "shoe_image.jpg")
-    print(image_save_path)
-    generate_excel_file(
-        FILE_STORAGE_PATH+"/BOM-V1.0-temp.xlsx",
-        os.path.join(FILE_STORAGE_PATH,order_rid, order_shoe_rid, "secondbom", "二次BOM表.xlsx"),
-        {
-            "order_id": order_rid,
-            "last_type": "",
-            "input_person": "",
-            "order_finish_time": db.session.query(Order).filter(Order.order_rid == order_rid).first().end_date,
-            "inherit_id": order_shoe_rid,
-            "customer_id": db.session.query(OrderShoe).filter(OrderShoe.order_shoe_id == order_shoe_id).first().customer_product_name,
-
-
-        },
-        series_data,
-        IMAGE_STORAGE_PATH + "shoe/" + order_shoe_rid+"/shoe_image.jpg",
-        image_save_path,
-    )
     
     return jsonify({"status": "success"})
 
@@ -777,6 +726,67 @@ def issue_boms():
                 
                 # Update the total usage (核定用量)
                 material_dict[key]["核定用量"] += bom_item.BomItem.total_usage
+        index = 1
+        for material_info in material_dict.values():
+            material_info["序号"] = index
+            series_data.append(material_info)
+            index += 1
+        if (
+            os.path.exists(
+                os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom")
+            )
+            == False
+        ):
+            os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom"))
+
+        image_save_path = os.path.join(
+            FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom", "shoe_image.jpg"
+        )
+        print(image_save_path)
+        order_shoe_id = (
+            db.session.query(OrderShoe, Shoe)
+            .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+            .filter(OrderShoe.order_id == order_id, Shoe.shoe_rid == order_shoe_rid)
+            .first()
+            .OrderShoe.order_shoe_id
+        )
+        shoe_directory = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid)
+
+# Get the list of folders inside the directory
+        folders = os.listdir(shoe_directory)
+
+        # Filter out any non-folder entries (just in case)
+        folders = [f for f in folders if os.path.isdir(os.path.join(shoe_directory, f))]
+
+        # Get the first folder in the directory
+        if folders:
+            first_folder = folders[0]
+            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, first_folder, "shoe_image.jpg")
+        else:
+            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg")
+        generate_excel_file(
+            FILE_STORAGE_PATH + "/BOM-V1.0-temp.xlsx",
+            os.path.join(
+                FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom", "二次BOM表.xlsx"
+            ),
+            {
+                "order_id": order_rid,
+                "last_type": "",
+                "input_person": "",
+                "order_finish_time": db.session.query(Order)
+                .filter(Order.order_rid == order_rid)
+                .first()
+                .end_date,
+                "inherit_id": order_shoe_rid,
+                "customer_id": db.session.query(OrderShoe)
+                .filter(OrderShoe.order_shoe_id == order_shoe_id)
+                .first()
+                .customer_product_name,
+            },
+            series_data,
+            image_path,
+            image_save_path,
+        )
         processor = EventProcessor()
         event = Event(
             staff_id=1,

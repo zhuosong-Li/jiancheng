@@ -797,6 +797,7 @@ def submit_purchase_divide_orders():
         size_type = bom_item.size_type
         if purchase_divide_order.purchase_divide_order_type == "N":
             material_storage = MaterialStorage(
+                order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 estimated_inbound_amount=material_quantity,
                 actual_inbound_amount=0,
@@ -823,6 +824,7 @@ def submit_purchase_divide_orders():
             size_45_quantity = purchase_order_item.size_45_purchase_amount
 
             size_material_storage = SizeMaterialStorage(
+                order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 total_estimated_inbound_amount=material_quantity,
                 size_34_estimated_inbound_amount=0,
