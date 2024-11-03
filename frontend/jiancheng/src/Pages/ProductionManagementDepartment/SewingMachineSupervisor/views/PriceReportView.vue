@@ -39,9 +39,12 @@
                     </el-tab-pane>
                 </el-tabs>
                 <el-row>
-                    <el-button style="position: fixed; right: 90px;" type="primary"
-                        @click="handleSaveData">保存</el-button>
-                    <el-button style="position: fixed; right: 20px;" type="success" @click="handleSubmit">提交</el-button>
+                    <el-button-group style="position: fixed; right: 30px;">
+                        <el-button type="info" @click="">保存为模板</el-button>
+                        <el-button type="info" @click="">加载模板</el-button>
+                        <el-button type="primary" @click="handleSaveData">保存</el-button>
+                        <el-button type="success" @click="handleSubmit">提交</el-button>
+                    </el-button-group>
                 </el-row>
             </div>
             <div v-else-if="statusName === '已提交' || statusName === '已审批'">

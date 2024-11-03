@@ -90,7 +90,7 @@ def get_new_price_reports():
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         if team == "针车":

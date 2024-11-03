@@ -95,12 +95,6 @@ def get_quantity_report_tasks():
                 OrderShoeProductionInfo,
                 OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
-            .join(
-                OrderShoeBatchInfo,
-                OrderShoeBatchInfo.order_shoe_type_id
-                == OrderShoeType.order_shoe_type_id,
-            )
             .join(
                 OrderShoeStatus,
                 OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id,
@@ -120,7 +114,7 @@ def get_quantity_report_tasks():
     if shoe_rid and shoe_rid != "":
         union_query = union_query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = union_query.distinct().count()
-    response = union_query.limit(page_size).offset((page - 1) * page_size).all()
+    response = union_query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         (
