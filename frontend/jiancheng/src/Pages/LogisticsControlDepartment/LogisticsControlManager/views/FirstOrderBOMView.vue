@@ -123,7 +123,7 @@
                             label="状态"
                             align="center"
                         ></el-table-column>
-                        <el-table-column label="操作" align="center" width="300">
+                        <el-table-column label="操作" align="center" width="500">
                             <template #default="scope">
                                 <div v-if="scope.row.currentStatus === '已保存'">
                                     <el-button type="primary" @click="openEditDialog(scope.row)"
@@ -137,11 +137,13 @@
                                     >
                                 </div>
                                 <div v-else-if="scope.row.currentStatus === '已提交'">
-                                    <el-button type="success" @click="openPreviewDialog(scope.row)"
+                                    <el-button type="primary" @click="openPreviewDialog(scope.row)"
                                         >预览</el-button
                                     >
+                                    <el-button type="success" @click="downloadPurchaseOrderZip(scope.row)">下载采购订单压缩包</el-button>
+                                    <el-button type="success" @click="downloadMaterialStasticExcel(scope.row)">下载材料统计单</el-button>
                                 </div>
-                                <div v-else-if="scope.row.currentStatus === '未填写'">
+                                <div v-else-if="scope.row.currentStatus === '未填写' && scope.row.status.includes('一次采购订单创建')">
                                     <el-button type="primary" @click="handleGenerate(scope.row)"
                                         >填写</el-button
                                     >
@@ -464,7 +466,7 @@
                 </div>
                 <template #footer>
                     <span>
-                        <el-button type="primary" @click="purchaseOrderVis = false">确认</el-button>
+                        <el-button type="primary" @click="isPreviewDialogVisible = false">确认</el-button>
                     </span>
                 </template>
             </el-dialog>
@@ -1163,6 +1165,11 @@ export default {
         downloadPurchaseOrderZip(row) {
             window.open(
                 `${this.$apiBaseUrl}/firstpurchase/downloadpurchaseorderzip?orderrid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
+            )
+        },
+        downloadMaterialStasticExcel(row) {
+            window.open(
+                `${this.$apiBaseUrl}/firstpurchase/downloadmaterialstatistics?orderrid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
             )
         }
     }

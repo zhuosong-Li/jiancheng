@@ -99,18 +99,34 @@
                                                 @click="handleGenerate(scope.row)"
                                                 >填写</el-button
                                             >
-                                            <el-button
+                                            <div
                                                 v-else-if="
-                                                    scope.row.firstBomStatus === '已下发' ||
-                                                    scope.row.firstBomStatus === '已提交' ||
-                                                    scope.row.firstBomStatus === '用量填写已提交' ||
                                                     scope.row.firstBomStatus === '用量填写已下发' ||
                                                     scope.row.firstBomStatus === 'BOM完成'
                                                 "
-                                                type="primary"
-                                                @click="openPreviewDialog(scope.row)"
-                                                >查看</el-button
                                             >
+                                                <el-button
+                                                    type="primary"
+                                                    @click="openPreviewDialog(scope.row)"
+                                                    >查看</el-button
+                                                >
+                                                <el-button type="success" @click="downloadfirstBOM(scope.row)">
+                                                    下载一次BOM
+                                                </el-button>
+                                            </div>
+                                            <div
+                                                v-else-if="
+                                                    scope.row.firstBomStatus === '已提交' ||
+                                                    scope.row.firstBomStatus === '用量填写已提交'
+                                                "
+                                            >
+                                                <el-button
+                                                    type="primary"
+                                                    @click="openPreviewDialog(scope.row)"
+                                                    >查看</el-button
+                                                >
+                                            </div>
+
                                             <div
                                                 v-else-if="
                                                     parentScope.row.status.includes(
@@ -986,7 +1002,9 @@ export default {
                 {
                     orderId: this.orderData.orderId,
                     orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId),
-                    colors: selectedShoe.map((shoe) => shoe.typeInfos.map((typeInfo) => typeInfo.color))
+                    colors: selectedShoe.map((shoe) =>
+                        shoe.typeInfos.map((typeInfo) => typeInfo.color)
+                    )
                 }
             )
             loadingInstance.close()
@@ -1135,7 +1153,7 @@ export default {
         },
         downloadfirstBOM(row) {
             window.open(
-                `${this.$apiBaseUrl}/firstbom/download?ordershoerid=${row.inheritId}&orderid=${this.orderData.orderId}`
+                `${this.$apiBaseUrl}/firstbom/download?ordershoerid=${row.orderShoeRid}&orderid=${this.orderData.orderId}`
             )
         }
     }

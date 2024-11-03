@@ -18,7 +18,6 @@ def get_order_list():
         .join(ShoeType, ShoeType.shoe_id == Shoe.shoe_id)
         .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
         .filter(OrderShoe.order_id == order_id)
-        .filter(OrderShoeStatus.current_status == 9)
         .all()
     )
     result = []
@@ -29,6 +28,14 @@ def get_order_list():
             status = "已上传"
         elif order_shoe.process_sheet_upload_status == "2":
             status = "已下发"
+        is_exist = False
+        for item in result:
+            if item["inheritId"] == shoe.shoe_rid:
+                is_exist = True
+                break
+        if is_exist:
+            continue
+
         result.append(
             {
                 "inheritId": shoe.shoe_rid,
