@@ -183,7 +183,7 @@ def get_all_material_info():
         elif sort_order == 'descending':
             union_query = union_query.order_by(desc(PurchaseOrder.purchase_order_issue_date))
     count_result = union_query.distinct().count()
-    response = union_query.limit(number).offset((page - 1) * number).all()
+    response = union_query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
         (

@@ -57,7 +57,7 @@ def get_semifinished_in_out_overview():
     if op_type != 0:
         query = query.filter(SemifinishedShoeStorage.semifinished_status != 2)
     count_result = query.distinct().count()
-    response = query.limit(number).offset((page - 1) * number).all()
+    response = query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
         (order, order_shoe, shoe, total_amount, storage_obj) = row

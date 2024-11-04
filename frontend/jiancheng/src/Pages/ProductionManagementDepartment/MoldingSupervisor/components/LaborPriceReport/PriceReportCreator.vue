@@ -10,7 +10,8 @@
         </el-table-column>
         <el-table-column prop="price" label="单位价格">
             <template #default="scope">
-                <p>{{ props.procedureInfo[scope.row.procedure] ? props.procedureInfo[scope.row.procedure]["price"] : '' }}</p>
+                <p>{{ props.procedureInfo[scope.row.procedure] ? props.procedureInfo[scope.row.procedure]["price"] :
+                    ''}}</p>
             </template>
         </el-table-column>
         <el-table-column prop="note" label="备注">
@@ -26,8 +27,12 @@
     </el-table>
     <el-button type="primary" size="default" @click="addRow(props.tableData)">添加新一行</el-button>
     <el-row :gutter="20">
-        <el-button style="position: fixed; right: 90px;" type="primary" @click="handleSaveData">保存</el-button>
-        <el-button style="position: fixed; right: 20px;" type="success" @click="handleSubmit">提交</el-button>
+        <el-button-group style="position: fixed; right: 30px;">
+            <el-button type="info" @click="">保存为模板</el-button>
+            <el-button type="info" @click="">加载模板</el-button>
+            <el-button type="primary" @click="handleSaveData">保存</el-button>
+            <el-button type="success" @click="handleSubmit">提交</el-button>
+        </el-button-group>
     </el-row>
 </template>
 
@@ -75,8 +80,8 @@ const handleSubmit = async (rowData) => {
     }
     else {
         await handleSaveData()
-        const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`, 
-        { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [props.reportId] })
+        const response = await axios.post(`${apiBaseUrl}/production/submitpricereport`,
+            { "orderId": props.orderId, "orderShoeId": props.orderShoeId, "reportIdArr": [props.reportId] })
         if (response.status == 200) {
             ElMessage.success("提交成功")
             window.location.reload()

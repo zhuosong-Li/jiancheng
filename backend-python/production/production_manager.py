@@ -129,7 +129,7 @@ def get_in_progress_orders():
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     count_result = query.distinct().count()
-    response = query.limit(number).offset((page - 1) * number).all()
+    response = query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
         (
@@ -469,7 +469,7 @@ def get_logistics_overview():
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         order, order_shoe, shoe = row
@@ -519,7 +519,7 @@ def get_finished_nodes():
             OrderShoeStatus.current_status.in_([18, 23, 24, 30, 31, 32, 33, 40, 41, 42])
         )
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         order, order_shoe, shoe, reference = row
@@ -949,7 +949,7 @@ def get_order_outsource_overview():
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         (
@@ -1587,7 +1587,7 @@ def get_all_quantity_reports_overview():
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     amount_map = {}
     for row in response:
@@ -1652,7 +1652,7 @@ def get_submitted_quantity_reports():
     if team and team in ["裁断", "针车预备", "针车", "成型"]:
         query = query.filter(QuantityReport.team == team)
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         production_info, report = row
@@ -1769,7 +1769,7 @@ def get_price_report_approval_overview():
         else:
             return jsonify({"message": "invalid team name"}), 400
     count_result = query.distinct().count()
-    response = query.limit(page_size).offset((page - 1) * page_size).all()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
     for row in response:
         order, order_shoe, customer, shoe, status_obj = row

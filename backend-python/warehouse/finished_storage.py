@@ -58,7 +58,7 @@ def get_finished_in_out_overview():
     if op_type != 0:
         query = query.filter(FinishedShoeStorage.finished_status != 2)
     count_result = query.distinct().count()
-    response = query.limit(number).offset((page - 1) * number).all()
+    response = query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
         (
