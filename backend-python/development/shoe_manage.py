@@ -61,10 +61,12 @@ def add_new_shoe():
 
 @shoe_manage_bp.route("/shoemanage/editshoe", methods=["POST"])
 def edit_shoe():
+    shoe_id = request.json.get("shoeId")
     shoe_rid = request.json.get("shoeRId")
     shoe_designer = request.json.get("shoeDesigner")
     try:
-        shoe = Shoe.query.filter_by(shoe_rid=shoe_rid).first()
+        shoe = Shoe.query.get(shoe_id)
+        shoe.shoe_rid = shoe_rid
         shoe.shoe_designer = shoe_designer
         db.session.commit()
         return jsonify({"message": "Shoe updated successfully"})

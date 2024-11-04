@@ -1,3 +1,5 @@
+from file_locations import *
+
 PRODUCTION_LINE_REFERENCE = ['F', 'S', 'M']
 
 PRICE_REPORT_REFERENCE = {
@@ -97,10 +99,6 @@ SHOESIZEINFO = [
 IN_PRODUCTION_ORDER_NUMBER = 9
 END_OF_ORDER_NUMBER = 18
 END_OF_PRODUCTION_NUMBER = 42
-
-FILE_STORAGE_PATH = "/home/jiancheng/Desktop/fileserver"
-IMAGE_STORAGE_PATH = "http://localhost:12667/"
-IMAGE_UPLOAD_PATH = "/home/jiancheng/Desktop/imgserver"
 
 PRODUCTION_LINES = {
     "裁断": [1, 2, 3, 4],

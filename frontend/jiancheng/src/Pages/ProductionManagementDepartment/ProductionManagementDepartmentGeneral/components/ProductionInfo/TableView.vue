@@ -58,7 +58,7 @@ export default {
 				"pageSize": this.inProdPageSize,
 				"orderRId": this.orderRIdSearch
 			}
-			const response = await axios.get("http://localhost:8000/production/productionmanager/getinprogressorders", { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getinprogressorders`, { params })
 			this.inProductionTableData = response.data.result
 			this.inproductionTotalRows = response.data.total
 		},

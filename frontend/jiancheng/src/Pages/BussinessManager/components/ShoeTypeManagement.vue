@@ -52,7 +52,7 @@
                             >编辑</el-button
                         >
                         <el-button type="primary" size="default" @click="openReUploadImageDialog(scope.row)">重新上传鞋图</el-button>
-                        
+                        <el-button type="danger" size="default" @click="deleteShoeType(scope.row)">Delete</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -166,6 +166,7 @@ export default {
             currentShoeColor: 0,
             fileList: [],
             orderForm: {
+                shoeId: "",
                 shoeRId: "",
                 shoeDesigner: "",
                 shoeAdjuster: "",
@@ -251,9 +252,10 @@ export default {
                         message: '添加成功'
                     });
 
-                    this.$refs.imageUpload.submit();
+                    await this.$refs.imageUpload.submit();
                     this.addShoeDialogVis = false;
                     this.orderForm = {
+                        shoeId: "",
                         shoeRId: "",
                         shoeDesigner: "",
                         shoeAdjuster: "",
@@ -277,6 +279,7 @@ export default {
                     });
                     this.editShoeDialogVis = false;
                     this.orderForm = {
+                        shoeId: "",
                         shoeRId: "",
                         shoeDesigner: "",
                         shoeAdjuster: "",

@@ -162,6 +162,7 @@ export default {
             currentShoeColor: 0,
             fileList: [],
             orderForm: {
+                shoeId: "",
                 shoeRId: "",
                 shoeDesigner: "",
                 shoeAdjuster: "",
@@ -249,6 +250,7 @@ export default {
                     this.$refs.imageUpload.submit();
                     this.addShoeDialogVis = false;
                     this.orderForm = {
+                        shoeId: "",
                         shoeRId: "",
                         shoeDesigner: "",
                         shoeAdjuster: "",
@@ -272,6 +274,7 @@ export default {
                     });
                     this.editShoeDialogVis = false;
                     this.orderForm = {
+                        shoeId: "",
                         shoeRId: "",
                         shoeDesigner: "",
                         shoeAdjuster: "",
