@@ -346,7 +346,7 @@ def submit_doc():
         file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "包装资料.xlsx")
         file.save(file_path)
         order = db.session.query(Order).filter_by(order_rid=order_rid).first()
-        order.production_list_upload_status = "1"
+        order.production_list_upload_status = "2"
         db.session.commit()
     return jsonify({"message": "File submitted successfully"}), 200
 
@@ -369,6 +369,11 @@ def download_order_doc():
         file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "生产数量表.xlsx")
         new_filename = (
             f"{order_rid}_生产数量表.xlsx"  # New filename to send to the client
+        )
+    elif file_type == "2":
+        file_path = os.path.join(FILE_STORAGE_PATH, order_rid, "包装资料.xlsx")
+        new_filename = (
+            f"{order_rid}_包装资料.xlsx"  # New filename to send to the client
         )
     else:
         return jsonify({"error": "Invalid file type"}), 400

@@ -425,7 +425,7 @@
         </el-row>
         <el-table :data="this.newOrderForm.orderShoeTypes" border stripe height = "900"
         :row-key = "(row) => {return row.shoeTypeId}"
-                @expand-change = "expandOpen" :expand-row-keys = "expandedRowKeys" >
+                >
             <el-table-column type = "expand" >
                 <template #default = "props">
                     <el-table :data = "props.row.orderShoeTypeBatchInfo" border>
@@ -449,23 +449,35 @@
                         <template #default="scope">
                             <el-input size = small
                             v-model = "props.row.quantityMapping[scope.row.packagingInfoId]"
+                            @change ="updateAmountMapping(props.row, scope.row)"
                             controls-position = "right"
                             >
                             </el-input>
                         </template>
                         </el-table-column>
                         <el-table-column label="总数量">
+                        <template #default="scope">
+                        <el-input size = small
+                            v-model = "props.row.amountMapping[scope.row.packagingInfoId]"
+                            controls-position = "right"
+                            :disabled="true">
+                        </el-input>
+                        </template>
                         </el-table-column>
                     </el-table>
                 </template>
             </el-table-column>
             <el-table-column prop = "shoeRId" label = "鞋型编号" sortable/>
             <el-table-column prop = "shoeColor" label = "鞋型颜色" />
-            <el-table-column prop = "shoeImage" label = "鞋型图片" />
+            <el-table-column label = "鞋型图片">
+                <template #default="scope">
+                    <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;" ></el-image>
+                </template>
+            </el-table-column>
             <el-table-column>
             <template #default="scope">
                     <el-button type="primary" size="default" @click="openAddBatchInfoDialog(scope.row)"
-                        >添加配码</el-button
+                        >编辑鞋型配码</el-button
                     >
             </template>
             </el-table-column>
@@ -492,10 +504,15 @@
                 </el-table-column>
             </el-table>
         </el-row> -->
-        <span>
+        <template #footer>
+            <span>
+            <el-button @click="backPreviousStep"> 上一步 </el-button>
+
             <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
             <el-button @click="submitNewOrder"> 添加订单 </el-button>
-        </span>
+            </span>
+        </template>
+        
     </el-dialog>
 
     <el-dialog
@@ -517,10 +534,10 @@
             <el-col :span="24" :offset="0">
                 <el-descriptions title="" :column="2" border>
                     <el-descriptions-item label="客户名称" align="center">{{
-                        batchDialogCurCustomerName
+                        this.newOrderForm.customerName
                     }}</el-descriptions-item>
                     <el-descriptions-item label="客户商标" align="center">{{
-                        batchDialogCurCustomerBrand
+                        this.newOrderForm.customerBrand
                     }}</el-descriptions-item>
                 </el-descriptions>
             </el-col>
@@ -559,11 +576,12 @@
                 </el-table-column>
  -->            </el-table>
         </el-row>
-        <span>
+
+        <template #footer>
             <el-button @click="closeAddBatchInfoDialog()">取消</el-button>
-            <el-button @click="addShoeTypeBatchInfo()"> 添加配码</el-button>
             <el-button @click="openAddCustomerBatchDialog()"> 添加新配码</el-button>
-        </span>
+            <el-button type="primary" @click="addShoeTypeBatchInfo()"> 保存配码</el-button>
+        </template>
     </el-dialog>
 
     <el-dialog
@@ -810,6 +828,10 @@ export default {
             })
             this.addCustomerBatchDialogVisible = false
         },
+        backPreviousStep(){
+            this.orderCreationSecondInfoVis = false
+            this.orderCreationInfoVis = true
+        },
         closeAddBatchInfoDialog(){
             this.addBatchInfoDialogVis = false
             this.$refs.batchInfoSelectionTable.clearSelection()
@@ -820,12 +842,18 @@ export default {
             this.newOrderForm.orderShoeTypes.forEach(item => {
                 item.orderShoeTypeBatchInfo = []
                 item.quantityMapping = {}
+                item.amountMapping = {}
                 this.newOrderForm.customerShoeName[item.shoeRId] = ""
 
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
             // console.log(this.newOrderForm)
 
+        },
+        updateAmountMapping(out_row, inner_row){
+            console.log(out_row)
+            console.log(inner_row)
+            out_row.amountMapping[inner_row.packagingInfoId] = out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityInRatio 
         },
         handleSelectionShoeType(selection) {
             this.selectedShoeList = selection
@@ -902,11 +930,14 @@ export default {
             const curQuantityMapping = this.newOrderForm.orderShoeTypes.find(row => {
                 return row.shoeTypeId == this.curShoeTypeId
             }).quantityMapping
-
+            const curAmountMapping = this.newOrderForm.orderShoeTypes.find(row => {
+                return row.shoeTypeId == this.curShoeTypeId
+            }).amountMapping
 
             this.currentBatch.forEach(batch => {
                 {
                     curQuantityMapping[batch.packagingInfoId] = 0
+                    curAmountMapping[batch.packagingInfoId] = 0
                 }
             })
             // this.newOrderForm.orderShoeTypes.find(row => {
@@ -921,8 +952,9 @@ export default {
 
         },
         expandOpen(row, expand){
-            console.log(this.expandedRowKeys)
-            this.expandedRowKeys.push(row.shoeTypeId)
+            return
+            // console.log(this.expandedRowKeys)
+            // this.expandedRowKeys.push(row.shoeTypeId)
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
         closeAddBatchInfodialog(){
@@ -1244,6 +1276,7 @@ export default {
                 })
         },
         async submitNewOrder() {
+            
             this.$confirm('确认导入订单信息？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
