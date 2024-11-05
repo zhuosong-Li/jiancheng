@@ -18,7 +18,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Database configuration
-config_path = os.path.join(os.path.dirname(__file__), 'backend_config_local.json')
+config_path = os.path.join(os.path.dirname(__file__), 'backend_config.json')
 
 with open(config_path, "r") as config_file:
     config = json.load(config_file)

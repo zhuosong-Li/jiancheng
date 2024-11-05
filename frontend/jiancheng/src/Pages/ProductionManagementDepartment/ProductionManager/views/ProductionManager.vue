@@ -55,6 +55,7 @@ import ProductionSchedulingDialogue from '../components/ProductionSchedulingDial
 import LogisticInfo from '../components/LogisticInfo.vue'
 import OutSourceApproval from '../components/OutSourceApproval.vue'
 import WagesApproval from '../components/WagesApproval.vue'
+import OrderProgress from '../components/OrderProgress.vue'
 import axios from 'axios'
 export default {
   components: {
@@ -64,12 +65,13 @@ export default {
     ProductionSchedulingDialogue,
     LogisticInfo,
     OutSourceApproval,
-    WagesApproval
+    WagesApproval,
+    OrderProgress
   },
   data() {
     return {
       userName: '',
-      currentComponent: 'ProductionSchedulingDialogue'
+      currentComponent: 'OrderProgress'
     }
   },
   mounted() {
@@ -85,7 +87,7 @@ export default {
       console.log(index)
       switch (index) {
         case 2:
-          this.currentComponent = 'ProductionSchedulingDialogue'
+          this.currentComponent = 'OrderProgress'
           break
         case 3:
           this.currentComponent = 'LogisticInfo'

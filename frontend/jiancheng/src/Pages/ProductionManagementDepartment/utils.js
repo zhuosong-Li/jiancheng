@@ -1,5 +1,24 @@
 import * as XLSX from 'xlsx';
+import axios from 'axios';
 import { saveAs } from 'file-saver';
+import app from '@/main';
+
+export const productionLines = {
+    "cutting": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17],
+    "preSewing": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17],
+    "sewing": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17],
+    "molding": [1, 2, 3, 5],
+}
+
+export const outsourceOutboundStatus = ["材料出库", "外包生产中", "成品入库", "外包结束"]
+export const outsourceReadOnlyStatus = ["已提交", "材料出库", "外包生产中", "成品入库", "外包结束"]
+export const outsourceEditStatus = ["未提交", "被驳回", "已审批"]
+
+export const getShoeSizesName = async (orderShoeId) => {
+    let params = { "orderShoeId": orderShoeId }
+    let response = await axios.get(`${app.config.globalProperties.$apiBaseUrl}/batchtype/getorderbatchtype`, { params })
+    return response.data
+}
 
 export const handleRowClick = (row) => {
     let url = ""
@@ -36,7 +55,7 @@ export function exportTableToExcel(data, columns, filename = 'table.xlsx') {
 export function shoeBatchInfoTableSpanMethod(tableData) {
     return function spanMethod({ row, column, rowIndex, columnIndex }) {
         // Merging 'colorName' and 'totalAmount' columns
-        if (columnIndex === 0 || columnIndex === 16) { // colorName and totalAmount columns
+        if (columnIndex === 0 || columnIndex === 1) { // colorName and totalAmount columns
             const currentColor = tableData[rowIndex].colorName;
 
             // Skip rows already merged
@@ -95,7 +114,7 @@ export function checkProductionStatus(array) {
 }
 
 export function checkOutsourceStatus(status) {
-    console.log(status, typeof(status))
+    console.log(status, typeof (status))
     let result = -1
     if (status < 4) {
         result = 0
@@ -106,10 +125,10 @@ export function checkOutsourceStatus(status) {
     else if (status == 5) {
         result = 2
     }
-    else if (status== 6) {
+    else if (status == 6) {
         result = 3
     }
-    else if (status== 7) {
+    else if (status == 7) {
         result = 4
     }
     return result

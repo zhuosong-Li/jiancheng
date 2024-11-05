@@ -7,7 +7,7 @@ from flask import Blueprint, jsonify, request
 from models import *
 from event_processor import EventProcessor
 from general_document.bom import generate_excel_file
-from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from api_utility import randomIdGenerater
 from collections import defaultdict
 

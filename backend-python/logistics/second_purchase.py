@@ -5,7 +5,7 @@ from app_config import app, db
 from models import *
 from api_utility import randomIdGenerater
 from event_processor import EventProcessor
-from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from itertools import groupby
 from operator import itemgetter
 import zipfile

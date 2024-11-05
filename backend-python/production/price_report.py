@@ -94,9 +94,29 @@ def get_new_price_reports():
     result = []
     for row in response:
         if team == "针车":
-            order, order_shoe, shoe, customer, status, rejection_reason, pre_start_date_res, pre_end_date_res, start_date_res, end_date_res = row
+            (
+                order,
+                order_shoe,
+                shoe,
+                customer,
+                status,
+                rejection_reason,
+                pre_start_date_res,
+                pre_end_date_res,
+                start_date_res,
+                end_date_res,
+            ) = row
         else:
-            order, order_shoe, shoe, customer, status, rejection_reason, start_date_res, end_date_res = row
+            (
+                order,
+                order_shoe,
+                shoe,
+                customer,
+                status,
+                rejection_reason,
+                start_date_res,
+                end_date_res,
+            ) = row
         status_name = check_report_status(status)
         obj = {
             "orderId": order.order_id,
@@ -107,10 +127,12 @@ def get_new_price_reports():
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
             "statusName": status_name,
-            "rejectionReason": rejection_reason
+            "rejectionReason": rejection_reason,
         }
         if team == "针车":
-            obj["preSewingProductionStartDate"] = pre_start_date_res.strftime("%Y-%m-%d")
+            obj["preSewingProductionStartDate"] = pre_start_date_res.strftime(
+                "%Y-%m-%d"
+            )
             obj["preSewingProductionEndDate"] = pre_end_date_res.strftime("%Y-%m-%d")
         result.append(obj)
     return {"result": result, "totalLength": count_result}
@@ -126,7 +148,7 @@ def store_price_report_detail():
         obj = {
             "report_id": report_id,
             "row_id": row["rowId"],
-            "procedure_id": row["procedureId"],
+            "procedure_name": row["procedure"],
             "price": row["price"],
             "note": row["note"],
         }
@@ -135,7 +157,7 @@ def store_price_report_detail():
         on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(
             report_id=insert_stmt.inserted.report_id,
             row_id=insert_stmt.inserted.row_id,
-            procedure_id=insert_stmt.inserted.procedure_id,
+            procedure_name=insert_stmt.inserted.procedure_name,
             price=insert_stmt.inserted.price,
             note=insert_stmt.inserted.note,
         )
@@ -196,14 +218,10 @@ def submit_price_report():
 def get_price_report_detail():
     report_id = request.args.get("reportId")
     response = (
-        db.session.query(UnitPriceReport, UnitPriceReportDetail, ProcedureReference)
+        db.session.query(UnitPriceReportDetail)
         .join(
             UnitPriceReportDetail,
             UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
-        )
-        .join(
-            ProcedureReference,
-            UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
         .filter(UnitPriceReport.report_id == report_id)
         .order_by(UnitPriceReportDetail.row_id)
@@ -211,11 +229,11 @@ def get_price_report_detail():
     )
     result = []
     for row in response:
-        _, report_detail, procedure_ref = row
+        report_detail = row
         result.append(
             {
                 "rowId": report_detail.row_id,
-                "procedure": procedure_ref.procedure_name,
+                "procedure": report_detail.procedure_name,
                 "price": report_detail.price,
                 "note": report_detail.note,
             }
@@ -228,11 +246,8 @@ def get_price_report_detail_by_order_shoe_id():
     order_shoe_id = request.args.get("orderShoeId")
     team = request.args.get("team")
     status = request.args.get("status", type=int)
-    query = (
-        db.session.query(UnitPriceReport)
-        .filter(
-            UnitPriceReport.order_shoe_id == order_shoe_id, UnitPriceReport.team == team
-        )
+    query = db.session.query(UnitPriceReport).filter(
+        UnitPriceReport.order_shoe_id == order_shoe_id, UnitPriceReport.team == team
     )
     if status:
         query = query.filter(UnitPriceReport.status == status)
@@ -240,16 +255,16 @@ def get_price_report_detail_by_order_shoe_id():
     if not report:
         return jsonify({"message": "Report not found"}), 400
     status_name = check_report_status(report.status)
-    meta_data = {"reportId": report.report_id, "statusName": status_name, "rejectionReason": report.rejection_reason}
+    meta_data = {
+        "reportId": report.report_id,
+        "statusName": status_name,
+        "rejectionReason": report.rejection_reason,
+    }
     response = (
-        db.session.query(UnitPriceReportDetail, ProcedureReference.procedure_name)
+        db.session.query(UnitPriceReportDetail)
         .outerjoin(
             UnitPriceReport,
             UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
-        )
-        .join(
-            ProcedureReference,
-            UnitPriceReportDetail.procedure_id == ProcedureReference.procedure_id,
         )
         .filter(UnitPriceReportDetail.report_id == report.report_id)
         .order_by(UnitPriceReportDetail.row_id)
@@ -258,11 +273,11 @@ def get_price_report_detail_by_order_shoe_id():
     result = []
     detail = []
     for row in response:
-        report_detail, procedure_name = row
+        report_detail = row
         detail.append(
             {
                 "rowId": report_detail.row_id,
-                "procedure": procedure_name,
+                "procedure": report_detail.procedure_name,
                 "price": report_detail.price,
                 "note": report_detail.note,
             }
@@ -285,4 +300,77 @@ def get_all_procedures():
                 "team": row.team,
             }
         )
+    return result
+
+
+@price_report_bp.route("/production/addnewprocedure", methods=["POST"])
+def add_new_procedures():
+    data = request.get_json()
+    obj = ProcedureReference(
+        procedure_name=data["name"],
+        team=data["team"],
+        current_price=float(data["price"]),
+    )
+    db.session.add(obj)
+    db.session.commit()
+    return jsonify({"message": "添加成功"})
+
+
+@price_report_bp.route("/production/editprocedure", methods=["PUT"])
+def edit_procedure():
+    data = request.get_json()
+    for row in data:
+        entity = db.session.query(ProcedureReference).get(row["procedureId"])
+        entity.procedure_name = row["procedureName"]
+        entity.team = row["team"]
+        entity.current_price = row["price"]
+    db.session.commit()
+    return jsonify({"message": "编辑成功"})
+
+
+@price_report_bp.route("/production/deleteprocedure", methods=["DELETE"])
+def delete_procedure():
+    data = request.get_json()
+    entity = db.session.query(ProcedureReference).get(data["procedureId"])
+    db.session.delete(entity)
+    db.session.commit()
+    return jsonify({"message": "删除成功"})
+
+
+@price_report_bp.route("/production/savetemplate", methods=["PUT"])
+def save_template():
+    data = request.get_json()
+    shoe_rid = data["shoeRId"]
+    report_id = data["reportId"]
+    shoe = db.session.query(Shoe).filter_by(shoe_rid=shoe_rid).first()
+    obj = {"unit_price_report_id": report_id, "shoe_id": shoe.shoe_id}
+    stmt = insert(UnitPriceReportTemplate).values(**obj)
+    stmt = stmt.on_duplicate_key_update(**obj)
+    db.session.execute(stmt)
+    db.session.commit()
+    return jsonify({"message": "保存成功"})
+
+
+@price_report_bp.route("/production/loadtemplate", methods=["GET"])
+def load_template():
+    shoe_rid = request.args.get("shoeRId")
+    team = request.args.get("team")
+    response = (
+        db.session.query(
+            UnitPriceReportDetail
+        )
+        .join(UnitPriceReport, UnitPriceReportDetail.report_id == UnitPriceReport.report_id)
+        .join(UnitPriceReportTemplate, UnitPriceReportTemplate.unit_price_report_id == UnitPriceReport.report_id)
+        .join(Shoe, Shoe.shoe_id == UnitPriceReportTemplate.shoe_id)
+        .filter(Shoe.shoe_rid==shoe_rid, UnitPriceReport.team == team)
+        .all()
+    )
+    result = []
+    for row in response:
+        obj = {
+            "rowId": row.row_id,
+            "procedure": row.procedure_name,
+            "price": row.price,
+        }
+        result.append(obj)
     return result

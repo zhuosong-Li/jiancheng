@@ -30,6 +30,10 @@ from logistics.first_purchase import first_purchase_bp
 from logistics.second_purchase import second_purchase_bp
 from technical.process_sheet_upload import process_sheet_upload_bp
 from shared_apis.outsource_factory import outsource_factory_bp
+from production.scheduling import production_scheduling_bp
+from production.outsource import outsource_bp
+from production.production_status_nodes import production_status_nodes_bp
+from bussiness.batch_info_type import batch_type_bp
 
 
 def register_blueprints():
@@ -64,3 +68,7 @@ def register_blueprints():
     app.register_blueprint(outsource_factory_bp)
     app.register_blueprint(process_sheet_upload_bp)
     app.register_blueprint(order_create_bp)
+    app.register_blueprint(production_scheduling_bp)
+    app.register_blueprint(outsource_bp)
+    app.register_blueprint(production_status_nodes_bp)
+    app.register_blueprint(batch_type_bp)

@@ -6,7 +6,7 @@ from models import *
 import os
 from api_utility import randomIdGenerater
 from event_processor import EventProcessor
-from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from general_document.bom import generate_excel_file
 from collections import defaultdict
 
