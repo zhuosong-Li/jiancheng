@@ -8,15 +8,7 @@ __pycache__/
 .idea/
 .vscode/
 
-# Ignore backend and frontend dependencies and configuration files
-backend-python/backend_config_local.json
-backend-python/backend_config.json
-frontend/jiancheng/frontend_config.json
-file_locations.json
-
 frontend/jiancheng/node_modules/
 
 # Node modules in general
 node_modules/
-# script
-dev.sh
