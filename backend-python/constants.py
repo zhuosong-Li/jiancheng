@@ -1,4 +1,13 @@
-from file_locations import *
+import json
+import os
+
+file_locations_path = os.path.join(os.path.dirname(__file__), 'file_locations.json')
+with open(file_locations_path, "r") as fd:
+    config = json.load(fd)
+
+FILE_STORAGE_PATH = config["FILE_STORAGE_PATH"]
+IMAGE_STORAGE_PATH = config["IMAGE_STORAGE_PATH"]
+IMAGE_UPLOAD_PATH = config["IMAGE_UPLOAD_PATH"]
 
 PRODUCTION_LINE_REFERENCE = ['F', 'S', 'M']
 
