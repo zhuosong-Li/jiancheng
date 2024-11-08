@@ -8,7 +8,7 @@ import os
 import json
 import shutil
 from models import *
-from constants import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
+from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
 
 from app_config import app, db
 
