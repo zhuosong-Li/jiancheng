@@ -4,7 +4,7 @@ import datetime
 from app_config import app, db
 from models import *
 from event_processor import EventProcessor
-from constants import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
+from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
 
 process_sheet_upload_bp = Blueprint("process_sheet_upload_bp", __name__)
 
