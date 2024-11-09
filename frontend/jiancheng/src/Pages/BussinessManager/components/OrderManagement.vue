@@ -4,36 +4,75 @@
             >订单管理</el-col
         >
     </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="8" :offset="0"
-            >
-            <el-button size="default" type="primary" @click="openImportDialog"
-                >通过EXCEL上传订单</el-button
+    <el-row :gutter="10" style="margin-top: 20px">
+        <el-col :span="2" :offset="0"
             >
             <el-button size="default" type="primary" @click="openCreateOrderDialog"
                 >创建订单</el-button
             >
         </el-col>
-        <el-col :span="4" :offset="5"
+
+        <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderRidFilter"
                 placeholder="请输入订单号"
                 size="default"
-                :suffix-icon="Search"
+                :suffix-icon="'el-icon-search'"
                 clearable
                 @input="filterByRid()"
             ></el-input>
         </el-col>
 
-        <el-col :span="4" :offset="0"
+        <el-col :span="2" :offset="0"
+            ><el-input
+                v-model="orderCustomerNameFilter"
+                placeholder="请输入客户名称"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterByCustomerName()"
+            ></el-input>
+        </el-col>
+
+        <el-col :span="2" :offset="0"
+            ><el-input
+                v-model="orderCustomerBrandFilter"
+                placeholder="请输入客户商标"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterByCustomerBrand()"
+            ></el-input>
+        </el-col>
+        <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderCidFilter"
                 placeholder="请输入客户订单号"
                 size="default"
-                :suffix-icon="Search"
+                :suffix-icon="'el-icon-search'"
                 clearable
                 @input="filterByCid()"
             ></el-input>
+        </el-col>
+
+        <el-col :span="4" :offset="0"
+        >
+        <div class="demo-date-picker">
+            <div class="block">
+            <span class=""></span>
+            <el-date-picker
+                v-model="orderDateFilter"
+                type="daterange"
+                unlink-panels
+                range-separator="To"
+                start-placeholder="Start date"
+                end-placeholder="End date"
+                :shortcuts="shortcuts"
+                :size="size"
+                @change="filterOrderByDate()"
+            />
+            </div>
+            </div>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -41,15 +80,13 @@
             <el-table-column type="index" width="50" />
             <el-table-column prop="orderRid" label="订单号" />
             <el-table-column prop="customerName" label="客户名" />
+            <el-table-column prop="customerBrand" label="客户商标"/>
             <el-table-column prop="orderCid" label="客户订单号" />
             <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
             <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
             <el-table-column prop="orderStatus" label="订单状态" />
             <el-table-column label="操作" width = "300">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
-                        >查看详情</el-button
-                    >
                     <el-button type="primary" size="default" @click="openOrderDetail(scope.row.orderDbId)"
                         >查看订单详情</el-button
                     >
@@ -310,7 +347,17 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="订单开始日期">
+            <el-form-item label="请选择配码种类">
+                <el-select v-model="newOrderForm.batchInfoTypeName" filterable placeholder="请选择种类" @change="updateBatchType">
+                    <el-option
+                        v-for="item in this.batchTypes"
+                        :key="item.batchInfoTypeId"
+                        :label="item.batchInfoTypeName"
+                        :value="item.batchInfoTypeName">
+                        </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="订单开始日期" ref="startdatepicker">
                 <el-date-picker
                     v-model="newOrderForm.orderStartDate"
                     type="date"
@@ -346,7 +393,7 @@
                 鞋型号搜索：
                 <el-input v-model="shoeRidFilter" 
                 placeholder="" size="default" 
-                :suffix-icon="Search"
+                :suffix-icon="'el-icon-search'"
                 clearable 
                 @input="filterByShoeRidWithSelection">
             </el-input> 
@@ -431,7 +478,10 @@
                     <el-table :data = "props.row.orderShoeTypeBatchInfo" border>
                         <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
                         <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                        <el-table-column prop="size34Ratio" label="34" />
+                        <el-table-column v-for="col in Object.keys(this.attrMapping).filter(key=>this.curBatchType[key]!=null)"
+                                         :label="this.curBatchType[col]"
+                                         :prop="this.attrMapping[col]"></el-table-column>
+                        <!-- <el-table-column prop="size34Ratio" label="34" />
                         <el-table-column prop="size35Ratio" label="35" />
                         <el-table-column prop="size36Ratio" label="36" />
                         <el-table-column prop="size37Ratio" label="37" />
@@ -443,8 +493,8 @@
                         <el-table-column prop="size43Ratio" label="43" />
                         <el-table-column prop="size44Ratio" label="44" />
                         <el-table-column prop="size45Ratio" label="45" />
-                        <el-table-column prop="size46Ratio" label="46" />
-                        <el-table-column prop="totalQuantityInRatio" label="比例和"/>
+                        <el-table-column prop="size46Ratio" label="46" /> -->
+                        <el-table-column prop="totalQuantityRatio" label="比例和"/>
                         <el-table-column label="单位数量">
                         <template #default="scope">
                             <el-input size = small
@@ -525,7 +575,7 @@
                 v-model="batchNameFilter"
                 placeholder="请输入配码名称"
                 size="default"
-                :suffix-icon="Search"
+                :suffix-icon="'el-icon-search'"
                 clearable
                 @input="filterBatchDataWithSelection"
             ></el-input>
@@ -553,7 +603,10 @@
                 </el-table-column>
                 <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
                 <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                <el-table-column prop="size34Ratio" label="34" sortable/>
+                <el-table-column v-for="col in Object.keys(this.attrMapping).filter(key => this.curBatchType[key] != null)"
+                                 :label="this.curBatchType[col]"
+                                 :prop=this.attrMapping[col]></el-table-column>
+                <!-- <el-table-column prop="size34Ratio" label="34" sortable/>
                 <el-table-column prop="size35Ratio" label="35" sortable/>
                 <el-table-column prop="size36Ratio" label="36" sortable/>
                 <el-table-column prop="size37Ratio" label="37" sortable/>
@@ -565,8 +618,8 @@
                 <el-table-column prop="size43Ratio" label="43" sortable/>
                 <el-table-column prop="size44Ratio" label="44" sortable/>
                 <el-table-column prop="size45Ratio" label="45" sortable/>
-                <el-table-column prop="size46Ratio" label="46" sortable/>
-                <el-table-column prop="totalQuantityInRatio" label="比例和"sortable/>
+                <el-table-column prop="size46Ratio" label="46" sortable/> -->
+                <el-table-column prop="totalQuantityRatio" label="比例和"sortable/>
                 <!-- <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
@@ -588,14 +641,18 @@
         title="添加配码"
         v-model="addCustomerBatchDialogVisible"
         width="30%">
-        <el-form :model="batchForm" label-width="120px" :inline="false" size="normal">
+        <el-form :model="batchForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="配码名称">
                 <el-input v-model="batchForm.packagingInfoName"></el-input>
             </el-form-item>
             <el-form-item label="配码地区">
                 <el-input v-model="batchForm.packagingInfoLocale"></el-input>
             </el-form-item>
-            <el-form-item label="34">
+            <el-form-item v-for="col in Object.keys(this.attrMapping).filter(key => this.curBatchType[key] != null)"
+                          :label="this.curBatchType[col]">
+                <el-input v-model="batchForm[attrMapping[col]]"></el-input>            
+            </el-form-item>
+            <!-- <el-form-item label="34">
                 <el-input v-model="batchForm.size34Ratio"></el-input>
             </el-form-item>
             <el-form-item label="35">
@@ -633,7 +690,7 @@
             </el-form-item>
             <el-form-item label="46">
                 <el-input v-model="batchForm.size46Ratio"></el-input>
-            </el-form-item>
+            </el-form-item> -->
 
         </el-form>
         
@@ -648,9 +705,10 @@
 </template>
 
 <script>
-import { Download, Search, Upload } from '@element-plus/icons-vue'
+import { Download, Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
+import { toggleRowStatus } from 'element-plus/es/components/table/src/util';
 
 export default {
     data() {
@@ -679,11 +737,13 @@ export default {
             parentBoarder:false,
             childBoarder:false,
             addBatchInfoDialogVis:false,
-            Search,
             Upload,
             batchNameFilter:'',
             orderRidFilter: '',
             orderCidFilter: '',
+            orderDateFilter:'',
+            orderCustomerNameFilter:'',
+            orderCustomerBrandFilter:'',
             displayData: [],
             filterData: [],
             unfilteredData: [],
@@ -696,6 +756,9 @@ export default {
             shoeRidFilter: '',
             checkgroup:[],
             curShoeTypeId : '',
+            batchTypes:[],
+            batchTypeNameList:[],
+            curBatchType:{},
             orderForm: {
                 orderRId: '',
                 orderCid: '',
@@ -709,6 +772,8 @@ export default {
                 orderRId:'',
                 orderCid: '',
                 customerId: null,
+                batchInfoTypeName:'',
+                batchInfoTypeId:'',
                 orderStartDate: '',
                 orderEndDate: '',
                 status: '',
@@ -721,6 +786,7 @@ export default {
                 customerId:'',
                 packagingInfoName: '',
                 packagingInfoLocale: '',
+                batchInfoTypeId:'',
                 size34Ratio: 0,
                 size35Ratio: 0,
                 size36Ratio: 0,
@@ -734,8 +800,44 @@ export default {
                 size44Ratio: 0,
                 size45Ratio: 0,
                 size46Ratio: 0,
-                totalQuantityInRatio:0
+                totalQuantityRatio:0
                 },
+                attrMapping:{
+                "size34Name":"size34Ratio",
+                "size35Name":"size35Ratio",
+                "size36Name":"size36Ratio",
+                "size37Name":"size37Ratio",
+                "size38Name":"size38Ratio",
+                "size39Name":"size39Ratio",
+                "size40Name":"size40Ratio",
+                "size41Name":"size41Ratio",
+                "size42Name":"size42Ratio",
+                "size43Name":"size43Ratio",
+                "size44Name":"size44Ratio",
+                "size45Name":"size45Ratio",
+                "size46Name":"size46Ratio",
+            },
+            shortcuts : [
+                {text:"Last Week", 
+                    value:() =>{
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600*1000*24*7)
+                        return [start, end]
+                    }
+                },
+                {
+                    text:"Last Month",
+                    value:() => {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+                        return [start, end]
+                        
+                }
+            }
+
+            ]
 
         }
     },
@@ -748,7 +850,6 @@ export default {
     computeTotal(row){
         console.log(row)
         return 10
-
     },
   },
     mounted() {
@@ -757,8 +858,15 @@ export default {
         this.getAllCutomers()
         this.getAllOrderStatus()
         this.getAllShoes()
+        this.getAllBatchTypes()
     },
     methods: {
+        formatDateToYYYYMMDD(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed, so we add 1
+        const day = String(date.getDate()).padStart(2, '0'); // pad the day with leading zero if needed
+        return `${year}-${month}-${day}`;
+        },
         findOrderShoeTypeById(id){
             return this.newOrderForm.orderShoeTypes.find(orderShoeType => { return orderShoeType.shoeTypeId == id
             })
@@ -780,6 +888,9 @@ export default {
             this.isImportVis = true
         },
         openCreateOrderDialog() {
+            this.newOrderForm.orderStartDate = this.formatDateToYYYYMMDD(new Date())
+            // this.$refs.startdatepicker.change()
+            console.log(this.newOrderForm.orderStartDate)
             this.orderCreationInfoVis = true
             this.shoeTableDisplayData = this.shoeTableData
         },  
@@ -798,6 +909,7 @@ export default {
             }
         },
         openAddBatchInfoDialog(row) {
+            console.log(this.curBatchType)
             this.curShoeTypeId = row.shoeTypeId
             this.addBatchInfoDialogVis = true
             const idField = 'packagingInfoId'
@@ -806,6 +918,7 @@ export default {
         },
         openAddCustomerBatchDialog() {
             this.batchForm.customerId = this.newOrderForm.customerId
+            this.batchForm.batchInfoTypeId = this.newOrderForm.batchInfoTypeId
             this.addCustomerBatchDialogVisible = true
         },
         submitAddCustomerBatchForm() {
@@ -817,13 +930,7 @@ export default {
             }).then(async () => {
                 const result = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
             }).then(async () => {
-                const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{params: {
-                customerid: this.newOrderForm.customerId}
-                
-            })
-                this.customerBatchData = response.data
-                this.customerDisplayBatchData = response.data
-                console.log(response.data)
+                this.getCustomerBatchInfo(this.newOrderForm.customerId)
 
             })
             this.addCustomerBatchDialogVisible = false
@@ -853,7 +960,7 @@ export default {
         updateAmountMapping(out_row, inner_row){
             console.log(out_row)
             console.log(inner_row)
-            out_row.amountMapping[inner_row.packagingInfoId] = out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityInRatio 
+            out_row.amountMapping[inner_row.packagingInfoId] = out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityRatio 
         },
         handleSelectionShoeType(selection) {
             this.selectedShoeList = selection
@@ -869,14 +976,22 @@ export default {
                     customerid: customerId
                 }
             })
-            // console.log(response.data)
-            this.customerBatchData = response.data
-            this.customerDisplayBatchData = response.data
+            console.log(response.data)
+            this.customerBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
+            this.customerDisplayBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
+            console.log(this.customerBatchData)
         },
         async getAllCutomers() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
             this.customerDetails = response.data
             this.customerNameList = [... new Set(response.data.map(item => item.customerName))]
+        },
+        async getAllBatchTypes() {
+            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
+            this.batchTypes = response.data.batchDataTypes
+            console.log(this.batchTypes)
+            this.batchTypeNameList = [... new Set(this.batchTypes.map(item => item.batchInfoTypeName))]
+            console.log(this.batchTypeNameList)
         },
         updateCustomerBrand() {
             console.log(this.newOrderForm.customerName)
@@ -886,6 +1001,15 @@ export default {
             this.newOrderForm.customerId = this.customerDetails.filter(item => item.customerName == this.newOrderForm.customerName)
             .filter(item => item.customerBrand == this.newOrderForm.customerBrand)[0].customerId
             console.log(this.newOrderForm.customerId)
+        },
+        updateBatchType(){
+            this.curBatchType = this.batchTypes.filter(item => item.batchInfoTypeName == this.newOrderForm.batchInfoTypeName)[0]
+            this.newOrderForm.batchInfoTypeId = this.curBatchType.batchInfoTypeId
+            console.log(this.newOrderForm.batchInfoTypeId)
+        },
+        filterDisplayOrder()
+        {
+            return
         },
         filterBatchData(){
             if (!this.batchNameFilter){
@@ -958,6 +1082,7 @@ export default {
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
         closeAddBatchInfodialog(){
+            return
         },
         async getAllOrders() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
@@ -1007,14 +1132,60 @@ export default {
             }
 
         },
-
+        filterOrderByDate()
+        {
+            if (!this.orderDateFilter)
+            {
+                this.displayData = this.unfilteredData
+            }
+            else
+            {
+                
+                this.filterData = this.unfilteredData.filter((task)=>
+            {
+                const filterMatch = new Date(task.orderStartDate) >= this.orderDateFilter[0] && new Date(task.orderEndDate) <= this.orderDateFilter[1]
+                return filterMatch 
+            })
+            this.displayData = this.filterData
+            }
+        },
+        filterByCustomerName()
+        {
+            if(!this.orderCustomerNameFilter)
+            {
+                this.displayData = this.unfilteredData
+            }
+            else
+            {
+                this.filterData = this.unfilteredData.filter((task)=>
+            {
+                const filterMatch = task.customerName.toLowerCase().includes(this.orderCustomerNameFilter.toLowerCase())
+                return filterMatch
+            })
+                this.displayData = this.filterData
+            }
+        },
+        filterByCustomerBrand()
+        {
+            if(!this.orderCustomerBrandFilter)
+        {
+            this.displayData = this.unfilteredData
+        }
+            else {
+                this.filterData = this.unfilteredData.filter((task)=> {
+                    const filterMatch = task.customerBrand.toLowerCase().includes(this.orderCustomerBrandFilter.toLowerCase())
+                    return filterMatch
+                })
+                this.displayData = this.filterData
+            }
+        },
         filterByCid(){
             if (!this.orderCidFilter){
                 this.displayData = this.unfilteredData
             }
             else {
                 this.filterData = this.unfilteredData.filter((task) => {
-                const filterMatch = task.orderCid.includes(this.orderCidFilter)
+                const filterMatch = task.orderCid.toLowerCase().includes(this.orderCidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
@@ -1026,7 +1197,7 @@ export default {
             }
             else {
                 this.filterData = this.unfilteredData.filter((task) => {
-                const filterMatch = task.orderRid.includes(this.orderRidFilter)
+                const filterMatch = task.orderRid.toLowerCase().includes(this.orderRidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
@@ -1038,7 +1209,7 @@ export default {
             }
             else{
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
+                const filterMatch = task.shoeRId.toLowerCase().includes(this.shoeRidFilter.toLowerCase())
                 return filterMatch})
 
                 this.shoeTableDisplayData = this.shoeTableTemp}
@@ -1050,7 +1221,6 @@ export default {
             }
             else
             {
-
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
                 const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
                 return filterMatch})
@@ -1301,6 +1471,7 @@ export default {
                 {
                 orderRId:'',
                 orderCid: '',
+                batchInfoTypeId:'',
                 customerId: null,
                 orderStartDate: '',
                 orderEndDate: '',

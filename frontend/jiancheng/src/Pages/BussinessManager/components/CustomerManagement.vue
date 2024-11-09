@@ -53,7 +53,7 @@
         title="添加客户"
         v-model="addCustomerDialogVisible"
         width="30%">
-        <el-form :model="customerForm" label-width="120px" :inline="false" size="normal">
+        <el-form :model="customerForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="客户名称">
                 <el-input v-model="customerForm.customerName"></el-input>
             </el-form-item>
@@ -74,14 +74,16 @@
         title = "配码管理"
         v-model="editCustomerBatchDialogVisible"
         width = "100%">
+        <el-tabs v-model="activeTab" type="card" tab-position="top" @tab-change="updateSelectedTab()" >
+            <el-tab-pane v-for="currentTab in batchTypeTabs" :key="currentTab.batchInfoTypeId" :label="currentTab.batchInfoTypeName" :name="currentTab.batchInfoTypeId">
         <el-col :span="4" :offset="15"
             ><el-input
                 v-model="batchNameFilter"
                 placeholder="请输入配码名称"
-                size="normal"
-                :suffix-icon="Search"
+                size="default"
+                :suffix-icon="'el-icon-search'"
                 clearable
-                @input="filterBatchData"
+                @input="filterBatchData(currentTab.batchInfoTypeId)"
             ></el-input>
         </el-col>
         <el-row :gutter="20">
@@ -97,23 +99,15 @@
             </el-col>
         </el-row>
         <el-row :gutter="20">
-            <el-table :data="customerDisplayBatchData" border stripe height="500">
-                <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
-                <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                <el-table-column prop="size34Ratio" label="34" />
-                <el-table-column prop="size35Ratio" label="35" />
-                <el-table-column prop="size36Ratio" label="36" />
-                <el-table-column prop="size37Ratio" label="37" />
-                <el-table-column prop="size38Ratio" label="38" />
-                <el-table-column prop="size39Ratio" label="39" />
-                <el-table-column prop="size40Ratio" label="40" />
-                <el-table-column prop="size41Ratio" label="41" />
-                <el-table-column prop="size42Ratio" label="42" />
-                <el-table-column prop="size43Ratio" label="43" />
-                <el-table-column prop="size44Ratio" label="44" />
-                <el-table-column prop="size45Ratio" label="45" />
-                <el-table-column prop="size46Ratio" label="46" />
-                <el-table-column prop="totalQuantityInRatio" label="对/件" sortable/>
+            <el-table :data="this.batchTabDisplayData[currentTab.batchInfoTypeId]" border stripe height="500">
+                <el-table-column prop="packagingInfoName" label="配码名称" sortable
+                width="120px"/>
+                <el-table-column v-for ="col in Object.keys(this.attrMapping).filter(key => currentTab[key] != null)"
+                                :label="currentTab[col]"
+                                :prop="attrMapping[col]"
+                                width="80px"></el-table-column>
+                <el-table-column prop="totalQuantityRatio" label="对/件" sortable
+                width="80px"/>
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default" @click="editBatchInfo(scope.row)"
@@ -129,64 +123,32 @@
             <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
             <el-button @click="openAddCustomerBatchDialog()"> 添加配码</el-button>
         </span>
+    </el-tab-pane>
+
+    </el-tabs>
     </el-dialog>
 
     <el-dialog
         title="添加配码"
         v-model="addCustomerBatchDialogVisible"
-        width="30%">
-        <el-form :model="batchForm" label-width="120px" :inline="false" size="normal">
+        width="30%"
+        >
+        <el-form :model="batchForm" label-width="120px" :inline="false" size="default" >
             <el-form-item label="配码名称">
                 <el-input v-model="batchForm.packagingInfoName"></el-input>
             </el-form-item>
             <el-form-item label="配码地区">
-                <el-input v-model="batchForm.packagingInfoLocale"></el-input>
+                <el-input v-model="batchForm.packagingInfoLocale" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item label="34">
-                <el-input v-model="batchForm.size34Ratio"></el-input>
+            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != null)"
+                                :label="this.currentBatchType[col]">
+                                <el-input v-model=batchForm[attrMapping[col]]></el-input>
             </el-form-item>
-            <el-form-item label="35">
-                <el-input v-model="batchForm.size35Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="36">
-                <el-input v-model="batchForm.size36Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="37">
-                <el-input v-model="batchForm.size37Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="38">
-                <el-input v-model="batchForm.size38Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="39">
-                <el-input v-model="batchForm.size39Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="40">
-                <el-input v-model="batchForm.size40Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="41">
-                <el-input v-model="batchForm.size41Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="42">
-                <el-input v-model="batchForm.size42Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="43">
-                <el-input v-model="batchForm.size43Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="44">
-                <el-input v-model="batchForm.size44Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="45">
-                <el-input v-model="batchForm.size45Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="46">
-                <el-input v-model="batchForm.size46Ratio"></el-input>
-            </el-form-item>
-
         </el-form>
         
         <template #footer>
         <span>
-            <el-button @click="addCustomerDialogVisible = false">取消</el-button>
+            <el-button @click="addCustomerBatchDialogVisible = false">取消</el-button>
             <el-button type="primary" @click="submitAddCustomerBatchForm">确认提交</el-button>
         </span>
         </template>
@@ -195,59 +157,24 @@
     <el-dialog
         title="编辑配码"
         v-model="editBatchDialogVisible"
-        width="30%">
-        <el-form :model="batchForm" label-width="120px" :inline="false" size="normal">
+        width="30%"
+        >
+        <el-form :model="batchForm" label-width="120px" :inline="false" size="default" >
             <el-form-item label="配码名称">
                 <el-input v-model="batchForm.packagingInfoName"></el-input>
             </el-form-item>
             <el-form-item label="配码地区">
-                <el-input v-model="batchForm.packagingInfoLocale"></el-input>
+                <el-input v-model="batchForm.packagingInfoLocale" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item label="34">
-                <el-input v-model="batchForm.size34Ratio"></el-input>
+            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != null)"
+                                :label="this.currentBatchType[col]">
+                                <el-input v-model=batchForm[attrMapping[col]]></el-input>
             </el-form-item>
-            <el-form-item label="35">
-                <el-input v-model="batchForm.size35Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="36">
-                <el-input v-model="batchForm.size36Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="37">
-                <el-input v-model="batchForm.size37Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="38">
-                <el-input v-model="batchForm.size38Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="39">
-                <el-input v-model="batchForm.size39Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="40">
-                <el-input v-model="batchForm.size40Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="41">
-                <el-input v-model="batchForm.size41Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="42">
-                <el-input v-model="batchForm.size42Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="43">
-                <el-input v-model="batchForm.size43Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="44">
-                <el-input v-model="batchForm.size44Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="45">
-                <el-input v-model="batchForm.size45Ratio"></el-input>
-            </el-form-item>
-            <el-form-item label="46">
-                <el-input v-model="batchForm.size46Ratio"></el-input>
-            </el-form-item>
-
         </el-form>
         
         <template #footer>
         <span>
-            <el-button @click="editBatchDialogVisible = false">取消</el-button>
+            <el-button @click="editBatchDialogVisible=false">取消</el-button>
             <el-button type="primary" @click="submitEditCustomerBatchForm">确认提交</el-button>
         </span>
         </template>
@@ -257,7 +184,7 @@
         title="编辑客户"
         v-model="editCustomerDialogVisible"
         width="30%">
-        <el-form :model="customerForm" label-width="120px" :inline="false" size="normal">
+        <el-form :model="customerForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="客户名称">
                 <el-input v-model="customerForm.customerName"></el-input>
             </el-form-item>
@@ -277,14 +204,16 @@
 </template>
 
 <script>
-import axios from 'axios'
+import axios from 'axios';
 export default {
     data() {
         return {
+            activeTab:0,
             customerForm: {
                 customerId: '',
                 customerName: '',
-                customerBrand: ''
+                customerBrand: '',
+                customerBatchInfos:[]
             },
             batchForm: {
                 customerId:'',
@@ -305,24 +234,44 @@ export default {
                 size46Ratio: 0,
                 totalQuantityInRatio:0
                 },
+            attrMapping:{
+                "size34Name":"size34Ratio",
+                "size35Name":"size35Ratio",
+                "size36Name":"size36Ratio",
+                "size37Name":"size37Ratio",
+                "size38Name":"size38Ratio",
+                "size39Name":"size39Ratio",
+                "size40Name":"size40Ratio",
+                "size41Name":"size41Ratio",
+                "size42Name":"size42Ratio",
+                "size43Name":"size43Ratio",
+                "size44Name":"size44Ratio",
+                "size45Name":"size45Ratio",
+                "size46Name":"size46Ratio",
+            },
             addCustomerDialogVisible: false,
             editCustomerDialogVisible: false,
             addCustomerBatchDialogVisible: false,
             editCustomerBatchDialogVisible: false,
             editBatchDialogVisible:false,
             batchNameFilter: '',
+            batchTypeTabs:[],
             customerTableData: [],
             customerBatchData: [],
             customerDisplayBatchData: [],
             customerFilteredBatchData: [],
             batchDialogCurCustomerName:'',
             batchDialogCurCustomerBrand:'',
-            batchDialogCurCustomerId:''
+            batchDialogCurCustomerId:'',
+            batchTabDisplayData:{},
+            colNameToProp:[],
+            currentBatchType:{}
         }
     },
     mounted() {
         this.$setAxiosToken()
         this.getCustomerList()
+        // this.getAllBatchTypes()
     },
     methods: {
         async getCustomerList() {
@@ -336,27 +285,73 @@ export default {
                 }
             })
             console.log(response.data)
-            this.customerBatchData = response.data
-            this.customerDisplayBatchData = response.data
+            this.batchTypeTabs = response.data
+            this.batchTypeTabs.forEach((info_type) => {this.batchTabDisplayData[info_type.batchInfoTypeId] = info_type.batchInfoList})
+            this.currentBatchType = this.batchTypeTabs[0]
+            this.activeTab = this.currentBatchType.batchInfoTypeId
         },
-        filterBatchData(){
-            if (!this.batchNameFilter){
-                this.customerDisplayBatchData = this.customerBatchData
-            }
-            else{
-                this.customerFilteredBatchData = this.customerBatchData.filter((task) => {
-                    const filteredData = task.packagingInfoName.includes(this.batchNameFilter)
-                    return filteredData
-                })
-                this.customerDisplayBatchData = this.customerFilteredBatchData
-            }
+        // async getAllBatchTypes(){
+        //     const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
+        //     console.log(response.data["batchDataTypes"])
+        //     this.batchTypeTabs = response.data["batchDataTypes"]
+        //     console.log(this.batchTypeTabs[0].batchInfoTypeName)
+        // },
+        
+        updateSelectedTab(){
+            console.log(this.activeTab)
+            this.currentBatchType = this.batchTypeTabs.find((batchtype) => batchtype.batchInfoTypeId == this.activeTab)
         },
         editBatchInfo(row){
-           
             this.editBatchDialogVisible = true
             this.batchForm = row
-            console.log(row)
+        },
+        resetBatchForm(){
+            this.batchForm = {
+                        customerId:'',
+                        packagingInfoName: '',
+                        packagingInfoLocale: '',
+                        batchInfoTypeId:'',
+                        size34Ratio: 0,
+                        size35Ratio: 0,
+                        size36Ratio: 0,
+                        size37Ratio: 0,
+                        size38Ratio: 0,
+                        size39Ratio: 0,
+                        size40Ratio: 0,
+                        size41Ratio: 0,
+                        size42Ratio: 0,
+                        size43Ratio: 0,
+                        size44Ratio: 0,
+                        size45Ratio: 0,
+                        size46Ratio: 0,
+                        totalQuantityInRatio:0
+                        }
+        },
 
+        openAddCustomerBatchDialog() {
+            console.log(this.currentBatchType.batchInfoTypeId)
+            this.resetBatchForm()
+            this.batchForm.customerId = this.batchDialogCurCustomerId
+            this.batchForm.batchInfoTypeId = this.activeTab
+            this.batchForm.packagingInfoLocale = this.currentBatchType.batchInfoTypeName
+            this.addCustomerBatchDialogVisible = true
+        },
+        openEditCustomerBatchDialog(row) {
+            this.batchDialogCurCustomerName = row.customerName
+            this.batchDialogCurCustomerBrand = row.customerBrand
+            this.batchDialogCurCustomerId = row.customerId
+            this.getCustomerBatchInfo(row.customerId)
+            this.editCustomerBatchDialogVisible = true
+        },
+        closeEditBatchDialog(){
+            console.log(123)
+            this.editBatchDialogVisible=false
+            this.resetBatchForm()
+            console.log(321)
+        },
+        closeAddBatchDialog(){
+            this.addCustomerBatchDialogVisible=false
+            this.resetBatchForm()
         },
         deleteBatchInfo(row){
             this.$confirm('确定删除此配码吗？', '提示', {
@@ -364,14 +359,17 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then( async () => {
-                const response = await axios.delete(
-                    `${this.$apiBaseUrl}/customer/deletebatchinfo`,
-                    {
+                const body = {
                         params:{
                             customerId:this.batchDialogCurCustomerId,
                             packagingInfoId:row.packagingInfoId
                         }
-                    })
+                    }
+                console.log(body)
+                console.log(`${this.$apiBaseUrl}/customer/deletebatchinfo`)
+                const response = await axios.delete(
+                    `${this.$apiBaseUrl}/customer/deletebatchinfo`,
+                    body)
                 if (response.status === 200){
                     this.$message({
                         type:'success',
@@ -394,18 +392,6 @@ export default {
         openEditCustomerDialog(row) {
             this.editCustomerDialogVisible = true
             this.customerForm = row
-
-        },
-        openAddCustomerBatchDialog(row) {
-            this.batchForm.customerId = this.batchDialogCurCustomerId
-            this.addCustomerBatchDialogVisible = true
-        },
-        openEditCustomerBatchDialog(row) {
-            this.batchDialogCurCustomerName = row.customerName
-            this.batchDialogCurCustomerBrand = row.customerBrand
-            this.batchDialogCurCustomerId = row.customerId
-            this.getCustomerBatchInfo(row.customerId)
-            this.editCustomerBatchDialogVisible = true
         },
         submitAddCustomerForm() {
             console.log(this.customerForm)
@@ -442,15 +428,16 @@ export default {
             })
         },
         submitAddCustomerBatchForm() {
-            console.log(this.batchForm)
             this.$confirm('确认添加客户配码信息？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
+                console.log(this.batchForm)
                 const response = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
             }).then( async () => {
-                this.getCustomerBatchInfo(this.batchDialogCurCustomerId)})
+                this.getCustomerBatchInfo(this.batchDialogCurCustomerId)
+                this.resetBatchForm()})
             this.addCustomerBatchDialogVisible = false
         },
         submitEditCustomerBatchForm(){
@@ -467,25 +454,7 @@ export default {
                         message: '修改成功'
                     })
                     this.editBatchDialogVisible = false
-                    this.batchForm = {
-                        customerId:'',
-                        packagingInfoName: '',
-                        packagingInfoLocale: '',
-                        size34Ratio: 0,
-                        size35Ratio: 0,
-                        size36Ratio: 0,
-                        size37Ratio: 0,
-                        size38Ratio: 0,
-                        size39Ratio: 0,
-                        size40Ratio: 0,
-                        size41Ratio: 0,
-                        size42Ratio: 0,
-                        size43Ratio: 0,
-                        size44Ratio: 0,
-                        size45Ratio: 0,
-                        size46Ratio: 0,
-                        totalQuantityInRatio:0
-                        }
+                    this.resetBatchForm()
                     this.getCustomerBatchInfo(this.batchDialogCurCustomerId)
                 // this.getCustomerList()
                 } else {

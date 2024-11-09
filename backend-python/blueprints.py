@@ -14,6 +14,7 @@ from shared_apis.department import department_bp
 from usage_calculation.usage_calculation import usage_calculation_bp
 from bussiness.order_import import order_import_bp
 from bussiness.order_create import order_create_bp
+from bussiness.batch_info_type import batch_type_bp
 from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
 from technical.second_bom import second_bom_bp
@@ -33,7 +34,6 @@ from shared_apis.outsource_factory import outsource_factory_bp
 from production.scheduling import production_scheduling_bp
 from production.outsource import outsource_bp
 from production.production_status_nodes import production_status_nodes_bp
-from bussiness.batch_info_type import batch_type_bp
 
 
 def register_blueprints():

@@ -65,10 +65,17 @@ def edit_shoe():
     shoe_rid = request.json.get("shoeRId")
     shoe_designer = request.json.get("shoeDesigner")
     try:
-        shoe = Shoe.query.get(shoe_id)
-        shoe.shoe_rid = shoe_rid
-        shoe.shoe_designer = shoe_designer
-        db.session.commit()
-        return jsonify({"message": "Shoe updated successfully"})
+        # check if shoeRid exists
+        db_shoe_id = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).shoe_id
+        # existing shoeRid have different entity, merge them
+        if db_shoe_id != shoe_id:
+            #use db_shoe_id
+            return jsonify({"error":"impletment shoeType merge Shoeid"}), 500
+        else:
+            shoe = Shoe.query.get(shoe_id)
+            shoe.shoe_rid = shoe_rid
+            shoe.shoe_designer = shoe_designer
+            db.session.commit()
+            return jsonify({"message": "Shoe updated successfully"})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
