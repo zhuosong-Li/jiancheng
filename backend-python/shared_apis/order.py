@@ -3,6 +3,7 @@ import time
 from app_config import db
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
+from api_utility import to_snake, to_camel
 from constants import IN_PRODUCTION_ORDER_NUMBER
 
 from models import (
@@ -21,7 +22,8 @@ from models import (
     Color,
     Bom,
     TotalBom,
-    PackagingInfo
+    PackagingInfo,
+    BatchInfoType
 )
 from sqlalchemy import or_, text
 from datetime import datetime
@@ -160,9 +162,10 @@ def get_order_info_business():
     order_id = request.args.get("orderid")
     print(order_id)
     entity = (
-        db.session.query(Order, Customer, OrderStatus)
+        db.session.query(Order, Customer, OrderStatus,BatchInfoType,)
         .filter(Order.order_id == order_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
+        .join(BatchInfoType, Order.batch_info_type_id == BatchInfoType.batch_info_type_id)
         .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
         .first()
         )
@@ -177,11 +180,16 @@ def get_order_info_business():
         # .join(Color, Color.shoe_id )
         .all()
         )
+    batch_info_type_response = {}
+    for attr in entity.BatchInfoType.__table__.columns.keys():
+        batch_info_type_response[to_camel(attr)] = getattr(entity.BatchInfoType, attr)
     print(order_shoe_entities)
     result = {
         "orderId":entity.Order.order_id,
         "orderRid":entity.Order.order_rid,
         "orderCid":entity.Order.order_cid,
+        "batchInfoTypeName":entity.BatchInfoType.batch_info_type_name,
+        "batchInfoType":batch_info_type_response,
         "startDate":formatted_start_date,
         "endDate":formatted_end_date,
         "customerName":entity.Customer.customer_name,
@@ -302,7 +310,7 @@ def get_order_info_business():
                     #     print(parsed_key)
                     #     batchInfoEntity[parsed_key] = getattr(entity.PackagingInfo, db_attr)
                     # response_order_shoe['shoeTypeBatchInfoList'].append(batchInfoEntity)
-                    temp_obj = { "".join(db_attr.rsplit("_")) : getattr(entity.PackagingInfo, db_attr) for db_attr in database_attr_list}
+                    temp_obj = { to_camel(db_attr) : getattr(entity.PackagingInfo, db_attr) for db_attr in database_attr_list}
                     temp_obj["unitPerRatio"] = entity.OrderShoeBatchInfo.packaging_info_quantity
                     response_order_shoe['shoeTypeBatchInfoList'].append(temp_obj)
                         
@@ -507,6 +515,7 @@ def get_all_orders():
                 "orderRid": order.order_rid,
                 "orderCid": order.order_cid,
                 "customerName": customer.customer_name,
+                "customerBrand":customer.customer_brand,
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,
                 "orderStatus": (

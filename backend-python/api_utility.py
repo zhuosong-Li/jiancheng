@@ -139,3 +139,11 @@ def outsource_status_converter(status_val):
     else:
         status = "外包结束"
     return status
+
+def to_camel(db_attr_name):
+    split_list = db_attr_name.split("_")
+    result = "".join([split_list[0]] + [db_attr.capitalize() for db_attr in split_list[1:]])
+    return result
+
+def to_snake(request_attr_name):
+    return ''.join(['_'+c.lower() if c.isupper() else c for c in request_attr_name]).lstrip('_')

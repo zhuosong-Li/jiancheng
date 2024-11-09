@@ -58,16 +58,18 @@
 	                </el-descriptions>
 	            </el-col>
 	        </el-row>
-	        <el-table :data="this.orderShoeData" border stripe height = "900" :row-key = "(row) => {return row.orderShoeTypeId}">
+	        <el-table :data="orderShoeData" border stripe height = "900" :row-key = "(row) => {return row.orderShoeTypeId}">
             <el-table-column type = "expand" >
                 <template #default = "props">
                     <el-table :data = "props.row.orderShoeTypes" border :row-key = "(row) => {return row.packagingInfoId}">
                         <el-table-column type="expand">
                             <template #default="scope">
                                 <el-table :data = "scope.row.shoeTypeBatchInfoList">
-                                    <el-table-column prop="packaginginfolocale" label ="地区"/>
-                                    <el-table-column prop="packaginginfoname" label ="名称"/>
-                                    <el-table-column prop="size34ratio" label ="34"/>
+                                    <el-table-column prop="packagingInfoName" label ="名称"/>
+                                    <el-table-column v-for="col in Object.keys(this.attrMappingToRatio).filter(key=>this.batchInfoType[key] != null)"
+                                                     :prop="attrMappingToRatio[col]"
+                                                     :label="batchInfoType[col]"></el-table-column>
+                                    <!-- <el-table-column prop="size34ratio" label ="34"/>
                                     <el-table-column prop="size35ratio" label ="35"/>
                                     <el-table-column prop="size36ratio" label ="36"/>
                                     <el-table-column prop="size37ratio" label ="37"/>
@@ -79,14 +81,18 @@
                                     <el-table-column prop="size43ratio" label ="43"/>
                                     <el-table-column prop="size44ratio" label ="44"/>
                                     <el-table-column prop="size45ratio" label ="45"/>
-                                    <el-table-column prop="size46ratio" label ="46"/>
-                                    <el-table-column prop="totalquantityratio" label ="比例和"/>
+                                    <el-table-column prop="size46ratio" label ="46"/> -->
+                                    <el-table-column prop="totalQuantityRatio" label ="比例和"/>
                                     <el-table-column prop="unitPerRatio" label ="比例单位数量"/>
 
                                 </el-table>
                             </template>
                         </el-table-column>
                         <el-table-column prop="shoeTypeColorName" label="颜色名称" sortable/>
+                        <!-- <el-table-column v-for="col in Object.keys(attrMappingToAmount).filter(key=>batchInfoType[key] != null)"
+                                        :prop="props.row.orderShoeTypes.shoeTypeBatchData[]"
+                                        :label="batchInfoType[col]">
+                        </el-table-column> -->
                         <el-table-column prop="shoeTypeBatchData.size34Amount" label="34" />
                         <el-table-column prop="shoeTypeBatchData.size35Amount" label="35" />
                         <el-table-column prop="shoeTypeBatchData.size36Amount" label="36" />
@@ -294,7 +300,38 @@ export default {
                         orderShoeId:'',
                         technicalRemark:'',
                         materialRemark:''
-            }
+            },
+            batchInfoType:{},
+            attrMappingToRatio:{
+                "size34Name":"size34Ratio",
+                "size35Name":"size35Ratio",
+                "size36Name":"size36Ratio",
+                "size37Name":"size37Ratio",
+                "size38Name":"size38Ratio",
+                "size39Name":"size39Ratio",
+                "size40Name":"size40Ratio",
+                "size41Name":"size41Ratio",
+                "size42Name":"size42Ratio",
+                "size43Name":"size43Ratio",
+                "size44Name":"size44Ratio",
+                "size45Name":"size45Ratio",
+                "size46Name":"size46Ratio",
+            },
+            attrMappingToAmount:{
+                "size34Name":"size34Amount",
+                "size35Name":"size35Amount",
+                "size36Name":"size36Amount",
+                "size37Name":"size37Amount",
+                "size38Name":"size38Amount",
+                "size39Name":"size39Amount",
+                "size40Name":"size40Amount",
+                "size41Name":"size41Amount",
+                "size42Name":"size42Amount",
+                "size43Name":"size43Amount",
+                "size44Name":"size44Amount",
+                "size45Name":"size45Amount",
+                "size46Name":"size46Amount",
+            },
 
         }
     },
@@ -311,6 +348,7 @@ export default {
           console.log(response.data)
           this.orderData = response.data
           this.orderShoeData = response.data.orderShoeAllData
+          this.batchInfoType = response.data.batchInfoType
       	},
         togglePriceChange()
         {

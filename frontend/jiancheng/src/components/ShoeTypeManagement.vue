@@ -23,12 +23,10 @@
                 <el-table-column
                     prop="shoeRId"
                     label="鞋型编号"
-                    width = "100"
                 ></el-table-column>
                 <el-table-column
                     prop="shoeColor"
                     label="鞋型颜色"
-                    width = "100"
                 ></el-table-column>
                 <el-table-column
                     prop="shoeImage"
@@ -41,18 +39,17 @@
                 <el-table-column
                     prop="shoeDesigner"
                     label="设计师"
-                    width = 100
                 ></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
                             type="primary"
-                            size="mini"
+                            size="small"
                             @click="openEditShoeDialog(scope.row)"
                             >编辑</el-button
                         >
                         <el-button type="primary" size="default" @click="openReUploadImageDialog(scope.row)">重新上传鞋图</el-button>
-                        <el-button type="danger" size="default" @click="deleteShoeType(scope.row)">Delete</el-button>
+                        
                     </template>
                 </el-table-column>
             </el-table>
@@ -63,6 +60,32 @@
             <el-button type="primary" @click="openAddShoeDialog">添加新鞋型</el-button>
         </el-col>
     </el-row>
+    <el-dialog
+        title="添加鞋款颜色"
+        v-model="addShoeColorDialogVis"
+        width="50%"
+        >
+        <el-form :model="colorForm" label-width="120px" :inline="false" size="normal">
+            <el-form-item label="颜色中文名称">
+                <el-input v-model="colorForm.colorName"></el-input>
+            </el-form-item>
+            <el-form-item label="颜色英文名称">
+                <el-input v-model="colorForm.colorNameEN"></el-input>
+            </el-form-item>
+            <el-form-item label="颜色西语名称">
+                <el-input v-model="colorForm.colorNameSP"></el-input>
+            </el-form-item>
+            <el-form-item label="颜色意语名称">
+                <el-input v-model="colorForm.colorNameIT"></el-input>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <span>
+            <el-button @click="addShoeColorDialogVis=false">取消</el-button>
+            <el-button type="primary" @click="addShoeColor">提交新颜色</el-button>
+        </span>
+        </template>
+    </el-dialog>
     <el-dialog
         title="添加新鞋型"
         v-model="addShoeDialogVis"
@@ -89,6 +112,7 @@
         <template #footer>
         <span>
             <el-button @click="addShoeDialogVis = false">取消</el-button>
+            <el-button type="primary" icon = "Edit" @click="openShoeColorDialog">添加鞋款颜色</el-button>
             <el-button type="primary" @click="addNewShoe">确认上传</el-button>
         </span>
         </template>
@@ -156,7 +180,6 @@
 <script>
 import axios from 'axios';
 import { Search } from '@element-plus/icons-vue';
-import { ElMessage } from 'element-plus'
 
 export default {
     data() {
@@ -172,9 +195,16 @@ export default {
                 shoeAdjuster: "",
                 shoeColor: "",
             },
+            colorForm:{
+                colorName:"",
+                colorNameEN:"",
+                colorNameIT:"",
+                colorNameSP:""
+            },
             reUploadImageDialogVis: false,
             editShoeDialogVis: false,
             addShoeDialogVis: false,
+            addShoeColorDialogVis:false,
             Search,
             inheritIdSearch: "",
             shoeTableData: [],
@@ -199,7 +229,6 @@ export default {
         },
         async getAllShoes() {
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
-            console.log(response.data)
             this.shoeTableData = response.data;
         },
         async getFilterShoes() {
@@ -237,6 +266,16 @@ export default {
         submitNewImage() {
             this.$refs.imageReUpload.submit();
         },
+        openShoeColorDialog(){
+            this.addShoeColorDialogVis = true
+        },
+        async addShoeColor() {
+            const response = await axios.post(`${this.$apiBaseUrl}/general/addnewcolor`, this.colorForm)
+            this.getAllColors()
+            this.addShoeColorDialogVis = false
+            // to do handle on success/ fail
+            return
+        },
         addNewShoe() {
             console.log(this.orderForm);
             this.$confirm('确认添加新鞋型？', '提示', {
@@ -251,8 +290,6 @@ export default {
                         type: 'success',
                         message: '添加成功'
                     });
-
-                    await this.$refs.imageUpload.submit();
                     this.addShoeDialogVis = false;
                     this.orderForm = {
                         shoeId: "",
