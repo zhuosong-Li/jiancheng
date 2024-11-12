@@ -12,58 +12,31 @@
             </el-row>
             <el-collapse>
                 <el-collapse-item title="鞋型配码信息" name="鞋型配码信息">
-                    <el-table :data="shoeBatchInfo" :span-method="(args) => spanMethod(args, shoeBatchInfo)" border
-                        stripe :max-height="500">
+                    <el-table :data="shoeBatchInfo" :span-method="spanMethod" border stripe :max-height="500">
                         <el-table-column prop="colorName" label="颜色"></el-table-column>
-                        <el-table-column prop="batchName" label="配码编号"></el-table-column>
-                        <el-table-column prop="size34" label="34"></el-table-column>
-                        <el-table-column prop="size35" label="35"></el-table-column>
-                        <el-table-column prop="size36" label="36"></el-table-column>
-                        <el-table-column prop="size37" label="37"></el-table-column>
-                        <el-table-column prop="size38" label="38"></el-table-column>
-                        <el-table-column prop="size39" label="39"></el-table-column>
-                        <el-table-column prop="size40" label="40"></el-table-column>
-                        <el-table-column prop="size41" label="41"></el-table-column>
-                        <el-table-column prop="size42" label="42"></el-table-column>
-                        <el-table-column prop="size43" label="43"></el-table-column>
-                        <el-table-column prop="size44" label="44"></el-table-column>
-                        <el-table-column prop="size45" label="45"></el-table-column>
-                        <el-table-column prop="size46" label="46"></el-table-column>
-                        <el-table-column prop="pairAmount" label="双数"></el-table-column>
                         <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+                        <el-table-column prop="batchName" label="配码编号"></el-table-column>
+                        <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
+                            :label="column.label"></el-table-column>
+                        <el-table-column prop="pairAmount" label="双数"></el-table-column>
                     </el-table>
                 </el-collapse-item>
                 <el-collapse-item title="计划自产数量" name="计划自产数量">
                     <el-tabs v-model="currentProductionAmountTab" type="border-card" tab-position="top">
                         <el-tab-pane v-for="item in productionAmountPanes" :key="item.key" :label="item.label"
                             :name="item.key">
-                            <el-table :data="shoeBatchProductionPlan[item.key]"
-                                :span-method="(args) => spanMethod(args, shoeBatchProductionPlan[item.key])" border
-                                stripe :max-height="500">
+                            <el-table :data="shoeBatchProductionPlan[item.key]" border stripe :max-height="500">
                                 <el-table-column prop="colorName" label="颜色"></el-table-column>
-                                <el-table-column prop="batchName" label="配码编号"></el-table-column>
-                                <el-table-column prop="size34" label="34"></el-table-column>
-                                <el-table-column prop="size35" label="35"></el-table-column>
-                                <el-table-column prop="size36" label="36"></el-table-column>
-                                <el-table-column prop="size37" label="37"></el-table-column>
-                                <el-table-column prop="size38" label="38"></el-table-column>
-                                <el-table-column prop="size39" label="39"></el-table-column>
-                                <el-table-column prop="size40" label="40"></el-table-column>
-                                <el-table-column prop="size41" label="41"></el-table-column>
-                                <el-table-column prop="size42" label="42"></el-table-column>
-                                <el-table-column prop="size43" label="43"></el-table-column>
-                                <el-table-column prop="size44" label="44"></el-table-column>
-                                <el-table-column prop="size45" label="45"></el-table-column>
-                                <el-table-column prop="size46" label="46"></el-table-column>
-                                <el-table-column prop="pairAmount" label="双数"></el-table-column>
                                 <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+                                <el-table-column v-for="column in filteredColumns" :key="column.prop"
+                                    :prop="column.prop" :label="column.label">
+                                </el-table-column>
                             </el-table>
                         </el-tab-pane>
                     </el-tabs>
                 </el-collapse-item>
                 <el-collapse-item title="工价单" name="工价单">
-                    <el-tabs v-model="currentPriceReportTab" type="border-card" tab-position="top"
-                        @tab-click="">
+                    <el-tabs v-model="currentPriceReportTab" type="border-card" tab-position="top" @tab-click="">
                         <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
                             <el-row v-if="priceReportDict[item.key] === undefined">
                                 尚未有工价单
@@ -86,23 +59,23 @@
                 </el-collapse-item>
                 <el-collapse-item title="外包信息" name="外包信息">
                     <el-tabs v-model="currentOutsourceTab" type="border-card" tab-position="left">
-                        <el-tab-pane v-for="(row, index) in outsourceInfo" :key="row.outsourceInfoId"
-                            :name="index" :label="`外包${index+1}`">
+                        <el-tab-pane v-for="(row, index) in outsourceInfo" :key="row.outsourceInfoId" :name="index"
+                            :label="`外包${index + 1}`">
                             <el-descriptions title="" :column="3" border>
                                 <el-descriptions-item label="外包工厂" align="center">{{
                                     row.outsourceFactory.value }}</el-descriptions-item>
                                 <el-descriptions-item label="外包类型" align="center">{{
                                     row.outsourceType.toString()
-                                    }}</el-descriptions-item>
+                                }}</el-descriptions-item>
                                 <el-descriptions-item label="外包数量" align="center">{{
                                     row.outsourceAmount
-                                    }}</el-descriptions-item>
+                                }}</el-descriptions-item>
                                 <el-descriptions-item label="外包周期" align="center">
                                     {{ row.outsourceStartDate }} 至 {{ row.outsourceEndDate }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="最迟交货日期" align="center">{{
                                     row.deadlineDate
-                                    }}</el-descriptions-item>
+                                }}</el-descriptions-item>
                             </el-descriptions>
                             <Arrow :status="row.outsourceNode" :workflowType="2"></Arrow>
                             <el-row>
@@ -131,11 +104,12 @@ import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import Arrow from '@/components/OrderShoeProductionArrorView.vue'
-import { checkProductionStatus, checkOutsourceStatus } from '../../utils';
+import { checkProductionStatus, checkOutsourceStatus, shoeBatchInfoTableSpanMethod, productionLines, getShoeSizesName } from '../../utils';
 export default {
     props: ['orderId', "orderShoeId"],
     data() {
         return {
+            getShoeSizesName,
             orderTableData: [],
             currentRow: {},
             currentPriceReportTab: -1,
@@ -185,6 +159,7 @@ export default {
             outsourceInfo: [],
             currentProductionAmountTab: 0,
             priceReportDict: {},
+            shoeSizeColumns: [],
         }
     },
     components: {
@@ -195,8 +170,15 @@ export default {
         this.getOrderShoeStatus()
         this.getOrderShoeBatchInfo()
         this.getPriceReportData()
-        this.getOrderShoeBatchEstimatedAmount()
+        this.getOrderShoeProductionAmount()
         this.getOutsourceInfo()
+    },
+    computed: {
+        filteredColumns() {
+            return this.shoeSizeColumns.filter(column =>
+                this.shoeBatchInfo.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
+            );
+        }
     },
     methods: {
         async getOrderShoeStatus() {
@@ -207,11 +189,13 @@ export default {
         async getOrderShoeBatchInfo() {
             const params = { "orderShoeId": this.$props.orderShoeId }
             const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
+            this.shoeSizeColumns = await this.getShoeSizesName(this.$props.orderShoeId)
             this.shoeBatchInfo = response.data
+            this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo)
         },
-        async getOrderShoeBatchEstimatedAmount() {
+        async getOrderShoeProductionAmount() {
             const params = { "orderShoeId": this.$props.orderShoeId }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchestimatedamount`, { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeproductionamount`, { params })
             this.shoeBatchProductionPlan = response.data
             this.currentProductionAmountTab = 0
         },
@@ -268,12 +252,12 @@ export default {
         },
         async openOutsourceSetting() {
             const params = {
-				"orderId": this.$props.orderId,
-				"orderShoeId": this.$props.orderShoeId,
-			}
-			const queryString = new URLSearchParams(params).toString();
-			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
-			window.open(url, '_blank')
+                "orderId": this.$props.orderId,
+                "orderShoeId": this.$props.orderShoeId,
+            }
+            const queryString = new URLSearchParams(params).toString();
+            const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
+            window.open(url, '_blank')
         },
         async startOutsourceFlow(rowData) {
             try {
@@ -287,29 +271,29 @@ export default {
             }
             await this.getOutsourceInfo()
         },
-        spanMethod({ row, column, rowIndex, columnIndex }, tableData) {
-            // Merging 'colorName' and 'totalAmount' columns
-            if (columnIndex === 0 || columnIndex === 16) { // colorName and totalAmount columns
-                const currentColor = tableData[rowIndex].colorName;
+        // spanMethod({ row, column, rowIndex, columnIndex }, tableData) {
+        //     // Merging 'colorName' and 'totalAmount' columns
+        //     if (columnIndex === 0 || columnIndex === 16) { // colorName and totalAmount columns
+        //         const currentColor = tableData[rowIndex].colorName;
 
-                // Skip rows already merged
-                if (rowIndex > 0 && tableData[rowIndex - 1].colorName === currentColor) {
-                    return [0, 0]; // Skip this cell
-                }
+        //         // Skip rows already merged
+        //         if (rowIndex > 0 && tableData[rowIndex - 1].colorName === currentColor) {
+        //             return [0, 0]; // Skip this cell
+        //         }
 
-                // Calculate the rowspan for the current 'colorName'
-                let rowspan = 1;
-                for (let i = rowIndex + 1; i < tableData.length; i++) {
-                    if (tableData[i].colorName === currentColor) {
-                        rowspan++;
-                    } else {
-                        break;
-                    }
-                }
+        //         // Calculate the rowspan for the current 'colorName'
+        //         let rowspan = 1;
+        //         for (let i = rowIndex + 1; i < tableData.length; i++) {
+        //             if (tableData[i].colorName === currentColor) {
+        //                 rowspan++;
+        //             } else {
+        //                 break;
+        //             }
+        //         }
 
-                return [rowspan, 1]; // Set the rowspan for merging, and colspan = 1
-            }
-        }
+        //         return [rowspan, 1]; // Set the rowspan for merging, and colspan = 1
+        //     }
+        // }
     },
 }
 </script>

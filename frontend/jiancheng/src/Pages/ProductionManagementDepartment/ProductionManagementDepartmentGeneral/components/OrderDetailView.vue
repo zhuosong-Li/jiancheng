@@ -5,7 +5,7 @@
 		</el-header>
 		<el-main height="">
 			<el-row :gutter="20" style="text-align: center">
-				<el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center">订单生产详情</el-col>
+				<el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center">订单生产动态明细</el-col>
 			</el-row>
 			<el-row :gutter="20">
 				<el-col :span="24" :offset="0">
@@ -31,21 +31,24 @@
 					</el-descriptions>
 				</el-col>
 			</el-row>
+			<el-button v-if="isMultipleSelection" @click="openMultipleShoesDialog">
+				排产
+			</el-button>
+			<el-button @click="toggleSelectionMode">
+				{{ isMultipleSelection ? "退出" : "选择多个鞋型" }}
+			</el-button>
 			<el-row :gutter="20" style="margin-top: 20px">
 				<el-col :span="24" :offset="0">
-					<el-table :data="orderShoeDataTable" border style="height: 800px">
-						<el-table-column type="expand">
-							<template #default="{row}">
+					<el-table :data="orderShoeDataTable" border style="height: 800px"
+						@selection-change="handleSelectionChange">
+						<el-table-column v-if="isMultipleSelection" type="selection" width="55" />
+						<el-table-column type="expand" label="展开">
+							<template #default="props">
 								<h3>鞋型详情</h3>
-								<el-table :data="row.detail"
-									:span-method="(params) => orderShoeDataTableSpanMethod(params, row.detail)" border>
-									<el-table-column label="预览图" width="200">
-										<template #default="scope">
-											<el-image :src="scope.row.imageurl" fit="fill"></el-image>
-										</template>
-									</el-table-column>
+								<el-table :data="props.row.detail"
+									:span-method="(params) => orderShoeDataTableSpanMethod(params, props.row.detail)"
+									border>
 									<el-table-column label="颜色" prop="colorName" />
-									<el-table-column label="配码编号" prop="batchInfoName" />
 									<el-table-column label="订单总数" prop="batchAmount" />
 									<el-table-column label="裁断完成数量" prop="cuttingAmount" />
 									<el-table-column label="预备完成数量" prop="preSewingAmount" />
@@ -56,13 +59,23 @@
 						</el-table-column>
 						<el-table-column prop="shoeRId" label="公司编号" width="100"></el-table-column>
 						<el-table-column prop="customerProductName" label="客户型号" width="100"></el-table-column>
+						<el-table-column prop="a" label="物料到货情况" width="110">
+							<template #default="scope">
+								<el-button type="primary" size="small" @click="openLogisticsDialog(scope.row)">
+									详情
+								</el-button>
+							</template>
+						</el-table-column>
 						<el-table-column prop="percentageText" label="生产状态百分比"></el-table-column>
 						<el-table-column prop="totalShoes" label="当前鞋型订单总数"></el-table-column>
 						<el-table-column prop="status" label="状态"></el-table-column>
 						<el-table-column label="操作">
 							<template #default="scope">
-								<el-button type="primary" size="small"
-									@click="viewProductionSchedule(scope.row)">查看排期</el-button>
+								<el-button type="primary" size="small" @click="viewProductionSchedule(scope.row)">查看排期
+								</el-button>
+								<el-button size="small" @click="downloadInstructionForm(scope.row)">
+									工艺指令单
+								</el-button>
 							</template>
 						</el-table-column>
 					</el-table>
@@ -146,10 +159,8 @@
 						</el-row>
 						<el-row :gutter="20">
 							<el-col>
-								<el-table :data="tab.productionAmountTable" :span-method="tab.productionSpanMethod"
-									border stripe :max-height="500">
+								<el-table :data="tab.productionAmountTable" border stripe :max-height="500">
 									<el-table-column prop="colorName" label="颜色"></el-table-column>
-									<el-table-column prop="batchName" label="配码编号"></el-table-column>
 									<el-table-column prop="size34" label="34">
 										<template v-slot="scope">
 											<el-input v-model="scope.row.size34" />
@@ -255,6 +266,105 @@
 					</span>
 				</template>
 			</el-dialog>
+			<el-dialog title="鞋型所有材料物流信息" v-model="isMaterialLogisticVis" width="80%">
+				<el-row :gutter="20">
+					<el-col :span="24" :offset="0">
+						<el-table :data="logisticsMaterialData" border stripe>
+							<el-table-column prop="materialType" label="材料类型"></el-table-column>
+							<el-table-column prop="materialName" label="材料名称"></el-table-column>
+							<el-table-column prop="colorName" label="颜色"></el-table-column>
+							<el-table-column prop="estimatedInboundAmount" label="核定用量"></el-table-column>
+							<el-table-column prop="actualInboundAmount" label="采购数量"></el-table-column>
+							<el-table-column prop="supplierName" label="供应商名称"></el-table-column>
+							<el-table-column prop="materialArrivalDate" label="材料预计到达日期"></el-table-column>
+							<el-table-column prop="status" label="材料状态"></el-table-column>
+						</el-table>
+					</el-col>
+				</el-row>
+				<el-row :gutter="20">
+					<el-col :span="12" :offset="15">
+						<el-pagination @size-change="handleSizeChange" @current-change="handlePageChange"
+							:current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
+							layout="total, sizes, prev, pager, next, jumper" :total="logisticsRows" />
+					</el-col>
+				</el-row>
+				<template #footer>
+					<span>
+						<el-button type="primary" @click="isMaterialLogisticVis = false">返回</el-button>
+					</span>
+				</template>
+			</el-dialog>
+			<el-dialog title="多鞋型排产页面" v-model="isMultipleShoesDialogVis" width="80%">
+				<el-row :gutter="20">
+					已选中鞋型：{{ selectedRows.map(row => row.shoeRId).toString() }}
+				</el-row>
+				<el-row :gutter="20">
+					<el-form v-model="multipleShoesScheduleForm">
+						<el-form-item label="裁断线号选择">
+							<el-select v-model="multipleShoesScheduleForm.cuttingLineNumbers" placeholder="" @change=""
+								multiple>
+								<el-option v-for="item in productionLines['裁断']" :key="item" :label="item"
+									:value="item">
+								</el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="裁断生产周期">
+							<el-date-picker v-model="multipleShoesScheduleForm.cuttingDateRange" type="daterange"
+								size="default" range-separator="至" :disabled-date="disableDate"
+								value-format="YYYY-MM-DD">
+							</el-date-picker>
+						</el-form-item>
+						<el-form-item label="针车预备线号选择">
+							<el-select v-model="multipleShoesScheduleForm.preSewingLineNumbers" placeholder=""
+								@change="" multiple>
+								<el-option v-for="item in productionLines['针车预备']" :key="item" :label="item"
+									:value="item">
+								</el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="针车预备生产周期">
+							<el-date-picker v-model="multipleShoesScheduleForm.preSewingDateRange" type="daterange"
+								size="default" range-separator="至" :disabled-date="disableDate"
+								value-format="YYYY-MM-DD">
+							</el-date-picker>
+						</el-form-item>
+						<el-form-item label="针车线号选择">
+							<el-select v-model="multipleShoesScheduleForm.sewingLineNumbers" placeholder="" @change=""
+								multiple>
+								<el-option v-for="item in productionLines['针车']" :key="item" :label="item"
+									:value="item">
+								</el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="针车生产周期">
+							<el-date-picker v-model="multipleShoesScheduleForm.sewingDateRange" type="daterange"
+								size="default" range-separator="至" :disabled-date="disableDate"
+								value-format="YYYY-MM-DD">
+							</el-date-picker>
+						</el-form-item>
+						<el-form-item label="成型线号选择">
+							<el-select v-model="multipleShoesScheduleForm.moldingLineNumbers" placeholder="" @change=""
+								multiple>
+								<el-option v-for="item in productionLines['成型']" :key="item" :label="item"
+									:value="item">
+								</el-option>
+							</el-select>
+						</el-form-item>
+						<el-form-item label="成型生产周期">
+							<el-date-picker v-model="multipleShoesScheduleForm.moldingDateRange" type="daterange"
+								size="default" range-separator="至" :disabled-date="disableDate"
+								value-format="YYYY-MM-DD">
+							</el-date-picker>
+						</el-form-item>
+					</el-form>
+				</el-row>
+				<template #footer>
+					<span>
+						<el-button type="primary" @click="isMultipleShoesDialogVis = false">返回</el-button>
+						<el-button type="primary" @click="saveMultipleSchedules">保存</el-button>
+					</span>
+				</template>
+			</el-dialog>
 		</el-main>
 	</el-container>
 </template>
@@ -356,6 +466,24 @@ export default {
 			currentRow: {},
 			shoeBatchInfo: [],
 			spanMethod: null,
+			logisticsMaterialData: [],
+			logisticsRows: 0,
+			isMaterialLogisticVis: false,
+			logisticsCurrentPage: 1,
+			logisticsPageSize: 10,
+			isMultipleSelection: false,
+			selectedRows: [],
+			isMultipleShoesDialogVis: false,
+			multipleShoesScheduleForm: {
+				cuttingLineNumbers: [],
+				cuttingDateRange: [],
+				preSewingLineNumbers: [],
+				preSewingDateRange: [],
+				sewingLineNumbers: [],
+				sewingDateRange: [],
+				moldingLineNumbers: [],
+				moldingDateRange: [],
+			},
 		}
 	},
 	mounted() {
@@ -363,6 +491,80 @@ export default {
 		this.getProductionLineOptions()
 	},
 	methods: {
+		async saveMultipleSchedules() {
+			this.multipleShoesScheduleForm.cuttingStartDate = null
+			this.multipleShoesScheduleForm.cuttingEndDate = null
+			if (this.multipleShoesScheduleForm.cuttingDateRange.length == 2) {
+				this.multipleShoesScheduleForm.cuttingStartDate = this.multipleShoesScheduleForm.cuttingDateRange[0]
+				this.multipleShoesScheduleForm.cuttingEndDate = this.multipleShoesScheduleForm.cuttingDateRange[1]
+			}
+			this.multipleShoesScheduleForm.preSewingStartDate = null
+			this.multipleShoesScheduleForm.preSewingEndDate = null
+			if (this.multipleShoesScheduleForm.preSewingDateRange.length == 2) {
+				this.multipleShoesScheduleForm.preSewingStartDate = this.multipleShoesScheduleForm.preSewingDateRange[0]
+				this.multipleShoesScheduleForm.preSewingEndDate = this.multipleShoesScheduleForm.preSewingDateRange[1]
+			}
+			this.multipleShoesScheduleForm.sewingStartDate = null
+			this.multipleShoesScheduleForm.sewingEndDate = null
+			if (this.multipleShoesScheduleForm.sewingDateRange.length == 2) {
+				this.multipleShoesScheduleForm.sewingStartDate = this.multipleShoesScheduleForm.sewingDateRange[0]
+				this.multipleShoesScheduleForm.sewingEndDate = this.multipleShoesScheduleForm.sewingDateRange[1]
+			}
+			this.multipleShoesScheduleForm.moldingStartDate = null
+			this.multipleShoesScheduleForm.moldingEndDate = null
+			if (this.multipleShoesScheduleForm.moldingDateRange.length == 2) {
+				this.multipleShoesScheduleForm.moldingStartDate = this.multipleShoesScheduleForm.moldingDateRange[0]
+				this.multipleShoesScheduleForm.moldingEndDate = this.multipleShoesScheduleForm.moldingDateRange[1]
+			}
+			try {
+				let data = {
+					"orderShoeIdArr": this.selectedRows.map(row => row.orderShoeId),
+					"scheduleForm": this.multipleShoesScheduleForm
+				}
+				await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/savemultipleschedules`, data)
+				ElMessage.success("保存成功")
+			}
+			catch (error) {
+				ElMessage.error(error)
+			}
+		},
+		openMultipleShoesDialog() {
+			this.isMultipleShoesDialogVis = true
+		},
+		toggleSelectionMode() {
+			this.isMultipleSelection = !this.isMultipleSelection;
+		},
+		handleSelectionChange(selection) {
+			this.selectedRows = selection; // Stores selected rows
+			console.log(this.selectedRows)
+		},
+		downloadInstructionForm(row) {
+
+		},
+		openLogisticsDialog(rowData) {
+			this.logisticsCurrentPage = 1
+			this.viewLogisticDetail(rowData)
+			this.isMaterialLogisticVis = true
+		},
+		async viewLogisticDetail(row) {
+			const params = {
+				"page": this.logisticsCurrentPage,
+				"pageSize": this.logisticsPageSize,
+				"orderRId": row.orderRId,
+				"shoeRId": row.shoeRId
+			}
+			const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
+			this.logisticsMaterialData = response.data.result
+			this.logisticsRows = response.data.total
+		},
+		handleLogisticsPageChange(val) {
+			this.logisticsCurrentPage = val
+			this.viewLogisticDetail()
+		},
+		handleLogisticsPageChange(val) {
+			this.logisticsPageSize = val
+			this.viewLogisticDetail()
+		},
 		async getOrderInfo() {
 			let params = { orderId: this.$props.orderId }
 			let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
@@ -439,12 +641,30 @@ export default {
 			let temp = []
 			this.tabs.forEach(row => {
 				if (response.data[row.team] === undefined) {
-					row.productionAmountTable = JSON.parse(JSON.stringify(this.shoeBatchInfo))
+					row.productionAmountTable = []
+					let color_totals = {}
+					this.shoeBatchInfo.forEach(batchInfo => {
+						console.log(batchInfo)
+						if (!(batchInfo.colorName in color_totals)) {
+							color_totals[batchInfo.colorName] = { ...batchInfo }
+						}
+						else {
+							for (let i = 34; i < 47; i++) {
+								color_totals[batchInfo.colorName][`size${i}`] += batchInfo[`size${i}`]
+							}
+							color_totals[batchInfo.colorName][`pairAmount`] += batchInfo[`pairAmount`]
+						}
+					})
+					console.log(color_totals)
+					for (let color_key in color_totals) {
+						row.productionAmountTable.push(color_totals[color_key])
+					}
 				}
 				else {
 					row.productionAmountTable = response.data[row.team]
 				}
-				row.productionSpanMethod = shoeBatchInfoTableSpanMethod(row.productionAmountTable)
+				// row.productionSpanMethod = shoeBatchInfoTableSpanMethod(row.productionAmountTable)
+				console.log(row.productionAmountTable)
 			})
 			this.tabs[1].productionAmountTable = this.tabs[2].productionAmountTable
 		},
@@ -484,7 +704,7 @@ export default {
 					table.forEach(row => {
 						let obj = {
 							"productionAmountId": row.productionAmountId,
-							"orderShoeBatchInfoId": row.orderShoeBatchInfoId,
+							"orderShoeTypeId": row.orderShoeTypeId,
 							"productionTeam": index,
 						}
 						for (let i = 34; i < 47; i++) {
@@ -599,8 +819,8 @@ export default {
 			}
 		},
 		orderShoeDataTableSpanMethod({ row, column, rowIndex, columnIndex }, tableData) {
-			// Merging 'colorName' and 'totalAmount' columns
-			if (columnIndex === 0 || columnIndex === 1) {
+			// Merging 'colorName'
+			if (columnIndex === 0) {
 				const currentColor = tableData[rowIndex].colorName;
 				// Skip rows already merged
 				if (rowIndex > 0 && tableData[rowIndex - 1].colorName === currentColor) {

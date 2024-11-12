@@ -18,6 +18,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import Sidebar from '../components/Sidebar.vue'
 import LaborPriceReport from '../components/LaborPriceReport.vue'
 import AmountProduced from '../components/AmountProduced.vue'
+import ProcedureManagement from '../components/ProcedureManagement.vue'
 import Setting from '../components/Setting.vue'
 import History from '../components/History.vue'
 import LogOut from '../components/LogOut.vue'
@@ -29,7 +30,8 @@ const components = {
     Setting,
     AmountProduced,
     LogOut,
-    History
+    History,
+    ProcedureManagement
 }
 const currentTab = ref('LaborPriceReport')
 const optionFn = (option) => {

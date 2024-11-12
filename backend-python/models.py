@@ -108,20 +108,29 @@ class Message(db.Model):
 
 class QuantityReportItem(db.Model):
     __tablename__ = "quantity_report_item"
-    report_id = db.Column(
+    quantity_report_item_id = db.Column(
         db.BigInteger,
         primary_key=True,
         nullable=False,
     )
-    order_shoe_batch_info_id = db.Column(
-        db.BigInteger,
-        primary_key=True,
-        nullable=False,
-    )
-    amount = db.Column(db.Integer, nullable=True)
+    quantity_report_id = db.Column(db.BigInteger,nullable=False)
+    size_34_report_amount = db.Column(db.Integer, default=0)
+    size_35_report_amount = db.Column(db.Integer, default=0)
+    size_36_report_amount = db.Column(db.Integer, default=0)
+    size_37_report_amount = db.Column(db.Integer, default=0)
+    size_38_report_amount = db.Column(db.Integer, default=0)
+    size_39_report_amount = db.Column(db.Integer, default=0)
+    size_40_report_amount = db.Column(db.Integer, default=0)
+    size_41_report_amount = db.Column(db.Integer, default=0)
+    size_42_report_amount = db.Column(db.Integer, default=0)
+    size_43_report_amount = db.Column(db.Integer, default=0)
+    size_44_report_amount = db.Column(db.Integer, default=0)
+    size_45_report_amount = db.Column(db.Integer, default=0)
+    size_46_report_amount = db.Column(db.Integer, default=0)
+    total_report_amount = db.Column(db.Integer, default=0)
 
     def __repr__(self):
-        return f"<QuantityReportItem(report_id={self.report_id}, order_shoe_batch_info_id={self.order_shoe_batch_info_id})>"
+        return f"<QuantityReportItem(report_id={self.quantity_report_item_id}>"
 
 
 class QuantityReport(db.Model):
@@ -129,7 +138,7 @@ class QuantityReport(db.Model):
     report_id = db.Column(
         db.BigInteger, primary_key=True, nullable=False, autoincrement=True
     )
-    order_shoe_id = db.Column(
+    order_shoe_type_id = db.Column(
         db.BigInteger,
     )
     team = db.Column(db.String(10), nullable=False)
@@ -253,6 +262,7 @@ class Order(db.Model):
     salesman = db.Column(db.String(10), nullable=False)
     production_list_upload_status = db.Column(db.String(1), nullable=True)
     amount_list_upload_status = db.Column(db.String(1), nullable=True)
+    batch_info_type_id = db.Column(db.Integer, nullable=False)
 
     def __repr__(self):
         return f"<Order(order_id={self.order_id})>"
@@ -282,8 +292,8 @@ class OrderShoeStatus(db.Model):
 class OutsourceBatchInfo(db.Model):
     __tablename__ = 'outsource_batch_info'
     outsource_batch_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    order_shoe_batch_info_id = db.Column(db.BigInteger, nullable=False)
-    batch_outsource_amount = db.Column(db.Integer, default=0)
+    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    total_outsource_amount = db.Column(db.Integer, default=0)
     size_34_outsource_amount = db.Column(db.Integer, default=0)
     size_35_outsource_amount = db.Column(db.Integer, default=0)
     size_36_outsource_amount = db.Column(db.Integer, default=0)
@@ -298,6 +308,7 @@ class OutsourceBatchInfo(db.Model):
     size_45_outsource_amount = db.Column(db.Integer, default=0)
     size_46_outsource_amount = db.Column(db.Integer, default=0)
     outsource_info_id = db.Column(db.BigInteger, nullable=False)
+    is_product_arrived = db.Column(db.SmallInteger, nullable=False)
 
 class PackagingInfo(db.Model):
     __tablename__ = "packaging_info"
@@ -332,6 +343,29 @@ class PackagingInfo(db.Model):
         return "PackagingInfo"
     
 
+class BatchInfoType(db.Model):
+    __tablename__ = 'batch_info_type'
+
+    batch_info_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    batch_info_type_name = db.Column(db.String(10), nullable=True)
+    size_34_name = db.Column(db.String(5), nullable=True)
+    size_35_name = db.Column(db.String(5), nullable=True)
+    size_36_name = db.Column(db.String(5), nullable=True)
+    size_37_name = db.Column(db.String(5), nullable=True)
+    size_38_name = db.Column(db.String(5), nullable=True)
+    size_39_name = db.Column(db.String(5), nullable=True)
+    size_40_name = db.Column(db.String(5), nullable=True)
+    size_41_name = db.Column(db.String(5), nullable=True)
+    size_42_name = db.Column(db.String(5), nullable=True)
+    size_43_name = db.Column(db.String(5), nullable=True)
+    size_44_name = db.Column(db.String(5), nullable=True)
+    size_45_name = db.Column(db.String(5), nullable=True)
+    size_46_name = db.Column(db.String(5), nullable=True)
+
+    def __repr__(self):
+        return f"<BatchInfoType(batch_info_type_id={self.batch_info_type_id}, batch_info_type_name='{self.batch_info_type_name}')>"
+
+
 class OrderShoeBatchInfo(db.Model):
     __tablename__ = "order_shoe_batch_info"
     order_shoe_batch_info_id = db.Column(
@@ -339,10 +373,6 @@ class OrderShoeBatchInfo(db.Model):
     )
     name = db.Column(db.String(20), nullable=False)
     total_amount = db.Column(db.Integer, nullable=True)
-    cutting_amount = db.Column(db.Integer, nullable=True)
-    pre_sewing_amount = db.Column(db.Integer, nullable=True)
-    sewing_amount = db.Column(db.Integer, nullable=True)
-    molding_amount = db.Column(db.Integer, nullable=True)
     size_34_amount = db.Column(db.Integer, nullable=True)
     size_35_amount = db.Column(db.Integer, nullable=True)
     size_36_amount = db.Column(db.Integer, nullable=True)
@@ -392,9 +422,7 @@ class OrderShoeProductionAmount(db.Model):
     size_46_production_amount = db.Column(db.Integer, default=0)
     total_production_amount = db.Column(db.Integer, default=0)
     production_team = db.Column(db.SmallInteger, nullable=False)
-    order_shoe_batch_info_id = db.Column(
-        db.BigInteger,
-    )
+    order_shoe_type_id = db.Column(db.BigInteger)
 
     def __repr__(self):
         return f"<OrderShoeProductionAmount(order_shoe_production_amount_id={self.order_shoe_production_amount_id})>"
@@ -439,6 +467,7 @@ class OutsourceInfo(db.Model):
     semifinished_estimated_outbound_date = db.Column(db.Date, nullable=True)
     semifinished_required = db.Column(db.Boolean, nullable=True)
     material_estimated_outbound_date = db.Column(db.Date, nullable=True)
+    rejection_reason = db.Column(db.String(50), nullable=True)
     order_shoe_id = db.Column(
         db.BigInteger,
     )
@@ -458,9 +487,9 @@ class OrderShoeProductionInfo(db.Model):
     pre_sewing_line_group = db.Column(db.String(30), nullable=True)
     sewing_line_group = db.Column(db.String(30), nullable=True)
     molding_line_group = db.Column(db.String(30), nullable=True)
-    is_cutting_outsourced = db.Column(db.Boolean, nullable=True)
-    is_sewing_outsourced = db.Column(db.Boolean, nullable=True)
-    is_molding_outsourced = db.Column(db.Boolean, nullable=True)
+    is_cutting_outsourced = db.Column(db.SmallInteger, nullable=True)
+    is_sewing_outsourced = db.Column(db.SmallInteger, nullable=True)
+    is_molding_outsourced = db.Column(db.SmallInteger, nullable=True)
     cutting_start_date = db.Column(db.Date, nullable=True)
     cutting_end_date = db.Column(db.Date, nullable=True)
     sewing_start_date = db.Column(db.Date, nullable=True)
@@ -640,7 +669,7 @@ class SemifinishedShoeStorage(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
     semifinished_inbound_datetime = db.Column(db.DateTime)
-    order_shoe_id = db.Column(db.BigInteger, nullable=False)
+    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
     semifinished_status = db.Column(db.SmallInteger)
     semifinished_object = db.Column(db.SmallInteger)
@@ -811,11 +840,7 @@ class UnitPriceReportDetail(db.Model):
         primary_key=True,
         nullable=False,
     )
-    procedure_id = db.Column(
-        db.BigInteger,
-        primary_key=True,
-        nullable=False,
-    )
+    procedure_name = db.Column(db.String(50),nullable=False)
     price = db.Column(db.Float, nullable=False)
     note = db.Column(db.String(600), nullable=True)
 
@@ -842,6 +867,15 @@ class UnitPriceReport(db.Model):
     def to_dict(obj):
         """Convert SQLAlchemy object to dictionary."""
         return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
+    
+
+class UnitPriceReportTemplate(db.Model):
+    __tablename__ = "unit_price_report_template"
+    unit_price_report_template_id = db.Column(
+        db.Integer, primary_key=True, nullable=False, autoincrement=True
+    )
+    unit_price_report_id = db.Column(db.BigInteger, nullable=False)
+    shoe_id = db.Column(db.Integer, nullable=False)
 
 
 class MaterialWarehouse(db.Model):
@@ -858,7 +892,7 @@ class FinishedShoeStorage(db.Model):
     __tablename__ = "finished_shoe_storage"
     finished_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     finished_inbound_datetime = db.Column(db.DateTime, nullable=False)
-    order_shoe_id = db.Column(
+    order_shoe_type_id = db.Column(
         db.BigInteger,
     )
     finished_amount = db.Column(db.Integer, default=0, nullable=False)
@@ -980,6 +1014,10 @@ class OrderShoeType(db.Model):
     order_shoe_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     shoe_type_id = db.Column(db.BigInteger, nullable=False)
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
+    cutting_amount = db.Column(db.Integer, default=0)
+    pre_sewing_amount = db.Column(db.Integer, default=0)
+    sewing_amount = db.Column(db.Integer, default=0)
+    molding_amount = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f"<OrderShoeType(order_shoe_type_id={self.order_shoe_type_id})>"

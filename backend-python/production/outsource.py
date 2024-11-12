@@ -1,0 +1,552 @@
+import traceback
+from datetime import datetime, timedelta
+
+from api_utility import format_date, format_line_group, outsource_status_converter
+from app_config import db
+from constants import *
+from event_processor import EventProcessor
+from flask import Blueprint, current_app, jsonify, request
+from models import *
+from sqlalchemy import func, or_
+from sqlalchemy.dialects.mysql import insert
+from constants import OUTSOURCE_STATUS_MAPPING
+
+outsource_bp = Blueprint("outsource_bp", __name__)
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getorderoutsourceoverview", methods=["GET"]
+)
+def get_order_outsource_overview():
+    page = request.args.get("page", type=int)
+    page_size = request.args.get("pageSize", type=int)
+    order_rid = request.args.get("orderRId")
+    shoe_rid = request.args.get("shoeRId")
+    query = (
+        db.session.query(
+            Order,
+            OrderShoe,
+            Shoe,
+            Customer,
+            OrderShoeProductionInfo.is_cutting_outsourced,
+            OrderShoeProductionInfo.is_sewing_outsourced,
+            OrderShoeProductionInfo.is_molding_outsourced,
+        )
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(Customer, Customer.customer_id == Order.customer_id)
+        .join(
+            OrderShoeProductionInfo,
+            OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
+        )
+        .filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
+    )
+    if order_rid and order_rid != "":
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
+    if shoe_rid and shoe_rid != "":
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    count_result = query.distinct().count()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
+    result = []
+    for row in response:
+        (
+            order,
+            order_shoe,
+            shoe,
+            customer,
+            is_cutting_outsourced,
+            is_sewing_outsourced,
+            is_molding_outsourced,
+        ) = row
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name,
+            "orderEndDate": format_date(order.end_date),
+            "isCuttingOutsourced": is_cutting_outsourced,
+            "isSewingOutsourced": is_sewing_outsourced,
+            "isMoldingOutsourced": is_molding_outsourced,
+        }
+        result.append(obj)
+    return {"result": result, "totalLength": count_result}
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getordershoeoutsourceinfo", methods=["GET"]
+)
+def get_order_shoe_outsource_info():
+    order_shoe_id = request.args.get("orderShoeId")
+    response = (
+        (
+            db.session.query(OutsourceInfo, OutsourceFactory)
+            .join(OrderShoe, OrderShoe.order_shoe_id == OutsourceInfo.order_shoe_id)
+            .join(
+                OutsourceFactory,
+                OutsourceFactory.factory_id == OutsourceInfo.factory_id,
+            )
+        )
+        .filter(OrderShoe.order_shoe_id == order_shoe_id)
+        .all()
+    )
+    result = []
+    for row in response:
+        outsource_info, factory = row
+        temp = []
+        for number in outsource_info.outsource_type.split(","):
+            if number == "0":
+                temp.append("裁断")
+            elif number == "1":
+                temp.append("针车")
+            elif number == "2":
+                temp.append("成型")
+        obj = {
+            "outsourceInfoId": outsource_info.outsource_info_id,
+            "outsourceType": temp,
+            "outsourceFactory": {
+                "id": factory.factory_id,
+                "value": factory.factory_name,
+            },
+            "outsourceAmount": outsource_info.outsource_amount,
+            "outsourceStartDate": outsource_info.outsource_start_date.strftime(
+                "%Y-%m-%d"
+            ),
+            "outsourceEndDate": outsource_info.outsource_end_date.strftime("%Y-%m-%d"),
+            "outsourceStatus": outsource_status_converter(
+                outsource_info.outsource_status
+            ),
+            "deadlineDate": outsource_info.deadline_date.strftime("%Y-%m-%d"),
+            "semifinishedRequired": outsource_info.semifinished_required,
+            "materialEstimatedOutboundDate": outsource_info.material_estimated_outbound_date.strftime(
+                "%Y-%m-%d"
+            ),
+            "rejectionReason": outsource_info.rejection_reason
+        }
+        if outsource_info.semifinished_estimated_outbound_date:
+            obj["semifinishedEstimatedOutboundDate"] = (
+                outsource_info.semifinished_estimated_outbound_date.strftime("%Y-%m-%d")
+            )
+        result.append(obj)
+    return result
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getoutsourcebatchinfo", methods=["GET"]
+)
+def get_outsource_batch_info():
+    order_shoe_id = request.args.get("orderShoeId")
+    outsource_info_id = request.args.get("outsourceInfoId")
+    entities = (
+        db.session.query(OutsourceBatchInfo, OrderShoeType.order_shoe_type_id, Color)
+        .join(
+            OrderShoeType,
+            OutsourceBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+        )
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Color, Color.color_id == ShoeType.color_id)
+        .filter(
+            OrderShoeType.order_shoe_id == order_shoe_id,
+            OutsourceBatchInfo.outsource_info_id == outsource_info_id,
+        )
+        .all()
+    )
+    # Dictionary to accumulate total amounts by color
+    color_totals = {}
+
+    # First loop to accumulate total amounts for each color
+    for entity in entities:
+        outsource_batch_info, _, color = entity
+        if color.color_name not in color_totals:
+            color_totals[color.color_name] = 0
+        color_totals[color.color_name] += outsource_batch_info.total_outsource_amount
+    # Second loop to build the result list and include the color totals
+    result = []
+    for entity in entities:
+        outsource_batch_info, order_shoe_type_id, color = entity
+        obj = {
+            "outsourceBatchInfoId": outsource_batch_info.outsource_batch_info_id,
+            "orderShoeTypeId": order_shoe_type_id,
+            "colorName": color.color_name,
+            "totalAmount": color_totals[
+                color.color_name
+            ],  # Add total amount for the color
+        }
+        for i in range(34, 47):
+            obj[f"size{i}Amount"] = getattr(
+                outsource_batch_info, f"size_{i}_outsource_amount"
+            )
+        result.append(obj)
+    return result
+
+
+@outsource_bp.route(
+    "/production/productionmanager/storeoutsourceforordershoe", methods=["PUT"]
+)
+def store_outsource_for_order_shoe():
+    outsource_input = request.get_json()
+    departments = ""
+    for line in outsource_input["type"]:
+        if line == "裁断":
+            departments += "0,"
+        elif line == "针车":
+            departments += "1,"
+        elif line == "成型":
+            departments += "2,"
+        else:
+            return jsonify({"message": "failed"}), 400
+    departments = departments[:-1]
+    obj = {
+        "outsource_type": departments,
+        "factory_id": outsource_input["factoryId"],
+        "outsource_start_date": outsource_input["outsourceStartDate"],
+        "outsource_end_date": outsource_input["outsourceEndDate"],
+        "deadline_date": outsource_input["deadlineDate"],
+        "material_estimated_outbound_date": outsource_input[
+            "materialEstimatedOutboundDate"
+        ],
+        "outsource_amount": 0,
+        "outsource_status": 0,
+        "order_shoe_id": outsource_input["orderShoeId"],
+    }
+    obj["semifinished_required"] = outsource_input["semifinishedRequired"]
+    if obj["semifinished_required"]:
+        obj["semifinished_estimated_outbound_date"] = outsource_input[
+            "semifinishedEstimatedOutboundDate"
+        ]
+    else:
+        obj["semifinished_estimated_outbound_date"] = None
+    info_obj = None
+    outsource_info_id = -1
+    if outsource_input["outsourceInfoId"]:
+        obj["outsource_info_id"] = outsource_input["outsourceInfoId"]
+        outsource_info_id = outsource_input["outsourceInfoId"]
+        stmt = insert(OutsourceInfo).values(**obj)
+        stmt = stmt.on_duplicate_key_update(**obj)
+        db.session.execute(stmt)
+    else:
+        info_obj = OutsourceInfo(**obj)
+        db.session.add(info_obj)
+        db.session.flush()
+        print(info_obj)
+        outsource_info_id = info_obj.outsource_info_id
+    # set production info
+    production_obj = OrderShoeProductionInfo.query.filter_by(
+        order_shoe_id=outsource_input["orderShoeId"]
+    ).first()
+    for line in outsource_input["type"]:
+        if line == "裁断":
+            production_obj.is_cutting_outsourced = True
+        elif line == "针车":
+            production_obj.is_sewing_outsourced = True
+        elif line == "成型":
+            production_obj.is_molding_outsourced = True
+
+    outsource_amount = 0
+    for row in outsource_input["outsourceAmount"]:
+        outsource_obj = {}
+
+        outsource_obj["total_outsource_amount"] = 0
+        for i in range(34, 47):
+            outsource_obj[f"size_{i}_outsource_amount"] = 0
+            if f"size{i}Amount" in row:
+                outsource_obj[f"size_{i}_outsource_amount"] = int(row[f"size{i}Amount"])
+                outsource_obj["total_outsource_amount"] += int(row[f"size{i}Amount"])
+
+        # set outsource batch info id
+        if "outsourceBatchInfoId" in row:
+            outsource_obj["outsource_batch_info_id"] = row["outsourceBatchInfoId"]
+
+        # set outsource_info_id
+        outsource_obj["outsource_info_id"] = outsource_info_id
+
+        # set order_shoe_type_id
+        outsource_obj["order_shoe_type_id"] = row["orderShoeTypeId"]
+
+        stmt = insert(OutsourceBatchInfo).values(**outsource_obj)
+        stmt = stmt.on_duplicate_key_update(**outsource_obj)
+        db.session.execute(stmt)
+        outsource_amount += outsource_obj["total_outsource_amount"]
+
+    # set amount
+    outsource_info = db.session.query(OutsourceInfo).get(outsource_info_id)
+    outsource_info.outsource_amount = outsource_amount
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@outsource_bp.route(
+    "/production/productionmanager/deleteoutsourceinfo", methods=["DELETE"]
+)
+def delete_outsource_info():
+    order_shoe_id = request.args.get("orderShoeId")
+    outsource_info_id = request.args.get("outsourceInfoId")
+    outsource_info = (
+        db.session.query(OutsourceInfo)
+        .filter(OutsourceInfo.outsource_info_id == outsource_info_id)
+        .first()
+    )
+    # set production info
+    production_obj = OrderShoeProductionInfo.query.filter_by(
+        order_shoe_id=order_shoe_id
+    ).first()
+    for line in outsource_info.outsource_type.split(","):
+        if line == "0":
+            production_obj.is_cutting_outsourced = False
+        elif line == "1":
+            production_obj.is_sewing_outsourced = False
+        elif line == "2":
+            production_obj.is_molding_outsourced = False
+
+    db.session.delete(outsource_info)
+    db.session.query(OutsourceBatchInfo).filter(
+        OutsourceBatchInfo.outsource_info_id == outsource_info_id
+    ).delete()
+    db.session.commit()
+    return jsonify({"message": "succuess"})
+
+
+@outsource_bp.route(
+    "/production/productionmanager/submitoutsourceinfo", methods=["PATCH"]
+)
+def submit_outsource_info():
+    data = request.get_json()
+    # set approval status to 1
+    info_id = data["outsourceInfoId"]
+    response = (
+        db.session.query(OutsourceInfo)
+        .filter(OutsourceInfo.outsource_info_id == info_id)
+        .first()
+    )
+    response.outsource_status = 1
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@outsource_bp.route(
+    "/production/productionmanager/editoutsourcestatus", methods=["PATCH"]
+)
+def edit_outsource_status():
+    data = request.get_json()
+    outsource_info_id = data["outsourceInfoId"]
+    outsource_obj = db.session.query(OutsourceInfo).get(outsource_info_id)
+    outsource_obj.outsource_status = data["outsourceStatus"]
+    db.session.commit()
+    return jsonify({"message": "success"})
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getoutsourcesemifinishedshipping", methods=["GET"]
+)
+def get_outsource_semifinished_shipping():
+    outsource_info_id = request.args.get("outsourceInfoId")
+    response = (
+        db.session.query(OutsourceInfo, SemifinishedShoeStorage, ShoeOutboundRecord)
+        .join(
+            SemifinishedShoeStorage,
+            SemifinishedShoeStorage.order_shoe_id == OutsourceInfo.order_shoe_id,
+        )
+        .join(
+            ShoeOutboundRecord,
+            ShoeOutboundRecord.semifinished_shoe_storage_id
+            == SemifinishedShoeStorage.semifinished_shoe_id,
+        )
+        .filter(
+            OutsourceInfo.outsource_info_id == outsource_info_id,
+        )
+        .all()
+    )
+    result = []
+    for row in response:
+        outsource_info, shoe_storage, record = row
+        obj = {
+            "semifinishedObject": shoe_storage.semifinished_object,
+            "semifinishedAmount": shoe_storage.semifinished_amount,
+            "semifinishedStatus": shoe_storage.semifinished_status,
+            "semifinishedEstimatedOutboundDate": outsource_info.semifinished_estimated_outbound_date,
+            "outboundDatetime": record.outbound_datetime,
+        }
+        result.append(obj)
+    return result
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getoutsourcematerialshipping", methods=["GET"]
+)
+def get_outsource_material_shipping():
+    outsource_info_id = request.args.get("outsourceInfoId")
+    # 发货数量：material_storage.current_amount
+    query1 = (
+        db.session.query(
+            OutsourceInfo,
+            MaterialStorage.material_outsource_status,
+            MaterialStorage.current_amount,
+            MaterialStorage.material_storage_color,
+            Material,
+            MaterialType,
+            OutboundRecord,
+        )
+        .join(OrderShoe, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            MaterialStorage,
+            MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id,
+        )
+        .join(
+            Material,
+            Material.material_id == MaterialStorage.material_id,
+        )
+        .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
+        .join(
+            OutboundRecord,
+            OutboundRecord.material_storage_id == MaterialStorage.material_storage_id,
+        )
+        .filter(
+            OutsourceInfo.outsource_info_id == outsource_info_id,
+        )
+    )
+    query2 = (
+        db.session.query(
+            OutsourceInfo,
+            SizeMaterialStorage.material_outsource_status,
+            SizeMaterialStorage.total_current_amount.label("current_amount"),
+            SizeMaterialStorage.size_material_color,
+            Material,
+            MaterialType,
+            OutboundRecord,
+        )
+        .join(OrderShoe, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            SizeMaterialStorage,
+            SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id,
+        )
+        .join(
+            Material,
+            Material.material_id == SizeMaterialStorage.material_id,
+        )
+        .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
+        .join(
+            OutboundRecord,
+            OutboundRecord.size_material_storage_id
+            == SizeMaterialStorage.size_material_storage_id,
+        )
+        .filter(
+            OutsourceInfo.outsource_info_id == outsource_info_id,
+        )
+    )
+    response = query1.union(query2).all()
+    result = []
+    for row in response:
+        (
+            outsource_info,
+            material_outsource_status,
+            current_amount,
+            color_name,
+            material,
+            material_type,
+            record,
+        ) = row
+        obj = {
+            "materialType": material_type.material_type_name,
+            "materialName": material.material_name,
+            "materialUnit": material.material_unit,
+            "outsourceStatus": material_outsource_status,
+            "outboundAmount": current_amount,
+            "materialEstimateOutboundDate": outsource_info.material_estimated_outbound_date,
+            "outboundDatetime": record.outbound_datetime,
+            "colorName": color_name,
+        }
+        result.append(obj)
+    return result
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getoutsourceapprovaloverview", methods=["GET"]
+)
+def get_outsource_approval_overview():
+    page = request.args.get("page", type=int)
+    page_size = request.args.get("pageSize", type=int)
+    order_rid = request.args.get("orderRId")
+    shoe_rid = request.args.get("shoeRId")
+    query = (
+        db.session.query(
+            Order,
+            OrderShoe,
+            Shoe,
+            OutsourceInfo,
+            OutsourceFactory
+        )
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .join(
+            OutsourceInfo, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id
+        )
+        .join(OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id)
+        .filter(OutsourceInfo.outsource_status != 0)
+    )
+    if order_rid and order_rid != "":
+        query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
+    if shoe_rid and shoe_rid != "":
+        query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    count_result = query.distinct().count()
+    response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
+    result = []
+    mapping = {"0": "裁断", "1": "针车", "2": "成型"}
+    for row in response:
+        (
+            order,
+            order_shoe,
+            shoe,
+            outsource_info,
+            outsource_factory
+        ) = row
+
+        arr = [mapping[team_int] for team_int in outsource_info.outsource_type.split(",")]
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name,
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
+            "outsourceInfoId": outsource_info.outsource_info_id,
+            "outsourceType": arr,
+            "factoryName": outsource_factory.factory_name,
+            "outsourceAmount": outsource_info.outsource_amount,
+            "outsourceStartDate": format_date(outsource_info.outsource_start_date),
+            "outsourceEndDate": format_date(outsource_info.outsource_end_date),
+            "outsourceStatus": outsource_status_converter(outsource_info.outsource_status),
+            "deadlineDate": format_date(outsource_info.deadline_date),
+            "semifinishedEstimatedOutboundDate": format_date(outsource_info.semifinished_estimated_outbound_date),
+            "semifinishedRequired": outsource_info.semifinished_required,
+            "materialEstimatedOutboundDate": format_date(outsource_info.material_estimated_outbound_date)
+        }
+        result.append(obj)
+    return {"result": result, "totalLength": count_result}
+
+
+@outsource_bp.route(
+    "/production/productionmanager/approveoutsource", methods=["PATCH"]
+)
+def approve_outsource():
+    outsource_info_id = request.get_json()["outsourceInfoId"]
+    entity = db.session.query(OutsourceInfo).get(outsource_info_id)
+    entity.outsource_status = 2
+    db.session.commit()
+    return {"message": "success"}
+
+
+@outsource_bp.route(
+    "/production/productionmanager/rejectoutsource", methods=["PATCH"]
+)
+def reject_outsource():
+    data = request.get_json()
+    outsource_info_id = data["outsourceInfoId"]
+    entity = db.session.query(OutsourceInfo).get(outsource_info_id)
+    entity.outsource_status = 3
+    entity.rejection_reason = data["rejectionReason"]
+    db.session.commit()
+    return {"message": "success"}

@@ -39,10 +39,9 @@
             <el-menu-item index="6" @click="handleMenuClick(6)">
               <span>数量审批</span>
             </el-menu-item>
-            <el-menu-item index="7">
-              <span>订单查询</span>
+            <el-menu-item index="7" @click="handleMenuClick(7)">
+              <span>订单生产明细</span>
             </el-menu-item>
-
             <el-menu-item index="8">
               <span>数据总览</span>
             </el-menu-item>
@@ -66,6 +65,7 @@ import OutSourceInfo from '../components/OutSourceInfo.vue'
 import ProductionSchedulingDialogue from '../components/ProductionSchedulingDialogue.vue'
 import ApprovalPage from '../components/ApprovalPage.vue'
 import ProductionManagement from '../components/ProductionManagement.vue'
+import OrderProgress from '../components/OrderProgress.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import axios from 'axios'
@@ -81,7 +81,8 @@ export default {
     ProductionSchedulingDialogue,
     OutSourceInfo,
     ApprovalPage,
-    ProductionManagement
+    ProductionManagement,
+    OrderProgress
   },
   data() {
     return {
@@ -115,6 +116,10 @@ export default {
           break
         case 6:
           this.currentComponent = 'ApprovalPage'
+          break
+        case 7:
+          this.currentComponent = 'OrderProgress'
+          break
       }
     },
   }

@@ -32,17 +32,20 @@
                         <div v-if="item.key === 1 && preSewingTableData !== null">
                             <SewingPriceReportTable :tableData="preSewingTableData"
                                 :procedureInfo="preSewingProcedureInfo" />
+                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
+                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
                         </div>
                         <div v-else-if="item.key === 2 && sewingTableData !== null">
                             <SewingPriceReportTable :tableData="sewingTableData" :procedureInfo="procedureInfo" />
+                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
+                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
                         </div>
                     </el-tab-pane>
                 </el-tabs>
                 <el-row>
                     <el-button-group style="position: fixed; right: 30px;">
-                        <el-button type="info" @click="">保存为模板</el-button>
-                        <el-button type="info" @click="">加载模板</el-button>
                         <el-button type="primary" @click="handleSaveData">保存</el-button>
+                        <el-button type="primary" @click="handleExport">下载为Excel</el-button>
                         <el-button type="success" @click="handleSubmit">提交</el-button>
                     </el-button-group>
                 </el-row>
@@ -52,9 +55,13 @@
                     <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
                         <div v-if="item.key === 1 && preSewingTableData !== null">
                             <PreviewReportPage :tableData="preSewingTableData" />
+                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
+                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
                         </div>
                         <div v-else-if="item.key === 2 && sewingTableData !== null">
                             <PreviewReportPage :tableData="sewingTableData" />
+                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
+                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
                         </div>
                     </el-tab-pane>
                 </el-tabs>
@@ -75,11 +82,11 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 const preSewingTableData = ref(null)
 const pewSewingReportId = ref(null)
-const preSewingProcedureInfo = ref({})
+const preSewingProcedureInfo = ref([])
 
 const sewingTableData = ref(null)
 const sewingReportId = ref(null)
-const procedureInfo = ref({})
+const procedureInfo = ref([])
 const statusName = ref('')
 const rejectionReason = ref('')
 const currentTab = ref(1)
@@ -114,9 +121,7 @@ const getSewingProcedures = async () => {
 const getProcedures = async (arr, name) => {
     const params = { team: name }
     const response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, { params })
-    response.data.forEach(row => {
-        arr.value[row.procedureName] = { "price": row.price, "id": row.procedureId }
-    });
+    arr.value = response.data
 }
 
 const getPreSewingPriceReportDetail = async () => {
@@ -147,19 +152,9 @@ const getPriceReportDetail = async () => {
 }
 
 const handleSaveData = async () => {
-    console.log(preSewingTableData.value, sewingTableData.value)
-    console.log(preSewingProcedureInfo.value, procedureInfo.value)
-    preSewingTableData.value.forEach(row => {
-        row["price"] = preSewingProcedureInfo.value[row.procedure]["price"]
-        row["procedureId"] = preSewingProcedureInfo.value[row.procedure]["id"]
-    })
     const response1 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
         { reportId: pewSewingReportId.value, newData: preSewingTableData.value })
 
-    sewingTableData.value.forEach(row => {
-        row["price"] = procedureInfo.value[row.procedure]["price"]
-        row["procedureId"] = procedureInfo.value[row.procedure]["id"]
-    })
     const response2 = await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
         { reportId: sewingReportId.value, newData: sewingTableData.value })
 
@@ -188,4 +183,52 @@ const handleSubmit = async () => {
     }
 
 }
+
+const saveAsTemplate = async () => {
+    let reportId = null
+    let reportData = null
+    if (currentTab.value == 1) {
+        reportId = pewSewingReportId.value
+        reportData = preSewingTableData.value
+    }
+    else {
+        reportId = sewingReportId.value
+        reportData = sewingTableData.value
+    }
+    try {
+        console.log(reportData)
+        await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
+        { reportId: reportId, newData: reportData })
+        await axios.put(`${apiBaseUrl}/production/savetemplate`,
+            {"reportId": reportId, "shoeRId": props.shoeRId})
+        ElMessage.success("保存成功")
+    }
+    catch (error) {
+        ElMessage.error("保存失败")
+    }
+}
+
+const loadTemplate = async () => {
+    let team = null
+    let tableData = null
+    if (currentTab.value == 1) {
+        team = '针车预备'
+        tableData = preSewingTableData
+    }
+    else {
+        team = '针车'
+        tableData = sewingTableData
+    }
+    try {
+        let params = {"shoeRId": props.shoeRId, "team": team}
+        let response = await axios.get(`${apiBaseUrl}/production/loadtemplate`, {params})
+        tableData.value = response.data
+        ElMessage.success("加载成功")
+    }
+    catch (error) {
+        ElMessage.error(error)
+    }
+}
+
+const handleExport = async () => { }
 </script>

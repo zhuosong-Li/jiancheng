@@ -35,45 +35,52 @@ def get_quantity_report_tasks():
         if team == "裁断":
             start_date = OrderShoeProductionInfo.cutting_start_date
             end_date = OrderShoeProductionInfo.cutting_end_date
-            produced_amount = OrderShoeBatchInfo.cutting_amount
             teamId = 0
         elif team == "针车预备":
             start_date = OrderShoeProductionInfo.pre_sewing_start_date
             end_date = OrderShoeProductionInfo.pre_sewing_end_date
-            produced_amount = OrderShoeBatchInfo.pre_sewing_amount
             teamId = 1
         elif team == "针车":
             start_date = OrderShoeProductionInfo.sewing_start_date
             end_date = OrderShoeProductionInfo.sewing_end_date
-            produced_amount = OrderShoeBatchInfo.sewing_amount
             teamId = 1
         elif team == "成型":
             start_date = OrderShoeProductionInfo.molding_start_date
             end_date = OrderShoeProductionInfo.molding_end_date
-            produced_amount = OrderShoeBatchInfo.molding_amount
             teamId = 2
         else:
             return jsonify({"message": "invalid team name"}), 400
-        amount_table = (
+        production_amount_table = (
             db.session.query(
                 OrderShoe.order_shoe_id,
                 func.sum(OrderShoeProductionAmount.total_production_amount).label(
                     "total_amount"
                 ),
-                func.sum(produced_amount).label("produced_amount"),
             )
             .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
             .join(
-                OrderShoeBatchInfo,
-                OrderShoeBatchInfo.order_shoe_type_id
-                == OrderShoeType.order_shoe_type_id,
-            )
-            .join(
                 OrderShoeProductionAmount,
-                OrderShoeProductionAmount.order_shoe_batch_info_id
-                == OrderShoeBatchInfo.order_shoe_batch_info_id,
+                OrderShoeProductionAmount.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id
             )
             .filter(OrderShoeProductionAmount.production_team == teamId)
+            .group_by(OrderShoe.order_shoe_id)
+        ).subquery()
+        report_amount_table = (
+            db.session.query(
+                OrderShoe.order_shoe_id,
+                func.sum(QuantityReportItem.total_report_amount).label(
+                    "total_report_amount"
+                ),
+            )
+            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(
+                QuantityReport,
+                QuantityReport.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id
+            )
+            .join(QuantityReportItem, QuantityReportItem.quantity_report_id == QuantityReport.report_id)
+            .filter(QuantityReport.team == team)
             .group_by(OrderShoe.order_shoe_id)
         ).subquery()
         query = (
@@ -85,8 +92,8 @@ def get_quantity_report_tasks():
                 start_date.label("start_date"),
                 end_date.label("end_date"),
                 literal(team).label("team"),
-                amount_table.c.produced_amount,
-                amount_table.c.total_amount,
+                report_amount_table.c.total_report_amount,
+                production_amount_table.c.total_amount,
             )
             .join(OrderShoe, OrderShoe.order_id == Order.order_id)
             .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -99,7 +106,8 @@ def get_quantity_report_tasks():
                 OrderShoeStatus,
                 OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .join(amount_table, amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(report_amount_table, report_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(production_amount_table, production_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
             .filter(
                 OrderShoeStatus.current_status == QUANTTIY_REPORT_REFERENCE[team],
                 OrderShoeStatus.current_status_value.in_([0, 1]),
@@ -137,7 +145,8 @@ def get_quantity_report_tasks():
             "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
             "customerName": customer.customer_name,
             "team": team,
-            "progress": str(produced_amount) + "/" + str(total_amount),
+            "producedAmount": produced_amount,
+            "totalAmount": total_amount
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
