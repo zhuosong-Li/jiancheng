@@ -94,7 +94,7 @@
                                             <el-table-column type="index"></el-table-column>
                                             <el-table-column
                                                 prop="packagingInfoName"
-                                                label="名称"
+                                                label="配码名称"
                                                 width="150"
                                             />
                                             <el-table-column
@@ -153,7 +153,6 @@
                                     label="总数量"
                                     width="120"
                                 />
-
                                 <el-table-column label="金额" width="120">
                                     <template #default="scope">
                                         <el-input
@@ -195,12 +194,20 @@
                                 v-if="!scope.row.orderShoeRemarkExist"
                                 type="primary"
                                 size="default"
-                                @click="oprenRemarkDialog(scope.row)"
+                                @click="openRemarkDialog(scope.row)"
                                 >添加备注
                             </el-button>
+                            
                             <el-text v-if="scope.row.orderShoeRemarkExist">{{
-                                scope.row.orderShoeRemark
+                                scope.row.orderShoeRemarkRep
                             }}</el-text>
+                            <el-button
+                                v-if="scope.row.orderShoeRemarkExist"
+                                type="warning"
+                                size="default"
+                                @click="openEditRemarkDialog(scope.row)">
+                                编辑备注
+                            </el-button>
                         </template>
                     </el-table-column>
                     <<!-- el-table-column label = "添加客户鞋型编号">
@@ -401,9 +408,15 @@ export default {
         toggleUnitChange() {
             this.unitChangeNotAllowed = !this.unitChangeNotAllowed
         },
-        oprenRemarkDialog(row) {
+        openRemarkDialog(row) {
             console.log(row.orderShoeId)
             this.remarkForm.orderShoeId = row.orderShoeId
+            this.remarkDialogVis = true
+        },
+        openEditRemarkDialog(row){
+            this.remarkForm.orderShoeId = row.orderShoeId
+            this.remarkForm.technicalRemark = row.orderShoeTechnicalRemark
+            this.remarkForm.materialRemark = row.orderShoeMaterialRemark
             this.remarkDialogVis = true
         },
         expandOpen(row, expand) {

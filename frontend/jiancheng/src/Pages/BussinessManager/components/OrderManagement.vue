@@ -5,14 +5,51 @@
         >
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="8" :offset="0"
-            >
-            <el-button size="default" type="primary" @click="openImportDialog"
-                >通过EXCEL上传订单</el-button
+        <el-col :span="4" :offset="0"
             >
             <el-button size="default" type="primary" @click="openCreateOrderDialog"
                 >创建订单</el-button
             >
+        </el-col>
+        <el-col :span="4" :offset="0"
+        >
+        <div class="demo-date-picker">
+            <div class="block">
+            <span class="demonstration">时间筛选订单</span>
+            <el-date-picker
+                v-model="orderDateFilter"
+                type="daterange"
+                unlink-panels
+                range-separator="To"
+                start-placeholder="Start date"
+                end-placeholder="End date"
+                :shortcuts="shortcuts"
+                :size="size"
+                @change="filterOrderByDate()"
+            />
+            </div>
+            </div>
+        </el-col>
+        <el-col :span="4" :offset="5"
+            ><el-input
+                v-model="orderCustomerNameFilter"
+                placeholder="请输入客户名称"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterByCustomerName()"
+            ></el-input>
+        </el-col>
+
+        <el-col :span="4" :offset="5"
+            ><el-input
+                v-model="orderCustomerBrandFilter"
+                placeholder="请输入客户商标"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterByCustomerBrand()"
+            ></el-input>
         </el-col>
         <el-col :span="4" :offset="5"
             ><el-input
@@ -48,9 +85,6 @@
             <el-table-column prop="orderStatus" label="订单状态" />
             <el-table-column label="操作" width = "300">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
-                        >查看详情</el-button
-                    >
                     <el-button type="primary" size="default" @click="openOrderDetail(scope.row.orderDbId)"
                         >查看订单详情</el-button
                     >
@@ -705,6 +739,9 @@ export default {
             batchNameFilter:'',
             orderRidFilter: '',
             orderCidFilter: '',
+            orderDateFilter:'',
+            orderCustomerNameFilter:'',
+            orderCustomerBrandFilter:'',
             displayData: [],
             filterData: [],
             unfilteredData: [],
@@ -778,6 +815,27 @@ export default {
                 "size45Name":"size45Ratio",
                 "size46Name":"size46Ratio",
             },
+            shortcuts : [
+                {text:"Last Week", 
+                    value:() =>{
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600*1000*24*7)
+                        return [start, end]
+                    }
+                },
+                {
+                    text:"Last Month",
+                    value:() => {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+                        return [start, end]
+                        
+                }
+            }
+
+            ]
 
         }
     },
@@ -790,7 +848,6 @@ export default {
     computeTotal(row){
         console.log(row)
         return 10
-
     },
   },
     mounted() {
@@ -948,6 +1005,10 @@ export default {
             this.newOrderForm.batchInfoTypeId = this.curBatchType.batchInfoTypeId
             console.log(this.newOrderForm.batchInfoTypeId)
         },
+        filterDisplayOrder()
+        {
+            return
+        },
         filterBatchData(){
             if (!this.batchNameFilter){
                 this.customerDisplayBatchData = this.customerBatchData
@@ -1019,6 +1080,7 @@ export default {
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
         closeAddBatchInfodialog(){
+            return
         },
         async getAllOrders() {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
@@ -1068,14 +1130,60 @@ export default {
             }
 
         },
-
+        filterOrderByDate()
+        {
+            if (!this.orderDateFilter)
+            {
+                this.displayData = this.unfilteredData
+            }
+            else
+            {
+                
+                this.filterData = this.unfilteredData.filter((task)=>
+            {
+                const filterMatch = new Date(task.orderStartDate) >= this.orderDateFilter[0] && new Date(task.orderEndDate) <= this.orderDateFilter[1]
+                return filterMatch 
+            })
+            this.displayData = this.filterData
+            }
+        },
+        filterByCustomerName()
+        {
+            if(!this.orderCustomerNameFilter)
+            {
+                this.displayData = this.unfilteredData
+            }
+            else
+            {
+                this.filterData = this.unfilteredData.filter((task)=>
+            {
+                const filterMatch = task.customerName.toLowerCase().includes(this.orderCustomerNameFilter.toLowerCase())
+                return filterMatch
+            })
+                this.displayData = this.filterData
+            }
+        },
+        filterByCustomerBrand()
+        {
+            if(!this.orderCustomerBrandFilter)
+        {
+            this.displayData = this.unfilteredData
+        }
+            else {
+                this.filterData = this.unfilteredData.filter((task)=> {
+                    const filterMatch = task.customerBrand.toLowerCase().includes(this.orderCustomerBrandFilter.toLowerCase())
+                    return filterMatch
+                })
+                this.displayData = this.filterData
+            }
+        },
         filterByCid(){
             if (!this.orderCidFilter){
                 this.displayData = this.unfilteredData
             }
             else {
                 this.filterData = this.unfilteredData.filter((task) => {
-                const filterMatch = task.orderCid.includes(this.orderCidFilter)
+                const filterMatch = task.orderCid.toLowerCase().includes(this.orderCidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
@@ -1087,7 +1195,7 @@ export default {
             }
             else {
                 this.filterData = this.unfilteredData.filter((task) => {
-                const filterMatch = task.orderRid.includes(this.orderRidFilter)
+                const filterMatch = task.orderRid.toLowerCase().includes(this.orderRidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
@@ -1099,7 +1207,7 @@ export default {
             }
             else{
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
+                const filterMatch = task.shoeRId.toLowerCase().includes(this.shoeRidFilter.toLowerCase())
                 return filterMatch})
 
                 this.shoeTableDisplayData = this.shoeTableTemp}

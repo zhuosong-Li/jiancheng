@@ -344,28 +344,7 @@ class PackagingInfo(db.Model):
         return "PackagingInfo"
     
 
-class BatchInfoType(db.Model):
-    __tablename__ = 'batch_info_type'
-
-    batch_info_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    batch_info_type_name = db.Column(db.String(10), nullable=True)
-    size_34_name = db.Column(db.String(5), nullable=True)
-    size_35_name = db.Column(db.String(5), nullable=True)
-    size_36_name = db.Column(db.String(5), nullable=True)
-    size_37_name = db.Column(db.String(5), nullable=True)
-    size_38_name = db.Column(db.String(5), nullable=True)
-    size_39_name = db.Column(db.String(5), nullable=True)
-    size_40_name = db.Column(db.String(5), nullable=True)
-    size_41_name = db.Column(db.String(5), nullable=True)
-    size_42_name = db.Column(db.String(5), nullable=True)
-    size_43_name = db.Column(db.String(5), nullable=True)
-    size_44_name = db.Column(db.String(5), nullable=True)
-    size_45_name = db.Column(db.String(5), nullable=True)
-    size_46_name = db.Column(db.String(5), nullable=True)
-
-    def __repr__(self):
-        return f"<BatchInfoType(batch_info_type_id={self.batch_info_type_id}, batch_info_type_name='{self.batch_info_type_name}')>"
-
+    
 
 class OrderShoeBatchInfo(db.Model):
     __tablename__ = "order_shoe_batch_info"
@@ -919,6 +898,10 @@ class BatchInfoType(db.Model):
     size_44_name = db.Column(db.String(5), nullable=True)
     size_45_name = db.Column(db.String(5), nullable=True)
     size_46_name = db.Column(db.String(2), nullable=True)
+
+    def __repr__(self):
+        return f"<BatchInfoType(batch_info_type_id={self.batch_info_type_id}, batch_info_type_name='{self.batch_info_type_name}')>"
+
 
 class InboundRecord(db.Model):
     __tablename__ = "inbound_record"

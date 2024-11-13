@@ -212,10 +212,14 @@ def get_order_info_business():
         response["shoeRid"] = order_shoe.Shoe.shoe_rid
         response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
         response["orderShoeStatusList"] = []
-        response["orderShoeRemark"] = "工艺备注:" + order_shoe.OrderShoe.business_technical_remark + " \n" + "材料备注:" + order_shoe.OrderShoe.business_material_remark 
+        response["orderShoeRemarkRep"] = "工艺备注:" + order_shoe.OrderShoe.business_technical_remark + " \n" + "材料备注:" + order_shoe.OrderShoe.business_material_remark
+        response["orderShoeTechnicalRemark"] = order_shoe.OrderShoe.business_technical_remark
+        response["orderShoeMaterialRemark"] = order_shoe.OrderShoe.business_material_remark
         response["orderShoeRemarkExist"] = not (order_shoe.OrderShoe.business_technical_remark == "" or order_shoe.OrderShoe.business_material_remark == "")
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
         # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
+        print(response)
+        print(123)
         result["orderShoeAllData"].append(response)
         order_shoe_id = order_shoe.OrderShoe.order_shoe_id
         if order_shoe_id not in order_shoe_ids:
@@ -298,8 +302,8 @@ def get_order_info_business():
                     total_size_45 += entity.OrderShoeBatchInfo.size_45_amount
                     total_size_46 += entity.OrderShoeBatchInfo.size_46_amount
                     overall_total += entity.OrderShoeBatchInfo.total_amount
+                    total_price += entity.OrderShoeBatchInfo.total_price
                     unit_price = entity.OrderShoeBatchInfo.price_per_pair
-                    total_price = entity.OrderShoeBatchInfo.total_price
                     currency_type = entity.OrderShoeBatchInfo.currency_type
 
 
@@ -433,7 +437,6 @@ def get_order_shoe_size_total():
     return jsonify(result)
 
 
-
 @order_bp.route("/order/getordershoesizesinfo", methods=["GET"])
 def get_order_shoe_sizes_info():
     order_id = request.args.get("orderid")
@@ -490,6 +493,10 @@ def get_order_shoe_sizes_info():
 
     return jsonify(result)
 
+@order_bp.route("/order/getdisplayorders", methods=["GET"])
+def get_display_orders():
+    return
+
 
 @order_bp.route("/order/getallorders", methods=["GET"])
 def get_all_orders():
@@ -501,6 +508,7 @@ def get_all_orders():
             OrderStatusReference,
             OrderStatus.order_current_status == OrderStatusReference.order_status_id,
         )
+        .order_by (Order.start_date.desc())
         .all()
     )
     print(entities)

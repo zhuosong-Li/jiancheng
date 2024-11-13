@@ -7,27 +7,6 @@ from app_config import app, db
 batch_type_bp = Blueprint("batch_type_bp", __name__)
 TABLE_ATTRNAMES = BatchInfoType.__table__.columns.keys()
 
-@batch_type_bp.route("/batchtype/getorderbatchtype", methods=["GET"])
-def get_order_batch_type():
-    order_shoe_id = request.args.get("orderShoeId")
-    # get batch info type (US, EU)
-    shoe_size_locale = (
-        db.session.query(BatchInfoType)
-        .join(Order, BatchInfoType.batch_info_type_id == Order.batch_info_type_id)
-        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
-        .filter(OrderShoe.order_shoe_id == order_shoe_id)
-        .first()
-    )
-    result = []
-    for i in range(34, 47):
-        locale = getattr(shoe_size_locale, f"size_{i}_name")
-        if locale:
-            obj = {
-                "prop": f"size{i}Amount",
-                "label": locale
-            }
-            result.append(obj)
-    return result
 
 def to_camel(db_attr_name):
     split_list = db_attr_name.split("_")
