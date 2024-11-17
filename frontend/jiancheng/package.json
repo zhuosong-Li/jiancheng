@@ -16,6 +16,7 @@
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
     "crypto-js": "^4.2.0",
+    "echarts": "^5.5.1",
     "element-plus": "^2.8.6",
     "file-saver": "^2.0.5",
     "js-cookie": "^3.0.5",
@@ -42,6 +43,7 @@
     "start-server-and-test": "^2.0.3",
     "vite": "^5.2.8",
     "vite-plugin-vue-devtools": "^7.0.25",
+    "vite-plugin-vue-setup-extend": "^0.4.0",
     "vitest": "^1.4.0"
   }
 }

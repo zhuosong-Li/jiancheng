@@ -15,6 +15,7 @@ import UsageCalculation from '../Pages/UsageCalculation/views/UsageCalculation.v
 import BussinessManager from '@/Pages/BussinessManager/views/BussinessManager.vue'
 import DevelopmentManager from '@/Pages/DevelopmentManager/views/DevelopmentManager.vue'
 import HumanResourcesDepartment from '@/Pages/HumanResourcesDepartment/views/HumanResourcesDepartment.vue'
+import CompanyManager from '@/Pages/CompanyManger/views/CompanyManager.vue'
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
@@ -29,6 +30,7 @@ import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalcu
 import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
 import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
 import BusinessManagerRoutes from '../Pages/BussinessManager/routers/business'
+import CompanyManagerRoutes from '../Pages/CompanyManger/routers/CompanyManager'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -168,6 +170,15 @@ const router = createRouter({
         role: 14
       }
     },
+    {
+      path :'/companyManager',
+      name : 'companyManager',
+      component: CompanyManager,
+      meta:{
+        requiresAuth: true,
+        role: 2
+      }
+    },
     ...LogisticsRoutes,
     ...ProductionRoutes,
     ...TechenicalDepartmentClerkRoutes,
@@ -179,7 +190,8 @@ const router = createRouter({
     ...UsageCalculationRoutes,
     ...DevelopmentManagerRoutes,
     ...TechnicalManagerRoutes,
-    ...BusinessManagerRoutes
+    ...BusinessManagerRoutes,
+    ...CompanyManagerRoutes
   ]
 })
 import axios from 'axios'
