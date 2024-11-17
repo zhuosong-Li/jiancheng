@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 import os
 from app_config import app, db
 from models import *
-from constants import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 
 shoe_manage_bp = Blueprint("shoe_manage_bp", __name__)
 

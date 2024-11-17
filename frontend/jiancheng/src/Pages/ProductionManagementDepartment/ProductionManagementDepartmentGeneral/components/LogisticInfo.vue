@@ -23,7 +23,7 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default"
-                            @click="viewLogisticDetail(scope.row)">查看订单物流信息</el-button>
+                            @click="openLogisticsDialog(scope.row)">查看订单物流信息</el-button>
                     </template>
                 </el-table-column>
             </el-table></el-col>
@@ -52,7 +52,7 @@
         </el-row>
         <el-row :gutter="20">
             <el-col :span="12" :offset="15">
-                <el-pagination @size-change="handleSizeChange" @current-change="handlePageChange"
+                <el-pagination @size-change="handleLogisticsPageChange" @current-change="handleLogisticsPageChange"
                     :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
                     layout="total, sizes, prev, pager, next, jumper" :total="logisticsRows" />
             </el-col>
@@ -83,8 +83,8 @@ export default {
             currentPage: 1,
             pageSize: 10,
             logisticsRows: 0,
-            logsticsCurrentPage: 1,
-            logsticsPageSize: 10
+            logisticsCurrentPage: 1,
+            logisticsPageSize: 10
         }
     },
     mounted() {
@@ -110,25 +110,29 @@ export default {
             this.currentPage = val
             this.getlogisticsOrderData()
         },
-        handleLogsticsSizeChange(val) {
-            this.logsticsPageSize = val
+        handleLogisticsPageChange(val) {
+            this.logisticsPageSize = val
             this.viewLogisticDetail()
         },
-        handleLogsticsPageChange(val) {
-            this.logsticsCurrentPage = val
+        handleLogisticsPageChange(val) {
+            this.logisticsCurrentPage = val
             this.viewLogisticDetail()
+        },
+        openLogisticsDialog(rowData) {
+            this.logisticsCurrentPage = 1
+            this.viewLogisticDetail(rowData)
+            this.isMaterialLogisticVis = true
         },
         async viewLogisticDetail(rowData) {
             const params = {
-                "page": 1,
-                "pageSize": 10,
+                "page": this.logisticsCurrentPage,
+                "pageSize": this.logisticsPageSize,
                 "orderRId": rowData.orderRId,
                 "shoeRId": rowData.shoeRId
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.logisticsMaterialData = response.data.result
             this.logisticsRows = response.data.total
-            this.isMaterialLogisticVis = true
         },
     }
 }

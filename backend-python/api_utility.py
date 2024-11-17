@@ -101,3 +101,41 @@ def format_line_group(line_group_obj):
     if not line_group_obj:
         return []
     return line_group_obj.split(",")
+
+
+def status_converter(current_status_arr, current_status_value_arr):
+    status = "未排产"
+    if 17 in current_status_arr:
+        status = "未排产"
+    elif 18 in current_status_arr:
+        status = "等待确认开始生产"
+    elif 23 in current_status_arr:
+        status = "裁断中"
+    elif 30 in current_status_arr:
+        status = "预备中"
+    elif 32 in current_status_arr:
+        status = "针车中"
+    elif 40 in current_status_arr:
+        status = "成型中"
+    elif 42 in current_status_arr:
+        status = "生产结束"
+    return status
+
+def outsource_status_converter(status_val):
+    if status_val == 0:
+        status = "未提交"
+    elif status_val == 1:
+        status = "已提交"
+    elif status_val == 2:
+        status = "已审批"
+    elif status_val == 3:
+        status = "被驳回"
+    elif status_val == 4:
+        status = "材料出库"
+    elif status_val == 5:
+        status = "外包生产中"
+    elif status_val == 6:
+        status = "成品入库"
+    else:
+        status = "外包结束"
+    return status

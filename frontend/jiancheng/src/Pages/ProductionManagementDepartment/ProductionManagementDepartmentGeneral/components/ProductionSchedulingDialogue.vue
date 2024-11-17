@@ -1,10 +1,5 @@
 <template>
   <el-row :gutter="20">
-    <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-      >生产详情及排期</el-col
-    >
-  </el-row>
-  <el-row :gutter="20">
     <el-col :span="6" :offset="20"
       ><el-button-group>
         <el-button type="default" size="default" :icon="Memo" @click="changeToList">列表视图</el-button>

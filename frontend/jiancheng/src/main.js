@@ -10,10 +10,10 @@ import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios'
 
+const app = createApp(App)
 fetch('/frontend_config.json')
     .then((response) => response.json())
     .then((config) => {
-        const app = createApp(App)
         app.config.globalProperties.$axios = axios
         app.config.globalProperties.$apiBaseUrl = config.api_base_url
         app.config.globalProperties.$setAxiosToken = function () {
@@ -41,3 +41,5 @@ fetch('/frontend_config.json')
         app.use(ElementPlus, { locale: zhCn })
         app.mount('#app')
     })
+
+export default app
