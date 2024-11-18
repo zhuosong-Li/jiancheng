@@ -14,13 +14,17 @@
                 @clear="getOrderTableData()" />
         </el-col>
     </el-row>
-    <el-table :data="taskData">
+    <el-table :data="taskData" border stripe>
         <el-table-column prop="orderRId" label="订单号"></el-table-column>
         <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
         <el-table-column prop="customerName" label="客户名称"></el-table-column>
         <el-table-column prop="productionStartDate" label="工段开始日期"></el-table-column>
         <el-table-column prop="productionEndDate" label="工段结束日期"></el-table-column>
-        <el-table-column prop="progress" label="生产进度"></el-table-column>
+        <el-table-column label="生产进度">
+            <template #default="scope">
+                {{ scope.row.producedAmount + ' / ' + scope.row.totalAmount }}
+            </template>
+        </el-table-column>
         <el-table-column label="操作">
             <template #default="{ row }">
                 <el-button type="primary" @click="handleView(row)">查看</el-button>

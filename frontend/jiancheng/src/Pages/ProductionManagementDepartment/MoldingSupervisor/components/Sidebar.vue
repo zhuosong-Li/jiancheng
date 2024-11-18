@@ -17,11 +17,8 @@
                 <el-menu-item index="3" @click="handleMenuOption('AmountProduced')">
                     <span>数量填写</span>
                 </el-menu-item>
-                <el-menu-item index="4" @click="handleMenuOption('History')">
-                    <span>历史记录</span>
-                </el-menu-item>
-                <el-menu-item index="5" @click="handleMenuOption('Setting')">
-                    <span>个人信息</span>
+                <el-menu-item index="4" @click="handleMenuOption('BatchInfo')">
+                    <span>装箱配码</span>
                 </el-menu-item>
                 <el-menu-item index="6" @click="handleMenuOption('LogOut')">
                     <span>退出系统</span>

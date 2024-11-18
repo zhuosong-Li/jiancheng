@@ -1,5 +1,5 @@
 <template>
-    <ProcedureManagement :teams="['针车预备', '针车']"></ProcedureManagement>
+    <ProcedureManagement :teams="['裁断']"></ProcedureManagement>
 </template>
 <script>
 import ProcedureManagement from '../../ProductionSharedPages/ProcedureManagement.vue';

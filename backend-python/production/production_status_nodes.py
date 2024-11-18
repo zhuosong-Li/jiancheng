@@ -148,31 +148,32 @@ def edit_order_shoe_status():
             .scalar()
         )
     if storage_status and storage_status != 1:
-        return jsonify({"message": "制品尚未入库"}), 400
+        return jsonify({"message": "成品尚未入库"}), 400
 
     team = -1
+    # 添加半成品仓，成品仓
     if "18" in status_arr:
         team = 0
-        arr.append(
-            SemifinishedShoeStorage(
-                order_shoe_id=order_shoe_id,
-                semifinished_status=0,
-                semifinished_object=0,
-            )
+        order_shoe_type_ids = (
+            db.session.query(OrderShoeType.order_shoe_type_id)
+            .join(OrderShoe, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
+            .filter_by(order_shoe_id=order_shoe_id)
+            .all()
         )
-        arr.append(
-            SemifinishedShoeStorage(
-                order_shoe_id=order_shoe_id,
-                semifinished_status=0,
-                semifinished_object=1,
-            )
-        )
-        arr.append(
-            FinishedShoeStorage(
-                order_shoe_id=order_shoe_id,
+        print(order_shoe_type_ids)
+        for id in order_shoe_type_ids:
+            for obj in [0, 1]:
+                semi_entity = SemifinishedShoeStorage(
+                    order_shoe_type_id=id[0],
+                    semifinished_status=0,
+                    semifinished_object=obj,
+                )
+                arr.append(semi_entity)
+            finished_entity = FinishedShoeStorage(
+                order_shoe_type_id=id[0],
                 finished_status=0,
             )
-        )
+            arr.append(finished_entity)
     elif "24" in status_arr:
         team = 1
     elif "33" in status_arr:
@@ -184,13 +185,8 @@ def edit_order_shoe_status():
                 func.sum(OrderShoeProductionAmount.total_production_amount)
             )
             .join(
-                OrderShoeBatchInfo,
-                OrderShoeBatchInfo.order_shoe_batch_info_id
-                == OrderShoeProductionAmount.order_shoe_batch_info_id,
-            )
-            .join(
                 OrderShoeType,
-                OrderShoeBatchInfo.order_shoe_type_id
+                OrderShoeProductionAmount.order_shoe_type_id
                 == OrderShoeType.order_shoe_type_id,
             )
             .join(OrderShoe, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)

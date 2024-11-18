@@ -35,18 +35,22 @@ def get_quantity_report_tasks():
         if team == "裁断":
             start_date = OrderShoeProductionInfo.cutting_start_date
             end_date = OrderShoeProductionInfo.cutting_end_date
+            amount = OrderShoeType.cutting_amount
             teamId = 0
         elif team == "针车预备":
             start_date = OrderShoeProductionInfo.pre_sewing_start_date
             end_date = OrderShoeProductionInfo.pre_sewing_end_date
+            amount = OrderShoeType.pre_sewing_amount
             teamId = 1
         elif team == "针车":
             start_date = OrderShoeProductionInfo.sewing_start_date
             end_date = OrderShoeProductionInfo.sewing_end_date
+            amount = OrderShoeType.sewing_amount
             teamId = 1
         elif team == "成型":
             start_date = OrderShoeProductionInfo.molding_start_date
             end_date = OrderShoeProductionInfo.molding_end_date
+            amount = OrderShoeType.molding_amount
             teamId = 2
         else:
             return jsonify({"message": "invalid team name"}), 400
@@ -61,7 +65,7 @@ def get_quantity_report_tasks():
             .join(
                 OrderShoeProductionAmount,
                 OrderShoeProductionAmount.order_shoe_type_id
-                == OrderShoeType.order_shoe_type_id
+                == OrderShoeType.order_shoe_type_id,
             )
             .filter(OrderShoeProductionAmount.production_team == teamId)
             .group_by(OrderShoe.order_shoe_id)
@@ -69,18 +73,14 @@ def get_quantity_report_tasks():
         report_amount_table = (
             db.session.query(
                 OrderShoe.order_shoe_id,
-                func.sum(QuantityReportItem.total_report_amount).label(
-                    "total_report_amount"
+                func.sum(amount).label(
+                    "report_amount"
                 ),
             )
-            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
             .join(
-                QuantityReport,
-                QuantityReport.order_shoe_type_id
-                == OrderShoeType.order_shoe_type_id
+                OrderShoeType,
+                OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .join(QuantityReportItem, QuantityReportItem.quantity_report_id == QuantityReport.report_id)
-            .filter(QuantityReport.team == team)
             .group_by(OrderShoe.order_shoe_id)
         ).subquery()
         query = (
@@ -92,7 +92,7 @@ def get_quantity_report_tasks():
                 start_date.label("start_date"),
                 end_date.label("end_date"),
                 literal(team).label("team"),
-                report_amount_table.c.total_report_amount,
+                report_amount_table.c.report_amount,
                 production_amount_table.c.total_amount,
             )
             .join(OrderShoe, OrderShoe.order_id == Order.order_id)
@@ -106,12 +106,16 @@ def get_quantity_report_tasks():
                 OrderShoeStatus,
                 OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .join(report_amount_table, report_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
-            .join(production_amount_table, production_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id)
-            .filter(
-                OrderShoeStatus.current_status == QUANTTIY_REPORT_REFERENCE[team],
-                OrderShoeStatus.current_status_value.in_([0, 1]),
+            .outerjoin(
+                report_amount_table,
+                report_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id,
             )
+            .join(
+                production_amount_table,
+                production_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id,
+            )
+            .filter(
+                OrderShoeStatus.current_status >= QUANTTIY_REPORT_REFERENCE[team])
         )
         queries.append(query)
     union_query = queries[0]
@@ -122,8 +126,11 @@ def get_quantity_report_tasks():
     if shoe_rid and shoe_rid != "":
         union_query = union_query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
     count_result = union_query.distinct().count()
-    response = union_query.distinct().limit(page_size).offset((page - 1) * page_size).all()
+    response = (
+        union_query.distinct().limit(page_size).offset((page - 1) * page_size).all()
+    )
     result = []
+    print(response)
     for row in response:
         (
             order,
@@ -141,12 +148,12 @@ def get_quantity_report_tasks():
             "orderRId": order.order_rid,
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
-            "productionStartDate": start_date_res.strftime("%Y-%m-%d"),
-            "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
+            "productionStartDate": format_date(start_date_res),
+            "productionEndDate": format_date(end_date_res),
             "customerName": customer.customer_name,
             "team": team,
-            "producedAmount": produced_amount,
-            "totalAmount": total_amount
+            "producedAmount": 0 if not produced_amount else produced_amount,
+            "totalAmount": total_amount,
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
@@ -161,14 +168,26 @@ def create_quantity_report():
         status=0,
         team=data["team"],
     )
-    order_shoe_obj = OrderShoeStatus.query.filter_by(
-        order_shoe_id=data["orderShoeId"],
-        current_status=QUANTTIY_REPORT_REFERENCE[data["team"]],
-    ).first()
-    order_shoe_obj.current_status_value = 1
     db.session.add(report)
+    db.session.flush()
+    response = (
+        db.session.query(OrderShoeType.order_shoe_type_id)
+        .join(
+            OrderShoe,
+            OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id,
+        )
+        .filter(OrderShoeType.order_shoe_id == data["orderShoeId"])
+        .all()
+    )
+    result = []
+    for id_tuple in response:
+        item = QuantityReportItem(
+            quantity_report_id=report.report_id, order_shoe_type_id=id_tuple[0]
+        )
+        result.append(item)
+    db.session.add_all(result)
     db.session.commit()
-    return {"reportId": report.report_id}
+    return {"message": "success"}
 
 
 @quantity_report_bp.route("/production/editquantityreportdetail", methods=["PUT"])
@@ -177,10 +196,10 @@ def edit_quantity_report_detail():
     report_id = data["reportId"]
     detail_arr = data["data"]
     for row in detail_arr:
-        item_obj = QuantityReportItem.query.filter_by(
-            report_id=report_id, order_shoe_batch_info_id=row["orderShoeBatchInfoId"]
+        entity = QuantityReportItem.query.filter_by(
+            quantity_report_id=report_id, order_shoe_type_id=row["orderShoeTypeId"]
         ).first()
-        item_obj.amount = row["amount"]
+        entity.report_amount = row["reportAmount"]
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -190,7 +209,7 @@ def submit_quantity_report():
     data = request.get_json()
     report = QuantityReport.query.get(data["reportId"])
     report.status = 1
-    report.submission_date = datetime.now().strftime("%Y-%m-%d")
+    report.submission_date = format_date(datetime.now())
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -198,7 +217,7 @@ def submit_quantity_report():
 @quantity_report_bp.route("/production/deletequantityreport", methods=["DELETE"])
 def delete_quantity_report():
     report_id = request.args.get("reportId")
-    items = QuantityReportItem.query.filter_by(report_id=report_id).all()
+    items = QuantityReportItem.query.filter_by(quantity_report_id=report_id).all()
     for item in items:
         db.session.delete(item)
     row = QuantityReport.query.get(report_id)
@@ -228,31 +247,6 @@ def get_all_quantity_report():
     return result
 
 
-@quantity_report_bp.route("/production/createquantityreportdetail", methods=["POST"])
-def create_quantity_report_detail():
-    data = request.get_json()
-    report_id = data["reportId"]
-    order_shoe_id = data["orderShoeId"]
-    response = (
-        db.session.query(OrderShoeBatchInfo)
-        .join(
-            OrderShoeType,
-            OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
-        )
-        .filter(OrderShoeType.order_shoe_id == order_shoe_id)
-        .all()
-    )
-    result = []
-    for row in response:
-        item = QuantityReportItem(
-            report_id=report_id, order_shoe_batch_info_id=row.order_shoe_batch_info_id
-        )
-        result.append(item)
-    db.session.add_all(result)
-    db.session.commit()
-    return {"message": "success"}
-
-
 @quantity_report_bp.route("/production/getquantityreportdetail", methods=["GET"])
 def get_quantity_report_detail():
     report_id = request.args.get("reportId")
@@ -261,50 +255,44 @@ def get_quantity_report_detail():
     mapping = {0: 0, 1: 1, 2: 1, 3: 2}
     response = (
         db.session.query(
-            OrderShoeBatchInfo, OrderShoeProductionAmount, Color, QuantityReportItem
-        )
-        .join(
-            OrderShoeType,
-            OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
+            OrderShoeType, OrderShoeProductionAmount, Color, QuantityReportItem
         )
         .join(
             OrderShoeProductionAmount,
-            OrderShoeProductionAmount.order_shoe_batch_info_id
-            == OrderShoeBatchInfo.order_shoe_batch_info_id,
+            OrderShoeProductionAmount.order_shoe_type_id == OrderShoeType.order_shoe_type_id
         )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
         .join(
             QuantityReportItem,
-            QuantityReportItem.order_shoe_batch_info_id
-            == OrderShoeBatchInfo.order_shoe_batch_info_id,
+            QuantityReportItem.order_shoe_type_id
+            == OrderShoeType.order_shoe_type_id,
         )
         .filter(
-            QuantityReportItem.report_id == report_id,
+            QuantityReportItem.quantity_report_id == report_id,
             OrderShoeProductionAmount.production_team == mapping[team],
         )
         .all()
     )
     result = []
     for row in response:
-        batch_info, production_amount, color, report_item = row
+        order_shoe_type, production_amount, color, report_item = row
         produced_amount = 0
         if team == 0:
-            produced_amount = batch_info.cutting_amount
+            produced_amount = order_shoe_type.cutting_amount
         elif team == 1:
-            produced_amount = batch_info.pre_sewing_amount
+            produced_amount = order_shoe_type.pre_sewing_amount
         elif team == 2:
-            produced_amount = batch_info.sewing_amount
+            produced_amount = order_shoe_type.sewing_amount
         elif team == 3:
-            produced_amount = batch_info.molding_amount
+            produced_amount = order_shoe_type.molding_amount
         if production_amount.total_production_amount > 0:
             obj = {
-                "orderShoeBatchInfoId": batch_info.order_shoe_batch_info_id,
+                "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
                 "colorName": color.color_name,
-                "name": batch_info.name,
-                "amount": report_item.amount,
                 "totalAmount": production_amount.total_production_amount,
                 "producedAmount": produced_amount,
+                "reportAmount": report_item.report_amount
             }
             result.append(obj)
     return result

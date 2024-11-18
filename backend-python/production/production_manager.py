@@ -1,18 +1,110 @@
 import traceback
 from datetime import datetime, timedelta
-
-from api_utility import format_date, format_line_group, status_converter
+from app_config import app
+from api_utility import format_date, format_line_group, status_converter, to_camel
 from app_config import db
 from constants import *
 from event_processor import EventProcessor
-from flask import Blueprint, current_app, jsonify, request, send_file
+from flask import Blueprint, current_app, jsonify, request, send_file, Response
 from models import *
 from sqlalchemy import func, or_, cast, Integer
 from sqlalchemy.dialects.mysql import insert
 from constants import OUTSOURCE_STATUS_MAPPING
+from general_document.batch_info import generate_excel_file
+from bussiness.batch_info_type import get_order_batch_type_helper
+import os
 
 production_manager_bp = Blueprint("production_manager_bp", __name__)
+PRODUCTION_INFO_ATTRNAMES = OrderShoeProductionInfo.__table__.columns.keys()
 
+
+def get_order_info_helper(order_id, order_shoe_id):
+    query = (
+        db.session.query(
+            Order,
+            Customer,
+        )
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(Order.order_id == order_id)
+    )
+    if order_shoe_id and order_shoe_id != "":
+        response = (
+            query.add_columns(OrderShoe, Shoe)
+            .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+            .join(Shoe, Shoe.shoe_id == ShoeType.shoe_id)
+            .filter(OrderShoe.order_shoe_id == order_shoe_id)
+            .first()
+        )
+        order, customer, order_shoe, shoe = response
+        result = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeId": shoe.shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name,
+            "customerBrand": customer.customer_brand,
+        }
+    else:
+        response = query.first()
+        order, customer = response
+        result = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
+            "customerBrand": customer.customer_brand,
+        }
+    return result
+
+
+def get_order_shoe_batch_info_helper(order_shoe_id):
+    entities = (
+        db.session.query(OrderShoeType, OrderShoeBatchInfo, Color)
+        .join(
+            OrderShoeType,
+            OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+        )
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Color, Color.color_id == ShoeType.color_id)
+        .filter(OrderShoeType.order_shoe_id == order_shoe_id)
+        .all()
+    )
+    # Dictionary to accumulate total amounts by color
+    color_totals = {}
+
+    # First loop to accumulate total amounts for each color
+    for entity in entities:
+        _, order_shoe_batch_info, color = entity
+        if color.color_name not in color_totals:
+            color_totals[color.color_name] = 0
+        color_totals[color.color_name] += order_shoe_batch_info.total_amount
+    # Second loop to build the result list and include the color totals
+    result = []
+    for entity in entities:
+        order_shoe_type, order_shoe_batch_info, color = entity
+        obj = {
+            "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
+            "orderShoeBatchInfoId": order_shoe_batch_info.order_shoe_batch_info_id,
+            "batchName": order_shoe_batch_info.name,
+            "colorName": color.color_name,
+            "pairAmount": order_shoe_batch_info.total_amount,
+            "totalAmount": color_totals[
+                color.color_name
+            ],  # Add total amount for the color
+        }
+        for i in range(34, 47):
+            amount_column_name = f"size_{i}_amount"
+            amount = getattr(order_shoe_batch_info, amount_column_name)
+            obj[f"size{i}Amount"] = amount
+        result.append(obj)
+    return result
 
 @production_manager_bp.route(
     "/production/productionmanager/getorderamount", methods=["GET"]
@@ -49,51 +141,20 @@ def get_order_amount():
 def get_order_info():
     order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
-    query = (
-        db.session.query(
-            Order,
-            Customer,
-        )
-        .join(Customer, Order.customer_id == Customer.customer_id)
-        .filter(Order.order_id == order_id)
-    )
-    if order_shoe_id and order_shoe_id != "":
-        response = (
-            query.add_columns(OrderShoe, Shoe)
-            .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-            .join(
-                OrderShoeProductionInfo,
-                OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
-            )
-            .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
-            .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
-            .join(Shoe, Shoe.shoe_id == ShoeType.shoe_id)
-            .filter(OrderShoe.order_shoe_id == order_shoe_id)
-            .first()
-        )
-        order, customer, order_shoe, shoe = response
-        result = {
-            "orderId": order.order_id,
-            "orderRId": order.order_rid,
-            "customerName": customer.customer_name,
-            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
-            "orderShoeId": order_shoe.order_shoe_id,
-            "shoeRId": shoe.shoe_rid,
-            "customerProductName": order_shoe.customer_product_name,
-        }
-    else:
-        response = query.first()
-        order, customer = response
-        result = {
-            "orderId": order.order_id,
-            "orderRId": order.order_rid,
-            "customerName": customer.customer_name,
-            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
-        }
+    result = get_order_info_helper(order_id, order_shoe_id)
     return jsonify(result)
 
+
+@production_manager_bp.route(
+    "/production/getproductioninfo", methods=["GET"]
+)
+def get_production_info():
+    order_shoe_id = request.args.get("orderShoeId")
+    response = db.session.query(OrderShoeProductionInfo).filter_by(order_shoe_id=order_shoe_id).first()
+    result = {}
+    for db_attr in PRODUCTION_INFO_ATTRNAMES:
+        result[to_camel(db_attr)] = getattr(response, db_attr)
+    return jsonify(result)
 
 @production_manager_bp.route(
     "/production/productionmanager/getinprogressorders", methods=["GET"]
@@ -155,8 +216,8 @@ def get_in_progress_orders():
             "customerBrand": customer.customer_brand,
             "startDate": cutting_start_date,
             "endDate": molding_end_date,
-            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
             "orderTotalShoes": total_amount,
             "finishedShoes": finished_amount if finished_amount else 0,
         }
@@ -266,8 +327,8 @@ def get_all_order_production_progress():
             "colorName": color.color_name,
             "colorAmount": color_amount,
             "producedAmount": molding_amount,
-            "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
             "isMaterialArrived": production_info.is_material_arrived,
             "processSheetUploadStatus": order_shoe.process_sheet_upload_status,
             "cuttingAmount": cutting_amount,
@@ -292,101 +353,6 @@ def get_all_order_production_progress():
     return {"result": res, "totalLength": count_result}
 
 
-# @production_manager_bp.route("/production/productionmanager/downloadproductionordersheet", methods=["GET"])
-# def download_production_order_sheet():
-#     order_rid = request.args.get("orderRId")
-#     shoe_rid = request.args.get("shoeRId")
-#     order_shoe_id = request.args.get("orderShoeId")
-#     file_path = os.path.join(
-#         FILE_STORAGE_PATH,
-#         order_rid,
-#         shoe_rid,
-#         "production",
-#         "生产指令单.xlsx",
-#     )
-#     new_name = order_rid + "_" + shoe_rid + "_生产指令单.xlsx"
-#     return send_file(file_path, as_attachment=True, download_name=new_name)
-
-
-# @production_manager_bp.route(
-#     "/production/productionmanager/getproductioninfo", methods=["GET"]
-# )
-# def get_production_info():
-#     # 参考scheduleView.vue 441行
-#     team = request.args.get("team")
-#     # 成型号
-#     number = request.args.get("number")
-#     if team == "cutting":
-#         status = 23
-#         line_usage = OrderShoeProductionInfo.cutting_line_group
-#         start_date = OrderShoeProductionInfo.cutting_start_date
-#         end_date = OrderShoeProductionInfo.cutting_end_date
-#     elif team == "preSewing":
-#         status = 29
-#         line_usage = OrderShoeProductionInfo.pre_sewing_line_group
-#         start_date = OrderShoeProductionInfo.pre_sewing_start_date
-#         end_date = OrderShoeProductionInfo.pre_sewing_end_date
-#     elif team == "sewing":
-#         status = 31
-#         line_usage = OrderShoeProductionInfo.sewing_line_group
-#         start_date = OrderShoeProductionInfo.sewing_start_date
-#         end_date = OrderShoeProductionInfo.sewing_end_date
-#     elif team == "molding":
-#         status = 39
-#         line_usage = OrderShoeProductionInfo.molding_line_group
-#         start_date = OrderShoeProductionInfo.molding_start_date
-#         end_date = OrderShoeProductionInfo.molding_end_date
-#     else:
-#         return {"message": "failed"}, 400
-#     response = (
-#         db.session.query(
-#             Order,
-#             Shoe,
-#             func.sum(OrderShoeBatchInfo.total_amount),
-#             line_usage,
-#             start_date,
-#             end_date,
-#         )
-#         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
-#         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-#         .join(
-#             OrderShoeBatchInfo,
-#             OrderShoeBatchInfo.order_shoe_id == OrderShoe.order_shoe_id,
-#         )
-#         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
-#         .join(
-#             OrderShoeProductionInfo,
-#             OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
-#         )
-#         .filter(OrderShoeStatus.current_status == status)
-#         .group_by(Order.order_id, OrderShoe.order_shoe_id)
-#         .all()
-#     )
-
-#     result = []
-#     for row in response:
-#         (
-#             order,
-#             shoe,
-#             total_amount,
-#             line_usage_info,
-#             start_date_val,
-#             end_date_val,
-#         ) = row
-#         val = len(line_usage_info.split(","))
-#         obj = {
-#             "startDate": start_date_val,
-#             "endDate": end_date_val,
-#             "orderId": order.order_id,
-#             "orderRId": order.order_rid,
-#             "shoeRId": shoe.shoe_rid,
-#             "number": total_amount,
-#             "lineUsage": val,
-#         }
-#         result.append(obj)
-#     return result
-
-
 @production_manager_bp.route(
     "/production/productionmanager/getproductiondepartments", methods=["GET"]
 )
@@ -395,7 +361,7 @@ def get_production_departments():
 
 
 @production_manager_bp.route(
-    "/production/productionmanager/getlogisticsoverview", methods=["GET"]
+    "/production/getallordershoeinfo", methods=["GET"]
 )
 def get_logistics_overview():
     page = request.args.get("page", type=int)
@@ -407,7 +373,7 @@ def get_logistics_overview():
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(OrderStatus, Order.order_id == OrderStatus.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
+        .filter(OrderStatus.order_current_status >= IN_PRODUCTION_ORDER_NUMBER)
     )
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
@@ -421,16 +387,18 @@ def get_logistics_overview():
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
 
 
 @production_manager_bp.route(
-    "/production/productionmanager/getordershoebatchinfoforproduction", methods=["GET"]
+    "/production/getordershoebatchinfoforproduction", methods=["GET"]
 )
 def get_order_shoe_batch_info_for_production():
     order_shoe_id = request.args.get("orderShoeId")
@@ -564,8 +532,8 @@ def check_date_production_status():
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
             "totalAmount": total_amount,
-            "productionStartDate": production_start_date.strftime("%Y-%m-%d"),
-            "productionEndDate": production_end_date.strftime("%Y-%m-%d"),
+            "productionStartDate": format_date(production_start_date),
+            "productionEndDate": format_date(production_end_date),
         }
         current_date = first_day
         while current_date <= end_day:
@@ -575,7 +543,7 @@ def check_date_production_status():
     for day in all_days:
         result.append(
             {
-                "date": day.strftime("%Y-%m-%d"),
+                "date": format_date(day),
                 "orderShoeCount": len(order_shoes_delta[day]),
                 "detail": order_shoes_delta[day],
             }
@@ -646,50 +614,11 @@ def get_order_shoe_production_amount():
 
 
 @production_manager_bp.route(
-    "/production/productionmanager/getordershoebatchinfo", methods=["GET"]
+    "/production/getordershoebatchinfo", methods=["GET"]
 )
 def get_order_shoe_batch_info():
     order_shoe_id = request.args.get("orderShoeId")
-    entities = (
-        db.session.query(OrderShoeType, OrderShoeBatchInfo, Color)
-        .join(
-            OrderShoeType,
-            OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
-        )
-        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
-        .join(Color, Color.color_id == ShoeType.color_id)
-        .filter(OrderShoeType.order_shoe_id == order_shoe_id)
-        .all()
-    )
-    # Dictionary to accumulate total amounts by color
-    color_totals = {}
-
-    # First loop to accumulate total amounts for each color
-    for entity in entities:
-        _, order_shoe_batch_info, color = entity
-        if color.color_name not in color_totals:
-            color_totals[color.color_name] = 0
-        color_totals[color.color_name] += order_shoe_batch_info.total_amount
-    # Second loop to build the result list and include the color totals
-    result = []
-    for entity in entities:
-        order_shoe_type, order_shoe_batch_info, color = entity
-        obj = {
-            "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
-            "orderShoeBatchInfoId": order_shoe_batch_info.order_shoe_batch_info_id,
-            "batchName": order_shoe_batch_info.name,
-            "colorName": color.color_name,
-            "pairAmount": order_shoe_batch_info.total_amount,
-            "totalAmount": color_totals[
-                color.color_name
-            ],  # Add total amount for the color
-        }
-        for i in range(34, 47):
-            amount_column_name = f"size_{i}_amount"
-            amount = getattr(order_shoe_batch_info, amount_column_name)
-            obj[f"size{i}Amount"] = amount
-        result.append(obj)
-
+    result = get_order_shoe_batch_info_helper(order_shoe_id)
     return jsonify(result)
 
 
@@ -751,11 +680,11 @@ def get_all_quantity_reports_overview():
         db.session.query(
             OrderShoe,
             QuantityReport.team,
-            func.sum(QuantityReportItem.amount).label("amount"),
+            func.sum(QuantityReportItem.report_amount).label("amount"),
         )
         .join(QuantityReport, QuantityReport.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
-            QuantityReportItem, QuantityReportItem.report_id == QuantityReport.report_id
+            QuantityReportItem, QuantityReportItem.quantity_report_id == QuantityReport.report_id
         )
         .filter(
             QuantityReport.creation_date == yesterday_date,
@@ -797,8 +726,8 @@ def get_all_quantity_reports_overview():
         if order_shoe.order_shoe_id not in amount_map:
             obj = {
                 "orderRId": order.order_rid,
-                "orderStartDate": order.start_date.strftime("%Y-%m-%d"),
-                "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+                "orderStartDate": format_date(order.start_date),
+                "orderEndDate": format_date(order.end_date),
                 "orderShoeId": order_shoe.order_shoe_id,
                 "shoeRId": shoe.shoe_rid,
                 "customerProductName": order_shoe.customer_product_name,
@@ -878,10 +807,10 @@ def get_submitted_quantity_reports():
             report_status = "被驳回"
         obj = {
             "reportId": report.report_id,
-            "creationDate": report.creation_date.strftime("%Y-%m-%d"),
-            "submissionDate": report.submission_date.strftime("%Y-%m-%d"),
-            "startDate": start_date.strftime("%Y-%m-%d"),
-            "endDate": end_date.strftime("%Y-%m-%d"),
+            "creationDate": format_date(report.creation_date),
+            "submissionDate": format_date(report.submission_date),
+            "startDate": format_date(start_date),
+            "endDate": format_date(end_date),
             "team": report.team,
             "reportStatus": report_status,
         }
@@ -984,7 +913,7 @@ def get_price_report_approval_overview():
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
-            "orderEndDate": order.end_date.strftime("%Y-%m-%d"),
+            "orderEndDate": format_date(order.end_date),
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
             "customerName": customer.customer_name,
@@ -1035,8 +964,8 @@ def get_all_price_reports_for_order_shoe():
         else:
             status = "已驳回"
         obj = {
-            "productionStartDate": start_date.strftime("%Y-%m-%d"),
-            "productionEndDate": end_date.strftime("%Y-%m-%d"),
+            "productionStartDate": format_date(start_date),
+            "productionEndDate": format_date(end_date),
             "reportId": report.report_id,
             "reportStatus": status,
             "team": report.team,
@@ -1152,3 +1081,30 @@ def reject_price_report():
         return jsonify({"message": "failed"}), 400
     db.session.commit()
     return jsonify({"message": "success"})
+
+
+@production_manager_bp.route(
+    "/production/downloadbatchinfo", methods=["GET"]
+)
+def download_batch_info():
+    order_id = request.args.get("orderId")
+    order_shoe_id = request.args.get("orderShoeId")
+    result = {}
+
+    temp1 = get_order_info_helper(order_id, order_shoe_id)
+    result["order_rid"] = temp1["orderRId"]
+    result["shoe_rid"] = temp1["shoeRId"]
+    result["customer_brand"] = temp1["customerBrand"]
+    result["customer_product_name"] = temp1["customerProductName"]
+
+    temp2 = get_order_shoe_batch_info_helper(order_shoe_id)
+    result["batch_info"] = temp2
+
+    temp3 = get_order_batch_type_helper(order_id)
+    result["shoe_size_names"] = temp3
+
+    template_path = os.path.join("./general_document", "test.xlsx")
+    new_file_path = os.path.join("./general_document", "装箱配码.xlsx")
+    new_name = f"鞋型{order_shoe_id}_装箱配码.xlsx"
+    generate_excel_file(template_path, new_file_path, result)
+    return send_file(new_file_path, as_attachment=True, download_name=new_name)

@@ -13,6 +13,23 @@
             <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getOutsourceOverview()"
                 @clear="getOutsourceOverview" />
         </el-col>
+        <el-col :span="4" :offset="2" style="white-space: nowrap;">
+            状态点筛选：
+            <el-select v-model="nodeNameSearch" clearable filterable @change="getOrderTableData()"
+                @clear="getOrderTableData()">
+                <el-option v-for="item in [
+                    '未审批',
+                    '已审批',
+                    '已驳回',
+                    '材料出库',
+                    '外包生产中',
+                    '成品入库',
+                    '成型结束',
+                    '外包结束'
+                ]" :key="item" :label="item" :value="item">
+                </el-option>
+            </el-select>
+        </el-col>
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
@@ -167,7 +184,7 @@ export default {
         },
         async openApprovalDialog(row) {
             this.currentRow = row
-            this.shoeSizeColumns = await this.getShoeSizesName(row.orderShoeId)
+            this.shoeSizeColumns = await this.getShoeSizesName(row.orderId)
             console.log(this.shoeSizeColumns)
             await this.getOutsourceBatchInfo(row)
             this.isApprovalDialogOpen = true

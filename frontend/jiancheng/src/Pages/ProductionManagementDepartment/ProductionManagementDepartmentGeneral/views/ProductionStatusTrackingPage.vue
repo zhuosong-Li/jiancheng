@@ -188,8 +188,8 @@ export default {
         },
         async getOrderShoeBatchInfo() {
             const params = { "orderShoeId": this.$props.orderShoeId }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
-            this.shoeSizeColumns = await this.getShoeSizesName(this.$props.orderShoeId)
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, { params })
+            this.shoeSizeColumns = await this.getShoeSizesName(this.$props.orderId)
             this.shoeBatchInfo = response.data
             this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo)
         },

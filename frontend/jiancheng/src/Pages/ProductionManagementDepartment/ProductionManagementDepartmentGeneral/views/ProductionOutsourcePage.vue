@@ -269,7 +269,7 @@ export default {
 	},
 	methods: {
 		async getShoeSizesName() {
-			let params = { "orderShoeId": this.$props.orderShoeId }
+			let params = { "orderShoeId": this.$props.orderId }
 			let response = await axios.get(`${this.$apiBaseUrl}/batchtype/getorderbatchtype`, { params })
 			this.shoeSizeColumns = response.data
 		},

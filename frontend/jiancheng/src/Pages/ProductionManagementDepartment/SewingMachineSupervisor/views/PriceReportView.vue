@@ -26,47 +26,24 @@
             <el-row v-if="statusName === '被驳回'" :gutter="20">
                 <span>驳回原因：{{ rejectionReason }}</span>
             </el-row>
-            <div v-if="statusName === '未提交' || statusName === '被驳回'">
-                <el-tabs v-model="currentTab" type="border-card" tab-position="top">
-                    <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
-                        <div v-if="item.key === 1 && preSewingTableData !== null">
-                            <SewingPriceReportTable :tableData="preSewingTableData"
-                                :procedureInfo="preSewingProcedureInfo" />
-                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
-                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
-                        </div>
-                        <div v-else-if="item.key === 2 && sewingTableData !== null">
-                            <SewingPriceReportTable :tableData="sewingTableData" :procedureInfo="procedureInfo" />
-                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
-                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
-                        </div>
-                    </el-tab-pane>
-                </el-tabs>
-                <el-row>
-                    <el-button-group style="position: fixed; right: 30px;">
-                        <el-button type="primary" @click="handleSaveData">保存</el-button>
-                        <el-button type="primary" @click="handleExport">下载为Excel</el-button>
-                        <el-button type="success" @click="handleSubmit">提交</el-button>
-                    </el-button-group>
-                </el-row>
-            </div>
-            <div v-else-if="statusName === '已提交' || statusName === '已审批'">
-                <el-tabs v-model="currentTab" type="border-card" tab-position="top">
-                    <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
-                        <div v-if="item.key === 1 && preSewingTableData !== null">
-                            <PreviewReportPage :tableData="preSewingTableData" />
-                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
-                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
-                        </div>
-                        <div v-else-if="item.key === 2 && sewingTableData !== null">
-                            <PreviewReportPage :tableData="sewingTableData" />
-                            <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
-                            <el-button type="info" @click="loadTemplate">加载模板</el-button>
-                        </div>
-                    </el-tab-pane>
-                </el-tabs>
-
-            </div>
+            <el-tabs v-model="currentTab" type="border-card" tab-position="top">
+                <el-tab-pane v-for="item in panes" :key="item.key" :label="item.label" :name="item.key">
+                    <PriceReportTable v-if="item.key === 1 && preSewingTableData !== null"
+                        :tableData="preSewingTableData" :procedureInfo="preSewingProcedureInfo" :readOnly="readOnly" />
+                    <PriceReportTable v-else-if="item.key === 2 && sewingTableData !== null"
+                        :tableData="sewingTableData" :procedureInfo="procedureInfo" :readOnly="readOnly" />
+                    <el-button type="info" @click="saveAsTemplate">保存为模板</el-button>
+                    <el-button type="info" @click="loadTemplate">加载模板</el-button>
+                    <el-button type="info" @click="generateProductionForm">生产流程卡</el-button>
+                </el-tab-pane>
+            </el-tabs>
+            <el-row>
+                <el-button-group style="position: fixed; right: 30px;">
+                    <el-button type="primary" @click="handleSaveData">保存</el-button>
+                    <el-button type="primary" @click="handleExport">下载为Excel</el-button>
+                    <el-button type="success" @click="handleSubmit">提交</el-button>
+                </el-button-group>
+            </el-row>
         </el-main>
     </el-container>
 </template>
@@ -74,8 +51,7 @@
 <script setup>
 import { onMounted, ref, getCurrentInstance } from 'vue';
 import axios from 'axios';
-import PreviewReportPage from '../components/LaborPriceReport/PreviewReportPage.vue';
-import SewingPriceReportTable from '../components/LaborPriceReport/SewingPriceReportTable.vue';
+import PriceReportTable from '../../ProductionSharedPages/PriceReportTable.vue';
 import AllHeader from '@/components/AllHeader.vue';
 import { ElMessage } from 'element-plus';
 import { useRouter } from 'vue-router';
@@ -102,7 +78,8 @@ const panes = ref([
 ])
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate", "preSewingProductionStartDate", "preSewingProductionEndDate"])
+const props = defineProps(["orderId", "orderShoeId"])
+const readOnly = ref(false)
 
 onMounted(() => {
     getPreSewingProcedures()
@@ -110,6 +87,13 @@ onMounted(() => {
     getPreSewingPriceReportDetail()
     getPriceReportDetail()
 })
+
+const generateProductionForm = async () => {
+    window.open(
+        `${apiBaseUrl}/production/downloadproductionform?orderShoeId=${props.orderShoeId}&reportId=${sewingReportId.value}`
+    )
+}
+
 const getPreSewingProcedures = async () => {
     await getProcedures(preSewingProcedureInfo, "针车预备")
 }
@@ -119,7 +103,7 @@ const getSewingProcedures = async () => {
 }
 
 const getProcedures = async (arr, name) => {
-    const params = { team: name }
+    const params = { teams: name }
     const response = await axios.get(`${apiBaseUrl}/production/getallprocedures`, { params })
     arr.value = response.data
 }
@@ -198,9 +182,9 @@ const saveAsTemplate = async () => {
     try {
         console.log(reportData)
         await axios.post(`${apiBaseUrl}/production/storepricereportdetail`,
-        { reportId: reportId, newData: reportData })
+            { reportId: reportId, newData: reportData })
         await axios.put(`${apiBaseUrl}/production/savetemplate`,
-            {"reportId": reportId, "shoeRId": props.shoeRId})
+            { "reportId": reportId, "shoeRId": props.shoeRId })
         ElMessage.success("保存成功")
     }
     catch (error) {
@@ -220,8 +204,8 @@ const loadTemplate = async () => {
         tableData = sewingTableData
     }
     try {
-        let params = {"shoeRId": props.shoeRId, "team": team}
-        let response = await axios.get(`${apiBaseUrl}/production/loadtemplate`, {params})
+        let params = { "shoeRId": props.shoeRId, "team": team }
+        let response = await axios.get(`${apiBaseUrl}/production/loadtemplate`, { params })
         tableData.value = response.data
         ElMessage.success("加载成功")
     }

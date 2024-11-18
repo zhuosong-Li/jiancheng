@@ -2,6 +2,7 @@ import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { saveAs } from 'file-saver';
 import app from '@/main';
+import { ElMessage } from 'element-plus';
 
 export const productionLines = {
     "cutting": [1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15, 16, 17],
@@ -14,8 +15,8 @@ export const outsourceOutboundStatus = ["材料出库", "外包生产中", "成�
 export const outsourceReadOnlyStatus = ["已提交", "材料出库", "外包生产中", "成品入库", "外包结束"]
 export const outsourceEditStatus = ["未提交", "被驳回", "已审批"]
 
-export const getShoeSizesName = async (orderShoeId) => {
-    let params = { "orderShoeId": orderShoeId }
+export const getShoeSizesName = async (orderId) => {
+    let params = { "orderId": orderId }
     let response = await axios.get(`${app.config.globalProperties.$apiBaseUrl}/batchtype/getorderbatchtype`, { params })
     return response.data
 }
@@ -132,4 +133,32 @@ export function checkOutsourceStatus(status) {
         result = 4
     }
     return result
+}
+
+export const saveAsTemplate = async (reportId, shoeId, team, reportData) => {
+    try {
+        console.log(reportData)
+        await axios.post(`${app.config.globalProperties.$apiBaseUrl}/production/storepricereportdetail`,
+        { reportId: reportId, newData: reportData })
+        await axios.put(`${app.config.globalProperties.$apiBaseUrl}/production/savetemplate`,
+            {"reportId": reportId, "shoeId": shoeId, "team": team, "reportRows": reportData})
+        ElMessage.success("保存成功")
+    }
+    catch (error) {
+        console.log(error)
+        ElMessage.error("保存失败")
+    }
+}
+
+export const loadTemplate = async (shoeId, team) => {
+    try {
+        let params = {"shoeId": shoeId, "team": team}
+        let response = await axios.get(`${app.config.globalProperties.$apiBaseUrl}/production/loadtemplate`, {params})
+        ElMessage.success("加载成功")
+        console.log(response.data)
+        return response.data
+    }
+    catch (error) {
+        ElMessage.error(error)
+    }
 }

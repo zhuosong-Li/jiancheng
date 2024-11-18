@@ -1,13 +1,17 @@
 import traceback
 from datetime import datetime
 
+from api_utility import format_date
 from app_config import db
 from constants import END_OF_PRODUCTION_NUMBER, PRICE_REPORT_REFERENCE
 from event_processor import EventProcessor
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, send_file
 from models import *
 from sqlalchemy import func
 from sqlalchemy.dialects.mysql import insert
+from general_document.procedure_form import generate_excel_file
+import os
+from file_locations import FILE_STORAGE_PATH
 
 price_report_bp = Blueprint("price_report_bp", __name__)
 
@@ -24,12 +28,25 @@ def check_report_status(number):
     return status_name
 
 
+def report_status_to_number(status_name):
+    if status_name == "未提交":
+        number = 0
+    elif status_name == "已提交":
+        number = 1
+    elif status_name == "已审批":
+        number = 2
+    else:
+        number = 3
+    return number
+
+
 @price_report_bp.route("/production/getnewpricereports", methods=["GET"])
 def get_new_price_reports():
     page = request.args.get("page", type=int)
     page_size = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
+    status_name = request.args.get("statusName")
     team = request.args.get("team")
     if team == "裁断":
         start_date = OrderShoeProductionInfo.cutting_start_date
@@ -80,8 +97,7 @@ def get_new_price_reports():
         .join(UnitPriceReport, UnitPriceReport.order_shoe_id == OrderShoe.order_shoe_id)
         .filter(
             OrderShoeStatus.current_status
-            == PRICE_REPORT_REFERENCE[team]["status_number"],
-            OrderShoeStatus.current_status_value.in_([0, 1]),
+            >= PRICE_REPORT_REFERENCE[team]["status_number"],
             UnitPriceReport.team == team,
         )
     )
@@ -89,6 +105,10 @@ def get_new_price_reports():
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    if status_name and status_name != "":
+        query = query.filter(
+            UnitPriceReport.status == report_status_to_number(status_name)
+        )
     count_result = query.distinct().count()
     response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
@@ -123,17 +143,15 @@ def get_new_price_reports():
             "orderRId": order.order_rid,
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
-            "productionStartDate": start_date_res.strftime("%Y-%m-%d"),
-            "productionEndDate": end_date_res.strftime("%Y-%m-%d"),
+            "productionStartDate": format_date(start_date_res),
+            "productionEndDate": format_date(end_date_res),
             "customerName": customer.customer_name,
             "statusName": status_name,
             "rejectionReason": rejection_reason,
         }
         if team == "针车":
-            obj["preSewingProductionStartDate"] = pre_start_date_res.strftime(
-                "%Y-%m-%d"
-            )
-            obj["preSewingProductionEndDate"] = pre_end_date_res.strftime("%Y-%m-%d")
+            obj["preSewingProductionStartDate"] = format_date(pre_start_date_res)
+            obj["preSewingProductionEndDate"] = format_date(pre_end_date_res)
         result.append(obj)
     return {"result": result, "totalLength": count_result}
 
@@ -194,7 +212,7 @@ def submit_price_report():
     processor: EventProcessor = current_app.config["event_processor"]
     for report_id in report_id_arr:
         report = db.session.query(UnitPriceReport).get(report_id)
-        report.submission_date = datetime.now().strftime("%Y-%m-%d")
+        report.submission_date = format_date(datetime.now())
         report.status = 1
     try:
         for operation in PRICE_REPORT_REFERENCE[report.team]["operation_id"]:
@@ -288,8 +306,14 @@ def get_price_report_detail_by_order_shoe_id():
 
 @price_report_bp.route("/production/getallprocedures", methods=["GET"])
 def get_all_procedures():
-    team = request.args.get("team")
-    response = ProcedureReference.query.filter(ProcedureReference.team == team).all()
+    teams = request.args.get("teams").split(",")
+    procedure_name = request.args.get("procedureName")
+    query = ProcedureReference.query.filter(ProcedureReference.team.in_(teams))
+    if procedure_name and procedure_name != "":
+        query = query.filter(
+            ProcedureReference.procedure_name.ilike(f"%{procedure_name}%")
+        )
+    response = query.all()
     result = []
     for row in response:
         result.append(
@@ -340,29 +364,53 @@ def delete_procedure():
 @price_report_bp.route("/production/savetemplate", methods=["PUT"])
 def save_template():
     data = request.get_json()
-    shoe_rid = data["shoeRId"]
-    report_id = data["reportId"]
-    shoe = db.session.query(Shoe).filter_by(shoe_rid=shoe_rid).first()
-    obj = {"unit_price_report_id": report_id, "shoe_id": shoe.shoe_id}
-    stmt = insert(UnitPriceReportTemplate).values(**obj)
-    stmt = stmt.on_duplicate_key_update(**obj)
-    db.session.execute(stmt)
+    shoe_id = data["shoeId"]
+    team = data["team"]
+    report_rows = data["reportRows"]
+    # search template
+    template = (
+        db.session.query(UnitPriceReportTemplate)
+        .filter_by(shoe_id=shoe_id, team=team)
+        .first()
+    )
+    if template:
+        # delete old rows
+        db.session.query(ReportTemplateDetail).filter_by(
+            report_template_id=template.template_id
+        ).delete()
+    else:
+        template = UnitPriceReportTemplate(shoe_id=shoe_id, team=team)
+        db.session.add(template)
+        db.session.flush()
+    arr = []
+    # insert new rows
+    for row in report_rows:
+        print(template.template_id)
+        entity = ReportTemplateDetail(
+            report_template_id=template.template_id,
+            row_id=row["rowId"],
+            procedure_name=row["procedure"],
+            price=row["price"],
+        )
+        arr.append(entity)
+    db.session.add_all(arr)
     db.session.commit()
     return jsonify({"message": "保存成功"})
 
 
 @price_report_bp.route("/production/loadtemplate", methods=["GET"])
 def load_template():
-    shoe_rid = request.args.get("shoeRId")
+    shoe_id = request.args.get("shoeId")
     team = request.args.get("team")
     response = (
-        db.session.query(
-            UnitPriceReportDetail
+        db.session.query(ReportTemplateDetail)
+        .join(
+            UnitPriceReportTemplate,
+            ReportTemplateDetail.report_template_id
+            == UnitPriceReportTemplate.template_id,
         )
-        .join(UnitPriceReport, UnitPriceReportDetail.report_id == UnitPriceReport.report_id)
-        .join(UnitPriceReportTemplate, UnitPriceReportTemplate.unit_price_report_id == UnitPriceReport.report_id)
         .join(Shoe, Shoe.shoe_id == UnitPriceReportTemplate.shoe_id)
-        .filter(Shoe.shoe_rid==shoe_rid, UnitPriceReport.team == team)
+        .filter(Shoe.shoe_id == shoe_id, UnitPriceReportTemplate.team == team)
         .all()
     )
     result = []
@@ -371,6 +419,43 @@ def load_template():
             "rowId": row.row_id,
             "procedure": row.procedure_name,
             "price": row.price,
+            "note": row.note,
         }
         result.append(obj)
+    print(result)
     return result
+
+
+@price_report_bp.route("/production/downloadproductionform", methods=["GET"])
+def download_production_form():
+    order_shoe_id = request.args.get("orderShoeId")
+    report_id = request.args.get("reportId")
+    meta_response = (
+        db.session.query(Shoe.shoe_rid)
+        .join(OrderShoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .filter(OrderShoe.order_shoe_id == order_shoe_id)
+        .first()
+    )
+    response = (
+        db.session.query(UnitPriceReportDetail)
+        .join(
+            UnitPriceReport,
+            UnitPriceReportDetail.report_id == UnitPriceReport.report_id,
+        )
+        .filter(UnitPriceReport.report_id == report_id)
+        .all()
+    )
+    res = {}
+    res["shoe_rid"] = meta_response[0]
+    res["procedures"] = []
+    for row in response:
+        obj = {
+            "row_id": row.row_id,
+            "procedure_name": row.procedure_name,
+        }
+        res["procedures"].append(obj)
+    template_path = os.path.join("./general_document", "流程卡模板.xlsx")
+    new_file_path = os.path.join("./general_document", "流程卡.xlsx")
+    new_name = f"鞋型{res["shoe_rid"]}_产量流程卡.xlsx"
+    generate_excel_file(template_path, new_file_path, res)
+    return send_file(new_file_path, as_attachment=True, download_name=new_name)

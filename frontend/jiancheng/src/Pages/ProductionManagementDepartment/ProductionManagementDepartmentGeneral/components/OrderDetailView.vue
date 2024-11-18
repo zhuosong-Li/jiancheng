@@ -631,7 +631,7 @@ export default {
 		},
 		async getOrderShoeBatchInfo() {
 			const params = { "orderShoeId": this.currentRow.orderShoeId }
-			const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
+			const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, { params })
 			this.shoeBatchInfo = response.data
 			this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo);
 		},
