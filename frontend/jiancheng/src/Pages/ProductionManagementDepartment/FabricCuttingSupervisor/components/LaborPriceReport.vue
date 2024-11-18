@@ -4,14 +4,26 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            订单号筛选：
-            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getOrderTableData()"
+            <el-input v-model="orderRIdSearch" placeholder="搜索订单号" clearable @keypress.enter="getOrderTableData()"
                 @clear="getOrderTableData" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
             <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getOrderTableData()"
                 @clear="getOrderTableData()" />
+        </el-col>
+        <el-col :span="4" :offset="2" style="white-space: nowrap;">
+            状态筛选：
+            <el-select v-model="statusNameSearch" filterable placeholder="搜索状态" @change="getOrderTableData()"
+                @clear="getOrderTableData()" clearable>
+                <el-option v-for="item in [
+                    '未提交',
+                    '已提交',
+                    '已审批',
+                    '被驳回',
+                ]" :key="item" :label="item" :value="item">
+                </el-option>
+            </el-select>
         </el-col>
     </el-row>
     <el-table :data="taskData" border stripe>
@@ -46,6 +58,7 @@ const shoeRIdSearch = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalPages = ref(0)
+const statusNameSearch = ref('')
 onMounted(() => {
     getOrderTableData()
 })
@@ -63,6 +76,7 @@ const getOrderTableData = async () => {
         "pageSize": pageSize.value,
         "orderRId": orderRIdSearch.value,
         "shoeRId": shoeRIdSearch.value,
+        "statusName": statusNameSearch.value,
         "team": "裁断"
     }
     const response = await axios.get(`${apiBaseUrl}/production/getnewpricereports`, { params })
@@ -71,7 +85,8 @@ const getOrderTableData = async () => {
 }
 const handleView = (row) => {
     let url = ""
-    const queryString = new URLSearchParams(row).toString();
+    let params = {"orderId": row.orderId, "orderShoeId": row.orderShoeId}
+    const queryString = new URLSearchParams(params).toString();
     url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
     window.open(url, '_blank');
 }

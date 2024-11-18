@@ -70,6 +70,8 @@ open_routes = [
     "/firstpurchase/downloadmaterialstatistics",
     "/secondpurchase/downloadpurchaseorderzip",
     "/secondpurchase/downloadmaterialstatistics",
+    "/production/downloadproductionform",
+    "/production/downloadbatchinfo",
 ]
 
 

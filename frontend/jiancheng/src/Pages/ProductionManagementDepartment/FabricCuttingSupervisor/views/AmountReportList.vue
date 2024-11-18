@@ -19,11 +19,13 @@
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
                     <el-descriptions title="鞋型信息" :column="3" border>
-                        <el-descriptions-item label="订单号">{{ props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="鞋型号">{{ props.shoeRId }}</el-descriptions-item>
-                        <el-descriptions-item label="客户">{{ props.customerName }}</el-descriptions-item>
-                        <el-descriptions-item label="工段开始日期">{{ props.productionStartDate }}</el-descriptions-item>
-                        <el-descriptions-item label="工段结束日期">{{ props.productionEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="订单号">{{ orderInfo.orderRId }}</el-descriptions-item>
+                        <el-descriptions-item label="鞋型号">{{ orderInfo.shoeRId }}</el-descriptions-item>
+                        <el-descriptions-item label="客户型号">{{ orderInfo.customerProductName }}</el-descriptions-item>
+                        <el-descriptions-item label="订单开始日期">{{ orderInfo.orderStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="订单结束日期">{{ orderInfo.orderEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段开始日期">{{ orderInfo.cuttingStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段结束日期">{{ orderInfo.cuttingEndDate }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
@@ -33,7 +35,8 @@
                 <el-table-column prop="submissionDate" label="提交日期" sortable></el-table-column>
                 <el-table-column prop="status" label="状态">
                     <template v-slot="scope">
-                        <el-tooltip v-if="scope.row.status === '被驳回'" effect="dark" :content="scope.row.rejectionReason">
+                        <el-tooltip v-if="scope.row.status === '被驳回'" effect="dark"
+                            :content="scope.row.rejectionReason">
                             <span class="rejected">{{ scope.row.status }}</span>
                         </el-tooltip>
                         <span v-else>{{ scope.row.status }}</span>
@@ -42,11 +45,10 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button v-if="scope.row.status === '已提交' || scope.row.status === '已审批'" type="success"
-                            @click="openPreviewDialog(scope.row)">查看</el-button>
+                            @click="openReportDialog(scope.row, false)">查看</el-button>
                         <el-button-group v-else-if="scope.row.status === '未提交' || scope.row.status === '被驳回'">
-                            <el-button type="primary" class="block-button" @click="handleEdit(scope.row)">编辑</el-button>
-                            <el-button type="success" class="block-button"
-                                @click="openPreviewDialog(scope.row)">查看</el-button>
+                            <el-button type="primary" class="block-button"
+                                @click="openReportDialog(scope.row, true)">编辑</el-button>
                             <el-button type="warning" class="block-button"
                                 @click="handleSubmit(scope.row)">提交</el-button>
                             <el-button type="danger" class="block-button"
@@ -60,47 +62,53 @@
                     <span>新建生产数量单</span>
                 </el-button>
             </el-row>
-            <div v-if="createVis">
-                <AmountReportCreator :currentReport="currentReport" :orderShoeId="props.orderShoeId"
-                    :handleClose="handleClose" />
-            </div>
-            <div v-else-if="previewVis">
-                <PreviewQuantityReport :shoeRId="props.shoeRId" :currentReport="currentReport"
-                    :handleClose="handleClose" />
-            </div>
+            <el-dialog :title="`${orderInfo.shoeRId}数量单`" v-model="isReportDialogOpen" width="80%">
+                <AmountReportTable :tableData="quantityTableData" :orderShoeId="props.orderShoeId"
+                    :editable="editable" />
+                <template #footer>
+                    <el-button @click="isReportDialogOpen = false">取消</el-button>
+                    <el-button v-if="editable" type="primary" @click="handleSaveData">保存</el-button>
+                    <el-button type="primary" @click="handleExport">下载为Excel</el-button>
+                </template>
+            </el-dialog>
         </el-main>
     </el-container>
 </template>
 
 <script setup>
 import { onMounted, ref, watch, getCurrentInstance } from 'vue';
-import AmountReportCreator from '../components/AmountProduced/AmountReportCreator.vue'
-import PreviewQuantityReport from '../components/AmountProduced/PreviewQuantityReport.vue';
+import AmountReportTable from '../components/AmountProduced/AmountReportTable.vue'
 import AllHeader from '@/components/AllHeader.vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import axios from 'axios'
-const createVis = ref(false)
-const createReportVis = ref(false)
-const previewVis = ref(false)
-const props = defineProps(["orderId", "orderRId", "orderShoeId", "shoeRId", "customerName", "productionStartDate", "productionEndDate"])
+import { exportTableToExcel } from '../../utils';
+const isReportDialogOpen = ref(false)
+const props = defineProps(["orderId", "orderShoeId"])
 const taskData = ref([])
 const currentReport = ref({})
 const dateValue = ref('')
 const createdDates = ref(new Set())
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
-const orderStartDate = ref('')
+const editable = ref(false)
+const orderInfo = ref({})
+const createReportVis = ref(false)
+const quantityTableData = ref([])
 
 
 onMounted(async () => {
-    getOrderStartDate()
+    getOrderInfo()
     getAllQuantityReports()
 })
 
-const getOrderStartDate = async () => {
-    let params = {"orderId": props.orderId}
+const getOrderInfo = async () => {
+    let params = { "orderId": props.orderId, "orderShoeId": props.orderShoeId }
     let response = await axios.get(`${apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
-    orderStartDate.value = response.data.orderStartDate
+    orderInfo.value = response.data
+    console.log(orderInfo.value)
+    params = { "orderShoeId": props.orderShoeId }
+    response = await axios.get(`${apiBaseUrl}/production/getproductioninfo`, { params })
+    orderInfo.value = { ...orderInfo.value, ...response.data }
 }
 
 const getAllQuantityReports = async () => {
@@ -126,12 +134,8 @@ watch(taskData, () => {
     createdDates.value = new Set(taskData.value.map(e => e.creationDate));
 }, { deep: true })
 
-const handleEdit = (rowData) => {
-    createVis.value = true
-    currentReport.value = rowData
-}
 const disabledDate = (time) => {
-    let startDate = new Date(orderStartDate.value)
+    let startDate = new Date(orderInfo.value.orderStartDate)
     startDate.setDate(startDate.getDate() - 1);
     const endDate = new Date()
     return time.getTime() < startDate || time.getTime() > endDate.getTime() || createdDates.value.has(dateFormatter(time));
@@ -150,28 +154,32 @@ const handleConfirmCreate = async () => {
         "creationDate": dateValue.value,
         "team": "裁断"
     }
-    const response = await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
+    await axios.post(`${apiBaseUrl}/production/createquantityreport`, body)
     ElMessage({ type: 'success', message: '添加成功!' })
-    body = {
-        reportId: response.data.reportId,
-        orderShoeId: props.orderShoeId
-    }
-    await axios.post(`${apiBaseUrl}/production/createquantityreportdetail`, body)
-    createReportVis.value = false
     getAllQuantityReports()
+    createReportVis.value = false
 }
-const handleCreateReport = () => {
-    createReportVis.value = true
+const openReportDialog = async (row, editableVal) => {
+    currentReport.value = row
+    editable.value = editableVal
+
+    let params = { "reportId": currentReport.value.reportId, "team": 0 }
+    let response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
+    quantityTableData.value = []
+    response.data.forEach(row => {
+        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
+        quantityTableData.value.push(row)
+    })
+    isReportDialogOpen.value = true
 }
 
-const openPreviewDialog = (rowData) => {
-    currentReport.value = rowData
-    previewVis.value = true
-}
 const handleSubmit = async (rowData) => {
-    console.log(rowData)
     await axios.patch(`${apiBaseUrl}/production/submitquantityreport`, { "reportId": rowData.reportId })
-    window.location.reload()
+    getAllQuantityReports()
+}
+
+const handleCreateReport = () => {
+    createReportVis.value = true
 }
 
 const handleDelete = (row, index) => {
@@ -194,15 +202,28 @@ const handleDelete = (row, index) => {
         });
     });
 }
-const handleClose = (option) => {
-    if (option === 0) createVis.value = false
-    else if (option === 1) previewVis.value = false
+const handleSaveData = async () => {
+    const data = {
+        "reportId": currentReport.value.reportId,
+        "data": quantityTableData.value,
+    }
+    try {
+        await axios.put(`${apiBaseUrl}/production/editquantityreportdetail`, data)
+        ElMessage.success("保存成功")
+    }
+    catch (error) {
+        ElMessage.error('保存失败')
+    }
+    isReportDialogOpen.value = false
+}
+const handleExport = () => {
+    exportTableToExcel(tableData.value, columns.value, currentTitle.value + ".xlsx")
 }
 </script>
 <style>
 .rejected {
-  color: red;
-  cursor: pointer;
-  text-decoration: underline;
+    color: red;
+    cursor: pointer;
+    text-decoration: underline;
 }
 </style>

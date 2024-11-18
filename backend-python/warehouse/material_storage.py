@@ -1,16 +1,14 @@
 import datetime
 from decimal import Decimal
+
+from api_utility import format_date
 from app_config import db
-from constants import (
-    END_OF_PRODUCTION_NUMBER,
-    IN_PRODUCTION_ORDER_NUMBER,
-    PRODUCTION_LINE_REFERENCE,
-    SHOESIZEINFO,
-)
+from constants import (END_OF_PRODUCTION_NUMBER, IN_PRODUCTION_ORDER_NUMBER,
+                       PRODUCTION_LINE_REFERENCE, SHOESIZEINFO)
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
-from sqlalchemy import func, or_, and_, asc, desc
+from sqlalchemy import and_, asc, desc, func, or_
 
 material_storage_bp = Blueprint("material_storage_bp", __name__)
 
@@ -218,7 +216,7 @@ def get_all_material_info():
         if not material_estimated_arrival_date:
             date_value = ""
         else:
-            date_value = material_estimated_arrival_date.strftime("%Y-%m-%d")
+            date_value = format_date(material_estimated_arrival_date)
         obj = {
             "materialType": material_type_name,
             "materialName": material_name,
@@ -240,7 +238,7 @@ def get_all_material_info():
             "colorName": color,
             "materialArrivalDate": date_value,
             "purchaseDivideOrderRId": purchase_divide_order_rid,
-            "purchaseOrderIssueDate": purchase_order_issue_date.strftime("%Y-%m-%d"),
+            "purchaseOrderIssueDate": format_date(purchase_order_issue_date),
             "materialModel": material_model
         }
         result.append(obj)

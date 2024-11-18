@@ -22,6 +22,7 @@ import Setting from '../components/Setting.vue'
 import History from '../components/History.vue'
 import LogOut from '../components/LogOut.vue'
 import Dashboard from '../components/Dashboard.vue'
+import BatchInfo from '../components/BatchInfo.vue'
 import { ref } from 'vue'
 const components = {
     Dashboard,
@@ -29,7 +30,8 @@ const components = {
     Setting,
     AmountProduced,
     LogOut,
-    History
+    History,
+    BatchInfo
 }
 const currentTab = ref('LaborPriceReport')
 const optionFn = (option) => {

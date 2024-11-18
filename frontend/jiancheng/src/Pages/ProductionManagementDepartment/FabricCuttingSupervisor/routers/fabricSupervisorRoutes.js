@@ -9,12 +9,7 @@ export default [
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate
             })
     },
     {
@@ -24,12 +19,7 @@ export default [
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate
             })
     }
 ]

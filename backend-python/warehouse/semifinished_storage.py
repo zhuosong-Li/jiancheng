@@ -36,6 +36,7 @@ def get_semifinished_in_out_overview():
             Shoe,
             func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
             SemifinishedShoeStorage,
+            Color
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
@@ -46,8 +47,10 @@ def get_semifinished_in_out_overview():
         )
         .join(
             SemifinishedShoeStorage,
-            SemifinishedShoeStorage.order_shoe_id == OrderShoe.order_shoe_id,
+            SemifinishedShoeStorage.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
         )
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Color, Color.color_id == ShoeType.color_id)
         .group_by(OrderShoe.order_shoe_id, SemifinishedShoeStorage.semifinished_shoe_id)
     )
     if order_rid and order_rid != "":
@@ -60,7 +63,7 @@ def get_semifinished_in_out_overview():
     response = query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
     for row in response:
-        (order, order_shoe, shoe, total_amount, storage_obj) = row
+        (order, order_shoe, shoe, total_amount, storage_obj, color) = row
         if storage_obj.semifinished_status == 0:
             status_name = "未完成入库"
         elif storage_obj.semifinished_status == 1:
@@ -82,6 +85,7 @@ def get_semifinished_in_out_overview():
             "currentAmount": storage_obj.semifinished_amount,
             "object": object,
             "statusName": status_name,
+            "colorName": color.color_name
         }
         result.append(obj)
     return {"result": result, "total": count_result}

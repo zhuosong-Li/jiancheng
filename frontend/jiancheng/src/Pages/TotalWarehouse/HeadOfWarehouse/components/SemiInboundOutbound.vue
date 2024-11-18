@@ -19,7 +19,8 @@
             <el-table :data="tableData" border stripe>
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
-                <el-table-column prop="customerProductName" label="客人号"></el-table-column>
+                <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
+                <el-table-column prop="colorName" label="颜色"></el-table-column>
                 <el-table-column prop="inboundAmount" label="计划入库数量"></el-table-column>
                 <el-table-column prop="currentAmount" label="半成品库存"></el-table-column>
                 <el-table-column prop="object" label="半成品类型"></el-table-column>

@@ -111,14 +111,12 @@ def get_order_shoe_outsource_info():
                 "value": factory.factory_name,
             },
             "outsourceAmount": outsource_info.outsource_amount,
-            "outsourceStartDate": outsource_info.outsource_start_date.strftime(
-                "%Y-%m-%d"
-            ),
-            "outsourceEndDate": outsource_info.outsource_end_date.strftime("%Y-%m-%d"),
+            "outsourceStartDate": format_date(outsource_info.outsource_start_date),
+            "outsourceEndDate": format_date(outsource_info.outsource_end_date),
             "outsourceStatus": outsource_status_converter(
                 outsource_info.outsource_status
             ),
-            "deadlineDate": outsource_info.deadline_date.strftime("%Y-%m-%d"),
+            "deadlineDate": format_date(outsource_info.deadline_date),
             "semifinishedRequired": outsource_info.semifinished_required,
             "materialEstimatedOutboundDate": outsource_info.material_estimated_outbound_date.strftime(
                 "%Y-%m-%d"
@@ -127,7 +125,7 @@ def get_order_shoe_outsource_info():
         }
         if outsource_info.semifinished_estimated_outbound_date:
             obj["semifinishedEstimatedOutboundDate"] = (
-                outsource_info.semifinished_estimated_outbound_date.strftime("%Y-%m-%d")
+                format_date(outsource_info.semifinished_estimated_outbound_date)
             )
         result.append(obj)
     return result

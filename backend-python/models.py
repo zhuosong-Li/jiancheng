@@ -114,20 +114,8 @@ class QuantityReportItem(db.Model):
         nullable=False,
     )
     quantity_report_id = db.Column(db.BigInteger,nullable=False)
-    size_34_report_amount = db.Column(db.Integer, default=0)
-    size_35_report_amount = db.Column(db.Integer, default=0)
-    size_36_report_amount = db.Column(db.Integer, default=0)
-    size_37_report_amount = db.Column(db.Integer, default=0)
-    size_38_report_amount = db.Column(db.Integer, default=0)
-    size_39_report_amount = db.Column(db.Integer, default=0)
-    size_40_report_amount = db.Column(db.Integer, default=0)
-    size_41_report_amount = db.Column(db.Integer, default=0)
-    size_42_report_amount = db.Column(db.Integer, default=0)
-    size_43_report_amount = db.Column(db.Integer, default=0)
-    size_44_report_amount = db.Column(db.Integer, default=0)
-    size_45_report_amount = db.Column(db.Integer, default=0)
-    size_46_report_amount = db.Column(db.Integer, default=0)
-    total_report_amount = db.Column(db.Integer, default=0)
+    order_shoe_type_id = db.Column(db.BigInteger,nullable=False)
+    report_amount = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f"<QuantityReportItem(report_id={self.quantity_report_item_id}>"
@@ -138,7 +126,7 @@ class QuantityReport(db.Model):
     report_id = db.Column(
         db.BigInteger, primary_key=True, nullable=False, autoincrement=True
     )
-    order_shoe_type_id = db.Column(
+    order_shoe_id = db.Column(
         db.BigInteger,
     )
     team = db.Column(db.String(10), nullable=False)
@@ -319,7 +307,7 @@ class PackagingInfo(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True
     )
     packaging_info_locale = db.Column(db.String(10), nullable=False)
-    info_mapping_id = db.Column(db.Integer, nullable=True)
+    batch_info_type_id = db.Column(db.Integer, nullable=True)
     size_34_ratio = db.Column(db.Integer, nullable=True)
     size_35_ratio = db.Column(db.Integer, nullable=True)
     size_36_ratio = db.Column(db.Integer, nullable=True)
@@ -842,10 +830,10 @@ class UnitPriceReportDetail(db.Model):
     )
     procedure_name = db.Column(db.String(50),nullable=False)
     price = db.Column(db.Float, nullable=False)
-    note = db.Column(db.String(600), nullable=True)
+    note = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
-        return f"<UnitPriceReportDetail(report_id={self.report_id}, row_id={self.row_id}, procedure_id={self.procedure_id}, note={self.note})>"
+        return f"<UnitPriceReportDetail(report_id={self.report_id}, row_id={self.row_id}, procedure_name={self.procedure_name}, note={self.note})>"
 
 
 class UnitPriceReport(db.Model):
@@ -871,11 +859,20 @@ class UnitPriceReport(db.Model):
 
 class UnitPriceReportTemplate(db.Model):
     __tablename__ = "unit_price_report_template"
-    unit_price_report_template_id = db.Column(
+    template_id = db.Column(
         db.Integer, primary_key=True, nullable=False, autoincrement=True
     )
-    unit_price_report_id = db.Column(db.BigInteger, nullable=False)
     shoe_id = db.Column(db.Integer, nullable=False)
+    team = db.Column(db.SmallInteger, nullable=False)
+
+
+class ReportTemplateDetail(db.Model):
+    __tablename__ = "report_template_detail"
+    report_template_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    row_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    procedure_name = db.Column(db.String(50), nullable=True)
+    price = db.Column(db.Float, nullable=True)
+    note = db.Column(db.String(100), nullable=True)
 
 
 class MaterialWarehouse(db.Model):

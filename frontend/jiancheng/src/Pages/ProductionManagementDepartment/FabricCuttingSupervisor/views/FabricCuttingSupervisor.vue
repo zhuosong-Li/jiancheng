@@ -22,6 +22,7 @@ import Setting from '../components/Setting.vue'
 import History from '../components/History.vue'
 import LogOut from '../components/LogOut.vue'
 import Dashboard from '../components/Dashboard.vue'
+import ProcedureManagement from '../components/ProcedureManagement.vue'
 import axios from 'axios'
 import { getCurrentInstance, ref } from 'vue'
 const components = {
@@ -30,7 +31,8 @@ const components = {
     Setting,
     AmountProduced,
     LogOut,
-    History
+    History,
+    ProcedureManagement
 }
 const currentTab = ref('LaborPriceReport')
 const optionFn = (option) => {

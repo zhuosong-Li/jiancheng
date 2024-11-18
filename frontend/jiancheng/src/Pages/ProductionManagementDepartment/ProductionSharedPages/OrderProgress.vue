@@ -135,7 +135,7 @@
                         </el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="logisticsInfo" label="生产指令单">
+                <el-table-column prop="logisticsInfo" label="包装资料">
                     <template #default="scope">
                         <el-button type="primary" size="small" @click="downloadProductionOrderSheet(scope.row)">
                             下载
@@ -367,6 +367,7 @@
         <template #footer>
             <span>
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
+                <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
                 <el-button type="primary" @click="modifyProductionSchedule">保存</el-button>
                 <el-button v-if="currentRow.status === '未排产'" type="success" @click="startProduction">开始生产</el-button>
             </span>
@@ -529,7 +530,7 @@ export default {
         async openScheduleDialog(row) {
             this.currentRow = row
             this.isScheduleDialogOpen = true
-            this.shoeSizeColumns = await this.getShoeSizesName(row.orderShoeId)
+            this.shoeSizeColumns = await this.getShoeSizesName(row.orderId)
             this.tabs.forEach(row => {
                 row.lineValue = []
                 row.dateValue = []
@@ -552,7 +553,7 @@ export default {
         async getOrderShoeBatchInfo() {
             this.shoeBatchInfo = []
             const params = { "orderShoeId": this.currentRow.orderShoeId }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoebatchinfo`, { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, { params })
             this.shoeBatchInfo = response.data
             console.log(this.shoeBatchInfo)
             this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo);
@@ -702,7 +703,12 @@ export default {
         },
         downloadProductionOrderSheet(row) {
             window.open(
-                `${this.$apiBaseUrl}/production/productionmanager/downloadprocutionordersheet?${row.orderShoeId}`
+                `${this.$apiBaseUrl}/production/productionmanager/downloadproductionordersheet?${row.orderShoeId}`
+            )
+        },
+        downloadBatchInfo() {
+            window.open(
+                `${this.$apiBaseUrl}/production/downloadbatchinfo?orderId=${this.currentRow.orderId}&orderShoeId=${this.currentRow.orderShoeId}`
             )
         },
         async getOrderDataTable() {
@@ -720,6 +726,10 @@ export default {
         },
         downloadInstructionForm(row) {
 
+        },
+        async downloadProcessSheet(row) {
+            let params = {"orderShoeId": row.orderShoeId}
+            await axios.get(`${this.$apiBaseUrl}/production/productionmanager/downloadproductionordersheet`, {params})
         },
         async openLogisticsDialog(rowData) {
             this.logisticsCurrentPage = 1
