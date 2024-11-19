@@ -7,8 +7,8 @@
                   v-model="orderRIdSearch"
                   placeholder="请输入订单号"
                   clearable
-                  @keypress.enter="getTableData(orderRIdSearch, routeMsg)"
-                  @clear="getTableData('', routeMsg)"
+                  @keypress.enter="updataParams('orderRId', orderRIdSearch)"
+                  @clear="updataParams('orderRId', orderRIdSearch)"
               />
           </el-col>
           <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
@@ -29,7 +29,6 @@
               <el-table-column prop="cutFillStatus" label="裁断价格填写状态" />
               <el-table-column prop="needleCarStatus" label="针车价格填写状态" />
               <el-table-column prop="formFillStatus" label="成型价格填写状态" />
-              <el-table-column prop="abnormalStatus" label="异常状态说明" />
           </el-table-column>
       </el-table>
       <el-row :gutter="20" style="justify-content: end">
@@ -62,7 +61,8 @@ const {
     currentTableData,
     getTableData,
     chageCurrentPageSize,
-    changeCurrentPage
+    changeCurrentPage,
+    updataParams
 } = useTablePagination();
 
 onMounted(() => {
@@ -76,7 +76,7 @@ onMounted(() => {
             abnormalStatus: ''
         }
     ];
-    getTableData('', routeMsg);
+    updataParams('route', routeMsg);
 });
 
 </script>

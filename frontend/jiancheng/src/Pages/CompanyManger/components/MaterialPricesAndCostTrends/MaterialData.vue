@@ -1,39 +1,23 @@
 <template>
     <div class="content">
-        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between;">
+        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between">
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 材料名称:
-                <el-input
-                    v-model="materialSearch"
-                    placeholder="请输入材料名称"
-                    clearable
-                />
+                <el-input v-model="materialName" placeholder="请输入材料名称" clearable />
             </el-col>
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 材料型号:
-                <el-input
-                    v-model="materialSearch"
-                    placeholder="请输入材料型号"
-                    clearable
-                />
+                <el-input v-model="materialModel" placeholder="请输入材料型号" clearable />
             </el-col>
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 材料规格:
-                <el-input
-                    v-model="materialSearch"
-                    placeholder="请输入材料规格"
-                    clearable
-                />
+                <el-input v-model="specifications" placeholder="请输入材料规格" clearable />
             </el-col>
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 材料厂家:
-                <el-input
-                    v-model="materialSearch"
-                    placeholder="请输入材料厂家"
-                    clearable
-                />
+                <el-input v-model="purchaseFactory" placeholder="请输入材料厂家" clearable />
             </el-col>
-            <el-button type="primary" size="middle" @click="getTableData(materialSearch, routeMsg)">查询</el-button>
+            <el-button type="primary" size="middle" @click="updateData()">查询</el-button>
             <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
         </el-row>
         <el-table
@@ -60,7 +44,16 @@
                             link
                             type="primary"
                             size="small"
-                            @click="edit('edit', scope.row.purchaseFactory + scope.row.materialName + scope.row.materialModel + scope.row.specifications, 'add')"
+                            @click="
+                                edit(
+                                    'edit',
+                                    scope.row.purchaseFactory +
+                                        scope.row.materialName +
+                                        scope.row.materialModel +
+                                        scope.row.specifications,
+                                    'add'
+                                )
+                            "
                         >
                             历史价格曲线
                         </el-button>
@@ -85,14 +78,17 @@
 </template>
 
 <script setup>
-import { ref ,onMounted } from 'vue';
-import useTablePagination from '../../hooks/useTablePagination';
-import { Download } from '@element-plus/icons-vue';
+import { ref, onMounted } from 'vue'
+import useTablePagination from '../../hooks/useTablePagination'
+import { Download } from '@element-plus/icons-vue'
 
-const edit = defineEmits(['edit']);
+const edit = defineEmits(['edit'])
 
-let materialSearch = ref('');
-const routeMsg = '';
+let materialName = ref('')
+let materialModel = ref('')
+let specifications = ref('')
+let purchaseFactory = ref('')
+const routeMsg = ''
 
 const {
     currentPage,
@@ -101,8 +97,9 @@ const {
     currentTableData,
     getTableData,
     chageCurrentPageSize,
-    changeCurrentPage
-} = useTablePagination();
+    changeCurrentPage,
+    updataParams
+} = useTablePagination()
 
 onMounted(() => {
     currentTableData.value = [
@@ -129,10 +126,23 @@ onMounted(() => {
             specifications: '规格2',
             color: '黑色',
             purchaseFactory: '厂家2'
-        },
-    ];
-    getTableData('', routeMsg);
+        }
+    ]
+    updataParams('route', routeMsg)
 })
+
+function updateData() {
+    updataParams(
+        'materialData',
+        materialName.value +
+            '>' +
+            materialModel.value +
+            '>' +
+            specifications.value +
+            '>' +
+            purchaseFactory.value
+    )
+}
 </script>
 
 <style scoped>

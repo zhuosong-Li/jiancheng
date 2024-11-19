@@ -25,6 +25,9 @@
             <el-menu-item index="4" @click="handleMenuClick('FinancialStatusAndDepartmentalInput')">
               <span>财务状态与部门输入</span>
             </el-menu-item>
+            <el-menu-item index="5" @click="handleMenuClick('OrderConfirmation')">
+              <span>订单确认</span>
+            </el-menu-item>
             <el-menu-item index="9" @click="logout">
               <span>退出系统</span>
             </el-menu-item>
@@ -47,13 +50,15 @@ import CostCalcAndProfitAnalysis from "../components/CostCalcAndProfitAnalysis/C
 import OrderStatusMonitor from "../components/OrderStatusMonitor/OrderStatusMonitor.vue";
 import MaterialPricesAndCostTrends from "../components/MaterialPricesAndCostTrends/MaterialPricesAndCostTrends.vue";
 import FinancialStatusAndDepartmentalInput from "../components/FinancialStatusAndDepartmentalInput/FinancialStatusAndDepartmentalInput.vue";
+import OrderConfirmation from "../components/OrderConfirmation/OrderConfirmation.vue";
 import useSetAxiosToken from "../hooks/useSetAxiosToken";
 
 const components = {
   CostCalcAndProfitAnalysis,
   OrderStatusMonitor,
   MaterialPricesAndCostTrends,
-  FinancialStatusAndDepartmentalInput
+  FinancialStatusAndDepartmentalInput,
+  OrderConfirmation
 };
 let currentComponent = ref('CostCalcAndProfitAnalysis');
 let userName = ref('总经理');

@@ -32,7 +32,7 @@ import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalcu
 import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
 import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
 import BusinessManagerRoutes from '../Pages/BussinessManager/routers/business'
-import CompanyManagerRoutes from '../Pages/CompanyManger/routers/CompanyManager'
+import OrderConfirmDetailRoutes from '../Pages/CompanyManger/routers/OrderConfirmDetail'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -211,7 +211,7 @@ const router = createRouter({
     ...DevelopmentManagerRoutes,
     ...TechnicalManagerRoutes,
     ...BusinessManagerRoutes,
-    ...CompanyManagerRoutes
+    ...OrderConfirmDetailRoutes
   ]
 })
 import axios from 'axios'

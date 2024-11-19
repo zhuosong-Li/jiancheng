@@ -1,14 +1,14 @@
 <template>
     <div class="content">
-        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between;">
+        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between">
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 已完成订单号筛选：
                 <el-input
                     v-model="orderRIdSearch"
                     placeholder="请输入订单号"
                     clearable
-                    @keypress.enter="getTableData(orderRIdSearch, routeMsg)"
-                    @clear="getTableData('', routeMsg)"
+                    @keypress.enter="updataParams('orderRId', orderRIdSearch)"
+                    @clear="updataParams('orderRId', orderRIdSearch)"
                 />
             </el-col>
             <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
@@ -19,6 +19,8 @@
             row-key="id"
             border
             default-expand-all
+            @cell-mouse-enter="enterSelectionRows"
+            @cell-mouse-leave="leaveSelectionRows"
         >
             <el-table-column>
                 <el-table-column prop="orderRId" label="订单编号" sortable />
@@ -60,14 +62,14 @@
     </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
-import useTablePagination from '../../hooks/useTablePagination';
-import { Download } from '@element-plus/icons-vue';
+import { ref, onMounted } from 'vue'
+import useTablePagination from '../../hooks/useTablePagination'
+import { Download } from '@element-plus/icons-vue'
 
-const edit = defineEmits(['edit']);
+const edit = defineEmits(['edit'])
 
-let orderRIdSearch = ref('');
-const routeMsg = '';
+let orderRIdSearch = ref('')
+const routeMsg = ''
 const {
     currentPage,
     currentPageSize,
@@ -75,8 +77,9 @@ const {
     currentTableData,
     getTableData,
     chageCurrentPageSize,
-    changeCurrentPage
-} = useTablePagination();
+    changeCurrentPage,
+    updataParams
+} = useTablePagination()
 
 onMounted(() => {
     currentTableData.value = [
@@ -87,11 +90,63 @@ onMounted(() => {
             finishedShoes: '',
             startDate: '',
             endDate: '',
-            orderEndDate: ''
+            orderEndDate: '',
+            productionCycle: '3'
         }
-    ];
-    getTableData('', routeMsg);
-});
+    ]
+    updataParams('route', routeMsg)
+})
+
+function enterSelectionRows(row, column, cell, event) {
+    //增加判断是否移入的是周期几列
+
+    createTips(
+        event,
+        row,
+        `开始日期：${row.startDate} <br />结束日期：${row.endDate}`
+    )
+}
+function leaveSelectionRows(row, column, cell, event) {
+    removeTips(row)
+}
+// 创建toolTip
+function createTips(el, row, value) {
+    const { detailId } = row
+    const tooltipDom = document.createElement('div')
+    tooltipDom.style.cssText = `
+        display: inline-block;
+        max-width: 400px;
+        max-height: 400px;
+        position: absolute;
+        top: ${el.clientY + 5}px;
+        left: ${el.clientX}px;
+        padding:5px 10px;
+        overflow: auto;
+        font-size: 14px;
+        font-family: PingFangSC-Regular, PingFang SC;
+        font-weight: 400;
+        color: #595959;
+        background: #fff;
+        border-radius: 5px;
+        z-index: 19999;
+        box-shadow: 0 4px 12px 1px #ccc;
+      `
+    tooltipDom.innerHTML = value
+    tooltipDom.setAttribute('id', `tooltip-${detailId}`)
+    // 将浮层插入到body中
+    document.body.appendChild(tooltipDom)
+}
+
+// 删除tooltip
+function removeTips(row) {
+    const { detailId } = row
+    const tooltipDomLeave = document.querySelectorAll(`#tooltip-${detailId}`)
+    if (tooltipDomLeave.length) {
+        tooltipDomLeave.forEach((dom) => {
+            document.body.removeChild(dom)
+        })
+    }
+}
 </script>
 <style scoped>
 .content {

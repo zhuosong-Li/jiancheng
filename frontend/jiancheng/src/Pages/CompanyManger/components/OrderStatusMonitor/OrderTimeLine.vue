@@ -19,17 +19,16 @@
 </template>
 
 <script lang="js" setup>
-import { MoreFilled } from '@element-plus/icons-vue';
-import { onMounted, ref } from 'vue';
-import axios from 'axios';
+import { MoreFilled } from '@element-plus/icons-vue'
+import { onMounted, ref } from 'vue'
+import axios from 'axios'
 
-const { orderId } = defineProps(['orderId']);
-let apiBaseUrl = localStorage.getItem('apiBaseUrl');
-let activities = ref([]);
+const { orderId } = defineProps(['orderId'])
+let activities = ref([])
 
 onMounted(() => {
     // 组件创建时立马根据鞋型id去查询相关时间线数据
-    queryOrderMsg(orderId);
+    queryOrderMsg(orderId)
 })
 
 async function queryOrderMsg(orderId) {

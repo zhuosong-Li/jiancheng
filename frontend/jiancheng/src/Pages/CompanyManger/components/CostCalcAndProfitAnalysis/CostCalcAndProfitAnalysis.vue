@@ -7,8 +7,8 @@
                     v-model="orderRIdSearch"
                     placeholder="请输入订单号"
                     clearable
-                    @keypress.enter="getTableData(orderRIdSearch, routeMsg)"
-                    @clear="getTableData('', routeMsg)"
+                    @keypress.enter="updataParams('orderRId', orderRIdSearch)"
+                    @clear="updataParams('orderRId', orderRIdSearch)"
                 />
             </el-col>
             <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
@@ -19,6 +19,7 @@
             row-key="id"
             border
             default-expand-all
+            @cell-click="showDialog"
         >
             <el-table-column>
                 <el-table-column prop="orderRId" label="订单编号" sortable />
@@ -53,6 +54,7 @@
 import { ref ,onMounted } from 'vue';
 import useTablePagination from '../../hooks/useTablePagination';
 import { Download } from '@element-plus/icons-vue';
+import CostCalcDialog from "./CostCalcDialog.vue";
 
 let orderRIdSearch = ref('');
 const routeMsg = '';
@@ -63,12 +65,18 @@ const {
     currentTableData,
     getTableData,
     chageCurrentPageSize,
-    changeCurrentPage
+    changeCurrentPage,
+    updataParams
 } = useTablePagination();
 
 onMounted(() => {
-    getTableData('', routeMsg);
+    updataParams('route', routeMsg);
 })
+
+function showDialog(row, column, cell, event) {
+    // 增加判断展示的是否是人工成本列的单元格
+
+}
 </script>
 
 <style scoped>
