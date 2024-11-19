@@ -116,6 +116,12 @@ const handleSubmit = () => {
                         window.location.href = 'technicalclerk'
                     } else if (response.data.role === 18) {
                         window.location.href = 'usagecalculation'
+                    } else if (response.data.role === 19) {
+                        window.location.href = 'semifinishedwarehouse'
+                    } else if (response.data.role === 20) {
+                        window.location.href = 'finishedwarehouse'
+                    } else if (response.data.role === 2) {
+                        window.location.href = 'companymanager'
                     } else {
                         console.log('Invalid role!')
                     }

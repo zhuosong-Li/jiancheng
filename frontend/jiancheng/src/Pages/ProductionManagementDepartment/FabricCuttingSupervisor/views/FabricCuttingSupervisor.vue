@@ -20,7 +20,6 @@ import LaborPriceReport from '../components/LaborPriceReport.vue'
 import AmountProduced from '../components/AmountProduced.vue'
 import Setting from '../components/Setting.vue'
 import History from '../components/History.vue'
-import LogOut from '../components/LogOut.vue'
 import Dashboard from '../components/Dashboard.vue'
 import ProcedureManagement from '../components/ProcedureManagement.vue'
 import axios from 'axios'
@@ -30,7 +29,6 @@ const components = {
     LaborPriceReport,
     Setting,
     AmountProduced,
-    LogOut,
     History,
     ProcedureManagement
 }

@@ -14,15 +14,12 @@
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
                         <el-menu-item index="1" @click="handleMenuClick(1)">
-                            <span>材料入库</span>
+                            <span>半成品出/入库</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
-                            <span>材料出库</span>
-                        </el-menu-item>
-                        <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>出/入库历史</span>
                         </el-menu-item>
-                        <el-menu-item index="8" @click="logout">
+                        <el-menu-item index="3" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -38,26 +35,21 @@
 
 <script>
 import AllHeader from '@/components/AllHeader.vue'
-import Dashboard from '../components/HeadOfWarehouseDashboard.vue'
-import MaterialInbound from '../components/MaterialInbound.vue'
-import InboundOutboundHistory from '../components/InboundOutboundHistory.vue'
-import MaterialOutbound from '../components/MaterialOutbound.vue'
+import SemiInboundOutbound from '../components/SemiInboundOutbound.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
 export default {
     components: {
         AllHeader,
-        Dashboard,
-        MaterialInbound,
-        MaterialOutbound,
-        InboundOutboundHistory,
+        SemiInboundOutbound,
     },
     data() {
         return {
             UserFilled,
-            currentComponent:'MaterialInbound',
-            userName: ''
+            currentComponent:'SemiInboundOutbound',
+            userName: '',
+            logout
         }
     },
     mounted() {
@@ -72,14 +64,11 @@ export default {
         handleMenuClick(index){
             switch(index) {
                 case 1:
-                    this.currentComponent = 'MaterialInbound'
+                    this.currentComponent = 'SemiInboundOutbound'
                     break
-                case 2:
-                    this.currentComponent = 'MaterialOutbound' 
-                    break
-                case 5:
-                    this.currentComponent = 'InboundOutboundHistory'
-                    break
+                // case 2:
+                //     this.currentComponent = 'InboundOutboundHistory'
+                //     break
             }
         }
     }

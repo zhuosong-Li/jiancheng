@@ -98,7 +98,7 @@ export default {
                 "orderRId": this.orderRIdSearch,
                 "shoeRId": this.shoeRIdSearch
             }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallordershoeinfo`, { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getallordershoeinfo`, { params })
             this.logisticsOrderData = response.data.result
             this.totalRows = response.data.totalLength
         },

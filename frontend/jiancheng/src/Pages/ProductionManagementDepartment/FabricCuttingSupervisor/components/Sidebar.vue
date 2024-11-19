@@ -20,7 +20,7 @@
                 <el-menu-item index="4" @click="handleMenuOption('ProcedureManagement')">
                     <span>工序管理</span>
                 </el-menu-item>
-                <el-menu-item index="5" @click="handleMenuOption('LogOut')">
+                <el-menu-item index="5" @click="logout">
                     <span>退出系统</span>
                 </el-menu-item>
             </el-menu>
@@ -31,6 +31,7 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted } from 'vue'
 import axios from 'axios'
+import { logout } from '@/Pages/utils/logOut';
 const userName = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
