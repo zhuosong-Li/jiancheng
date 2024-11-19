@@ -40,7 +40,8 @@
 					<el-table-column prop="outsourceEndDate" label="外包结束日期"></el-table-column>
 					<el-table-column prop="outsourceStatus" label="状态">
 						<template v-slot="scope">
-							<el-tooltip v-if="scope.row.outsourceStatus === '被驳回'" effect="dark" :content="scope.row.rejectionReason">
+							<el-tooltip v-if="scope.row.outsourceStatus === '被驳回'" effect="dark"
+								:content="scope.row.rejectionReason">
 								<span class="rejected">{{ scope.row.outsourceStatus }}</span>
 							</el-tooltip>
 							<span v-else>{{ scope.row.outsourceStatus }}</span>
@@ -74,25 +75,34 @@
 	<el-dialog title="外包编辑页面" v-model="showOutsourceEditPage" width="80%">
 		<el-form :model="outsourceForm" :rules="rules" ref="outsourceForm" class="custom-form">
 			<el-form-item label="外包类型" prop="outsourceType">
-				<el-select v-model="outsourceForm.outsourceType" :disabled="readOnly" placeholder="" filterable multiple>
+				<el-select v-model="outsourceForm.outsourceType" :disabled="readOnly" placeholder="" filterable
+					multiple>
 					<el-option v-for="item in productionDepartments" :key="item" :label="item" :value="item">
 					</el-option>
 				</el-select>
 			</el-form-item>
 			<el-form-item label="外包厂家" prop="outsourceFactory">
-				<el-select v-model="outsourceForm.outsourceFactory" :disabled="readOnly" value-key="id" placeholder="" filterable clearable>
+				<el-select v-model="outsourceForm.outsourceFactory" :disabled="readOnly" value-key="id" placeholder=""
+					filterable clearable>
 					<el-option v-for="item in factoryOptions" :key="item.id" :label="item.value" :value="item">
 					</el-option>
 				</el-select>
 			</el-form-item>
 			<el-form-item label="外包周期" prop="outsourcePeriodArr">
-				<el-date-picker v-model="outsourceForm.outsourcePeriodArr" :disabled="readOnly" type="daterange" value-format="YYYY-MM-DD"
-					response range-separator="至">
+				<el-date-picker v-model="outsourceForm.outsourcePeriodArr" :disabled="readOnly" type="daterange"
+					value-format="YYYY-MM-DD" response range-separator="至">
 				</el-date-picker>
 			</el-form-item>
+			<el-form-item label="外发材料" prop="materialRequired">
+				<el-radio-group v-model="outsourceForm.materialRequired" :disabled="readOnly">
+					<el-radio :value="true">是</el-radio>
+					<el-radio :value="false">否</el-radio>
+				</el-radio-group>
+			</el-form-item>
 			<el-form-item label="材料出货日期" prop="materialEstimatedOutboundDate">
-				<el-date-picker v-model="outsourceForm.materialEstimatedOutboundDate" :disabled="readOnly" type="date"
-					value-format="YYYY-MM-DD" response placeholder="选择日期时间">
+				<el-date-picker v-model="outsourceForm.materialEstimatedOutboundDate" type="date"
+					value-format="YYYY-MM-DD" response :disabled="outsourceForm.materialRequired == false || readOnly"
+					placeholder="选择日期时间">
 				</el-date-picker>
 			</el-form-item>
 			<el-form-item label="外发半成品" prop="semifinishedRequired">
@@ -103,13 +113,13 @@
 			</el-form-item>
 			<el-form-item label="半成品发货日期" prop="semifinishedEstimatedOutboundDate">
 				<el-date-picker v-model="outsourceForm.semifinishedEstimatedOutboundDate" type="date"
-					value-format="YYYY-MM-DD" response :disabled="outsourceForm.semifinishedRequired == false || readOnly"
-					placeholder="选择日期时间">
+					value-format="YYYY-MM-DD" response
+					:disabled="outsourceForm.semifinishedRequired == false || readOnly" placeholder="选择日期时间">
 				</el-date-picker>
 			</el-form-item>
 			<el-form-item label="最迟交货日期" prop="deadlineDate">
-				<el-date-picker v-model="outsourceForm.deadlineDate" :disabled="readOnly" type="date" value-format="YYYY-MM-DD" response
-					placeholder="选择日期时间">
+				<el-date-picker v-model="outsourceForm.deadlineDate" :disabled="readOnly" type="date"
+					value-format="YYYY-MM-DD" response placeholder="选择日期时间">
 				</el-date-picker>
 			</el-form-item>
 		</el-form>
@@ -124,7 +134,7 @@
 					<el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
 						:label="column.label">
 						<template v-slot="scope">
-							<el-input v-model="scope.row[column.prop]" :disabled="readOnly"/>
+							<el-input v-model="scope.row[column.prop]" :disabled="readOnly" />
 						</template>
 					</el-table-column>
 				</el-table>
@@ -195,14 +205,15 @@ export default {
 			productionDepartments: [],
 			totalShoes: 0,
 			template: {
-				"outsourceInfoId": null,
-				"outsourceType": null,
-				"outsourceFactory": null,
-				"outsourcePeriodArr": null,
-				"semifinishedRequired": false,
-				"semifinishedEstimatedOutboundDate": null,
-				"deadlineDate": null,
-				"materialEstimatedOutboundDate": null,
+				outsourceInfoId: null,
+				outsourceType: null,
+				outsourceFactory: null,
+				outsourcePeriodArr: null,
+				semifinishedRequired: false,
+				semifinishedEstimatedOutboundDate: null,
+				deadlineDate: null,
+				materialEstimatedOutboundDate: null,
+				materialRequired: false,
 				outsourceShoeBatchInfo: [],
 			},
 			outsourceForm: {},
@@ -227,8 +238,21 @@ export default {
 				outsourcePeriodArr: [
 					{ required: true, message: '此项为必填项', trigger: 'change' },
 				],
-				materialEstimatedOutboundDate: [
+				materialRequired: [
 					{ required: true, message: '此项为必填项', trigger: 'change' },
+				],
+				materialEstimatedOutboundDate: [
+					{
+						validator: (rule, value, callback) => {
+							// If field1 is "Yes", make field2 required
+							if (this.outsourceForm.materialRequired === true && !value) {
+								callback(new Error('此项为必填项'));
+							} else {
+								callback();
+							}
+						},
+						trigger: 'blur'
+					}
 				],
 				semifinishedRequired: [
 					{ required: true, message: '此项为必填项', trigger: 'change' },
@@ -269,7 +293,7 @@ export default {
 	},
 	methods: {
 		async getShoeSizesName() {
-			let params = { "orderShoeId": this.$props.orderId }
+			let params = { "orderId": this.$props.orderId }
 			let response = await axios.get(`${this.$apiBaseUrl}/batchtype/getorderbatchtype`, { params })
 			this.shoeSizeColumns = response.data
 		},
@@ -363,6 +387,7 @@ export default {
 						"semifinishedRequired": this.outsourceForm.semifinishedRequired,
 						"semifinishedEstimatedOutboundDate": this.outsourceForm.semifinishedEstimatedOutboundDate,
 						"deadlineDate": this.outsourceForm.deadlineDate,
+						"materialRequired": this.outsourceForm.materialRequired,
 						"materialEstimatedOutboundDate": this.outsourceForm.materialEstimatedOutboundDate,
 						"outsourceAmount": this.outsourceForm.outsourceShoeBatchInfo,
 						"orderShoeId": this.$props.orderShoeId

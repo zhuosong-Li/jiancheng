@@ -17,19 +17,10 @@
                 <el-menu-item index="3" @click="handleMenuOption('AmountProduced')">
                     <span>数量填写</span>
                 </el-menu-item>
-                <el-menu-item index="4" @click="handleMenuOption('DailyProceduresForm')">
-                    <span>产量流程卡</span>
-                </el-menu-item>
                 <el-menu-item index="5" @click="handleMenuOption('ProcedureManagement')">
                     <span>工序管理</span>
                 </el-menu-item>
-                <el-menu-item index="6" @click="handleMenuOption('History')">
-                    <span>历史记录</span>
-                </el-menu-item>
-                <el-menu-item index="7" @click="handleMenuOption('Setting')">
-                    <span>个人信息</span>
-                </el-menu-item>
-                <el-menu-item index="8" @click="handleMenuOption('LogOut')">
+                <el-menu-item index="8" @click="logout">
                     <span>退出系统</span>
                 </el-menu-item>
             </el-menu>
@@ -40,6 +31,7 @@
 <script setup>
 import { ref, getCurrentInstance, onMounted } from 'vue'
 import axios from 'axios'
+import { logout } from '@/Pages/utils/logOut';
 const userName = ref('')
 const proxy = getCurrentInstance()
 const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl

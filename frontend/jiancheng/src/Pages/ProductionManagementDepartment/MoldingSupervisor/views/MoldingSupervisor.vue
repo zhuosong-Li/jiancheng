@@ -19,8 +19,7 @@ import Sidebar from '../components/Sidebar.vue'
 import LaborPriceReport from '../components/LaborPriceReport.vue'
 import AmountProduced from '../components/AmountProduced.vue'
 import Setting from '../components/Setting.vue'
-import History from '../components/History.vue'
-import LogOut from '../components/LogOut.vue'
+import ProcedureManagement from '../components/ProcedureManagement.vue'
 import Dashboard from '../components/Dashboard.vue'
 import BatchInfo from '../components/BatchInfo.vue'
 import { ref } from 'vue'
@@ -29,9 +28,8 @@ const components = {
     LaborPriceReport,
     Setting,
     AmountProduced,
-    LogOut,
-    History,
-    BatchInfo
+    BatchInfo,
+    ProcedureManagement
 }
 const currentTab = ref('LaborPriceReport')
 const optionFn = (option) => {
