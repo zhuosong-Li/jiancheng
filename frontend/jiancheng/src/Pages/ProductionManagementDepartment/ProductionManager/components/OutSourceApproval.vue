@@ -113,6 +113,16 @@
                 :label="column.label">
             </el-table-column>
         </el-table>
+
+        <el-descriptions title="外包成本" style="margin-top: 20px;">
+        </el-descriptions>
+        <el-table :data="outsourceShoeBatchInfo" border stripe :max-height="500">
+            <el-table-column prop="colorName" label="颜色"></el-table-column>
+            <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+            <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
+                :label="column.label">
+            </el-table-column>
+        </el-table>
         <template #footer>
             <el-button type="primary" @click="isApprovalDialogOpen = false">返回</el-button>
             <el-button v-if="currentRow.outsourceStatus === '已提交'" type="success"

@@ -434,7 +434,8 @@ class OutsourceInfo(db.Model):
     outsource_status = db.Column(db.SmallInteger, nullable=False)
     deadline_date = db.Column(db.Date, nullable=True)
     semifinished_estimated_outbound_date = db.Column(db.Date, nullable=True)
-    semifinished_required = db.Column(db.Boolean, nullable=True)
+    semifinished_required = db.Column(db.Boolean, nullable=False)
+    material_required = db.Column(db.Boolean, nullable=False)
     material_estimated_outbound_date = db.Column(db.Date, nullable=True)
     rejection_reason = db.Column(db.String(50), nullable=True)
     order_shoe_id = db.Column(
@@ -810,7 +811,7 @@ class UnitPriceReportDetail(db.Model):
         nullable=False,
     )
     procedure_name = db.Column(db.String(50),nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    price = db.Column(db.DECIMAL(10,2), nullable=False)
     note = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
@@ -829,6 +830,7 @@ class UnitPriceReport(db.Model):
     team = db.Column(db.String(10), nullable=True)
     status = db.Column(db.SmallInteger, nullable=False)
     rejection_reason = db.Column(db.String(40), nullable=True)
+    price_sum = db.Column(db.DECIMAL(10,2), default=0)
 
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"

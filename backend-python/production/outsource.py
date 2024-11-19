@@ -117,16 +117,16 @@ def get_order_shoe_outsource_info():
                 outsource_info.outsource_status
             ),
             "deadlineDate": format_date(outsource_info.deadline_date),
+            "materialRequired": outsource_info.material_required,
             "semifinishedRequired": outsource_info.semifinished_required,
-            "materialEstimatedOutboundDate": outsource_info.material_estimated_outbound_date.strftime(
-                "%Y-%m-%d"
+            "materialEstimatedOutboundDate": format_date(
+                outsource_info.material_estimated_outbound_date
             ),
-            "rejectionReason": outsource_info.rejection_reason
+            "semifinishedEstimatedOutboundDate": format_date(
+                outsource_info.semifinished_estimated_outbound_date
+            ),
+            "rejectionReason": outsource_info.rejection_reason,
         }
-        if outsource_info.semifinished_estimated_outbound_date:
-            obj["semifinishedEstimatedOutboundDate"] = (
-                format_date(outsource_info.semifinished_estimated_outbound_date)
-            )
         result.append(obj)
     return result
 
@@ -202,20 +202,22 @@ def store_outsource_for_order_shoe():
         "outsource_start_date": outsource_input["outsourceStartDate"],
         "outsource_end_date": outsource_input["outsourceEndDate"],
         "deadline_date": outsource_input["deadlineDate"],
-        "material_estimated_outbound_date": outsource_input[
-            "materialEstimatedOutboundDate"
-        ],
         "outsource_amount": 0,
         "outsource_status": 0,
         "order_shoe_id": outsource_input["orderShoeId"],
     }
+    obj["material_required"] = outsource_input["materialRequired"]
+    obj["material_estimated_outbound_date"] = (
+        outsource_input["materialEstimatedOutboundDate"]
+        if obj["material_required"]
+        else None
+    )
     obj["semifinished_required"] = outsource_input["semifinishedRequired"]
-    if obj["semifinished_required"]:
-        obj["semifinished_estimated_outbound_date"] = outsource_input[
-            "semifinishedEstimatedOutboundDate"
-        ]
-    else:
-        obj["semifinished_estimated_outbound_date"] = None
+    obj["semifinished_estimated_outbound_date"] = (
+        outsource_input["semifinishedEstimatedOutboundDate"]
+        if obj["semifinished_required"]
+        else None
+    )
     info_obj = None
     outsource_info_id = -1
     if outsource_input["outsourceInfoId"]:
@@ -228,7 +230,6 @@ def store_outsource_for_order_shoe():
         info_obj = OutsourceInfo(**obj)
         db.session.add(info_obj)
         db.session.flush()
-        print(info_obj)
         outsource_info_id = info_obj.outsource_info_id
     # set production info
     production_obj = OrderShoeProductionInfo.query.filter_by(
@@ -468,19 +469,11 @@ def get_outsource_approval_overview():
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
     query = (
-        db.session.query(
-            Order,
-            OrderShoe,
-            Shoe,
-            OutsourceInfo,
-            OutsourceFactory
-        )
+        db.session.query(Order, OrderShoe, Shoe, OutsourceInfo, OutsourceFactory)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderStatus, OrderStatus.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .join(
-            OutsourceInfo, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id
-        )
+        .join(OutsourceInfo, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
         .join(OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id)
         .filter(OutsourceInfo.outsource_status != 0)
     )
@@ -493,15 +486,11 @@ def get_outsource_approval_overview():
     result = []
     mapping = {"0": "裁断", "1": "针车", "2": "成型"}
     for row in response:
-        (
-            order,
-            order_shoe,
-            shoe,
-            outsource_info,
-            outsource_factory
-        ) = row
+        (order, order_shoe, shoe, outsource_info, outsource_factory) = row
 
-        arr = [mapping[team_int] for team_int in outsource_info.outsource_type.split(",")]
+        arr = [
+            mapping[team_int] for team_int in outsource_info.outsource_type.split(",")
+        ]
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -516,19 +505,23 @@ def get_outsource_approval_overview():
             "outsourceAmount": outsource_info.outsource_amount,
             "outsourceStartDate": format_date(outsource_info.outsource_start_date),
             "outsourceEndDate": format_date(outsource_info.outsource_end_date),
-            "outsourceStatus": outsource_status_converter(outsource_info.outsource_status),
+            "outsourceStatus": outsource_status_converter(
+                outsource_info.outsource_status
+            ),
             "deadlineDate": format_date(outsource_info.deadline_date),
-            "semifinishedEstimatedOutboundDate": format_date(outsource_info.semifinished_estimated_outbound_date),
+            "semifinishedEstimatedOutboundDate": format_date(
+                outsource_info.semifinished_estimated_outbound_date
+            ),
             "semifinishedRequired": outsource_info.semifinished_required,
-            "materialEstimatedOutboundDate": format_date(outsource_info.material_estimated_outbound_date)
+            "materialEstimatedOutboundDate": format_date(
+                outsource_info.material_estimated_outbound_date
+            ),
         }
         result.append(obj)
     return {"result": result, "totalLength": count_result}
 
 
-@outsource_bp.route(
-    "/production/productionmanager/approveoutsource", methods=["PATCH"]
-)
+@outsource_bp.route("/production/productionmanager/approveoutsource", methods=["PATCH"])
 def approve_outsource():
     outsource_info_id = request.get_json()["outsourceInfoId"]
     entity = db.session.query(OutsourceInfo).get(outsource_info_id)
@@ -537,9 +530,7 @@ def approve_outsource():
     return {"message": "success"}
 
 
-@outsource_bp.route(
-    "/production/productionmanager/rejectoutsource", methods=["PATCH"]
-)
+@outsource_bp.route("/production/productionmanager/rejectoutsource", methods=["PATCH"])
 def reject_outsource():
     data = request.get_json()
     outsource_info_id = data["outsourceInfoId"]

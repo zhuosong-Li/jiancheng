@@ -25,7 +25,7 @@
             class="el-menu-vertical-demo"
           >
             <el-menu-item index="2" @click="handleMenuClick(2)">
-              <span>生产排期表</span>
+              <span>订单生产明细</span>
             </el-menu-item>
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
@@ -39,11 +39,8 @@
             <el-menu-item index="6" @click="handleMenuClick(6)">
               <span>数量审批</span>
             </el-menu-item>
-            <el-menu-item index="7" @click="handleMenuClick(7)">
-              <span>订单生产明细</span>
-            </el-menu-item>
-            <el-menu-item index="8">
-              <span>数据总览</span>
+            <el-menu-item index="7" @click="logout()">
+              <span>退出系统</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -69,7 +66,7 @@ import OrderProgress from '../components/OrderProgress.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import axios from 'axios'
-
+import { logout } from '@/Pages/utils/logOut'
 
 export default {
   components: {
@@ -87,8 +84,9 @@ export default {
   data() {
     return {
       UserFilled,
-      currentComponent: 'ProductionSchedulingDialogue',
-      userName: ''
+      currentComponent: 'OrderProgress',
+      userName: '',
+      logout
     }
   },
   mounted() {
@@ -103,7 +101,7 @@ export default {
     handleMenuClick(index) {
       switch (index) {
         case 2:
-          this.currentComponent = 'ProductionSchedulingDialogue'
+          this.currentComponent = 'OrderProgress'
           break
         case 3:
           this.currentComponent = 'LogisticInfo'
@@ -116,9 +114,6 @@ export default {
           break
         case 6:
           this.currentComponent = 'ApprovalPage'
-          break
-        case 7:
-          this.currentComponent = 'OrderProgress'
           break
       }
     },

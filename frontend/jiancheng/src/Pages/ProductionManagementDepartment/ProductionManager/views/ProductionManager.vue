@@ -30,12 +30,8 @@
             <el-menu-item index="6" @click="handleMenuClick(6)">
               <span>工价审批</span>
             </el-menu-item>
-            <el-menu-item index="7">
-              <span>订单查询</span>
-            </el-menu-item>
-
-            <el-menu-item index="8">
-              <span>数据总览</span>
+            <el-menu-item index="7" @click="logout">
+              <span>退出系统</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -57,6 +53,7 @@ import OutSourceApproval from '../components/OutSourceApproval.vue'
 import WagesApproval from '../components/WagesApproval.vue'
 import OrderProgress from '../components/OrderProgress.vue'
 import axios from 'axios'
+import { logout } from '@/Pages/utils/logOut'
 export default {
   components: {
     UserFilled,
@@ -71,7 +68,8 @@ export default {
   data() {
     return {
       userName: '',
-      currentComponent: 'OrderProgress'
+      currentComponent: 'OrderProgress',
+      logout
     }
   },
   mounted() {
