@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request
 from models import *
+from sqlalchemy import func
+from datetime import datetime
 
 head_manager_bp = Blueprint("head_manager_bp", __name__)
 
@@ -182,90 +184,257 @@ def get_cost_info():
     return jsonify(cost_info)
 
 
-@head_manager_bp.route("/headmanager/getorderstatusinfo", methods=["GET"])
-def get_order_status_info():
-    """Get the status information of the orders."""
+@head_manager_bp.route("/headmanager/getmaterialpriceinfo", methods=["GET"])
+def get_material_price_info():
+    """Get the price information of the materials."""
+    # Get query parameters
+    material_name = request.args.get("materialName", None)
+    material_model = request.args.get("materialModel", None)
+    material_specification = request.args.get("materialSpecification", None)
+    supplier_name = request.args.get("supplierName", None)
+
+    # Subquery to get the latest inbound record for each material storage
+    latest_material_inbound_subquery = (
+        db.session.query(
+            InboundRecord.material_storage_id.label("material_storage_id"),
+            func.max(InboundRecord.inbound_datetime).label("latest_inbound_date"),
+        )
+        .group_by(InboundRecord.material_storage_id)
+        .subquery()
+    )
+
+    # Subquery to get the latest inbound record for each size material storage
+    latest_size_inbound_subquery = (
+        db.session.query(
+            InboundRecord.size_material_storage_id.label("size_material_storage_id"),
+            func.max(InboundRecord.inbound_datetime).label("latest_inbound_date"),
+        )
+        .group_by(InboundRecord.size_material_storage_id)
+        .subquery()
+    )
+
+    # Main query to get material price info with the newest inbound record
+    material_storage = (
+        db.session.query(MaterialStorage, Material, Supplier, InboundRecord)
+        .join(Material, MaterialStorage.material_id == Material.material_id)
+        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+        .outerjoin(
+            latest_material_inbound_subquery,
+            MaterialStorage.material_storage_id
+            == latest_material_inbound_subquery.c.material_storage_id,
+        )
+        .outerjoin(
+            InboundRecord,
+            (
+                InboundRecord.material_storage_id
+                == latest_material_inbound_subquery.c.material_storage_id
+            )
+            & (
+                InboundRecord.inbound_datetime
+                == latest_material_inbound_subquery.c.latest_inbound_date
+            ),
+        )
+        .all()
+    )
+
+    # Main query to get size material price info with the newest inbound record
+    size_material_storage = (
+        db.session.query(SizeMaterialStorage, Material, Supplier, InboundRecord)
+        .join(Material, SizeMaterialStorage.material_id == Material.material_id)
+        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+        .outerjoin(
+            latest_size_inbound_subquery,
+            SizeMaterialStorage.size_material_storage_id
+            == latest_size_inbound_subquery.c.size_material_storage_id,
+        )
+        .outerjoin(
+            InboundRecord,
+            (
+                InboundRecord.size_material_storage_id
+                == latest_size_inbound_subquery.c.size_material_storage_id
+            )
+            & (
+                InboundRecord.inbound_datetime
+                == latest_size_inbound_subquery.c.latest_inbound_date
+            ),
+        )
+        .all()
+    )
+
+    # Process results for material storage
+    material_price_info = []
+    for ms in material_storage:
+        if (
+            (not material_name or ms.Material.material_name == material_name)
+            and (not material_model or ms.Material.material_model == material_model)
+            and (
+                not material_specification
+                or ms.Material.material_specification == material_specification
+            )
+            and (not supplier_name or ms.Supplier.supplier_name == supplier_name)
+        ):
+            # Handle missing inbound record
+            purchase_date = (
+                ms.InboundRecord.inbound_datetime.strftime("%Y-%m-%d")
+                if ms.InboundRecord and ms.InboundRecord.inbound_datetime
+                else "未入库"
+            )
+
+            material_price_info.append(
+                {
+                    "type": "N",
+                    "materialStorageId": ms.Material.material_id,
+                    "materialName": ms.Material.material_name,
+                    "materialModel": ms.MaterialStorage.material_model,
+                    "materialSpecification": ms.MaterialStorage.material_specification,
+                    "supplierName": ms.Supplier.supplier_name,
+                    "unitPrice": ms.MaterialStorage.unit_price,
+                    "color": ms.MaterialStorage.material_storage_color,
+                    "purchaseAmount": ms.MaterialStorage.actual_inbound_amount,  # Assuming 'amount' is the quantity field
+                    "purchaseDate": purchase_date,  # Set to "未入库" if no inbound record exists
+                }
+            )
+
+    # Process results for size material storage
+    for sms in size_material_storage:
+        if (
+            (not material_name or sms.Material.material_name == material_name)
+            and (not material_model or sms.Material.material_model == material_model)
+            and (
+                not material_specification
+                or sms.Material.material_specification == material_specification
+            )
+            and (not supplier_name or sms.Supplier.supplier_name == supplier_name)
+        ):
+            # Handle missing inbound record
+            purchase_date = (
+                sms.InboundRecord.inbound_datetime.strftime("%Y-%m-%d")
+                if sms.InboundRecord and sms.InboundRecord.inbound_datetime
+                else "未入库"
+            )
+
+            material_price_info.append(
+                {
+                    "type": "S",
+                    "materialStorageId": sms.SizeMaterialStorage.size_material_storage_id,
+                    "materialName": sms.Material.material_name,
+                    "materialModel": sms.SizeMaterialStorage.size_material_model,
+                    "materialSpecification": sms.SizeMaterialStorage.size_material_specification,
+                    "supplierName": sms.Supplier.supplier_name,
+                    "unitPrice": sms.SizeMaterialStorage.unit_price,
+                    "color": sms.SizeMaterialStorage.size_material_color,
+                    "purchaseAmount": sms.SizeMaterialStorage.total_actual_inbound_amount,  # Assuming 'amount' is the quantity field
+                    "purchaseDate": purchase_date,  # Set to "未入库" if no inbound record exists
+                }
+            )
+
+    return jsonify(material_price_info)
+
+
+@head_manager_bp.route("/headmanager/getmaterialinboundcurve", methods=["GET"])
+def get_material_inbound_curve():
+    """Get the inbound curve of the materials."""
+    material_type = request.args.get("materialType", None)
+    material_storage_id = request.args.get("materialStorageId", None)
+    if not material_type or not material_storage_id:
+        return jsonify({"msg": "Missing query parameters."}), 400
+    curve_data = []
+    if material_type == "N":
+        material_storage = (
+            db.session.query(MaterialStorage, InboundRecord)
+            .join(InboundRecord, MaterialStorage.material_storage_id == InboundRecord.material_storage_id)
+            .filter(MaterialStorage.material_storage_id == material_storage_id)
+            .all()
+        )
+        for ms in material_storage:
+            curve_data.append(
+                {
+                    "date": ms.InboundRecord.inbound_datetime.strftime("%Y-%m-%d"),
+                    "unitPrice": ms.MaterialStorage.unit_price,
+                }
+            )
+        return jsonify(curve_data)
+    elif material_type == "S":
+        size_material_storage = (
+            db.session.query(SizeMaterialStorage, InboundRecord)
+            .join(InboundRecord, SizeMaterialStorage.size_material_storage_id == InboundRecord.size_material_storage_id)
+            .filter(SizeMaterialStorage.size_material_storage_id == material_storage_id)
+            .all()
+        )
+        for sms in size_material_storage:
+            curve_data.append(
+                {
+                    "date": sms.InboundRecord.inbound_datetime.strftime("%Y-%m-%d"),
+                    "unitPrice": sms.SizeMaterialStorage.unit_price,
+                }
+            )
+        return jsonify(curve_data)
+    return jsonify({"msg": "Invalid material type."}), 400
+    # Get query parameters
+
+@head_manager_bp.route("/headmanager/financialstatus", methods=["GET"])
+def get_financial_status():
     order_rid = request.args.get("orderRid", None)
-    status_symbol = request.args.get("statusSymbol", None)
     if not order_rid:
-        orders = Order.query.all()
+        order = Order.query.all()
     else:
-        orders = Order.query.filter(Order.order_rid == order_rid).all()
-    if not orders:
-        return jsonify({"msg": "No order found."}), 404
-    order_status_info = []
-    for o in orders:
+        order = Order.query.filter(Order.order_rid.like(f"%{order_rid}%")).all()
+    financial_list = []
+    for o in order:
         order_shoes = (
             db.session.query(OrderShoe, Shoe)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
             .filter(OrderShoe.order_id == o.order_id)
             .all()
         )
-        order_status_list = []
+        order_price_input_status = '未填写'
+        order_status = db.session.query(OrderStatus).filter(OrderStatus.order_id == o.order_id).first().order_current_status
+        if order_status >= 7:
+            order_price_input_status = '已填写'
+        order_shoe_list = []
         for os in order_shoes:
-            events = (
-                db.session.query(
-                    Event,
-                    Operation,
-                    OrderShoeStatus,
-                    OrderShoe,
-                    OrderShoeStatusReference,
-                )
-                .join(Operation, Event.operation_id == Operation.operation_id)
-                .join(
-                    OrderShoeStatus,
-                    Operation.operation_modified_status
-                    == OrderShoeStatus.order_shoe_status_id,
-                )
-                .join(
-                    OrderShoe, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id
-                )
-                .join(
-                    OrderShoeStatusReference,
-                    OrderShoeStatus.current_status
-                    == OrderShoeStatusReference.status_id,
-                )
-                .filter(OrderShoeStatus.order_shoe_id == os.OrderShoe.order_shoe_id)
-                .filter(Operation.operation_modified_value == 2)
-                .all()
-            )
-            print(events)
-            event_list = []
-            for e in events:
-                event_list.append(
-                    {
-                        "ordershoeId": e.OrderShoe.order_shoe_id,
-                        "eventTime": e.Event.handle_time,
-                        "operationName": e.Operation.operation_name,
-                    }
-                )
-            order_status_list.append(
+            order_shoe_material_inbound_status = '未填写'
+            order_shoe_cutting_input_status = '未填写'
+            order_shoe_sewing_input_status = '未填写'
+            order_shoe_molding_input_status = '未填写'
+            order_shoe_price_input_status = order_price_input_status
+            production_info = db.session.query(OrderShoeProductionInfo).filter(OrderShoeProductionInfo.order_shoe_id == os.OrderShoe.order_shoe_id).first()
+            is_arrived = production_info.is_material_arrived if production_info else False
+            if is_arrived:
+                order_shoe_material_inbound_status = '已填写'
+            cutting_price_report = db.session.query(UnitPriceReport).filter(UnitPriceReport.order_shoe_id == os.OrderShoe.order_shoe_id, UnitPriceReport.team == '裁断').first()
+            if cutting_price_report:
+                if cutting_price_report.status == 1:
+                    order_shoe_cutting_input_status = '未审核'
+                if cutting_price_report.status == 2:
+                    order_shoe_cutting_input_status = '已填写'
+            sewing_price_report = db.session.query(UnitPriceReport).filter(UnitPriceReport.order_shoe_id == os.OrderShoe.order_shoe_id, UnitPriceReport.team == '针车').first()
+            if sewing_price_report:
+                if sewing_price_report.status == 1:
+                    order_shoe_sewing_input_status = '未审核'
+                if sewing_price_report.status == 2:
+                    order_shoe_sewing_input_status = '已填写'
+            order_shoe_list.append(
                 {
                     "shoeRId": os.Shoe.shoe_rid,
                     "shoeName": os.OrderShoe.customer_product_name,
-                    "status": event_list,
+                    "materialInboundStatus": order_shoe_material_inbound_status,
+                    "cuttingInputStatus": order_shoe_cutting_input_status,
+                    "sewingInputStatus": order_shoe_sewing_input_status,
+                    "moldingInputStatus": order_shoe_molding_input_status,
+                    "priceInputStatus": order_shoe_price_input_status,
                 }
             )
-            order_info = {
-                "orderId": o.order_id,
-                "orderRid": o.order_rid,
-                "orderShoes": order_status_list,
-            }
-        order_status_info.append(order_info)
-    return jsonify(order_status_info)
+        order_info = {
+            "orderId": o.order_id,
+            "orderRid": o.order_rid,
+            "orderShoes": order_shoe_list,
+        }
+        financial_list.append(order_info)
+    return jsonify(financial_list)
+        
+        
 
+    
 
-@head_manager_bp.route("/headmanager/getmaterialpriceinfo", methods=["GET"])
-def get_material_price_info():
-    """Get the price information of the materials."""
-    material_name = request.args.get("materialName", None)
-    material_model = request.args.get("materialModel", None)
-    material_specification = request.args.get("materialSpecification", None)
-    supplier_name = request.args.get("supplierName", None)
-    material_storage = (
-        db.session.query(MaterialStorage, Material, Supplier)
-        .join(Material, MaterialStorage.material_id == Material.material_id)
-        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
-        .all()
-    )
-    print(material_storage)
+    # Get the total number of shoes in transit

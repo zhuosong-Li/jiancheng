@@ -75,6 +75,8 @@ open_routes = [
     "/headmanager/getcostinfo",
     "/headmanager/getorderstatusinfo",
     "/headmanager/getmaterialpriceinfo",
+    "/headmanager/getmaterialinboundcurve",
+    "/headmanager/financialstatus",
 ]
 
 
