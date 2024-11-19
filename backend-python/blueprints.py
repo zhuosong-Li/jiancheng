@@ -34,7 +34,7 @@ from production.scheduling import production_scheduling_bp
 from production.outsource import outsource_bp
 from production.production_status_nodes import production_status_nodes_bp
 from bussiness.batch_info_type import batch_type_bp
-
+from head_manager.head_manager_api import head_manager_bp
 
 def register_blueprints():
     app.register_blueprint(price_report_bp)
@@ -72,3 +72,4 @@ def register_blueprints():
     app.register_blueprint(outsource_bp)
     app.register_blueprint(production_status_nodes_bp)
     app.register_blueprint(batch_type_bp)
+    app.register_blueprint(head_manager_bp)
