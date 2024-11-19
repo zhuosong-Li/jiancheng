@@ -34,6 +34,7 @@ def create_new_order():
 		return jsonify({'error': 'invalid request'}),400
 	order_rid = order_info["orderRId"]
 	order_cid = order_info["orderCid"]
+	batch_info_type_id = order_info["batchInfoTypeId"]
 	customer_id = order_info["customerId"]
 	order_start_date = order_info["orderStartDate"]
 	order_end_date = order_info["orderEndDate"]
@@ -41,6 +42,7 @@ def create_new_order():
 	order_salesman = order_info["salesman"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
+	
 
 	exist_order = Order.query.filter_by(order_rid = order_rid).first()
 	if exist_order:
@@ -49,6 +51,7 @@ def create_new_order():
 	new_order = Order(
     	order_rid = order_rid,
     	order_cid = order_cid,
+		batch_info_type_id = batch_info_type_id,
     	customer_id = customer_id,
     	start_date = order_start_date,
     	end_date = order_end_date,
@@ -164,11 +167,7 @@ def create_new_order():
 				price_per_pair = 0,
 				total_price = 0,
 				currency_type = "",
-				cutting_amount = 0,
-				sewing_amount = 0, 
-				pre_sewing_amount = 0,
-				molding_amount = 0,
-				total_amount = batch['totalQuantityInRatio']*quantity_per_ratio,
+				total_amount = batch['totalQuantityRatio']*quantity_per_ratio,
 				packaging_info_id = batch['packagingInfoId'],
 				packaging_info_quantity = quantity_per_ratio)
 			print(new_entity.size_34_amount)
