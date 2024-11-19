@@ -9,20 +9,27 @@ import json
 import shutil
 from models import *
 from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
+from api_utility import format_date
 
 
 from app_config import app, db
 
+
+from event_processor import EventProcessor
+from flask import current_app
+
 order_create_bp = Blueprint("order_create_bp", __name__)
+
+NEW_ORDER_STATUS = 6
+NEW_ORDER_STEP_OP = 12
+NEW_ORDER_NEXT_STEP_OP = 13
+NEW_ORDER_SHOE_OP = 2
 
 # Allowed file extensions
 ALLOWED_EXTENSIONS = {"xls", "xlsx"}
 
-
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-
-
 
 
 @order_create_bp.route("/ordercreate/createneworder", methods=["POST"])
@@ -38,14 +45,15 @@ def create_new_order():
 	customer_id = order_info["customerId"]
 	order_start_date = order_info["orderStartDate"]
 	order_end_date = order_info["orderEndDate"]
-	order_status = order_info["status"]
+	# new order status should be fixed
+	order_status = NEW_ORDER_STATUS
 	order_salesman = order_info["salesman"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
-	
 
 	exist_order = Order.query.filter_by(order_rid = order_rid).first()
 	if exist_order:
+		print("order exists")
 		return jsonify({'error':'invalid request'}), 400
 
 	new_order = Order(
@@ -69,7 +77,7 @@ def create_new_order():
 	new_order_status = OrderStatus(
 		order_id = new_order_id,
 		order_current_status = order_status,
-		order_status_value = 1,)
+		order_status_value = 0,)
 	db.session.add(new_order_status)
 	db.session.flush()
 
@@ -124,8 +132,6 @@ def create_new_order():
 			shoe_id_to_order_shoe_id[shoe_id] = new_order_shoe_entity.order_shoe_id
 
 	### for every shoe_type
-	print(shoe_id_to_rid)
-	print(shoe_id_to_order_shoe_id)
 	for shoe_type_id in shoe_type_ids:
 		## create ordershoetype
 		shoe_type = shoe_type_id_to_shoe_type[shoe_type_id]
@@ -170,10 +176,10 @@ def create_new_order():
 				total_amount = batch['totalQuantityRatio']*quantity_per_ratio,
 				packaging_info_id = batch['packagingInfoId'],
 				packaging_info_quantity = quantity_per_ratio)
-			print(new_entity.size_34_amount)
 			batch_info_entity_array.append(new_entity)
 		db.session.add_all(batch_info_entity_array)
 	db.session.commit()
+	print("order added to DB")
 	result = jsonify({"message": "Order imported successfully"}), 200
 	# except Exception as e:
 	# 	result = jsonify({"message": str(e)}, 500)
@@ -181,67 +187,116 @@ def create_new_order():
 	print("time taken is " + str(time_t - time_s))
 	return result
 
-    # order_shoe_type_id = order_shoe_type.order_shoe_type_id  # Use order_shoe_type_id for the batch info
 
-    # for item in items:
-    #     order_shoe_batch = OrderShoeBatchInfo(
-    #         order_shoe_type_id=order_shoe_type_id,  # Use the newly created or found order_shoe_type_id
-    #         name=item["sizeId"],
-    #         total_amount=item["pairCount"],
-    #         cutting_amount=0,
-    #         sewing_amount=0,
-    #         pre_sewing_amount=0,
-    #         molding_amount=0,
-    #         size_34_amount=0,
-    #         size_35_amount=item["7/35"],
-    #         size_36_amount=item["7.5/36"],
-    #         size_37_amount=item["8/37"],
-    #         size_38_amount=item["8.5/38"],
-    #         size_39_amount=item["9/39"],
-    #         size_40_amount=item["9.5/40"],
-    #         size_41_amount=item["10/41"],
-    #         size_42_amount=item["10.5/42"],
-    #         size_43_amount=item["11/43"],
-    #         size_44_amount=item["12/44"],
-    #         size_45_amount=item["13/45"],
-    #         price_per_pair=item["pricePerPair"],
-    #         total_price=item["totalPrice"],
-    #         currency_type=item["currencyType"],
-    #     )
-    #     arr.append(order_shoe_batch)
-
-    # db.session.add_all(arr)
-    # db.session.commit()
 @order_create_bp.route("/ordercreate/updateprice", methods=["POST"])
 def order_price_update():
+	time_s = time.time()
 	unit_price_form = request.json.get('unitPriceForm')
 	currency_type_form = request.json.get('currencyTypeForm')
+	order_id = request.json.get('orderId')
+	staff_id = request.json.get('staffId')
 	print(currency_type_form)
+	print(unit_price_form)
+	# for order_shoe_type_id in unit_price_form.keys():
+	# 	unit_price = float(unit_price_form[order_shoe_type_id])
+	# 	entities = (db.session.query(OrderShoeBatchInfo)
+	# 		.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+	# 		.all())
+	# 	for entity in entities:
+	# 		entity.price_per_pair = unit_price
+	# 		entity.total_price = unit_price * entity.total_amount
+
+	# for order_shoe_type_id in currency_type_form.keys():
+	# 	currency_type = str(currency_type_form[order_shoe_type_id])
+	# 	entities = (db.session.query(OrderShoeBatchInfo)
+	# 		.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+	# 		.all())
+	# 	for entity in entities:
+	# 		entity.currency_type = currency_type
+	
 	for order_shoe_type_id in unit_price_form.keys():
 		unit_price = float(unit_price_form[order_shoe_type_id])
-		entities = (db.session.query(OrderShoeBatchInfo)
-			.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
-			.all())
-		for entity in entities:
-			entity.price_per_pair = unit_price
-			entity.total_price = unit_price * entity.total_amount
-			db.session.commit()
-
-	for order_shoe_type_id in currency_type_form.keys():
 		currency_type = str(currency_type_form[order_shoe_type_id])
-		entities = (db.session.query(OrderShoeBatchInfo)
-			.filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
-			.all())
-		for entity in entities:
-			entity.currency_type = currency_type
-			db.session.commit()
-
+		entity = (db.session.query(OrderShoeType)
+			  .filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id)
+			  .first())
+		entity.unit_price = unit_price
+		entity.currency_type = currency_type
+	db.session.commit()
+	if 0 not in unit_price_form.values() and '' not in currency_type_form.values():
+		cur_time = format_date(datetime.datetime.now())
+		new_event = Event(staff_id = staff_id, handle_time = cur_time, operation_id = NEW_ORDER_STEP_OP, event_order_id = order_id)
+		processor: EventProcessor = current_app.config["event_processor"]
+		processor.processEvent(new_event)
+	# find all orderShoeTypes belong to this order
+	# db.session.query(OrderShoeType)
+	# .filter(OrderShoeType.order_shoe_type_id == )
+	# sync_order_shoe_status(list(set(unit_price_form.keys()).union(set(currency_type_form.keys()))))
+	time_t = time.time()
+	print("time taken is update price is" + str(time_t - time_s))
 	return jsonify({'msg':"ok"}), 200
 
 
+# def sync_order_shoe_status(order_shoe_type_id_list):
+# 	time_s = time.time()
+# 	order_shoe_id_list = []
+# 	for order_shoe_type_id in order_shoe_type_id_list:
+# 		entity = (db.session.query(OrderShoeType)
+# 			  .filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id)
+# 			  .first())
+# 		order_shoe_id_list.append(entity.order_shoe_id)	
+# 	order_shoe_id_list = list(set(order_shoe_id_list))
+# 	print(order_shoe_id_list)
+
+# 	for order_shoe_id in order_shoe_id_list:
+# 		status_entity = (db.session.query(OrderShoeStatus)
+# 					 .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
+# 					 .first())
+# 		status_entity.current_status_value = 1
+# 		db.session.flush()
+# 	db.session.commit()
+# 	order_id = (db.session.query(OrderShoe)
+# 			 .filter(OrderShoe.order_shoe_id.in_(order_shoe_id_list))
+# 			 .first()).order_id
+# 	all_order_shoe_status = (db.session.query(OrderShoe, OrderShoeStatus)
+# 				   .filter(OrderShoe.order_id == order_id)
+# 				   .filter(OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+# 				   .all())
+# 	print(all_order_shoe_status)
+# 	if all_order_shoe_status:
+# 		all_filled = True
+# 		for entity in all_order_shoe_status:
+# 			all_filled = all_filled and entity.OrderShoeStatus.current_status_value == 1
+# 	else:
+# 		all_filled = False
+# 	print("all filled is ")
+# 	print(all_filled)
+# 	if all_filled:
+# 		order_entity = (db.session.query(OrderStatus)
+# 				  .filter(OrderStatus.order_id == order_id)
+# 				  .first())
+# 		order_entity.order_status_value = 1
+# 		db.session.commit()
+# 	time_t = time.time()
+# 	print("time taken for syncing order status is " + str(time_t - time_s))
+# 	return 
+
+
+@order_create_bp.route("/ordercreate/sendnext", methods=['POST'])
+def order_next_step():
+	order_id = request.json.get("orderId")
+	staff_id = request.json.get("staffId")
+	entity = (db.session.query(Order)
+			.filter(Order.order_id == order_id)
+			.first())
+	if entity:
+		cur_time = format_date(datetime.datetime.now())
+		new_event = Event(staff_id = staff_id, handle_time = cur_time, operation_id = NEW_ORDER_NEXT_STEP_OP, event_order_id = order_id)
+		processor: EventProcessor = current_app.config["event_processor"]
+		processor.processEvent(new_event)
+	return "Event Processed In Order Create API CALL", 200
 @order_create_bp.route("/ordercreate/updateremark", methods=['POST'])
 def order_remark_update():
-	print(request.json)
 	remark_form = request.json.get('orderShoeRemarkForm')
 	order_shoe_id = remark_form['orderShoeId']
 	business_technical_remark = remark_form['technicalRemark']

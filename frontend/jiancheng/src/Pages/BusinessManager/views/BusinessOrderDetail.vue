@@ -53,16 +53,12 @@
                                     >查看</el-button
                                 >
                             </el-descriptions-item>
-                            <!-- <el-descriptions-item label="生产数量单上传状态" align="center"
-	                        >{{ orderDocData.amountDoc }}
-	                        <el-button
-	                            type="primary"
-	                            size="default"
-	                            @click="openSubmitDocDialog(1)"
-	                            >上传</el-button
+                            <el-descriptions-item label="财务信息操作" align="center"
 	                        >
-	                        <el-button v-if="orderDocData.amountDoc === '已上传包装文件'" type="primary" size="default" @click="downloadDoc(1)">查看</el-button>
-	                    </el-descriptions-item> -->
+                            <el-button v-if ="priceUpdateButtonVis"@click="submitPriceForm" type="primary">保存财务信息</el-button>
+                            <el-button v-if ="this.role == 4" @click="toggleFinInfoChange"> 财务信息修改权限 </el-button>
+                            <el-button v-if ="this.allowNext" type="warning" @click="sendOrderNext"> 下发 </el-button>
+	                    </el-descriptions-item>
                         </el-descriptions>
                     </el-col>
                 </el-row>
@@ -186,7 +182,7 @@
                     </el-table-column>
                     <el-table-column prop="shoeRid" label="鞋型编号" sortable />
                     <el-table-column prop="shoeCid" label="客户鞋型编号" sortable />
-                    <el-table-column prop="currentStatus" label="订单状态" />
+                    <el-table-column prop="currentStatus" label="鞋型状态" />
 
                     <el-table-column label="备注">
                         <template #default="scope">
@@ -218,12 +214,6 @@
             </template>
             </el-table-column> -->
                 </el-table>
-                <span>
-                    <el-button @click="submitPriceForm">保存财务信息</el-button>
-                    <!-- <el-button @click="submitNewOrder">  </el-button> -->
-                    <el-button @click="togglePriceChange"> 改变价格修改权限 </el-button>
-                    <el-button @click="toggleUnitChange"> 改变货币单位修改权限 </el-button>
-                </span>
             </el-main>
         </el-container>
     </el-container>
@@ -273,50 +263,12 @@
 
         <template #footer>
             <span>
-                <el-button @click="handleDialogClose">取消</el-button>
+                <el-button @click="isSubmitDocVis=false">取消</el-button>
                 <el-button type="primary" @click="submitDoc">上传</el-button>
             </span>
         </template>
     </el-dialog>
 
-    <!-- <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-table
-                    :data="orderShoePreviewData"
-                    border
-                    :span-method="mergeCellsPreview"
-                    stripe
-                    height="500"
-                >
-                    <el-table-column prop="inheritId" label="工厂型号"></el-table-column>
-                    <el-table-column prop="customerId" label="客户型号"></el-table-column>
-                    <el-table-column prop="status" label="鞋型状态"></el-table-column>
-                    <el-table-column prop="colorCN" label="中文颜色"></el-table-column>
-                    <el-table-column prop="colorEN" label="英文颜色"></el-table-column>
-                    <el-table-column prop="sizeId" label="配码"></el-table-column>
-                    <el-table-column label="尺码信息" align="center">
-                        <el-table-column prop="7/35" label="7/35"></el-table-column>
-                        <el-table-column prop="7.5/36" label="7.5/36"></el-table-column>
-                        <el-table-column prop="8/37" label="8/37"></el-table-column>
-                        <el-table-column prop="8.5/38" label="8.5/38"></el-table-column>
-                        <el-table-column prop="9/39" label="9/39"></el-table-column>
-                        <el-table-column prop="9.5/40" label="9.5/40"></el-table-column>
-                        <el-table-column prop="10/41" label="10/41"></el-table-column>
-                        <el-table-column prop="10.5/42" label="10.5/42"></el-table-column>
-                        <el-table-column prop="11/43" label="11/43"></el-table-column>
-                        <el-table-column prop="12/44" label="12/44"></el-table-column>
-                        <el-table-column prop="13/45" label="13/45"></el-table-column>
-                    </el-table-column>
-                    <el-table-column prop="pairCount" label="双数"></el-table-column>
-                </el-table>
-            </el-col>
-        </el-row> -->
-
-    <!--         <template #footer>
-            <span>
-                <el-button type="primary" @click="previewOrderVis = false">确认</el-button>
-            </span>
-        </template> -->
 </template>
 
 <script>
@@ -334,12 +286,20 @@ export default {
             return {
                 Authorization: `Bearer ${this.token}`
             }
+        },
+        allowNext(){
+            return (this.orderCurStatus == 6 && this.orderCurStatusVal == 1)
         }
     },
     data() {
         return {
             token: localStorage.getItem('token'),
+            role: localStorage.getItem('role'),
+            staffId: localStorage.getItem('staffid'),
             orderData: {},
+            orderDBId:'',
+            orderCurStatus:'',
+            orderCurStatusVal:'',
             orderShoeData: [],
             orderDocData: {},
             expandedRowKeys: [],
@@ -349,6 +309,7 @@ export default {
             remarkDialogVis: false,
             priceChangeNotAllowed: false,
             unitChangeNotAllowed: false,
+            priceUpdateButtonVis:true,
             remarkForm: {
                 orderShoeId: '',
                 technicalRemark: '',
@@ -391,6 +352,9 @@ export default {
         this.getOrderInfo()
         // this.getOrderOrderShoe()
         // this.getOrderOrderShoe()
+        console.log(this.role)
+        this.setFinInfoNotAllowed()
+        
     },
     methods: {
         async getOrderInfo() {
@@ -401,12 +365,32 @@ export default {
             this.orderData = response.data
             this.orderShoeData = response.data.orderShoeAllData
             this.batchInfoType = response.data.batchInfoType
+            this.orderDBId = this.orderData.orderId
+            this.orderCurStatus = this.orderData.orderStatus
+            this.orderCurStatusVal = this.orderData.orderStatusVal
+            this.orderData.orderShoeAllData.forEach((orderShoe) => orderShoe.orderShoeTypes.forEach(
+                (orderShoeType) =>{
+                    this.orderShoeTypeIdToUnitPrice[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.unitPrice
+                    this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.currencyType
+                }
+                ))
+
         },
-        togglePriceChange() {
+        updateStatus()
+        {
+            return
+        },
+        toggleFinInfoChange()
+        {
             this.priceChangeNotAllowed = !this.priceChangeNotAllowed
-        },
-        toggleUnitChange() {
             this.unitChangeNotAllowed = !this.unitChangeNotAllowed
+            this.priceUpdateButtonVis = !this.priceUpdateButtonVis
+        },
+        setFinInfoNotAllowed()
+        {
+            this.priceChangeNotAllowed = true
+            this.unitChangeNotAllowed = true
+            this.priceUpdateButtonVis = false
         },
         openRemarkDialog(row) {
             console.log(row.orderShoeId)
@@ -418,6 +402,21 @@ export default {
             this.remarkForm.technicalRemark = row.orderShoeTechnicalRemark
             this.remarkForm.materialRemark = row.orderShoeMaterialRemark
             this.remarkDialogVis = true
+        },
+        sendOrderNext()
+        {
+            this.$confirm('确认下发订单？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const result = await axios.post(`${this.$apiBaseUrl}/ordercreate/sendnext`, {'orderId':this.orderDBId,
+                    "staffId":this.staffId,
+                })
+            }).then(async () => {
+                this.getOrderInfo()
+            })
+            // this.addCustomerBatchDialogVisible = false
         },
         expandOpen(row, expand) {
             console.log(this.expandedRowKeys)
@@ -435,13 +434,17 @@ export default {
             console.log(this.orderShoeTypeIdToCurrencyType)
         },
         async submitPriceForm() {
+            console.log(this.orderShoeTypeIdToCurrencyType)
             const response = await axios.post(`${this.$apiBaseUrl}/ordercreate/updateprice`, {
                 unitPriceForm: this.orderShoeTypeIdToUnitPrice,
-                currencyTypeForm: this.orderShoeTypeIdToCurrencyType
+                currencyTypeForm: this.orderShoeTypeIdToCurrencyType,
+                orderId:this.orderDBId,
+                staffId:this.staffId
             })
             if (response.status === 200) {
                 ElMessage.success('变更成功')
                 this.getOrderInfo()
+                this.setFinInfoNotAllowed()
             } else {
                 ElMessage.error('备注变更失败')
             }
@@ -492,27 +495,12 @@ export default {
                 console.log(this.$refs.uploadDoc)
                 await this.$refs.uploadDoc.submit()
                 loadingInstance.close()
+                this.getOrderInfo()
             } catch (error) {
                 console.error('Upload error:', error)
                 ElMessage.error('上传失败')
             }
         },
-        // async getOrderOrderShoe() {
-        //       const response = await axios.get(`${this.$apiBaseUrl}/order/getbusinessorderinfo`, {
-        //           params: {
-        //               orderid: this.orderId
-        //           }
-        //       })
-        //       this.orderShoePreviewData = response.data
-        // 	},
-        // async getOrderDocInfo() {
-        //         const response = await axios.get(`${this.$apiBaseUrl}/order/getorderdocinfo`, {
-        //             params: {
-        //                 orderrid: this.orderId
-        //             }
-        //         })
-        //         this.orderDocData = response.data
-        // 	},
         checkdata() {
             console.log(this.orderData)
             console.log(this.orderShoePreviewData)

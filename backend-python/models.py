@@ -1035,6 +1035,8 @@ class OrderShoeType(db.Model):
     pre_sewing_amount = db.Column(db.Integer, default=0)
     sewing_amount = db.Column(db.Integer, default=0)
     molding_amount = db.Column(db.Integer, default=0)
+    unit_price = db.Column(db.DECIMAL(10, 2), default=0)
+    currency_type = db.Column(db.String(4), nullable=True, default="")
 
     def __repr__(self):
         return f"<OrderShoeType(order_shoe_type_id={self.order_shoe_type_id})>"
