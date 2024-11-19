@@ -456,6 +456,6 @@ def download_production_form():
         res["procedures"].append(obj)
     template_path = os.path.join("./general_document", "流程卡模板.xlsx")
     new_file_path = os.path.join("./general_document", "流程卡.xlsx")
-    new_name = f"鞋型{res["shoe_rid"]}_产量流程卡.xlsx"
+    new_name = f"鞋型{res['shoe_rid']}_产量流程卡.xlsx"
     generate_excel_file(template_path, new_file_path, res)
     return send_file(new_file_path, as_attachment=True, download_name=new_name)
