@@ -22,6 +22,9 @@
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>鞋型管理</span>
                         </el-menu-item>
+                        <el-menu-item index="5" @click="handleMenuClick(5)">
+                            <span>配码种类管理</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -41,14 +44,15 @@ import { UserFilled } from '@element-plus/icons-vue'
 import OrderManagement from '../components/OrderManagement.vue';
 import CustomerManagement from '../components/CustomerManagement.vue';
 import axios from 'axios'
-import ShoeTypeManagement from '../components/ShoeTypeManagement.vue';
-
+import ShoeTypeManagement from '@/components/ShoeTypeManagement.vue';
+import BatchInfoTypeManagement from '../components/BatchInfoTypeManagement.vue';
 export default {
     components: {
         AllHeader,
         OrderManagement,
         CustomerManagement,
-        ShoeTypeManagement
+        ShoeTypeManagement,
+        BatchInfoTypeManagement
     },
     data() {
         return {
@@ -79,6 +83,9 @@ export default {
                     break
                 case 4:
                     this.currentComponent = 'ShoeTypeManagement'
+                    break
+                case 5:
+                    this.currentComponent = "BatchInfoTypeManagement"
                     break
                 case 9:
                     this.$router.push('/')

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 
 from app_config import app, db
 from models import *
-
+from api_utility import to_camel, to_snake
 customer_bp = Blueprint("customer_bp", __name__)
 
 @customer_bp.route("/customer/getallcustomers", methods=["GET"])
@@ -34,38 +34,31 @@ def get_customer_details():
 
 @customer_bp.route("/customer/getcustomerbatchinfo", methods=["GET"])
 def get_customer_batch_info():
+    result = []
+    batch_info_type_attrs = BatchInfoType.__table__.columns.keys()
+    batch_info_attrs = PackagingInfo.__table__.columns.keys()
     customer_id = request.args.get("customerid")
     entities = (db.session.query(PackagingInfo)
-                .filter(PackagingInfo.customer_id == customer_id)
-                .all())
-    result = []
-    for entity in entities:
-        result.append(
-            {
-                "packagingInfoId":entity.packaging_info_id,
-                "packagingInfoName":entity.packaging_info_name,
-                "packagingInfoLocale":entity.packaging_info_locale,
-                "size34Ratio":entity.size_34_ratio,
-                "size35Ratio":entity.size_35_ratio,
-                "size36Ratio":entity.size_36_ratio,
-                "size37Ratio":entity.size_37_ratio,
-                "size38Ratio":entity.size_38_ratio,
-                "size39Ratio":entity.size_39_ratio,
-                "size40Ratio":entity.size_40_ratio,
-                "size41Ratio":entity.size_41_ratio,
-                "size42Ratio":entity.size_42_ratio,
-                "size43Ratio":entity.size_43_ratio,
-                "size44Ratio":entity.size_44_ratio,
-                "size45Ratio":entity.size_45_ratio,
-                "size46Ratio":entity.size_46_ratio,
-                "totalQuantityInRatio": sum([entity.size_34_ratio,entity.size_35_ratio
-                ,entity.size_36_ratio,entity.size_37_ratio,entity.size_38_ratio,entity.size_39_ratio,
-                entity.size_40_ratio,entity.size_41_ratio,entity.size_42_ratio,entity.size_43_ratio,
-                entity.size_44_ratio,entity.size_45_ratio,entity.size_46_ratio])
-            }
-        )
-    print(result)
-    return jsonify(result)
+                    .filter(PackagingInfo.customer_id == customer_id)
+                    )
+    
+    info_types = (db.session.query(BatchInfoType).all())
+    for db_info_type in info_types:
+        info_type_response = {}
+        for attr in batch_info_type_attrs:
+            if getattr(db_info_type, attr) != None:
+                info_type_response[to_camel(attr)] = getattr(db_info_type, attr) 
+        batch_info_list = []
+        cur_entities = entities.filter(PackagingInfo.batch_info_type_id == db_info_type.batch_info_type_id).all()
+        for batch_info in cur_entities:
+            batch_info_response = {}
+            for attr in batch_info_attrs:
+                batch_info_response[to_camel(attr)] = getattr(batch_info, attr)
+            batch_info_list.append(batch_info_response)
+        info_type_response["batchInfoList"] = batch_info_list
+        result.append(info_type_response)
+    
+    return jsonify(result), 200
 @customer_bp.route("/customer/addcustomer", methods=["POST"])
 def add_customer():
     customer_name = request.json.get("customerName")
@@ -85,8 +78,10 @@ def add_customer():
 def add_customer_batch_info():
     
     customer_id = request.json.get("customerId")
+    print(request.json)
     packaging_info_name = request.json.get("packagingInfoName")
     packaging_info_locale = request.json.get("packagingInfoLocale")
+    batch_info_type_id = request.json.get("batchInfoTypeId")
     size_34_ratio = request.json.get("size34Ratio")
     size_35_ratio = request.json.get("size35Ratio")
     size_36_ratio = request.json.get("size36Ratio")
@@ -109,6 +104,7 @@ def add_customer_batch_info():
             customer_id=customer_id,
             packaging_info_name = packaging_info_name,
             packaging_info_locale = packaging_info_locale,
+            batch_info_type_id = batch_info_type_id,
             size_34_ratio = size_34_ratio,
             size_35_ratio = size_35_ratio,
             size_36_ratio = size_36_ratio,
@@ -194,6 +190,7 @@ def edit_customer():
 @customer_bp.route("/customer/deletebatchinfo", methods = ["DELETE"])
 def delete_customer_batch():
     try:
+        print(request)
         customer_id = request.args.get("customerId")
         packaging_info_id = request.args.get("packagingInfoId")
         batch_info_entity = db.session.query(PackagingInfo).filter(
