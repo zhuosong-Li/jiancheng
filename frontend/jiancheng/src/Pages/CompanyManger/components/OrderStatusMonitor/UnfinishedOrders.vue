@@ -7,8 +7,8 @@
                     v-model="orderRIdSearch"
                     placeholder="请输入订单号"
                     clearable
-                    @keypress.enter="getTableData(orderRIdSearch, routeMsg)"
-                    @clear="getTableData('', routeMsg)"
+                    @keypress.enter="updataParams('orderRId', orderRIdSearch)"
+                    @clear="updataParams('orderRId', orderRIdSearch)"
                 />
             </el-col>
             <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
@@ -74,7 +74,8 @@ const {
     currentTableData,
     getTableData,
     chageCurrentPageSize,
-    changeCurrentPage
+    changeCurrentPage,
+    updataParams
 } = useTablePagination()
 
 onMounted(() => {
@@ -89,7 +90,7 @@ onMounted(() => {
             orderEndDate: ''
         }
     ]
-    getTableData('', routeMsg)
+    updataParams('route', routeMsg);
 })
 </script>
 

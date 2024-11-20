@@ -9,10 +9,12 @@
                 format="YYYY-MM-DD HH:mm:ss"
                 date-format="YYYY/MM/DD ddd"
                 time-format="A hh:mm:ss"
-                style="height: 40px;"
+                style="height: 40px"
                 :default-time="defaultTime"
             />
-            <el-button type="primary" size="middle" style="margin-left: 50px;">筛选</el-button>
+            <el-button type="primary" size="middle" style="margin-left: 50px" @click="filterData()"
+                >筛选</el-button
+            >
         </div>
         <div
             :id="'histroyTrend_' + materialName"
@@ -25,22 +27,24 @@
                 align-items: center;
             "
         ></div>
-        </div>
+    </div>
 </template>
 
 <script setup>
-import { onMounted, watch, ref } from 'vue'
+import { onMounted, watch, ref, nextTick } from 'vue'
 import useHistoryMaterial from '../../hooks/useHistoryMaterial'
+import axios from 'axios'
 import * as echarts from 'echarts'
 
 const { materialName } = defineProps(['materialName'])
 
 const { materialData, getMaterialData } = useHistoryMaterial()
 
-const defaultTime = ref([new Date(2024, 11, 1, 12, 0, 0),new Date(2024, 11, 15, 8, 0, 0)]);
-let timeValue = ref('');
+const defaultTime = ref([new Date(2024, 11, 1, 12, 0, 0), new Date(2024, 11, 15, 8, 0, 0)])
+let timeValue = ref('')
 
-let myChart
+let myChart;
+
 onMounted(() => {
     getMaterialData(materialName)
     setTimeout(() => {
@@ -98,6 +102,11 @@ onMounted(() => {
             ]
         }
     }, 2000)
+    window.addEventListener('resize', ()=>{
+        nextTick(()=>{
+            myChart.resize();
+        })
+    });
 })
 
 watch(
@@ -110,39 +119,53 @@ watch(
         } else {
             myChart = echarts.getInstanceByDom(chartDom)
         }
-        const data = materialData.value.data
-        let xAxisData = []
-        let yAxisData = []
-        for (let i = 0; i < data.length; i++) {
-            xAxisData.push(data[i].date)
-            yAxisData.push(data[i].price)
-        }
-        // 绘制图表
-        myChart.setOption({
-            xAxis: {
-                type: 'category',
-                data: xAxisData,
-                name: '时间'
-            },
-            yAxis: {
-                type: 'value',
-                name: '单价'
-            },
-            series: [
-                {
-                    data: yAxisData,
-                    type: 'line',
-                    name: materialData.value.materialName + '单价'
-                }
-            ]
-        })
+        updateChart()
     },
     { deep: true }
 )
+
+function updateChart() {
+    const data = materialData.value.data
+    let xAxisData = []
+    let yAxisData = []
+    for (let i = 0; i < data.length; i++) {
+        // 增加时间范围数据筛选
+        // if (data[i].date >= defaultTime[0] && data[i].date <= defaultTime[1]) {
+        xAxisData.push(data[i].date)
+        yAxisData.push(data[i].price)
+        // }
+    }
+    // 绘制图表
+    myChart.setOption({
+        xAxis: {
+            type: 'category',
+            data: xAxisData,
+            name: '时间'
+        },
+        yAxis: {
+            type: 'value',
+            name: '单价'
+        },
+        series: [
+            {
+                data: yAxisData,
+                type: 'line',
+                name: materialData.value.materialName + '单价'
+            }
+        ],
+        //简单的在图表配置中添加这个工具配置
+        toolbox: {
+            show: true,
+            feature: {
+                saveAsImage: {}
+            }
+        }
+    })
+}
 </script>
 
 <style scoped>
-.content{
+.content {
     display: flex;
     width: 100%;
     height: 90%;
@@ -150,4 +173,8 @@ watch(
     align-items: center;
     flex-direction: column;
 }
+.historyTrend > div {
+    width: 100% !important;
+    height: 100% !important;
+} 
 </style>
