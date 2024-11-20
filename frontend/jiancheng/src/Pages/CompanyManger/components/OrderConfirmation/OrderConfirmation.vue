@@ -22,7 +22,7 @@
         </el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="displayData" border stripe height="650">
+        <el-table :data="displayData" stripe height="650">
             <el-table-column type="index" width="50" />
             <el-table-column prop="orderRid" label="订单号" />
             <el-table-column prop="customerName" label="客户名" />
@@ -45,9 +45,8 @@
 </template>
 
 <script setup>
-import { Download, Search, Upload } from '@element-plus/icons-vue'
+import { Search } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
 import { ref, onMounted,getCurrentInstance } from 'vue'
 
 let orderRidFilter = ref('')
@@ -55,7 +54,7 @@ let orderCidFilter = ref('')
 let displayData = ref([])
 let unfilteredData = ref([])
 let filterData = ref([])
-const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$api_baseUrl
+const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
 
 onMounted(() => {
     getAllOrders()
@@ -70,7 +69,7 @@ async function getAllOrders() {
 
 function openOrderDetail(orderId) {
     let url = ''
-    url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}`
+    url = `${window.location.origin}/companyManager/orderConfirmDetail/orderid=${orderId}`
     window.open(url, '_blank')
 }
 

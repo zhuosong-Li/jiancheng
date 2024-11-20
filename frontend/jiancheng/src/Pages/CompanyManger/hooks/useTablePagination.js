@@ -14,6 +14,7 @@ export default function () {
     let materialModel = ref('')
     let materialSpecification = ref('')
     let supplierName = ref('')
+    let orderType = ref(0)
 
     let params = reactive({
             'currentPage': currentPage.value,
@@ -25,7 +26,8 @@ export default function () {
             'materialName': materialName.value,
             'materialModel': materialModel.value,
             'materialSpecification': materialSpecification.value,
-            'supplierName': supplierName.value
+            'supplierName': supplierName.value,
+            'orderType': orderType.value
         });
 
     async function getTableData() {
@@ -40,17 +42,21 @@ export default function () {
     }
 
     function chageCurrentPageSize(val) {
-        params.currentPageSize = val
-        currentPageSize.value = val
+        if (params.currentPageSize !== val) {
+            params.currentPageSize = val
+            currentPageSize.value = val
+        }
     }
 
     function changeCurrentPage(val) {
-        params.currentPage = val
-        currentPage.value = val
+        if (params.currentPage !== val) {
+            params.currentPage = val
+            currentPage.value = val
+        }
     }
 
     function updataParams(key, value){
-        if (key === 'materialData') {
+        if (key === 'materialData' || key === 'orderStatus') {
             Object.assign(params,value);
         } else {
             params[key] = value;

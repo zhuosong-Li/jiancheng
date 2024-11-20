@@ -17,7 +17,6 @@
         <el-table
             :data="currentTableData"
             style="width: 100%; margin-bottom: 20px; height: 600px"
-            row-key="id"
             @cell-click="showDialog"
         >
             <el-table-column>
@@ -55,8 +54,6 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="orderRid" label="订单编号" sortable />
-                <el-table-column prop="factoryShoesModel" label="工厂鞋型编号" sortable />
-                <el-table-column prop="custShoesModel" label="客户鞋型编号" sortable />
                 <el-table-column prop="orderTotalMaterialCost" label="材料采购成本" sortable />
                 <el-table-column prop="needleCuttingLaborCost" label="生产人工成本" sortable />
                 <el-table-column

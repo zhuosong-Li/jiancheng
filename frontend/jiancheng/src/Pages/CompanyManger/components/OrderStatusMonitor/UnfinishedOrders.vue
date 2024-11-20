@@ -6,35 +6,46 @@
                 <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable />
                 <el-button
                     type="primary"
-                    size="middle"
                     @click="updataParams('orderRid', orderRIdSearch)"
                     style="margin-left: 20px"
                     >筛选</el-button
                 >
             </el-col>
-            <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
+            <el-button type="primary" @click="" :icon="Download"></el-button>
         </el-row>
         <el-table
             :data="currentTableData"
             style="width: 100%; margin-bottom: 20px; height: 540px"
-            row-key="id"
             border
-            default-expand-all
         >
-            <el-table-column label="订单信息">
-                <el-table-column prop="orderRId" label="订单编号" sortable />
-                <el-table-column prop="factoryId" label="工厂鞋型编号" sortable />
-                <el-table-column prop="customerId" label="客户鞋型编号" sortable />
-                <el-table-column prop="logisticsStatus" label="当前材料物流状态" sortable />
-                <el-table-column prop="projectStatus" label="生产状态" sortable />
-                <el-table-column prop="shippingStatus" label="发货状态" sortable />
+            <el-table-column>
+                <el-table-column type="expand">
+                    <template #default="props">
+                        <el-table
+                            :data="props.row.orderShoes"
+                            style="width: 100%; margin-bottom: 20px"
+                        >
+                            <el-table-column />
+                            <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
+                            <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
+                            <el-table-column
+                                prop="isMaterialArrived"
+                                label="当前材料物流状态"
+                                sortable
+                            />
+                            <el-table-column prop="orderShoeStatus" label="生产状态" sortable />
+                            <el-table-column prop="outboundStatus" label="发货状态" sortable />
+                        </el-table>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="orderRid" label="订单编号" sortable />
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
                             link
                             type="primary"
                             size="small"
-                            @click="edit('edit', scope.row.orderRId, 'add', scope.row)"
+                            @click="edit('edit', scope.row.orderRid + '>' + scope.row.orderId, 'add')"
                         >
                             订单详情
                         </el-button>
@@ -57,15 +68,16 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, getCurrentInstance } from 'vue'
 import { onMounted } from 'vue'
 import useTablePagination from '../../hooks/useTablePagination'
 import { Download } from '@element-plus/icons-vue'
 
 const edit = defineEmits(['edit'])
+const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
 
 let orderRIdSearch = ref('')
-const routeMsg = ''
+const routeMsg = `${$api_baseUrl}/headmanager/getorderstatusinfo`
 const {
     currentPage,
     currentPageSize,
@@ -78,18 +90,7 @@ const {
 } = useTablePagination()
 
 onMounted(() => {
-    currentTableData.value = [
-        {
-            orderRId: '10100000000000000',
-            customerName: 'ssssss',
-            orderTotalShoes: '',
-            finishedShoes: '',
-            startDate: '',
-            endDate: '',
-            orderEndDate: ''
-        }
-    ]
-    updataParams('route', routeMsg)
+    updataParams('orderStatus', { route: routeMsg, orderType: 0 })
 })
 </script>
 

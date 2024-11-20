@@ -37,7 +37,7 @@
                             <span>财务状态与部门输入</span>
                         </el-menu-item>
                         <el-menu-item index="5" @click="handleMenuClick('OrderConfirmation')">
-                            <span>订单确认</span>
+                            <span>生产订单确认</span>
                         </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
