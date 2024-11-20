@@ -17,22 +17,34 @@
         <el-table
             :data="currentTableData"
             style="width: 100%; margin-bottom: 20px; height: 540px"
-            row-key="id"
             border
-            default-expand-all
-            @cell-mouse-enter="enterSelectionRows"
-            @cell-mouse-leave="leaveSelectionRows"
         >
             <el-table-column>
+                <el-table-column type="expand">
+                    <template #default="props">
+                        <el-table
+                            :data="props.row.orderShoes"
+                            style="width: 100%; margin-bottom: 20px"
+                            @cell-mouse-enter="enterSelectionRows"
+                            @cell-mouse-leave="leaveSelectionRows"
+                        >
+                            <el-table-column />
+                            <el-table-column prop="factoryId" label="工厂鞋型编号" sortable />
+                            <el-table-column prop="customerId" label="客户鞋型编号" sortable />
+                            <el-table-column
+                                prop="producPrepareCycle"
+                                label="生产预备周期(天)"
+                                sortable
+                            />
+                            <el-table-column prop="productionCycle" label="生产周期(天)" sortable />
+                            <el-table-column prop="deliveryCycle" label="发货周期(天)" sortable />
+                            <el-table-column prop="orderProfit" label="订单利润" sortable />
+                            <el-table-column prop="projectCycle" label="项目总周期(天)" sortable />
+                            <el-table-column prop="profitRatio" label="盈利比率" sortable />
+                        </el-table>
+                    </template>
+                </el-table-column>
                 <el-table-column prop="orderRId" label="订单编号" sortable />
-                <el-table-column prop="factoryId" label="工厂鞋型编号" sortable />
-                <el-table-column prop="customerId" label="客户鞋型编号" sortable />
-                <el-table-column prop="producPrepareCycle" label="生产预备周期(天)" sortable />
-                <el-table-column prop="productionCycle" label="生产周期(天)" sortable />
-                <el-table-column prop="deliveryCycle" label="发货周期(天)" sortable />
-                <el-table-column prop="orderProfit" label="订单利润" sortable />
-                <el-table-column prop="projectCycle" label="项目总周期(天)" sortable />
-                <el-table-column prop="profitRatio" label="盈利比率" sortable />
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
@@ -61,14 +73,15 @@
     </div>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, getCurrentInstance } from 'vue'
 import useTablePagination from '../../hooks/useTablePagination'
 import { Download } from '@element-plus/icons-vue'
 
 const edit = defineEmits(['edit'])
 
 let orderRIdSearch = ref('')
-const routeMsg = ''
+const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
+const routeMsg = `${$api_baseUrl}/headmanager/getorderstatusinfo`
 const {
     currentPage,
     currentPageSize,
@@ -81,19 +94,7 @@ const {
 } = useTablePagination()
 
 onMounted(() => {
-    currentTableData.value = [
-        {
-            orderRId: '10000000000000001',
-            customerName: 'ssssss',
-            orderTotalShoes: '',
-            finishedShoes: '',
-            startDate: '',
-            endDate: '',
-            orderEndDate: '',
-            productionCycle: '3'
-        }
-    ]
-    updataParams('route', routeMsg)
+    updataParams('orderStatus', { route: routeMsg, orderType: 1 })
 })
 
 function enterSelectionRows(row, column, cell, event) {

@@ -9,7 +9,7 @@
                     :data="orderShoeData"
                     border
                     stripe
-                    height="900"
+                    height="650"
                     :row-key="
                         (row) => {
                             return row.orderShoeTypeId
@@ -91,7 +91,7 @@
                                             size="small"
                                             controls-position="right"
                                             @change="updateValue(scope.row)"
-                                            v-model="scope.row.shoeTypeBatchData.unitPrice"
+                                            v-model.lazy="scope.row.shoeTypeBatchData.unitPrice"
                                             :disabled="priceChangeNotAllowed"
                                         >
                                         </el-input>
@@ -107,28 +107,82 @@
                     <el-table-column prop="shoeRid" label="鞋型编号" sortable />
                     <el-table-column prop="shoeCid" label="客户鞋型编号" sortable />
                     <el-table-column prop="currentStatus" label="订单状态" />
+                    <el-table-column label="备注">
+                        <template #default="scope">
+                            <el-button
+                                v-if="!scope.row.orderShoeRemarkExist"
+                                type="primary"
+                                size="default"
+                                @click="openRemarkDialog(scope.row)"
+                                style="margin-left: 20px; margin-top: -20px"
+                                >添加备注
+                            </el-button>
+
+                            <el-text v-if="scope.row.orderShoeRemarkExist">{{
+                                scope.row.orderShoeRemarkRep
+                            }}</el-text>
+                            <el-button
+                                v-if="scope.row.orderShoeRemarkExist"
+                                type="warning"
+                                size="default"
+                                @click="openEditRemarkDialog(scope.row)"
+                                style="margin-left: 20px; margin-top: -20px"
+                            >
+                                编辑备注
+                            </el-button>
+                        </template>
+                    </el-table-column>
                 </el-table>
 
                 <span>
-                    <el-button @click="submitFormData">确认修改完成</el-button>
+                    <el-button type="primary" size="middle" @click="submitFormData"
+                        >确认修改完成</el-button
+                    >
                 </span>
             </el-main>
         </el-container>
     </el-container>
+    <el-dialog title="鞋型备注" v-model="remarkDialogVis" width="50%">
+        <el-form>
+            <el-form-item label="工艺备注">
+                <el-input type="textarea" :rows="2" v-model="remarkForm.technicalRemark"></el-input>
+            </el-form-item>
+
+            <el-form-item label="材料备注">
+                <el-input type="textarea" :rows="2" v-model="remarkForm.materialRemark"></el-input>
+            </el-form-item>
+        </el-form>
+
+        <template #footer>
+            <span>
+                <el-button @click="remarkDialogVis = false">取消</el-button>
+
+                <el-button type="primary" @click="submitRemarkForm">提交备注</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <script setup>
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { onMounted, reactive, ref } from 'vue'
-import { getCurrentInstance } from "vue";
-const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$api_baseUrl
+import { getCurrentInstance } from 'vue'
+import { ElMessage } from 'element-plus'
 
-defineProps(['orderId'])
+const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
+
+const { orderId } = defineProps(['orderId'])
 let orderData = reactive({})
 let orderShoeData = ref([])
-let priceChangeNotAllowed = ref(true)
+let priceChangeNotAllowed = ref(false)
+let remarkDialogVis = ref(false)
 let orderShoeTypeIdToUnitPrice = reactive({})
+let remarkForm = reactive({
+    orderShoeId: '',
+    technicalRemark: '',
+    materialRemark: ''
+})
 
 onMounted(() => {
     getOrderInfo()
@@ -149,6 +203,27 @@ function updateValue(row) {
 
 async function submitFormData() {
     await axios.post(`${$api_baseUrl}/order/getbusinessorderinfo?orderid=${orderId}`)
+}
+
+function openRemarkDialog(row) {
+    remarkForm.orderShoeId = row.orderShoeId
+    remarkDialogVis.value = true
+}
+function openEditRemarkDialog(row) {
+    remarkForm.orderShoeId = row.orderShoeId
+    remarkForm.technicalRemark = row.orderShoeTechnicalRemark
+    remarkForm.materialRemark = row.orderShoeMaterialRemark
+    remarkDialogVis.value = true
+}
+async function submitRemarkForm() {
+    const response = await axios.post(`${$api_baseUrl}/ordercreate/updateremark`, {
+        orderShoeRemarkForm: remarkForm
+    })
+    if (response.status === 200) {
+        ElMessage.success('信息变更成功')
+        getOrderInfo()
+        remarkDialogVis.value = false
+    }
 }
 </script>
 

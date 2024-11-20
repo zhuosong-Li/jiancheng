@@ -26,7 +26,7 @@
             row-key="id"
         >
             <el-table-column>
-                <el-table-column prop="type" label="材料类型" sortable />
+                <el-table-column prop="materialType" label="材料类型" sortable />
                 <el-table-column prop="materialName" label="材料名称" sortable />
                 <el-table-column prop="materialModel" label="材料型号" sortable />
                 <el-table-column prop="materialSpecification" label="材料规格" sortable />
