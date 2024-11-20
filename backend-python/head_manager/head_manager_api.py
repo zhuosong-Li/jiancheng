@@ -853,5 +853,4 @@ def confirm_production_order():
         return jsonify({"msg": "Error Order Status"}), 400
 
 
-
     # Get the total number of shoes in transit
