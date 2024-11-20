@@ -1,4 +1,4 @@
-import { ref,reactive, watch, getCurrentInstance } from 'vue'
+import { ref, reactive, watch, getCurrentInstance } from 'vue'
 import axios from 'axios'
 
 export default function () {
@@ -7,9 +7,10 @@ export default function () {
     let currentPageSize = ref(10)
     let currentTotalRows = ref(0)
     let currentTableData = ref([])
-    let type = ref('GET');
-    let route = ref('');
-    let orderRIdSearch = ref('');
+    let tableData = ref([])
+    let type = ref('GET')
+    let route = ref('')
+    let orderRIdSearch = ref('')
     let materialName = ref('')
     let materialModel = ref('')
     let materialSpecification = ref('')
@@ -17,24 +18,22 @@ export default function () {
     let orderType = ref(0)
 
     let params = reactive({
-            'currentPage': currentPage.value,
-            'currentPageSize': currentPageSize.value,
-            'orderRid': orderRIdSearch.value,
-            'currentTotalRows': currentTotalRows.value,
-            'type': type.value,
-            'route': route.value,
-            'materialName': materialName.value,
-            'materialModel': materialModel.value,
-            'materialSpecification': materialSpecification.value,
-            'supplierName': supplierName.value,
-            'orderType': orderType.value
-        });
+        orderRid: orderRIdSearch.value,
+        type: type.value,
+        route: route.value,
+        materialName: materialName.value,
+        materialModel: materialModel.value,
+        materialSpecification: materialSpecification.value,
+        supplierName: supplierName.value,
+        orderType: orderType.value
+    })
 
     async function getTableData() {
         if (params.type === 'GET') {
             const response = await axios.get(`${params.route}`, { params })
-            currentTableData.value = response.data
-            // currentTotalRows.value = response.data.total
+            tableData.value = response.data
+            currentTotalRows.value = response.data.length
+            dataCut()
         }
         if (params.type === 'POST') {
             await axios.post(`${route}`, { params })
@@ -42,29 +41,36 @@ export default function () {
     }
 
     function chageCurrentPageSize(val) {
-        if (params.currentPageSize !== val) {
-            params.currentPageSize = val
+        if (currentPageSize.value !== val) {
             currentPageSize.value = val
+            dataCut()
         }
     }
 
     function changeCurrentPage(val) {
-        if (params.currentPage !== val) {
-            params.currentPage = val
+        if (currentPage.value !== val) {
             currentPage.value = val
+            dataCut()
         }
     }
 
-    function updataParams(key, value){
+    function updataParams(key, value) {
         if (key === 'materialData' || key === 'orderStatus') {
-            Object.assign(params,value);
+            Object.assign(params, value)
         } else {
-            params[key] = value;
+            params[key] = value
         }
     }
     watch(params, () => {
-        getTableData();
-    });
+        getTableData()
+    })
+
+    function dataCut() {
+        currentTableData.value = tableData.value.slice(
+            (currentPage.value - 1) * currentPageSize.value,
+            currentPageSize.value * currentPage.value
+        )
+    }
 
     return {
         currentPage,

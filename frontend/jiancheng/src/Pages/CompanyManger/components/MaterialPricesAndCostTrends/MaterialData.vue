@@ -17,8 +17,8 @@
                 材料厂家:
                 <el-input v-model="supplierName" placeholder="请输入材料厂家" clearable />
             </el-col>
-            <el-button type="primary" size="middle" @click="updateData()">查询</el-button>
-            <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
+            <el-button type="primary" @click="updateData()">查询</el-button>
+            <!-- <el-button type="primary" @click="" :icon="Download"></el-button> -->
         </el-row>
         <el-table
             :data="currentTableData"

@@ -63,7 +63,13 @@ onMounted(() => {
 async function getAllOrders() {
     const response = await axios.get(`${$api_baseUrl}/order/getallorders`)
     // 此处需要增加订单状态筛选功能，保留状态为生产订单确认的数据
-    unfilteredData.value = response.data
+    const arr = [];
+    for (let i = 0; i < response.data.length; i++) {
+        if (response.data[i].orderStatus === '生产订单总经理确认') {
+            arr.push(response.data[i]);
+        }
+    }
+    unfilteredData.value = arr
     displayData.value = unfilteredData.value
 }
 

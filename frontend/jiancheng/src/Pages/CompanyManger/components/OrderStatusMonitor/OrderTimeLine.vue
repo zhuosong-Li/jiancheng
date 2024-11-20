@@ -1,18 +1,13 @@
 <template>
     <el-timeline style="max-width: 100%">
         <el-timeline-item
-            v-for="(activity, index) in activities"
+            v-for="(activity, index) in activities.reverse()"
             :key="index"
-            :icon="activity.icon"
-            :type="activity.type"
-            :color="activity.color"
-            :size="activity.size"
-            :hollow="activity.hollow"
-            :timestamp="activity.timestamp"
+            :timestamp="activity.handleTime"
         >
             <el-card>
-                <h4>{{ activity.timestamp }}</h4>
-                <p>{{ activity.content }}</p>
+                <p>操作名称：{{ activity.operationName }}</p>
+                <p>源状态：{{ activity.operationModifiedStatus }}</p>
             </el-card>
         </el-timeline-item>
     </el-timeline>
@@ -40,65 +35,6 @@ async function queryOrderMsg(orderId) {
         const response = await axios.get(routeMsg, {params});
         activities.value = response.data;
     }
-    activities.value = [
-        {
-            content: orderId,
-            timestamp: '2018-04-12 20:46',
-            size: 'large',
-            type: 'primary',
-            icon: MoreFilled
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            color: '#0bbd87'
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            size: 'large'
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            type: 'primary',
-            hollow: true
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46'
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            type: 'primary',
-            hollow: true
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46'
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            type: 'primary',
-            hollow: true
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46'
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46',
-            type: 'primary',
-            hollow: true
-        },
-        {
-            content: orderId,
-            timestamp: '2018-04-03 20:46'
-        }
-    ]
 }
 </script>
 
