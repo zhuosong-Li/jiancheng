@@ -1,15 +1,16 @@
 <template>
     <div class="content">
-        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between">
+        <el-row :gutter="16" style="margin-top: 20px; justify-content: space-between; width: 100%">
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 已完成订单号筛选：
-                <el-input
-                    v-model="orderRIdSearch"
-                    placeholder="请输入订单号"
-                    clearable
-                    @keypress.enter="updataParams('orderRId', orderRIdSearch)"
-                    @clear="updataParams('orderRId', orderRIdSearch)"
-                />
+                <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable />
+                <el-button
+                    type="primary"
+                    size="middle"
+                    @click="updataParams('orderRid', orderRIdSearch)"
+                    style="margin-left: 20px"
+                    >筛选</el-button
+                >
             </el-col>
             <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
         </el-row>
@@ -46,18 +47,16 @@
                 </el-table-column>
             </el-table-column>
         </el-table>
-        <el-row :gutter="20" style="justify-content: end">
-            <el-col :span="7" :offset="8">
-                <el-pagination
-                    @size-change="chageCurrentPageSize"
-                    @current-change="changeCurrentPage"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 30, 40]"
-                    :page-size="currentPageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="currentTotalRows"
-                />
-            </el-col>
+        <el-row :gutter="20" style="justify-content: end; width: 100%">
+            <el-pagination
+                @size-change="chageCurrentPageSize"
+                @current-change="changeCurrentPage"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="currentPageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="currentTotalRows"
+            />
         </el-row>
     </div>
 </template>
@@ -100,11 +99,7 @@ onMounted(() => {
 function enterSelectionRows(row, column, cell, event) {
     //增加判断是否移入的是周期几列
 
-    createTips(
-        event,
-        row,
-        `开始日期：${row.startDate} <br />结束日期：${row.endDate}`
-    )
+    createTips(event, row, `开始日期：${row.startDate} <br />结束日期：${row.endDate}`)
 }
 function leaveSelectionRows(row, column, cell, event) {
     removeTips(row)
@@ -148,9 +143,4 @@ function removeTips(row) {
     }
 }
 </script>
-<style scoped>
-.content {
-    height: calc(100% - 40px);
-    width: calc(100% - 40px);
-}
-</style>
+<style scoped></style>
