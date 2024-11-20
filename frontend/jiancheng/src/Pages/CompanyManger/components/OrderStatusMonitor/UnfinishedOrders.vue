@@ -11,7 +11,7 @@
                     >筛选</el-button
                 >
             </el-col>
-            <el-button type="primary" @click="" :icon="Download"></el-button>
+            <!-- <el-button type="primary" @click="" :icon="Download"></el-button> -->
         </el-row>
         <el-table
             :data="currentTableData"
@@ -23,9 +23,8 @@
                     <template #default="props">
                         <el-table
                             :data="props.row.orderShoes"
-                            style="width: 100%; margin-bottom: 20px"
+                            style="width: calc(100% - 48px); margin-bottom: 5px; margin-left: 48px"
                         >
-                            <el-table-column />
                             <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
                             <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
                             <el-table-column
@@ -39,13 +38,17 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="orderRid" label="订单编号" sortable />
+                <el-table-column prop="customerName" label="客户名称" />
+                <el-table-column prop="orderStartDate" label="订单开始日期" />
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
                             link
                             type="primary"
                             size="small"
-                            @click="edit('edit', scope.row.orderRid + '>' + scope.row.orderId, 'add')"
+                            @click="
+                                edit('edit', scope.row.orderRid + '>' + scope.row.orderId, 'add')
+                            "
                         >
                             订单详情
                         </el-button>

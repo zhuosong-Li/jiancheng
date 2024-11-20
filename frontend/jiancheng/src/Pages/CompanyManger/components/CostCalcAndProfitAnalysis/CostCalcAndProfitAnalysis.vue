@@ -6,13 +6,12 @@
                 <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable />
                 <el-button
                     type="primary"
-                    size="middle"
                     @click="updataParams('orderRid', orderRIdSearch)"
                     style="margin-left: 20px"
                     >筛选</el-button
                 >
             </el-col>
-            <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
+            <!-- <el-button type="primary" size="middle" @click="" :icon="Download"></el-button> -->
         </el-row>
         <el-table
             :data="currentTableData"
@@ -24,11 +23,9 @@
                     <template #default="props">
                         <el-table
                             :data="props.row.orderShoes"
-                            style="width: 100%; margin-bottom: 20px"
-                            row-key="id"
+                            style="width: 100%; margin-bottom: 5px;"
                             @cell-click="showDialog"
                         >
-                            <el-table-column />
                             <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
                             <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
                             <el-table-column
@@ -62,7 +59,7 @@
                     sortable
                 />
                 <el-table-column prop="orderTotalLogisticsCost" label="物流费用" sortable />
-                <el-table-column prop="orderTotalOutsouceCost" label="外加工成本" sortable />
+                <el-table-column prop="orderTotalOutsouceCost" label="外包成本" sortable />
                 <el-table-column prop="orderTotalProfit" label="订单利润" sortable />
                 <el-table-column prop="orderTotalProfitPerShoe" label="效率指标" sortable />
             </el-table-column>
@@ -87,9 +84,7 @@
         >
             <el-table-column>
                 <el-table-column prop="orderRid" label="裁断内部成本" sortable />
-                <el-table-column prop="orderTotalLogisticsCost" label="裁断外包成本" sortable />
                 <el-table-column prop="custShoesModel" label="针车内部成本" sortable />
-                <el-table-column prop="materialProcurementCost" label="针车外包成本" sortable />
                 <el-table-column prop="needleCuttingLaborCost" label="成型内部成本" sortable />
             </el-table-column>
         </el-table>

@@ -795,17 +795,16 @@ def save_production_order_Price():
             entity.price_per_pair = unit_price
             entity.total_price = unit_price * entity.total_amount
             db.session.commit()
-    order_status = OrderStatus.query.filter(OrderStatus.order_id == order_id).first()
 
     return jsonify({"msg": "Production order confirmed."})
 
 @head_manager_bp.route("/headmanager/confirmProductionOrder", methods=["POST"])
 def confirm_production_order():
-    orderid = request.json.get("orderId")
-    order = Order.query.filter(Order.order_id == orderid).first()
+    order_id = request.json.get("orderId")
+    order = Order.query.filter(Order.order_id == order_id).first()
     if not order:
         return jsonify({"msg": "Order not found."}), 404
-    order_status = OrderStatus.query.filter(OrderStatus.order_id == orderid).first()
+    order_status = OrderStatus.query.filter(OrderStatus.order_id == order_id).first()
     if order_status.order_current_status == 7:
         processor = EventProcessor()
         event = Event(

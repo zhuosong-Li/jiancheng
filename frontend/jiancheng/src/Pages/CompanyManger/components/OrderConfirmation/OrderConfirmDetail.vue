@@ -97,6 +97,18 @@
                                         </el-input>
                                     </template>
                                 </el-table-column>
+                                <el-table-column label="金额单位">
+                                    <template #default="scope">
+                                        <el-input
+                                            size="small"
+                                            controls-position="right"
+                                            @change="updateCurrencyValue(scope.row)"
+                                            v-model="scope.row.shoeTypeBatchData.currencyType"
+                                            :disabled="priceChangeNotAllowed"
+                                        >
+                                        </el-input>
+                                    </template>
+                                </el-table-column>
                                 <el-table-column
                                     prop="shoeTypeBatchData.totalPrice"
                                     label="总金额"
@@ -114,7 +126,7 @@
                                 type="primary"
                                 size="default"
                                 @click="openRemarkDialog(scope.row)"
-                                style="margin-left: 20px; margin-top: -20px"
+                                style="margin-left: 20px"
                                 >添加备注
                             </el-button>
 
@@ -135,9 +147,8 @@
                 </el-table>
 
                 <span>
-                    <el-button type="primary" size="middle" @click="submitFormData"
-                        >确认修改完成</el-button
-                    >
+                    <el-button type="primary" @click="saveFormData">保存数据</el-button>
+                    <el-button type="primary" @click="showMessage">完成修改</el-button>
                 </span>
             </el-main>
         </el-container>
@@ -168,7 +179,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { onMounted, reactive, ref } from 'vue'
 import { getCurrentInstance } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
 
@@ -178,6 +189,7 @@ let orderShoeData = ref([])
 let priceChangeNotAllowed = ref(false)
 let remarkDialogVis = ref(false)
 let orderShoeTypeIdToUnitPrice = reactive({})
+let orderShoeTypeIdToCurrencyType = reactive({})
 let remarkForm = reactive({
     orderShoeId: '',
     technicalRemark: '',
@@ -200,9 +212,40 @@ function updateValue(row) {
         row.shoeTypeBatchData.unitPrice * row.shoeTypeBatchData.totalAmount
     orderShoeTypeIdToUnitPrice[row.orderShoeTypeId] = row.shoeTypeBatchData.unitPrice
 }
-
+function updateCurrencyValue(row) {
+    orderShoeTypeIdToCurrencyType[row.orderShoeTypeId] = row.shoeTypeBatchData.currencyType
+}
 async function submitFormData() {
-    await axios.post(`${$api_baseUrl}/order/getbusinessorderinfo?orderid=${orderId}`)
+    const response = await axios.post(`${$api_baseUrl}/headmanager/confirmProductionOrder`, {
+        orderId: location.pathname.split('=')[1]
+    })
+    if (response.status === 200) {
+        getOrderInfo()
+    } else {
+        ElMessage.error('修改失败')
+    }
+}
+async function saveFormData() {
+    const response = await axios.post(`${$api_baseUrl}/headmanager/saveProductionOrderPrice`, {
+        unitPriceForm: orderShoeTypeIdToUnitPrice,
+        currencyTypeForm: orderShoeTypeIdToCurrencyType
+    })
+    if (response.status === 200) {
+        getOrderInfo()
+    } else {
+        ElMessage.error('保存失败')
+    }
+}
+
+const showMessage = () => {
+  ElMessageBox.alert('是否确认修改', '', {
+    confirmButtonText: '确认',
+    callback: (action) => {
+        if (action === 'confirm') {
+            submitFormData()
+        }
+    },
+  })
 }
 
 function openRemarkDialog(row) {
