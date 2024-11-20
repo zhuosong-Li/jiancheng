@@ -438,6 +438,7 @@ class OutsourceInfo(db.Model):
     material_required = db.Column(db.Boolean, nullable=False)
     material_estimated_outbound_date = db.Column(db.Date, nullable=True)
     rejection_reason = db.Column(db.String(50), nullable=True)
+    total_cost = db.Column(db.DECIMAL(10, 2), nullable=True)
     order_shoe_id = db.Column(
         db.BigInteger,
     )

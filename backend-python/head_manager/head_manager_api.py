@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, request
 from models import *
 from sqlalchemy import func
 from datetime import datetime
+from event_processor import EventProcessor
 
 head_manager_bp = Blueprint("head_manager_bp", __name__)
 
@@ -18,12 +19,17 @@ def get_cost_info():
         return jsonify({"msg": "No order found."}), 404
     cost_info = []
     for o in order:
+        customer_name = db.session.query(Customer).filter(Customer.customer_id == o.customer_id).first().customer_name
         order_shoes = (
             db.session.query(OrderShoe, Shoe)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
             .filter(OrderShoe.order_id == o.order_id)
             .all()
         )
+        order_total_labor_cost = 0  
+        order_total_cutting_cost = 0
+        order_total_sewing_cost = 0
+        order_total_molding_cost = 0
         order_total_material_cost = 0
         order_total_administrative_expenses = 0
         order_total_logistics_cost = 0
@@ -45,6 +51,48 @@ def get_cost_info():
                 .filter(SizeMaterialStorage.order_shoe_id == os.OrderShoe.order_shoe_id)
                 .all()
             )
+            labor_cost = 0
+            cutting_cost = 0
+            sewing_cost = 0
+            molding_cost = 0
+            cutting_unit_cost = 0
+            sewing_unit_cost = 0
+            cutting_unit_price_report = (
+                db.session.query(UnitPriceReport)
+                .filter(UnitPriceReport.order_shoe_id == os.OrderShoe.order_shoe_id, UnitPriceReport.team == "裁断")
+                .all()
+            )
+            sewing_unit_price_report = (
+                db.session.query(UnitPriceReport)
+                .filter(UnitPriceReport.order_shoe_id == os.OrderShoe.order_shoe_id, UnitPriceReport.team == "针车")
+                .all()
+            )
+            for cupr in cutting_unit_price_report:
+                cutting_unit_cost += cupr.price_sum
+            for supr in sewing_unit_price_report:
+                sewing_unit_cost += supr.price_sum
+            inherit_cutting_amount = 0
+            inherit_sewing_amount = 0
+            inherit_production_amounts = (
+                db.session.query(OrderShoeProductionAmount, OrderShoeType, OrderShoe)
+                .join(OrderShoeType, OrderShoeProductionAmount.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
+                .join(OrderShoe, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+                .filter(OrderShoe.order_shoe_id == os.OrderShoe.order_shoe_id)
+                .all()
+            )
+            if not inherit_production_amounts:
+                cutting_cost = 0
+                sewing_cost = 0
+            else:
+                for ipa in inherit_production_amounts:
+                    if ipa.OrderShoeProductionAmount.production_team == 0:
+                        inherit_cutting_amount += ipa.OrderShoeProductionAmount.total_production_amount
+                    if ipa.OrderShoeProductionAmount.production_team == 1:
+                        inherit_sewing_amount += ipa.OrderShoeProductionAmount.total_production_amount
+                cutting_cost = cutting_unit_cost * inherit_cutting_amount
+                sewing_cost = sewing_unit_cost * inherit_sewing_amount
+
+            inside_labor_cost = cutting_cost + sewing_cost + molding_cost
             material_cost = 0
             size_cost = 0
             for ms in material_storage:
@@ -80,9 +128,16 @@ def get_cost_info():
             logistics_cost = 0
             order_total_logistics_cost += logistics_cost
             outsouce_cost = 0
-            order_total_outsouce_cost += outsouce_cost
-            price_of_shoes = 0
 
+            price_of_shoes = 0
+            order_total_labor_cost += inside_labor_cost
+            order_total_cutting_cost += cutting_cost
+            order_total_sewing_cost += sewing_cost
+            order_total_molding_cost += molding_cost
+            outsource_cost = db.session.query(OutsourceInfo).filter(OutsourceInfo.order_shoe_id == os.OrderShoe.order_shoe_id).first()
+            if outsource_cost:
+                outsouce_cost = outsource_cost.total_cost
+            order_total_outsouce_cost += outsouce_cost
             shoe_total_amount = 0
             order_shoe_batch_infos = (
                 db.session.query(OrderShoe, OrderShoeType, OrderShoeBatchInfo)
@@ -98,8 +153,6 @@ def get_cost_info():
                 .filter(OrderShoe.order_shoe_id == os.OrderShoe.order_shoe_id)
                 .all()
             )
-            cutting_cost = 0
-            sewing_cost = 0
             for osbi in order_shoe_batch_infos:
                 price_of_shoes += (
                     osbi.OrderShoeBatchInfo.total_price
@@ -119,6 +172,7 @@ def get_cost_info():
                 + administrative_expenses
                 + logistics_cost
                 + outsouce_cost
+                + inside_labor_cost
             )
             order_total_cost += total_cost
             cost_per_shoe = (
@@ -131,6 +185,7 @@ def get_cost_info():
                 - administrative_expenses
                 - logistics_cost
                 - outsouce_cost
+                - inside_labor_cost
             )
             order_total_profit += profit
             profit_per_shoe = (
@@ -144,11 +199,15 @@ def get_cost_info():
                     "shoeRId": os.Shoe.shoe_rid,
                     "shoeName": os.OrderShoe.customer_product_name,
                     "totalMaterialCost": round(total_material_cost, 3),
-                    "administrativeExpenses": administrative_expenses,
-                    "logisticsCost": logistics_cost,
-                    "outsouceCost": outsouce_cost,
-                    "priceOfShoes": price_of_shoes,
-                    "shoeTotalAmount": round(shoe_total_amount, 3),
+                    "administrativeExpenses": round(administrative_expenses, 3),
+                    "logisticsCost": round(logistics_cost, 3),
+                    "outsouceCost": round(outsouce_cost, 3),
+                    "priceOfShoes": round(price_of_shoes, 3),
+                    "labourCost": round(inside_labor_cost, 3),
+                    "cuttingCost": round(cutting_cost, 3),
+                    "sewingCost": round(sewing_cost, 3),
+                    "moldingCost": round(molding_cost, 3),
+                    "shoeTotalAmount": shoe_total_amount,
                     "profit": round(profit, 3),
                     "profitPerShoe": round(profit_per_shoe, 3),
                     "costPerShoe": round(cost_per_shoe, 3),
@@ -168,13 +227,19 @@ def get_cost_info():
         order_info = {
             "orderId": o.order_id,
             "orderRid": o.order_rid,
+            "customerName": customer_name,
+            "orderStartDate": o.start_date.strftime("%Y-%m-%d"),
             "orderShoes": order_shoe_list,
             "orderTotalMaterialCost": round(order_total_material_cost, 3),
-            "orderTotalAdministrativeExpenses": order_total_administrative_expenses,
-            "orderTotalLogisticsCost": order_total_logistics_cost,
-            "orderTotalOutsouceCost": order_total_outsouce_cost,
-            "orderTotalPriceOfShoes": order_total_price_of_shoes,
+            "orderTotalAdministrativeExpenses": round(order_total_administrative_expenses, 3),
+            "orderTotalLogisticsCost": round(order_total_logistics_cost, 3),
+            "orderTotalOutsouceCost": round(order_total_outsouce_cost, 3),
+            "orderTotalPriceOfShoes": round(order_total_price_of_shoes, 3),
             "orderTotalShoeAmount": order_total_shoe_amount,
+            "orderTotalLabourCost": round(order_total_labor_cost, 3),
+            "orderTotalCuttingCost": round(order_total_cutting_cost, 3),
+            "orderTotalSewingCost": round(order_total_sewing_cost, 3),
+            "orderTotalMoldingCost": round(order_total_molding_cost, 3),
             "orderTotalProfit": round(order_total_profit, 3),
             "orderTotalCost": round(order_total_cost, 3),
             "orderTotalCostPerShoe": round(order_total_cost_per_shoe, 3),
@@ -188,7 +253,7 @@ def get_cost_info():
 def get_order_status_info():
     """Get the status information of the orders."""
     order_rid = request.args.get("orderRid", None)
-    order_type = request.args.get("type", None)
+    order_type = request.args.get("orderType", None)
     if not order_rid:
         order = Order.query.all()
     else:
@@ -198,6 +263,7 @@ def get_order_status_info():
     if order_type == "0":
         order_status_info = []
         for o in order:
+            customer_name = db.session.query(Customer).filter(Customer.customer_id == o.customer_id).first().customer_name
             order_shoes = (
                 db.session.query(OrderShoe, Shoe)
                 .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
@@ -249,6 +315,8 @@ def get_order_status_info():
                     .all()
                 )
                 outbound_status = "已出库"
+                if not finished_shoe_status:
+                    outbound_status = "未入库"
                 for fss in finished_shoe_status:
                     if (
                         fss.FinishedShoeStorage.finished_status == 0
@@ -271,6 +339,8 @@ def get_order_status_info():
                 )
             order_info = {
                 "orderId": o.order_id,
+                "customerName": customer_name,
+                "orderStartDate": o.start_date.strftime("%Y-%m-%d"),
                 "orderRid": o.order_rid,
                 "orderShoes": order_shoe_list,
             }
@@ -359,7 +429,7 @@ def get_order_shoe_timeline():
                     {
                         "operationId": e.Operation.operation_id,
                         "operationName": e.Operation.operation_name,
-                        "operationModifiedStatus": e.OrderStatusReference.status_name,
+                        "operationModifiedStatus": e.OrderStatusReference.order_status_name,
                         "handleTime": e.Event.handle_time.strftime("%Y-%m-%d %H:%M:%S"),
                     }
                 )
@@ -519,7 +589,7 @@ def get_material_price_info():
                 {
                     "type": "N",
                     "materialType": ms.MaterialType.material_type_name,
-                    "materialStorageId": ms.Material.material_id,
+                    "materialStorageId": ms.MaterialStorage.material_storage_id,
                     "materialName": ms.Material.material_name,
                     "materialModel": ms.MaterialStorage.material_model,
                     "materialSpecification": ms.MaterialStorage.material_specification,
@@ -629,6 +699,7 @@ def get_financial_status():
         order = Order.query.filter(Order.order_rid.like(f"%{order_rid}%")).all()
     financial_list = []
     for o in order:
+        customer_name = db.session.query(Customer).filter(Customer.customer_id == o.customer_id).first().customer_name
         order_shoes = (
             db.session.query(OrderShoe, Shoe)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
@@ -703,9 +774,83 @@ def get_financial_status():
         order_info = {
             "orderId": o.order_id,
             "orderRid": o.order_rid,
+            "customerName": customer_name,
+            "orderStartDate": o.start_date.strftime("%Y-%m-%d"),
             "orderShoes": order_shoe_list,
         }
         financial_list.append(order_info)
     return jsonify(financial_list)
+
+@head_manager_bp.route("/headmanager/saveProductionOrderPrice", methods=["POST"])
+def save_production_order_Price():
+    """Confirm the production order."""
+    unit_price_form = request.json.get('unitPriceForm')
+    currency_type_form = request.json.get('currencyTypeForm')
+    for order_shoe_type_id in unit_price_form.keys():
+        unit_price = float(unit_price_form[order_shoe_type_id])
+        entities = (db.session.query(OrderShoeBatchInfo)
+            .filter(OrderShoeBatchInfo.order_shoe_type_id == order_shoe_type_id)
+			.all())
+        for entity in entities:
+            entity.price_per_pair = unit_price
+            entity.total_price = unit_price * entity.total_amount
+            db.session.commit()
+    order_status = OrderStatus.query.filter(OrderStatus.order_id == order_id).first()
+
+    return jsonify({"msg": "Production order confirmed."})
+
+@head_manager_bp.route("/headmanager/confirmProductionOrder", methods=["POST"])
+def confirm_production_order():
+    orderid = request.json.get("orderId")
+    order = Order.query.filter(Order.order_id == orderid).first()
+    if not order:
+        return jsonify({"msg": "Order not found."}), 404
+    order_status = OrderStatus.query.filter(OrderStatus.order_id == orderid).first()
+    if order_status.order_current_status == 7:
+        processor = EventProcessor()
+        event = Event(
+            staff_id=1,
+            operation_id=14,
+            event_order_id=order_id,
+            event_type=0,
+            handle_time=datetime.now(),
+        )
+        result = processor.processEvent(event)
+        db.session.add(event)
+        db.session.commit()
+        event = Event(
+            staff_id=1,
+            operation_id=15,
+            event_order_id=order_id,
+            event_type=0,
+            handle_time=datetime.now(),
+        )
+        result = processor.processEvent(event)
+        db.session.add(event)
+        db.session.commit()
+        event = Event(
+            staff_id=1,
+            operation_id=16,
+            event_order_id=order_id,
+            event_type=0,
+            handle_time=datetime.now(),
+        )
+        result = processor.processEvent(event)
+        db.session.add(event)
+        db.session.commit()
+        event = Event(
+            staff_id=1,
+            operation_id=17,
+            event_order_id=order_id,
+            event_type=0,
+            handle_time=datetime.now(),
+        )
+        result = processor.processEvent(event)
+        db.session.add(event)
+        db.session.commit()
+        return jsonify({"msg": "Production order confirmed."})
+    else:
+        return jsonify({"msg": "Error Order Status"}), 400
+
 
     # Get the total number of shoes in transit
