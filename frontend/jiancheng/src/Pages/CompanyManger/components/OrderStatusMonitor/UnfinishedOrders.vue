@@ -1,39 +1,51 @@
 <template>
     <div class="content">
-        <el-row :gutter="20" style="margin-top: 20px; justify-content: space-between;">
+        <el-row :gutter="16" style="margin-top: 20px; justify-content: space-between; width: 100%">
             <el-col :span="4" :offset="0" style="white-space: nowrap">
                 进行中订单号筛选：
-                <el-input
-                    v-model="orderRIdSearch"
-                    placeholder="请输入订单号"
-                    clearable
-                    @keypress.enter="updataParams('orderRId', orderRIdSearch)"
-                    @clear="updataParams('orderRId', orderRIdSearch)"
-                />
+                <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable />
+                <el-button
+                    type="primary"
+                    @click="updataParams('orderRid', orderRIdSearch)"
+                    style="margin-left: 20px"
+                    >筛选</el-button
+                >
             </el-col>
-            <el-button type="primary" size="middle" @click="" :icon="Download"></el-button>
+            <el-button type="primary" @click="" :icon="Download"></el-button>
         </el-row>
         <el-table
             :data="currentTableData"
             style="width: 100%; margin-bottom: 20px; height: 540px"
-            row-key="id"
             border
-            default-expand-all
         >
-            <el-table-column label="订单信息">
-                <el-table-column prop="orderRId" label="订单编号" sortable />
-                <el-table-column prop="factoryId" label="工厂鞋型编号" sortable />
-                <el-table-column prop="customerId" label="客户鞋型编号" sortable />
-                <el-table-column prop="logisticsStatus" label="当前材料物流状态" sortable />
-                <el-table-column prop="projectStatus" label="生产状态" sortable />
-                <el-table-column prop="shippingStatus" label="发货状态" sortable />
+            <el-table-column>
+                <el-table-column type="expand">
+                    <template #default="props">
+                        <el-table
+                            :data="props.row.orderShoes"
+                            style="width: 100%; margin-bottom: 20px"
+                        >
+                            <el-table-column />
+                            <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
+                            <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
+                            <el-table-column
+                                prop="isMaterialArrived"
+                                label="当前材料物流状态"
+                                sortable
+                            />
+                            <el-table-column prop="orderShoeStatus" label="生产状态" sortable />
+                            <el-table-column prop="outboundStatus" label="发货状态" sortable />
+                        </el-table>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="orderRid" label="订单编号" sortable />
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
                             link
                             type="primary"
                             size="small"
-                            @click="edit('edit', scope.row.orderRId, 'add', scope.row)"
+                            @click="edit('edit', scope.row.orderRid + '>' + scope.row.orderId, 'add')"
                         >
                             订单详情
                         </el-button>
@@ -41,32 +53,31 @@
                 </el-table-column>
             </el-table-column>
         </el-table>
-        <el-row :gutter="20" style="justify-content: end">
-            <el-col :span="7" :offset="8">
-                <el-pagination
-                    @size-change="chageCurrentPageSize"
-                    @current-change="changeCurrentPage"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 30, 40]"
-                    :page-size="currentPageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="currentTotalRows"
-                />
-            </el-col>
+        <el-row :gutter="20" style="justify-content: end; width: 100%">
+            <el-pagination
+                @size-change="chageCurrentPageSize"
+                @current-change="changeCurrentPage"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="currentPageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="currentTotalRows"
+            />
         </el-row>
     </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { onMounted } from 'vue';
-import useTablePagination from '../../hooks/useTablePagination';
-import { Download } from '@element-plus/icons-vue';
+import { ref, getCurrentInstance } from 'vue'
+import { onMounted } from 'vue'
+import useTablePagination from '../../hooks/useTablePagination'
+import { Download } from '@element-plus/icons-vue'
 
-const edit = defineEmits(['edit']);
+const edit = defineEmits(['edit'])
+const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
 
-let orderRIdSearch = ref('');
-const routeMsg = '';
+let orderRIdSearch = ref('')
+const routeMsg = `${$api_baseUrl}/headmanager/getorderstatusinfo`
 const {
     currentPage,
     currentPageSize,
@@ -79,24 +90,8 @@ const {
 } = useTablePagination()
 
 onMounted(() => {
-    currentTableData.value = [
-        {
-            orderRId: '10100000000000000',
-            customerName: 'ssssss',
-            orderTotalShoes: '',
-            finishedShoes: '',
-            startDate: '',
-            endDate: '',
-            orderEndDate: ''
-        }
-    ]
-    updataParams('route', routeMsg);
+    updataParams('orderStatus', { route: routeMsg, orderType: 0 })
 })
 </script>
 
-<style scoped>
-.content {
-    height: calc(100% - 40px);
-    width: calc(100% - 40px);
-}
-</style>
+<style scoped></style>
