@@ -9,7 +9,7 @@ from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
 from sqlalchemy import and_, asc, desc, func, or_
-from bussiness.batch_info_type import get_order_batch_type_helper
+from business.batch_info_type import get_order_batch_type_helper
 
 material_storage_bp = Blueprint("material_storage_bp", __name__)
 

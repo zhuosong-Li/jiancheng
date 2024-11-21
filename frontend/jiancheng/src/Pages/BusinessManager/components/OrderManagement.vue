@@ -19,29 +19,7 @@
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
-                @input="filterByRid()"
-            ></el-input>
-        </el-col>
-
-        <el-col :span="2" :offset="0"
-            ><el-input
-                v-model="orderCustomerNameFilter"
-                placeholder="请输入客户名称"
-                size="default"
-                :suffix-icon="'el-icon-search'"
-                clearable
-                @input="filterByCustomerName()"
-            ></el-input>
-        </el-col>
-
-        <el-col :span="2" :offset="0"
-            ><el-input
-                v-model="orderCustomerBrandFilter"
-                placeholder="请输入客户商标"
-                size="default"
-                :suffix-icon="'el-icon-search'"
-                clearable
-                @input="filterByCustomerBrand()"
+                @input="filterDisplayOrder(1)"
             ></el-input>
         </el-col>
         <el-col :span="2" :offset="0"
@@ -51,9 +29,31 @@
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
-                @input="filterByCid()"
+                @input="filterDisplayOrder(2)"
             ></el-input>
         </el-col>
+        <el-col :span="2" :offset="0"
+            ><el-input
+                v-model="orderCustomerNameFilter"
+                placeholder="请输入客户名称"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterDisplayOrder(3)"
+            ></el-input>
+        </el-col>
+        
+        <el-col :span="2" :offset="0"
+            ><el-input
+                v-model="orderCustomerBrandFilter"
+                placeholder="请输入客户商标"
+                size="default"
+                :suffix-icon="'el-icon-search'"
+                clearable
+                @input="filterDisplayOrder(4)"
+            ></el-input>
+        </el-col>
+        
 
         <el-col :span="4" :offset="0"
         >
@@ -61,27 +61,46 @@
             <div class="block">
             <span class=""></span>
             <el-date-picker
-                v-model="orderDateFilter"
+                v-model="orderStartDateFilter"
                 type="daterange"
                 unlink-panels
                 range-separator="To"
                 start-placeholder="Start date"
                 end-placeholder="End date"
                 :shortcuts="shortcuts"
-                :size="size"
-                @change="filterOrderByDate()"
+                size="default"
+                @change="filterDisplayOrder(5)"
             />
             </div>
+        </div>
+        </el-col>
+
+        <el-col :span="4" :offset="1"
+        >
+        <div class="demo-date-picker">
+            <div class="block">
+            <span class=""></span>
+            <el-date-picker
+                v-model="orderEndDateFilter"
+                type="daterange"
+                unlink-panels
+                range-separator="To"
+                start-placeholder="Start date"
+                end-placeholder="End date"
+                :shortcuts="shortcuts"
+                size="default"
+                @change="filterDisplayOrder(6)"
+            />
             </div>
+        </div>
         </el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="displayData" border stripe height="500">
-            <el-table-column type="index" width="50" />
+        <el-table :data="paginatedDisplayData" border stripe height="500">
             <el-table-column prop="orderRid" label="订单号" />
+            <el-table-column prop="orderCid" label="客户订单号" />
             <el-table-column prop="customerName" label="客户名" />
             <el-table-column prop="customerBrand" label="客户商标"/>
-            <el-table-column prop="orderCid" label="客户订单号" />
             <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
             <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
             <el-table-column prop="orderStatus" label="订单状态" />
@@ -93,232 +112,17 @@
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :total="totalItems"
+        @current-change="handlePageChange"
+        layout="total,prev,pager,next,jumper"
+        style="margin-top:20px;"
+        ></el-pagination>
+
     </el-row>
-<el-dialog title="订单详情" v-model="previewOrderVis" width="90%">
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-descriptions title="" :column="2" border>
-                    <el-descriptions-item label="订单编号" align="center">{{
-                        orderData.orderRid
-                    }}</el-descriptions-item>
-                    <el-descriptions-item label="订单创建时间" align="center">{{
-                        orderData.orderStartDate
-                    }}</el-descriptions-item>
-                    <el-descriptions-item label="客户名称" align="center">{{
-                        orderData.customerName
-                    }}</el-descriptions-item>
-                    <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
-                                <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
-                                <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
-                    <el-descriptions-item label="订单预计截止日期" align="center">{{
-                        orderData.orderEndDate
-                    }}</el-descriptions-item>
-                </el-descriptions>
-            </el-col>
-        </el-row>
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-descriptions title="" :column="2" border>
-                    <el-descriptions-item label="包装资料上传状态" align="center"
-                        >{{ orderDocData.productionDoc }}
-                        <el-button
-                            type="primary"
-                            size="default"
-                            @click="openSubmitDocDialog(0)"
-                            >上传</el-button
-                        >
-                        <el-button v-if="orderDocData.productionDoc === '已上传'" type="primary" size="default" @click="downloadDoc(0)">查看</el-button>
-                    </el-descriptions-item>
-                    <el-descriptions-item label="生产数量单上传状态" align="center"
-                        >{{ orderDocData.amountDoc }}
-                        <el-button
-                            type="primary"
-                            size="default"
-                            @click="openSubmitDocDialog(1)"
-                            >上传</el-button
-                        >
-                        <el-button v-if="orderDocData.amountDoc === '已上传'" type="primary" size="default" @click="downloadDoc(1)">查看</el-button>
-                    </el-descriptions-item>
-                </el-descriptions>
-            </el-col>
-        </el-row>
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-table
-                    :data="orderShoePreviewData"
-                    border
-                    :span-method="mergeCellsPreview"
-                    stripe
-                    height="500"
-                >
-                    <el-table-column prop="inheritId" label="工厂型号"></el-table-column>
-                    <el-table-column prop="customerId" label="客户型号"></el-table-column>
-                    <el-table-column prop="status" label="鞋型状态"></el-table-column>
-                    <el-table-column prop="colorCN" label="中文颜色"></el-table-column>
-                    <el-table-column prop="colorEN" label="英文颜色"></el-table-column>
-                    <el-table-column prop="sizeId" label="配码"></el-table-column>
-                    <el-table-column label="尺码信息" align="center">
-                        <el-table-column prop="7/35" label="7/35"></el-table-column>
-                        <el-table-column prop="7.5/36" label="7.5/36"></el-table-column>
-                        <el-table-column prop="8/37" label="8/37"></el-table-column>
-                        <el-table-column prop="8.5/38" label="8.5/38"></el-table-column>
-                        <el-table-column prop="9/39" label="9/39"></el-table-column>
-                        <el-table-column prop="9.5/40" label="9.5/40"></el-table-column>
-                        <el-table-column prop="10/41" label="10/41"></el-table-column>
-                        <el-table-column prop="10.5/42" label="10.5/42"></el-table-column>
-                        <el-table-column prop="11/43" label="11/43"></el-table-column>
-                        <el-table-column prop="12/44" label="12/44"></el-table-column>
-                        <el-table-column prop="13/45" label="13/45"></el-table-column>
-                    </el-table-column>
-                    <el-table-column prop="pairCount" label="双数"></el-table-column>
-                </el-table>
-            </el-col>
-        </el-row>
-
-        <template #footer>
-            <span>
-                <el-button type="primary" @click="previewOrderVis = false">确认</el-button>
-            </span>
-        </template>
-    </el-dialog>
-    <el-dialog
-        title="订单EXCEL导入"
-        v-model="isImportVis"
-        width="100%"
-        @close="closeClearUploadData"
-    >
-        <el-upload
-            ref="upload"
-            :action="`${this.$apiBaseUrl}/orderimport/getuploadorder`"
-            :headers="uploadHeaders"
-            :before-upload="beforeUpload"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            accept=".xls,.xlsx"
-            :file-list="fileList"
-            limit="1"
-        >
-            <el-button type="warning" :icon="Upload">上传文件选择</el-button>
-        </el-upload>
-        <el-table :data="uploadData" border stripe :span-method="mergeCells" height="500">
-            <el-table-column prop="inheritId" label="工厂型号"></el-table-column>
-            <el-table-column prop="customerId" label="客户型号"></el-table-column>
-            <el-table-column prop="colorCN" label="中文颜色"></el-table-column>
-            <el-table-column prop="colorEN" label="英文颜色"></el-table-column>
-            <el-table-column prop="sizeId" label="配码"></el-table-column>
-            <el-table-column prop="7/35" label="7/35"></el-table-column>
-            <el-table-column prop="7.5/36" label="7.5/36"></el-table-column>
-            <el-table-column prop="8/37" label="8/37"></el-table-column>
-            <el-table-column prop="8.5/38" label="8.5/38"></el-table-column>
-            <el-table-column prop="9/39" label="9/39"></el-table-column>
-            <el-table-column prop="9.5/40" label="9.5/40"></el-table-column>
-            <el-table-column prop="10/41" label="10/41"></el-table-column>
-            <el-table-column prop="10.5/42" label="10.5/42"></el-table-column>
-            <el-table-column prop="11/43" label="11/43"></el-table-column>
-            <el-table-column prop="12/44" label="12/44"></el-table-column>
-            <el-table-column prop="13/45" label="13/45"></el-table-column>
-            <el-table-column prop="pairEachBox" label="双/件"></el-table-column>
-            <el-table-column prop="boxCount" label="件数"></el-table-column>
-            <el-table-column prop="pairCount" label="双数"></el-table-column>
-            <el-table-column prop="pairCount" label="双数"></el-table-column>
-            <el-table-column prop="currencyType" label="货币单位"></el-table-column>
-            <el-table-column prop="pricePerPair" label="单价"></el-table-column>
-            <el-table-column prop="totalPrice" label="总价"></el-table-column>
-        </el-table>
-
-        <template #footer>
-            <span>
-                <el-button @click="closeClearUploadData">取消</el-button>
-                <el-button type="primary" @click="confirmImportFile">确认导入</el-button>
-            </span>
-        </template>
-    </el-dialog>
     
-    <el-dialog title="订单详情填写" v-model="orderInfoVis" width="40%">
-        <el-form :model="orderForm" label-width="120px" :inline="false" size="default">
-            <el-form-item label="请输入订单号">
-                <el-input v-model="orderForm.orderRId"></el-input>
-            </el-form-item>
-            <el-form-item label="请选择客户">
-                <el-select v-model="orderForm.customerId" filterable placeholder="请选择客户">
-                    <el-option
-                        v-for="item in customerNameList"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    ></el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="订单开始日期">
-                <el-date-picker
-                    v-model="orderForm.orderStartDate"
-                    type="date"
-                    placeholder="选择日期"
-                    value-format="YYYY-MM-DD"
-                ></el-date-picker>
-            </el-form-item>
-            <el-form-item label="订单结束日期">
-                <el-date-picker
-                    v-model="orderForm.orderEndDate"
-                    type="date"
-                    placeholder="选择日期"
-                    value-format="YYYY-MM-DD"
-                ></el-date-picker>
-            </el-form-item>
-            <el-form-item label="订单状态">
-                <el-select v-model="orderForm.status" filterable placeholder="请选择订单状态">
-                    <el-option
-                        v-for="item in orderStatusList"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    >
-                    </el-option>
-                </el-select>
-            </el-form-item>
-            <el-form-item label="业务员">
-                <el-input v-model="orderForm.salesman"></el-input>
-            </el-form-item>
-        </el-form>
-
-        <template #footer>
-            <span>
-                <el-button @click="orderInfoVis = false">取消</el-button>
-                <el-button type="primary" @click="confirmImportInfo">确认</el-button>
-            </span>
-        </template>
-    </el-dialog>
-    <el-dialog
-        :title="submitDocType === 0 ? '上传生产订单' : '上传生产数量单'"
-        v-model="isSubmitDocVis"
-        width="30%"
-        @close="handleDialogClose"
-    >
-        <el-upload
-            ref="uploadDoc"
-            :action="`${this.$apiBaseUrl}/orderimport/submitdoc`"
-            :headers="uploadHeaders"
-            :auto-upload="false"
-            accept=".xls,.xlsx"
-            :file-list="fileList"
-            :limit="1"
-            :data="{ fileType: submitDocType, orderRid: orderData.orderRid }"
-            :on-success="handleUploadDocSuccess"
-            :on-error="handleUploadDocError"
-        >
-            <el-button  type="primary">选择文件</el-button>
-        </el-upload>
-
-
-        <template #footer>
-            <span>
-            <el-button @click="handleDialogClose">取消</el-button>
-            <el-button type="primary" @click="submitUpload">上传</el-button>
-        </span>
-        </template>
-    </el-dialog>
-
-
     <el-dialog title="创建订单鞋型填写" v-model="orderCreationInfoVis" width="80%">
         <el-form :model="newOrderForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="请输入订单号">
@@ -372,17 +176,6 @@
                     placeholder="选择日期"
                     value-format="YYYY-MM-DD"
                 ></el-date-picker>
-            </el-form-item>
-            <el-form-item label="订单状态">
-                <el-select v-model="newOrderForm.status" filterable placeholder="请选择订单状态">
-                    <el-option
-                        v-for="item in orderStatusList"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    >
-                    </el-option>
-                </el-select>
             </el-form-item>
             <el-form-item label="业务员">
                 <el-input v-model="newOrderForm.salesman"></el-input>
@@ -702,18 +495,22 @@
         </template>
     </el-dialog>
 
+    
 </template>
 
 <script>
 import { Download, Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage,ElPagination } from 'element-plus'
 import { toggleRowStatus } from 'element-plus/es/components/table/src/util';
 
 export default {
     data() {
         return {
             token: localStorage.getItem('token'),
+            currentPage:1,
+            pageSize:8,
+            totalItems:200,
             submitDocType: 0,
             orderShoePreviewData: [],
             orderData: {},
@@ -723,7 +520,7 @@ export default {
             customerBatchData: [],
             customerDisplayBatchData:[],
             selectedShoeList:[],
-            orderStatusList: [],
+            // orderStatusList: [],
             currentBatch:[],
             expandedRowKeys:[],
             addCustomerBatchDialogVisible:false,
@@ -741,10 +538,12 @@ export default {
             batchNameFilter:'',
             orderRidFilter: '',
             orderCidFilter: '',
-            orderDateFilter:'',
+            orderStartDateFilter:'',
+            orderEndDateFilter:'',
             orderCustomerNameFilter:'',
             orderCustomerBrandFilter:'',
             displayData: [],
+            prevDisplayData:[],
             filterData: [],
             unfilteredData: [],
             uploadData: [],
@@ -849,14 +648,18 @@ export default {
     },
     computeTotal(row){
         console.log(row)
-        return 10
     },
+    paginatedDisplayData(){
+        const start = (this.currentPage - 1)*this.pageSize
+        const end = this.currentPage * this.pageSize
+        return this.displayData.slice(start,end)
+    }
   },
     mounted() {
         this.$setAxiosToken()
         this.getAllOrders()
         this.getAllCutomers()
-        this.getAllOrderStatus()
+        // this.getAllOrderStatus()
         this.getAllShoes()
         this.getAllBatchTypes()
     },
@@ -866,6 +669,10 @@ export default {
         const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed, so we add 1
         const day = String(date.getDate()).padStart(2, '0'); // pad the day with leading zero if needed
         return `${year}-${month}-${day}`;
+        },
+        handlePageChange(newPage)
+        {
+            this.currentPage = newPage
         },
         findOrderShoeTypeById(id){
             return this.newOrderForm.orderShoeTypes.find(orderShoeType => { return orderShoeType.shoeTypeId == id
@@ -890,7 +697,6 @@ export default {
         openCreateOrderDialog() {
             this.newOrderForm.orderStartDate = this.formatDateToYYYYMMDD(new Date())
             // this.$refs.startdatepicker.change()
-            console.log(this.newOrderForm.orderStartDate)
             this.orderCreationInfoVis = true
             this.shoeTableDisplayData = this.shoeTableData
         },  
@@ -909,7 +715,6 @@ export default {
             }
         },
         openAddBatchInfoDialog(row) {
-            console.log(this.curBatchType)
             this.curShoeTypeId = row.shoeTypeId
             this.addBatchInfoDialogVis = true
             const idField = 'packagingInfoId'
@@ -958,8 +763,6 @@ export default {
 
         },
         updateAmountMapping(out_row, inner_row){
-            console.log(out_row)
-            console.log(inner_row)
             out_row.amountMapping[inner_row.packagingInfoId] = out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityRatio 
         },
         handleSelectionShoeType(selection) {
@@ -976,10 +779,8 @@ export default {
                     customerid: customerId
                 }
             })
-            console.log(response.data)
             this.customerBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
             this.customerDisplayBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
-            console.log(this.customerBatchData)
         },
         async getAllCutomers() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
@@ -989,27 +790,18 @@ export default {
         async getAllBatchTypes() {
             const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
             this.batchTypes = response.data.batchDataTypes
-            console.log(this.batchTypes)
             this.batchTypeNameList = [... new Set(this.batchTypes.map(item => item.batchInfoTypeName))]
-            console.log(this.batchTypeNameList)
         },
         updateCustomerBrand() {
-            console.log(this.newOrderForm.customerName)
             this.customerBrandList = [... new Set(this.customerDetails.filter(item =>item.customerName == this.newOrderForm.customerName).map(item => item.customerBrand))]
         },
         updateCustomerId() {
             this.newOrderForm.customerId = this.customerDetails.filter(item => item.customerName == this.newOrderForm.customerName)
             .filter(item => item.customerBrand == this.newOrderForm.customerBrand)[0].customerId
-            console.log(this.newOrderForm.customerId)
         },
         updateBatchType(){
             this.curBatchType = this.batchTypes.filter(item => item.batchInfoTypeName == this.newOrderForm.batchInfoTypeName)[0]
             this.newOrderForm.batchInfoTypeId = this.curBatchType.batchInfoTypeId
-            console.log(this.newOrderForm.batchInfoTypeId)
-        },
-        filterDisplayOrder()
-        {
-            return
         },
         filterBatchData(){
             if (!this.batchNameFilter){
@@ -1071,7 +863,6 @@ export default {
             // this.newOrderForm.orderShoeTypes.find(row => {
             //     return row.shoeTypeId == this.curShoeTypeId
             // }).
-            console.log(curQuantityMapping, this.curShoeTypeId)
             this.addBatchInfoDialogVis = false
 
         },
@@ -1088,11 +879,12 @@ export default {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
             this.unfilteredData = response.data
             this.displayData = this.unfilteredData
+            this.totalItems = this.unfilteredData.length
         },
-        async getAllOrderStatus() {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
-            this.orderStatusList = response.data
-        },
+        // async getAllOrderStatus() {
+        //     const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
+        //     this.orderStatusList = response.data
+        // },
         async getOrderOrderShoe(orderRid) {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoeinfo`, {
                 params: {
@@ -1128,80 +920,105 @@ export default {
             catch (error) {
                 console.error('Upload error:', error)
                 ElMessage.error('上传失败')
-
             }
-
         },
-        filterOrderByDate()
+        filterOrderByFilterType(filterType)
         {
-            if (!this.orderDateFilter)
+            switch(filterType)
             {
-                this.displayData = this.unfilteredData
+                case 1:
+                    //console.log(this.orderRidFilter)
+                    this.filterByRid()
+                    break
+                case 2:
+                    //console.log(this.orderCidFilter)
+                    this.filterByCid()
+                    break
+                case 3:
+                    //console.log(this.orderCustomerNameFilter)
+                    this.filterByCustomerName()
+                    break
+                case 4:
+                    //console.log(this.orderCustomerBrandFilter)
+                    this.filterByCustomerBrand()
+                    break
+                case 5:
+                    //console.log(this.orderStartDateFilter)
+                    this.filterOrderByStartDate()
+                    break
+                case 6:
+                    //console.log(this.orderEndDateFilter)
+                    this.filterOrderByEndDate()
+                    break
             }
-            else
+            return
+        },
+
+        filterDisplayOrder()
+        {   
+            this.filterList = [this.orderRidFilter, this.orderCidFilter, this.orderCustomerNameFilter, this.orderCustomerBrandFilter, this.orderStartDateFilter
+                , this.orderEndDateFilter]            
+            this.indexToFilter = (this.filterList.filter((filter) => filter)).map((filter) => this.filterList.indexOf(filter))
+            this.displayData = this.unfilteredData
+            this.indexToFilter.forEach((index) => this.filterOrderByFilterType(index + 1))
+            this.totalItems = this.displayData.length
+            // this.orderCidFilter,
+            // this.orderRidFilter,
+            // this.orderCustomerNameFilter,
+            // this.orderCustomerBrandFilter,
+            // this.orderStartDateFilter,
+            // this.orderEndDateFilter,
+            return
+        },
+        
+        filterOrderByStartDate()
+        {
+            this.filterData = this.displayData.filter((task)=>
             {
-                
-                this.filterData = this.unfilteredData.filter((task)=>
-            {
-                const filterMatch = new Date(task.orderStartDate) >= this.orderDateFilter[0] && new Date(task.orderEndDate) <= this.orderDateFilter[1]
+                const filterMatch = new Date(task.orderStartDate) >= this.orderStartDateFilter[0] && new Date(task.orderStartDate) <= this.orderStartDateFilter[1]
                 return filterMatch 
             })
             this.displayData = this.filterData
-            }
+        },
+        filterOrderByEndDate()
+        {
+            this.filterData = this.displayData.filter((task)=>
+            {
+                const filterMatch = new Date(task.orderEndDate) >= this.orderEndDateFilter[0] && new Date(task.orderEndDate) <= this.orderEndDateFilter[1]
+                return filterMatch 
+            })
+            this.displayData = this.filterData
         },
         filterByCustomerName()
         {
-            if(!this.orderCustomerNameFilter)
-            {
-                this.displayData = this.unfilteredData
-            }
-            else
-            {
-                this.filterData = this.unfilteredData.filter((task)=>
+            this.filterData = this.displayData.filter((task)=>
             {
                 const filterMatch = task.customerName.toLowerCase().includes(this.orderCustomerNameFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
-            }
         },
         filterByCustomerBrand()
         {
-            if(!this.orderCustomerBrandFilter)
-        {
-            this.displayData = this.unfilteredData
-        }
-            else {
-                this.filterData = this.unfilteredData.filter((task)=> {
+                this.filterData = this.displayData.filter((task)=> {
                     const filterMatch = task.customerBrand.toLowerCase().includes(this.orderCustomerBrandFilter.toLowerCase())
                     return filterMatch
                 })
                 this.displayData = this.filterData
-            }
         },
         filterByCid(){
-            if (!this.orderCidFilter){
-                this.displayData = this.unfilteredData
-            }
-            else {
-                this.filterData = this.unfilteredData.filter((task) => {
+                this.filterData = this.displayData.filter((task) => {
                 const filterMatch = task.orderCid.toLowerCase().includes(this.orderCidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
-            }
         },
         filterByRid(){
-            if (!this.orderRidFilter){
-                this.displayData = this.unfilteredData
-            }
-            else {
-                this.filterData = this.unfilteredData.filter((task) => {
+                this.filterData = this.displayData.filter((task) => {
                 const filterMatch = task.orderRid.toLowerCase().includes(this.orderRidFilter.toLowerCase())
                 return filterMatch
             })
                 this.displayData = this.filterData
-            }
         },
         filterByShoeRid(){
             if (!this.shoeRidFilter){
@@ -1244,7 +1061,6 @@ export default {
             this.tempFileName = response.tempFileName
             this.uploadData = response.data
             console.log('Upload successful:', response)
-            console.log(this.tempFileName)
         },
         async handleUploadError(error, file) {
             // Handle any errors that occurred during the upload
@@ -1457,7 +1273,6 @@ export default {
                         text: '等待中，请稍后...',
                         background: 'rgba(0, 0, 0, 0.7)'
             })
-                console.log(this.newOrderForm)
                 loadingInstance.close()
                 const response = await axios.post(
                         `${this.$apiBaseUrl}/ordercreate/createneworder`,
@@ -1485,7 +1300,6 @@ export default {
             })
         },
         openOrderDetail(orderId) {
-            console.log(this.displayData)
             let url = ""
             url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}`;
             window.open(url,'_blank')

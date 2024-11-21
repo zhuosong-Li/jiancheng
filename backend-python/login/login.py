@@ -62,7 +62,7 @@ def login():
         # Also store the `jti` keyed by the token's `jti` to handle logout/revocation
         redis_client.setex(jti, timedelta(days=1), "valid")
 
-        return jsonify(access_token=access_token, role=user.Character.character_id), 200
+        return jsonify(access_token=access_token, role=user.Character.character_id, staffid=user.User.staff_id), 200
     else:
         return jsonify({"msg": "Bad username or password"}), 401
 

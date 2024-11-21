@@ -12,7 +12,7 @@ import FabricCuttingSupervisor from '../Pages/ProductionManagementDepartment/Fab
 import SewingMachineSupervisor from '../Pages/ProductionManagementDepartment/SewingMachineSupervisor/views/SewingMachineSupervisor.vue'
 import MoldingSupervisor from '../Pages/ProductionManagementDepartment/MoldingSupervisor/views/MoldingSupervisor.vue'
 import UsageCalculation from '../Pages/UsageCalculation/views/UsageCalculation.vue'
-import BussinessManager from '@/Pages/BussinessManager/views/BussinessManager.vue'
+import BusinessManager from '@/Pages/BusinessManager/views/BusinessManager.vue'
 import DevelopmentManager from '@/Pages/DevelopmentManager/views/DevelopmentManager.vue'
 import HumanResourcesDepartment from '@/Pages/HumanResourcesDepartment/views/HumanResourcesDepartment.vue'
 import CompanyManager from '@/Pages/CompanyManger/views/CompanyManager.vue'
@@ -31,7 +31,7 @@ import DeputyGeneral from '@/Pages/ProductionManagementDepartment/ProductionMana
 import UsageCalculationRoutes from '../Pages/UsageCalculation/routers/UsageCalculation'
 import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/DevelopmentManager'
 import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
-import BusinessManagerRoutes from '../Pages/BussinessManager/routers/business'
+import BusinessManagerRoutes from '../Pages/BusinessManager/routers/business'
 import OrderConfirmDetailRoutes from '../Pages/CompanyManger/routers/OrderConfirmDetail'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -146,14 +146,23 @@ const router = createRouter({
       }
     },
     {
-      path :'/bussinessmanager',
-      name : 'bussinessmanager',
-      component: BussinessManager,
+      path :'/businessmanager',
+      name : 'businessmanager',
+      component: BusinessManager,
       meta:{
         requiresAuth: true,
         role: 4
       }
     },
+    // {
+    //   path :'/businessclerk',
+    //   name : 'businessclerk',
+    //   component:BusinessClerk,
+    //   meta:{
+    //     requirsAuth:true,
+    //     role:21
+    //   }
+    // },
     {
       path :'/developmentmanager',
       name : 'developmentmanager',

@@ -11,7 +11,7 @@ from sqlalchemy import func, or_, cast, Integer
 from sqlalchemy.dialects.mysql import insert
 from constants import OUTSOURCE_STATUS_MAPPING
 from general_document.batch_info import generate_excel_file
-from bussiness.batch_info_type import get_order_batch_type_helper
+from business.batch_info_type import get_order_batch_type_helper
 import os
 
 production_manager_bp = Blueprint("production_manager_bp", __name__)
