@@ -30,8 +30,8 @@
         </el-col>
     </el-row>
     <el-dialog title="成品入库/出库记录" v-model="isRecordDialogVisible" width="60%">
-        <el-table :data="recordData" border stripe>
-            <el-table-column prop="opType" label="操作类型"></el-table-column>
+        <el-descriptions title="入库记录"></el-descriptions>
+        <el-table :data="recordData.inboundRecords" border stripe>
             <el-table-column label="自产/外包">
                 <template #default="scope">
                     {{ mapping[scope.row.productionType] }}
@@ -39,6 +39,14 @@
             </el-table-column>
             <el-table-column prop="date" label="操作时间"></el-table-column>
             <el-table-column prop="amount" label="操作数量"></el-table-column>
+            <el-table-column prop="source" label="来自"></el-table-column>
+        </el-table>
+
+        <el-descriptions title="出库记录"></el-descriptions>
+        <el-table :data="recordData.outboundRecords" border stripe>
+            <el-table-column prop="date" label="操作时间"></el-table-column>
+            <el-table-column prop="amount" label="操作数量"></el-table-column>
+            <el-table-column prop="destination" label="出库至"></el-table-column>
         </el-table>
     </el-dialog>
 </template>

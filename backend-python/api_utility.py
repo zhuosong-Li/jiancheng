@@ -97,6 +97,12 @@ def format_date(date_obj):
     return date_obj.strftime("%Y-%m-%d")
 
 
+def format_datetime(datetime_obj):
+    if not datetime_obj:
+        return ""
+    return datetime_obj.strftime("%Y-%m-%d %H:%M:%S")
+
+
 def format_line_group(line_group_obj):
     if not line_group_obj:
         return []

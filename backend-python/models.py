@@ -690,6 +690,7 @@ class ShoeInboundRecord(db.Model):
         db.BigInteger,
         nullable=True,
     )
+    outsource_info_id = db.Column(db.Integer, nullable=True)
 
 
 class ShoeOutboundRecord(db.Model):
@@ -701,9 +702,7 @@ class ShoeOutboundRecord(db.Model):
     outbound_amount = db.Column(db.Integer, nullable=True)
     outbound_datetime = db.Column(db.DateTime, nullable=False)
     outbound_address = db.Column(db.String(100), nullable=True)
-    outbound_type = db.Column(
-        db.CHAR(1), nullable=False, default="P", comment="P: 自产\nO: 外包"
-    )
+    outbound_type = db.Column(db.SmallInteger, nullable=False, default=0)
     outbound_department = db.Column(db.CHAR(1), nullable=True)
     picker = db.Column(db.String(15), nullable=True)
     semifinished_shoe_storage_id = db.Column(
@@ -714,6 +713,7 @@ class ShoeOutboundRecord(db.Model):
         db.BigInteger,
         nullable=True,
     )
+    outsource_info_id = db.Column(db.Integer, nullable=True)
 
 
 class Staff(db.Model):

@@ -13,6 +13,7 @@ from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
 from sqlalchemy import func, or_, and_
+from api_utility import format_datetime
 
 finished_storage_bp = Blueprint("finished_storage_bp", __name__)
 
@@ -178,29 +179,57 @@ def _outbound_helper(storage, data):
 def get_finished_in_out_bound_records():
     db.session.query()
     storage_id = request.args.get("storageId")
-    inbound_response = ShoeInboundRecord.query.filter(
-        ShoeInboundRecord.finished_shoe_storage_id == storage_id
-    ).all()
-    outbound_response = ShoeOutboundRecord.query.filter(
-        ShoeOutboundRecord.finished_shoe_storage_id == storage_id
-    ).all()
+    inbound_response = (
+        db.session.query(ShoeInboundRecord, OutsourceInfo, OutsourceFactory)
+        .outerjoin(
+            OutsourceInfo,
+            OutsourceInfo.outsource_info_id == ShoeInboundRecord.outsource_info_id,
+        )
+        .outerjoin(OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id)
+        .filter(ShoeInboundRecord.finished_shoe_storage_id == storage_id)
+        .all()
+    )
+    outbound_response = (
+        db.session.query(ShoeOutboundRecord, OutsourceInfo, OutsourceFactory)
+        .outerjoin(
+            OutsourceInfo,
+            OutsourceInfo.outsource_info_id == ShoeOutboundRecord.outsource_info_id,
+        )
+        .outerjoin(
+            OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id,
+        )
+        .filter(ShoeOutboundRecord.finished_shoe_storage_id == storage_id)
+        .all()
+    )
 
-    result = []
+    result = {"inboundRecords": [], "outboundRecords": []}
     for row in inbound_response:
+        record, _, factory = row
         obj = {
-            "opType": "入库",
-            "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "productionType": record.inbound_type,
+            "date": format_datetime(record.inbound_datetime),
+            "amount": record.inbound_amount,
+            "source": None
         }
-        obj["amount"] = row.inbound_amount
-        result.append(obj)
+        if factory:
+            obj["source"] = factory.factory_name
+        result["inboundRecords"].append(obj)
 
     for row in outbound_response:
+        record, _, factory = row
         obj = {
-            "opType": "出库",
-            "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+            "productionType": record.outbound_type,
+            "date": format_datetime(record.outbound_datetime),
+            "amount": record.outbound_amount,
+            "destination": None,
+            "picker": record.picker,
+            "department": record.outbound_department,
+            "address": record.outbound_address
         }
-        obj["amount"] = row.outbound_amount
-        result.append(obj)
+        if factory:
+            obj["destination"] = factory.factory_name
+        result["outboundRecords"].append(obj)
+    print(result)
     return result
 
 
