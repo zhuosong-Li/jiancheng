@@ -25,11 +25,20 @@
         </el-button>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData" @selection-change="handleSelectionChange">
-            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable"/>
+        <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData"
+            @selection-change="handleSelectionChange">
+            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable" />
             <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120"
                 sortable="custom"></el-table-column>
-            <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
+            <el-table-column label="采购订单号" width="100">
+                <template #default="scope">
+                    <el-tooltip effect="dark" :content="scope.row.purchaseDivideOrderRId" placement="bottom">
+                        <span class="truncate-text">
+                            {{ scope.row.purchaseDivideOrderRId }}
+                        </span>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialModel" label="材料型号"></el-table-column>
@@ -257,14 +266,6 @@ export default {
             this.isInboundDialogVisible = false
             this.getMaterialTableData()
 
-            // let params = {"orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId}
-            // response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/notifyrequiredmaterialarrival`, {params})
-            // if (response.data["message"] == "yes") {
-            //     // notify production manager that material is ready
-            //     data = {"senderId": 5, "receiverIds": [6, 7], "content": "鞋型号" + this.currentRow.shoeRId + "所需材料已到齐。请联系相关人员出货。"}
-            //     await axios.post(`${this.$apiBaseUrl}/message/sendmessage`, data)
-            //     this.$message({type: 'success', message: '已通知生产经理该鞋型物料到齐'})
-            // }
         },
         async submitSizeInboundForm() {
             try {
@@ -329,12 +330,12 @@ export default {
                 showCancelButton: true,
                 cancelButtonText: '取消'
             }).then(async () => {
-                let data = []
-                this.selectedRows.forEach(row => {
-                    data.push({ "storageId": row.materialStorageId, "materialCategory": row.materialCategory })
-                })
-                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinboundmaterial`, data)
                 try {
+                    let data = []
+                    this.selectedRows.forEach(row => {
+                        data.push({ "storageId": row.materialStorageId, "materialCategory": row.materialCategory })
+                    })
+                    await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinboundmaterial`, data)
                     ElMessage.success("操作成功")
                 }
                 catch (error) {

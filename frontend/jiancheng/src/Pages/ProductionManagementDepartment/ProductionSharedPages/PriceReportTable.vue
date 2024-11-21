@@ -10,7 +10,7 @@
         </el-table-column>
         <el-table-column prop="price" label="工价">
             <template v-if="!readOnly" #default="scope">
-                <el-input v-model="scope.row.price" placeholder="" clearable></el-input>
+                <el-input v-model="scope.row.price" placeholder="" clearable type="number"></el-input>
             </template>
         </el-table-column>
         <el-table-column prop="note" label="备注">

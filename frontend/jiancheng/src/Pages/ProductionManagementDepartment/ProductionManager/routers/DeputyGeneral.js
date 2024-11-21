@@ -26,11 +26,7 @@ export default [
     props: route => (
       {
         orderShoeId: route.query.orderShoeId,
-        shoeRId: route.query.shoeRId,
         orderId: route.query.orderId,
-        orderRId: route.query.orderRId,
-        orderEndDate: route.query.orderEndDate,
-        customerName: route.query.customerName,
       }
     )
   },

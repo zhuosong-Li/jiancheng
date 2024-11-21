@@ -7,18 +7,26 @@
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getTableData()" @clear="getTableData()"/>
+            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData()" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getTableData()"  @clear="getTableData()"/>
+            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
+                @clear="getTableData()" />
         </el-col>
     </el-row>
     <el-table :data="tableData" border stripe height="600" @sort-change="sortData">
         <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
-        <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
+        <el-table-column label="采购订单号" width="100">
+            <template #default="scope">
+                <el-tooltip effect="dark" :content="scope.row.purchaseDivideOrderRId" placement="bottom">
+                    <span class="truncate-text">
+                        {{ scope.row.purchaseDivideOrderRId }}
+                    </span>
+                </el-tooltip>
+            </template>
+        </el-table-column>
         <el-table-column prop="materialType" label="材料类型"></el-table-column>
         <el-table-column prop="materialName" label="材料名称"></el-table-column>
         <el-table-column prop="materialModel" label="材料型号"></el-table-column>
@@ -53,10 +61,11 @@
             <el-option v-for="item in materialTypeOptions" :value="item" />
         </el-select>
         请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getTableData()" @clear="getTableData"/>
+        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getTableData()"
+            @clear="getTableData" />
         请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" placeholder="" clearable
-            @keypress.enter="getTableData()" @clear="getTableData"/>
+        <el-input v-model="materialSpecificationSearch" placeholder="" clearable @keypress.enter="getTableData()"
+            @clear="getTableData" />
         请选择材料供应商：
         <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
             @change="getTableData()">
@@ -170,7 +179,7 @@ export default {
                 this.recordData = response.data
             }
         },
-        async sortData({prop, order}) {
+        async sortData({ prop, order }) {
             await this.getTableData(prop, order)
         }
     }

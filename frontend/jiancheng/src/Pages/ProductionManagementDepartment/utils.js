@@ -114,22 +114,27 @@ export function checkProductionStatus(array) {
     return result
 }
 
-export function checkOutsourceStatus(status) {
-    console.log(status, typeof (status))
+export function checkOutsourceStatus(statusName) {
+    const outsourceStage1 = ["未提交", "已提交", "被驳回", "已审批"]
+    const outsourceStage2 = ["材料出库"]
+    const outsourceStage3 = ["生产中"]
+    const outsourceStage4 = ["成品入库"]
+    const outsourceStage5 = ["外包结束"]
     let result = -1
-    if (status < 4) {
+
+    if (outsourceStage1.includes(statusName)) {
         result = 0
     }
-    else if (status == 4) {
+    else if (outsourceStage2.includes(statusName)) {
         result = 1
     }
-    else if (status == 5) {
+    else if (outsourceStage3.includes(statusName)) {
         result = 2
     }
-    else if (status == 6) {
+    else if (outsourceStage4.includes(statusName)) {
         result = 3
     }
-    else if (status == 7) {
+    else if (outsourceStage5.includes(statusName)) {
         result = 4
     }
     return result

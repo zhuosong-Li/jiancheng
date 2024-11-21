@@ -58,7 +58,7 @@
                     </el-button>
                 </el-collapse-item>
                 <el-collapse-item title="外包信息" name="外包信息">
-                    <el-tabs v-model="currentOutsourceTab" type="border-card" tab-position="left">
+                    <el-tabs v-model="currentOutsourceTab" type="border-card" tab-position="top">
                         <el-tab-pane v-for="(row, index) in outsourceInfo" :key="row.outsourceInfoId" :name="index"
                             :label="`外包${index + 1}`">
                             <el-descriptions title="" :column="3" border>
@@ -66,24 +66,23 @@
                                     row.outsourceFactory.value }}</el-descriptions-item>
                                 <el-descriptions-item label="外包类型" align="center">{{
                                     row.outsourceType.toString()
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="外包数量" align="center">{{
                                     row.outsourceAmount
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="外包周期" align="center">
                                     {{ row.outsourceStartDate }} 至 {{ row.outsourceEndDate }}
                                 </el-descriptions-item>
                                 <el-descriptions-item label="最迟交货日期" align="center">{{
                                     row.deadlineDate
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
+                                <el-descriptions-item label="状态" align="center">{{
+                                    row.outsourceStatus
+                                    }}</el-descriptions-item>
                             </el-descriptions>
                             <Arrow :status="row.outsourceNode" :workflowType="2"></Arrow>
-                            <el-row>
-                                <el-col :offset="22">
-                                    <el-button v-if="row.outsourceStatus < 4" type="primary"
-                                        @click="startOutsourceFlow(row)">开始外包</el-button>
-                                </el-col>
-                            </el-row>
+                            <el-button v-if="row.outsourceStatus === '已审批'" type="primary"
+                                @click="startOutsourceFlow(row)">开始外包</el-button>
                         </el-tab-pane>
                     </el-tabs>
                     <el-button type="primary" @click="openOutsourceSetting">
@@ -155,7 +154,8 @@ export default {
             outsourcePanes: [],
             currentOutsourceTab: 0,
             productionStatus: -1,
-            outsourceStatus: -1,
+            outsourceNode: -1,
+            outsourceStatus: '',
             outsourceInfo: [],
             currentProductionAmountTab: 0,
             priceReportDict: {},
@@ -261,7 +261,7 @@ export default {
         },
         async startOutsourceFlow(rowData) {
             try {
-                let data = { "outsourceInfoId": rowData.outsourceInfoId, "outsourceStatus": 4 }
+                let data = { "outsourceInfoId": rowData.outsourceInfoId }
                 await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/editoutsourcestatus`, data)
                 ElMessage.success("推进外包成功")
             }

@@ -29,19 +29,19 @@ export default {
         return {
             currentWorkflow: [],
             productionWorkflow: [
-                { stage: '生产开始', department: '生产部' },
-                { stage: '裁断开始', department: '生产部' },
-                { stage: '裁断结束', department: '业务部' },
-                { stage: '针车预备开始', department: '生产部' },
-                { stage: '针车预备结束', department: '生产部' },
-                { stage: '针车开始', department: '生产部' },
-                { stage: '针车结束', department: '生产部' },
-                { stage: '成型开始', department: '生产部' },
-                { stage: '成型结束', department: '生产部' },
-                { stage: '生产结束', department: '生产部' }
+                { stage: '生产前' },
+                { stage: '裁断开始' },
+                { stage: '裁断结束' },
+                { stage: '针车预备开始' },
+                { stage: '针车预备结束' },
+                { stage: '针车开始' },
+                { stage: '针车结束' },
+                { stage: '成型开始' },
+                { stage: '成型结束' },
+                { stage: '生产结束' }
             ],
             outsourceWorkflow: [
-                { stage: '外包开始' },
+                { stage: '外包前' },
                 { stage: '材料出库' },
                 { stage: '生产中' },
                 { stage: '成品入库' },

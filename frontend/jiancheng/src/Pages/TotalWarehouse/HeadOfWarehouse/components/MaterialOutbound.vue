@@ -31,11 +31,15 @@
         <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData"
             @selection-change="handleSelectionChange">
             <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable"/>
-            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120"
-                sortable="custom"></el-table-column>
-            <el-table-column label="采购订单号" width="100" show-overflow-tooltip>
+            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom">
+            </el-table-column>
+            <el-table-column label="采购订单号" width="100">
                 <template #default="scope">
-                    {{ scope.row.purchaseDivideOrderRId }}
+                    <el-tooltip effect="dark" :content="scope.row.purchaseDivideOrderRId" placement="bottom">
+                        <span class="truncate-text">
+                            {{ scope.row.purchaseDivideOrderRId }}
+                        </span>
+                    </el-tooltip>
                 </template>
             </el-table-column>
             <el-table-column prop="materialType" label="材料类型"></el-table-column>

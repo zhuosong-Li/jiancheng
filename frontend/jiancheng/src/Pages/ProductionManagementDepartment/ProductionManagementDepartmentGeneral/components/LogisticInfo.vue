@@ -20,10 +20,10 @@
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
                 <el-table-column prop="orderEndDate" label="订单截止日期"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="物流信息">
                     <template #default="scope">
-                        <el-button type="primary" size="default"
-                            @click="openLogisticsDialog(scope.row)">查看订单物流信息</el-button>
+                        <el-button type="primary" size="small"
+                            @click="openLogisticsDialog(scope.row)">查看</el-button>
                     </template>
                 </el-table-column>
             </el-table></el-col>
