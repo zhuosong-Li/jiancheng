@@ -16,7 +16,7 @@
         <el-table
             :data="currentTableData"
             style="width: 100%; margin-bottom: 20px; height: 600px"
-            @cell-click="showDialog"
+            @cell-click="showDialog1"
         >
             <el-table-column>
                 <el-table-column type="expand">
@@ -24,7 +24,7 @@
                         <el-table
                             :data="props.row.orderShoes"
                             style="width: 100%; margin-bottom: 5px;"
-                            @cell-click="showDialog"
+                            @cell-click="showDialog2"
                         >
                             <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
                             <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
@@ -34,7 +34,7 @@
                                 sortable
                             />
                             <el-table-column
-                                prop="needleCuttingLaborCost"
+                                prop="labourCost"
                                 label="生产人工成本"
                                 sortable
                             />
@@ -52,7 +52,7 @@
                 </el-table-column>
                 <el-table-column prop="orderRid" label="订单编号" sortable />
                 <el-table-column prop="orderTotalMaterialCost" label="材料采购成本" sortable />
-                <el-table-column prop="needleCuttingLaborCost" label="生产人工成本" sortable />
+                <el-table-column prop="orderTotalLabourCost" label="生产人工成本" sortable />
                 <el-table-column
                     prop="orderTotalAdministrativeExpenses"
                     label="行政费用"
@@ -76,16 +76,27 @@
             />
         </el-row>
     </div>
-    <el-dialog title="生产人工成本详细数据" v-model="dialogVisible" width="50%">
+    <el-dialog title="生产人工成本详细数据" v-model="dialogVisible1" width="50%">
         <el-table
-            :data="smallTabelData"
+            :data="smallTabelData1"
             style="width: 100%; margin-bottom: 20px; height: 150px"
-            row-key="id"
         >
             <el-table-column>
-                <el-table-column prop="orderRid" label="裁断内部成本" sortable />
-                <el-table-column prop="custShoesModel" label="针车内部成本" sortable />
-                <el-table-column prop="needleCuttingLaborCost" label="成型内部成本" sortable />
+                <el-table-column prop="orderTotalCuttingCost" label="裁断内部成本" sortable />
+                <el-table-column prop="orderTotalSewingCost" label="针车内部成本" sortable />
+                <el-table-column prop="orderTotalMoldingCost" label="成型内部成本" sortable />
+            </el-table-column>
+        </el-table>
+    </el-dialog>
+    <el-dialog title="生产人工成本详细数据" v-model="dialogVisible2" width="50%">
+        <el-table
+            :data="smallTabelData2"
+            style="width: 100%; margin-bottom: 20px; height: 150px"
+        >
+            <el-table-column>
+                <el-table-column prop="cuttingCost" label="裁断内部成本" sortable />
+                <el-table-column prop="sewingCost" label="针车内部成本" sortable />
+                <el-table-column prop="moldingCost" label="成型内部成本" sortable />
             </el-table-column>
         </el-table>
     </el-dialog>
@@ -99,8 +110,10 @@ import { Download } from '@element-plus/icons-vue'
 const $api_baseUrl = getCurrentInstance().appContext.config.globalProperties.$apiBaseUrl
 
 let orderRIdSearch = ref('')
-const dialogVisible = ref(false)
-let smallTabelData = ref([])
+const dialogVisible1 = ref(false)
+let smallTabelData1 = ref([])
+const dialogVisible2 = ref(false)
+let smallTabelData2 = ref([])
 // let localData
 const routeMsg = `${$api_baseUrl}/headmanager/getcostinfo`
 const {
@@ -118,19 +131,16 @@ onMounted(() => {
     updataParams('route', routeMsg)
 })
 
-// 此处留存是否需要前端做分页以及 数据过滤
-// watch(currentTableData, (newValue) => {
-//     localData = new Array(newValue);
-//     for (let i = 0; i < localData.length; i++) {
 
-//     }
-// });
-
-function showDialog(row, column, cell, event) {
+function showDialog1(row, column, cell, event) {
     // 增加判断展示的是否是人工成本列的单元格
-    console.log('点击了单元格进行人工成本数据详细查看')
-    smallTabelData.value.splice(0, 1, row)
-    dialogVisible.value = true
+    smallTabelData1.value.splice(0, 1, row)
+    dialogVisible1.value = true
+}
+function showDialog2(row, column, cell, event) {
+    // 增加判断展示的是否是人工成本列的单元格
+    smallTabelData2.value.splice(0, 1, row)
+    dialogVisible2.value = true
 }
 </script>
 
