@@ -1,7 +1,12 @@
 import traceback
 from datetime import datetime, timedelta
 
-from api_utility import format_date, format_line_group, outsource_status_converter
+from api_utility import (
+    format_date,
+    format_line_group,
+    outsource_status_converter,
+    to_camel,
+)
 from app_config import db
 from constants import *
 from event_processor import EventProcessor
@@ -539,3 +544,51 @@ def reject_outsource():
     entity.rejection_reason = data["rejectionReason"]
     db.session.commit()
     return {"message": "success"}
+
+
+@outsource_bp.route(
+    "/production/productionmanager/getoutsourcecostdetail", methods=["GET"]
+)
+def get_outsource_cost_detail():
+    outsource_info_id = request.args.get("outsourceInfoId")
+    response = (
+        db.session.query(OutsourceCostDetail)
+        .filter_by(outsource_info_id=outsource_info_id)
+        .all()
+    )
+    attr_names = OutsourceCostDetail.__table__.columns.keys()
+    result = []
+    for row in response:
+        obj = {}
+        for db_attr in attr_names:
+            obj[to_camel(db_attr)] = getattr(row, db_attr)
+        result.append(obj)
+    return result
+
+
+@outsource_bp.route(
+    "/production/productionmanager/storeoutsourcecostdata", methods=["PATCH"]
+)
+def store_outsource_cost_data():
+    data = request.get_json()
+    if data:
+        outsource_info_id = data[0]["outsourceInfoId"]
+    print(data)
+    # delete outsource cost
+    db.session.query(OutsourceCostDetail).filter_by(
+        outsource_info_id=outsource_info_id
+    ).delete()
+    db.session.flush()
+    # insert new data
+    result = []
+    for row in data:
+        entity = OutsourceCostDetail(
+            item_name=row["itemName"],
+            item_cost=row["itemCost"],
+            remark=row["remark"],
+            outsource_info_id=row["outsourceInfoId"],
+        )
+        result.append(entity)
+    db.session.add_all(result)
+    db.session.commit()
+    return jsonify({"message": "success"})

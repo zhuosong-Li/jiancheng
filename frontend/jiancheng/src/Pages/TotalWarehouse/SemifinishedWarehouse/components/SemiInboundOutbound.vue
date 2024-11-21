@@ -300,10 +300,11 @@ export default {
             let params = { "orderShoeId": this.currentRow.orderShoeId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
             this.outboundForm.outsourceInfo = []
+            console.log(response.data)
             response.data.forEach(element => {
                 if (element.outsourceStatus == 2 || element.outsourceStatus == 4) {
                     if ((this.currentRow.object === '裁断后材料' && element.outsourceType[0] === '针车') ||
-                        (this.currentRow.object === '鞋包' && element.outsourceType[0] === '成型')) {
+                        (this.currentRow.object === '鞋包' && element.outsourceType[0] === '成型') && element.semifinishedRequired) {
                         this.outboundForm.outsourceInfo.push(element)
                     }
                 }
