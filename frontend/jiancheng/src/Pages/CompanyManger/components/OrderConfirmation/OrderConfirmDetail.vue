@@ -9,7 +9,7 @@
                     :data="orderShoeData"
                     border
                     stripe
-                    height="650"
+                    height="700"
                     :row-key="
                         (row) => {
                             return row.orderShoeTypeId
@@ -30,29 +30,22 @@
                                 <el-table-column type="expand">
                                     <template #default="scope">
                                         <el-table :data="scope.row.shoeTypeBatchInfoList">
+                                            <el-table-column type="index"></el-table-column>
                                             <el-table-column
-                                                prop="packaginginfolocale"
-                                                label="地区"
+                                                prop="packagingInfoName"
+                                                label="配码名称"
+                                                width="150"
                                             />
                                             <el-table-column
-                                                prop="packaginginfoname"
-                                                label="名称"
-                                            />
-                                            <el-table-column prop="size34ratio" label="34" />
-                                            <el-table-column prop="size35ratio" label="35" />
-                                            <el-table-column prop="size36ratio" label="36" />
-                                            <el-table-column prop="size37ratio" label="37" />
-                                            <el-table-column prop="size38ratio" label="38" />
-                                            <el-table-column prop="size39ratio" label="39" />
-                                            <el-table-column prop="size40ratio" label="40" />
-                                            <el-table-column prop="size41ratio" label="41" />
-                                            <el-table-column prop="size42ratio" label="42" />
-                                            <el-table-column prop="size43ratio" label="43" />
-                                            <el-table-column prop="size44ratio" label="44" />
-                                            <el-table-column prop="size45ratio" label="45" />
-                                            <el-table-column prop="size46ratio" label="46" />
+                                                v-for="col in Object.keys(
+                                                    attrMappingToRatio
+                                                ).filter((key) => batchInfoType[key] != null)"
+                                                :prop="attrMappingToRatio[col]"
+                                                :label="batchInfoType[col]"
+                                                width="90"
+                                            ></el-table-column>
                                             <el-table-column
-                                                prop="totalquantityratio"
+                                                prop="totalQuantityRatio"
                                                 label="比例和"
                                             />
                                             <el-table-column
@@ -67,24 +60,19 @@
                                     label="颜色名称"
                                     sortable
                                 />
-                                <el-table-column prop="shoeTypeBatchData.size34Amount" label="34" />
-                                <el-table-column prop="shoeTypeBatchData.size35Amount" label="35" />
-                                <el-table-column prop="shoeTypeBatchData.size36Amount" label="36" />
-                                <el-table-column prop="shoeTypeBatchData.size37Amount" label="37" />
-                                <el-table-column prop="shoeTypeBatchData.size38Amount" label="38" />
-                                <el-table-column prop="shoeTypeBatchData.size39Amount" label="39" />
-                                <el-table-column prop="shoeTypeBatchData.size40Amount" label="40" />
-                                <el-table-column prop="shoeTypeBatchData.size41Amount" label="41" />
-                                <el-table-column prop="shoeTypeBatchData.size42Amount" label="42" />
-                                <el-table-column prop="shoeTypeBatchData.size43Amount" label="43" />
-                                <el-table-column prop="shoeTypeBatchData.size44Amount" label="44" />
-                                <el-table-column prop="shoeTypeBatchData.size45Amount" label="45" />
-                                <el-table-column prop="shoeTypeBatchData.size46Amount" label="46" />
+                                <el-table-column
+                                    v-for="col in Object.keys(attrMappingToAmount).filter(
+                                        (key) => batchInfoType[key] != null
+                                    )"
+                                    :prop="`shoeTypeBatchData.${attrMappingToAmount[col]}`"
+                                    :label="batchInfoType[col]"
+                                    width="90"
+                                ></el-table-column>
                                 <el-table-column
                                     prop="shoeTypeBatchData.totalAmount"
                                     label="总数量"
+                                    width="120"
                                 />
-
                                 <el-table-column label="金额">
                                     <template #default="scope">
                                         <el-input
@@ -190,6 +178,37 @@ let priceChangeNotAllowed = ref(false)
 let remarkDialogVis = ref(false)
 let orderShoeTypeIdToUnitPrice = reactive({})
 let orderShoeTypeIdToCurrencyType = reactive({})
+let batchInfoType = reactive({})
+let attrMappingToRatio = reactive({
+    size34Name: 'size34Ratio',
+    size35Name: 'size35Ratio',
+    size36Name: 'size36Ratio',
+    size37Name: 'size37Ratio',
+    size38Name: 'size38Ratio',
+    size39Name: 'size39Ratio',
+    size40Name: 'size40Ratio',
+    size41Name: 'size41Ratio',
+    size42Name: 'size42Ratio',
+    size43Name: 'size43Ratio',
+    size44Name: 'size44Ratio',
+    size45Name: 'size45Ratio',
+    size46Name: 'size46Ratio'
+})
+let attrMappingToAmount = reactive({
+    size34Name: 'size34Amount',
+    size35Name: 'size35Amount',
+    size36Name: 'size36Amount',
+    size37Name: 'size37Amount',
+    size38Name: 'size38Amount',
+    size39Name: 'size39Amount',
+    size40Name: 'size40Amount',
+    size41Name: 'size41Amount',
+    size42Name: 'size42Amount',
+    size43Name: 'size43Amount',
+    size44Name: 'size44Amount',
+    size45Name: 'size45Amount',
+    size46Name: 'size46Amount'
+})
 let remarkForm = reactive({
     orderShoeId: '',
     technicalRemark: '',
@@ -206,6 +225,15 @@ async function getOrderInfo() {
     )
     orderData = response.data
     orderShoeData.value = response.data.orderShoeAllData
+    batchInfoType = response.data.batchInfoType
+    orderData.orderShoeAllData.forEach((orderShoe) =>
+        orderShoe.orderShoeTypes.forEach((orderShoeType) => {
+            orderShoeTypeIdToUnitPrice[orderShoeType.orderShoeTypeId] =
+                orderShoeType.shoeTypeBatchData.unitPrice
+            orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] =
+                orderShoeType.shoeTypeBatchData.currencyType
+        })
+    )
 }
 function updateValue(row) {
     row.shoeTypeBatchData.totalPrice =
@@ -238,14 +266,14 @@ async function saveFormData() {
 }
 
 const showMessage = () => {
-  ElMessageBox.alert('是否确认修改', '', {
-    confirmButtonText: '确认',
-    callback: (action) => {
-        if (action === 'confirm') {
-            submitFormData()
+    ElMessageBox.alert('是否确认修改', '', {
+        confirmButtonText: '确认',
+        callback: (action) => {
+            if (action === 'confirm') {
+                submitFormData()
+            }
         }
-    },
-  })
+    })
 }
 
 function openRemarkDialog(row) {
