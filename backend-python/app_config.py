@@ -77,7 +77,9 @@ open_routes = [
     "/headmanager/getmaterialpriceinfo",
     "/headmanager/getmaterialinboundcurve",
     "/headmanager/financialstatus",
-    "/headmanager/getordershoetimeline"
+    "/headmanager/getordershoetimeline",
+    "/devproductionorder/downloadproductioninstruction",
+    "/devproductionorder/downloadpicnotes"
 ]
 
 

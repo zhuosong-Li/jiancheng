@@ -2278,3 +2278,29 @@ def get_auto_finished_supplier_name():
         return jsonify(supplier_list), 200
     else:
         return jsonify([]), 200
+
+@dev_producion_order_bp.route("/devproductionorder/downloadproductioninstruction", methods=["GET"])
+def download_production_instruction():
+    order_shoe_rid = request.args.get("ordershoerid")
+    order_id = request.args.get("orderid")
+    print(order_shoe_rid, order_id)
+    order_shoe = (
+        db.session.query(Order, OrderShoe, Shoe)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
+        .first()
+    )
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
+    file_path = os.path.join(folder_path, "投产指令单.xlsx")
+    new_name = order_id + "-" + order_shoe_rid + "_投产指令单.xlsx"
+    return send_file(file_path, as_attachment=True, download_name=new_name)
+
+@dev_producion_order_bp.route("/devproductionorder/downloadpicnotes", methods=["GET"])
+def download_pic_notes():
+    order_shoe_rid = request.args.get("ordershoerid")
+    order_id = request.args.get("orderid")
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
+    file_path = os.path.join(folder_path, "投产指令单备注图片.jpg")
+    new_name = order_id + "-" + order_shoe_rid + "_投产指令单备注图片.jpg"
+    return send_file(file_path, as_attachment=True, download_name=new_name)

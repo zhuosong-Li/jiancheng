@@ -119,12 +119,23 @@
                                     @click="openUploadDialog(scope.row)"
                                     >上传投产指令单</el-button
                                 >
-                                <el-button
-                                    v-else-if="scope.row.status === '已下发'"
+                                <div v-else-if="scope.row.status === '已下发'">
+                                    <el-button
+                                    
                                     type="primary"
                                     @click="openPreviewDialog(scope.row)"
                                     >查看</el-button
                                 >
+                                <el-button
+                                    type="success"
+                                    @click="downloadProductionInstruction(scope.row)"
+                                    >下载投产指令单EXCEL</el-button>
+                                <el-button
+                                    type="warning"
+                                    @click="downloadProductionInstructionImage(scope.row)"
+                                    >下载备注图片</el-button>
+                                </div>
+
                                 <div v-else-if="scope.row.status === '已上传'">
                                     <el-button type="primary" @click="openEditDialog(scope.row)"
                                         >编辑投产指令单</el-button
@@ -3562,7 +3573,18 @@ export default {
         },
         handleSupplierNameSelect(row, selectedItem) {
             row.supplierName = selectedItem.value
+        },
+        downloadProductionInstruction(row) {
+            window.open(
+                `${this.$apiBaseUrl}/devproductionorder/downloadproductioninstruction?orderid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
+            )
+        },
+        downloadProductionInstructionImage(row) {
+            window.open(
+                `${this.$apiBaseUrl}/devproductionorder/downloadpicnotes?orderid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
+            )
         }
+
     }
 }
 </script>

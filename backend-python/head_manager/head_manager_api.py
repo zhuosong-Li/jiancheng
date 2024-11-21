@@ -139,6 +139,12 @@ def get_cost_info():
                 outsouce_cost = outsource_cost.total_cost
             order_total_outsouce_cost += outsouce_cost
             shoe_total_amount = 0
+            order_shoe_type = (
+                db.session.query(OrderShoeType)
+                .filter(OrderShoeType.order_shoe_id == os.OrderShoe.order_shoe_id)
+                .all()
+            )
+
             order_shoe_batch_infos = (
                 db.session.query(OrderShoe, OrderShoeType, OrderShoeBatchInfo)
                 .join(
@@ -155,8 +161,8 @@ def get_cost_info():
             )
             for osbi in order_shoe_batch_infos:
                 price_of_shoes += (
-                    osbi.OrderShoeBatchInfo.total_price
-                    if osbi.OrderShoeBatchInfo.total_price
+                    osbi.OrderShoeType.unit_price * osbi.OrderShoeBatchInfo.total_amount
+                    if osbi.OrderShoeBatchInfo.total_amount and osbi.OrderShoeType.unit_price
                     else 0
                 )
                 shoe_total_amount += (
