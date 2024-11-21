@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 
+from api_utility import format_date
 from app_config import db
 from constants import (
     END_OF_PRODUCTION_NUMBER,
@@ -88,7 +89,7 @@ def get_finished_in_out_overview():
             "inboundAmount": total_amount,
             "currentAmount": storage_obj.finished_amount,
             "statusName": status_name,
-            "endDate": order.end_date,
+            "endDate": format_date(order.end_date),
             "colorName": color.color_name
         }
         result.append(obj)

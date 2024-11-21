@@ -11,6 +11,7 @@ from operator import itemgetter
 import zipfile
 import os
 from general_document.purchase_divide_order import generate_excel_file
+from general_document.size_purchase_divide_order import generate_size_excel_file
 from general_document.material_statistics import generate_material_statistics_file
 second_purchase_bp = Blueprint("second_purchase_bp", __name__)
 
@@ -846,6 +847,7 @@ def submit_purchase_divide_orders():
 
     # Dictionary to keep track of processed PurchaseDivideOrders
     purchase_divide_order_dict = {}
+    size_purchase_divide_order_dict = {}
     if (
         os.path.exists(
             os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "purchase_order")
@@ -902,6 +904,53 @@ def submit_purchase_divide_orders():
                     "用途说明": "",
                 }
             )
+        elif purchase_divide_order.purchase_divide_order_type == "S":
+            if purchase_order_id not in size_purchase_divide_order_dict:
+                size_purchase_divide_order_dict[purchase_order_id] = {
+                    "供应商": supplier.supplier_name,
+                    "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "备注": purchase_divide_order.purchase_order_remark,
+                    "环保要求": purchase_divide_order.purchase_order_environmental_request,
+                    "发货地址": purchase_divide_order.shipment_address,
+                    "交货期限": purchase_divide_order.shipment_deadline,
+                    "订单信息": order_rid + "-" + order_shoe_rid,
+                    "seriesData": [],
+                }
+
+            # Append the current PurchaseOrderItem to the 'seriesData' list of the relevant order
+            size_purchase_divide_order_dict[purchase_order_id]["seriesData"].append(
+                {
+                    "物品名称": (
+                        material.material_name
+                        + " "
+                        + (bom_item.material_model if bom_item.material_model else "")
+                        + " "
+                        + (
+                            bom_item.material_specification
+                            if bom_item.material_specification
+                            else ""
+                        )
+                        + " "
+                        + (bom_item.bom_item_color if bom_item.bom_item_color else "")
+                    ),
+                    "34": purchase_order_item.size_34_purchase_amount,
+                    "35": purchase_order_item.size_35_purchase_amount,
+                    "36": purchase_order_item.size_36_purchase_amount,
+                    "37": purchase_order_item.size_37_purchase_amount,
+                    "38": purchase_order_item.size_38_purchase_amount,
+                    "39": purchase_order_item.size_39_purchase_amount,
+                    "40": purchase_order_item.size_40_purchase_amount,
+                    "41": purchase_order_item.size_41_purchase_amount,
+                    "42": purchase_order_item.size_42_purchase_amount,
+                    "43": purchase_order_item.size_43_purchase_amount,
+                    "44": purchase_order_item.size_44_purchase_amount,
+                    "45": purchase_order_item.size_45_purchase_amount,
+                    "46": purchase_order_item.size_46_purchase_amount,
+                    "单位": material.material_unit,
+                    "备注": bom_item.remark,
+                    "用途说明": "",
+                }
+            )
     customer_name = (
         db.session.query(Order, Customer)
         .join(Customer, Order.customer_id == Customer.customer_id)
@@ -930,6 +979,7 @@ def submit_purchase_divide_orders():
     generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单.xlsx")
+    size_template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单尺码版.xlsx")
     for purchase_order_id, data in purchase_divide_order_dict.items():
         new_file_path = os.path.join(
             FILE_STORAGE_PATH,
@@ -943,6 +993,16 @@ def submit_purchase_divide_orders():
         generate_excel_file(template_path, new_file_path, data)
         generated_files.append(new_file_path)
         print(data)
+    for purchase_order_id, data in size_purchase_divide_order_dict.items():
+        new_file_path = os.path.join(
+            FILE_STORAGE_PATH,
+            order_rid,
+            order_shoe_rid,
+            "purchase_order",
+            purchase_order_id + "_" + data["供应商"] + ".xlsx",
+        )
+        generate_size_excel_file(size_template_path, new_file_path, data)
+        generated_files.append(new_file_path)
     zip_file_path = os.path.join(
         FILE_STORAGE_PATH,
         order_rid,
@@ -950,6 +1010,7 @@ def submit_purchase_divide_orders():
         "purchase_order",
         "二次采购订单.zip",
     )
+    
     with zipfile.ZipFile(zip_file_path, "w") as zipf:
         for file in generated_files:
             # Extract purchase_order_id from the filename and check if it ends with 'F'

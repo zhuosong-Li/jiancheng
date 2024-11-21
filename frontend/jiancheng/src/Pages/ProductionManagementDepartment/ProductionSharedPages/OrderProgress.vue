@@ -368,8 +368,8 @@
             <span>
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
-                <el-button type="primary" @click="modifyProductionSchedule">保存</el-button>
-                <el-button v-if="currentRow.status === '未排产'" type="success" @click="startProduction">开始生产</el-button>
+                <el-button v-if="$props.editable" type="primary" @click="modifyProductionSchedule">保存</el-button>
+                <el-button v-if="currentRow.status === '未排产' && $props.editable" type="success" @click="startProduction">开始生产</el-button>
             </span>
         </template>
     </el-dialog>

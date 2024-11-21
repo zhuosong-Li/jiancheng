@@ -4,7 +4,7 @@
             >配码种类管理</el-col
         >
     </el-row>
-    <el-button type="primary" @click="testData">123</el-button>
+    <!-- <el-button type="primary" @click="testData">123</el-button> -->
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
             <el-table
@@ -189,7 +189,6 @@ export default {
             console.log(inputForm.keys())
         },
         openAddBatchTypeDialog(){
-            console.log(123)
             this.addBatchTypeDialogVis=true
         },
         openEditBatchTypeDialog(){

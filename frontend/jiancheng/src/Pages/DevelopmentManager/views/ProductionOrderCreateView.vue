@@ -132,6 +132,9 @@
                                     <el-button type="success" @click="openPreviewDialog(scope.row)"
                                         >预览投产指令单</el-button
                                     >
+                                    <el-button type="warning" @click="uploadNoteImage(scope.row)"
+                                        >上传图片备注</el-button
+                                    >
                                 </div>
                             </template></el-table-column
                         >
@@ -145,6 +148,25 @@
                     >
                 </el-col>
             </el-row>
+            <el-dialog v-model="isUploadImageDialogVisible" title="上传投产指令单备注图片">
+                <el-upload
+                    ref="uploadImage"
+                    class="upload-image"
+                    :action="`${this.$apiBaseUrl}/devproductionorder/uploadpicnotes`"
+                    :on-success="handleUploadSuccess"
+                    :on-error="handleUploadError"
+                    :headers="uploadHeaders"
+                    :before-upload="beforeUpload"
+                    :file-list="fileList"
+                    list-type="picture-card"
+                    accept="image/*"
+                    :auto-upload="false"
+                    :data="{ orderId: orderData.orderId, orderShoeRId: currentShoeId }"
+                >
+                </el-upload>
+                <el-button size="small" type="primary" @click="submitUpload">点击上传</el-button>
+                <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+            </el-dialog>
 
             <el-dialog title="正式BOM表下发页面" v-model="isFinalBOM" width="90%">
                 <el-descriptions title="订单信息" :column="2" border>
@@ -227,59 +249,38 @@
                     </span>
                 </template>
             </el-dialog>
-            <el-dialog title="上传投产指令单" v-model="UploadVis" width="50%">
-                <el-descriptions title="订单信息" :column="2" border>
-                    <el-descriptions-item label="订单编号" align="center">{{
-                        orderData.orderId
-                    }}</el-descriptions-item>
-                    <el-descriptions-item label="订单创建时间" align="center">{{
-                        orderData.createTime
-                    }}</el-descriptions-item>
-                    <el-descriptions-item label="客户名称" align="center">{{
-                        orderData.customerName
-                    }}</el-descriptions-item>
-                    <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
-                                <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
-                                <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
-                    <el-descriptions-item label="订单预计截止日期" align="center">{{
-                        orderData.deadlineTime
-                    }}</el-descriptions-item>
-                </el-descriptions>
-                <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
-                    <el-form-item label="投产指令单上传">
-                        <el-upload
-                            :action="`${this.$apiBaseUrl}/devproductionorder/upload`"
-                            :on-success="handleUploadSuccess"
-                            :on-error="handleUploadError"
-                            :headers="uploadHeaders"
-                            :before-upload="beforeUpload"
-                            :file-list="fileList"
-                            :auto-upload="false"
-                            :on-remove="handleRemove"
-                            :limit="1"
-                            list-type="text"
-                            accept=".xls,.xlsx"
-                            :data="{ orderId: orderData.orderId, orderShoeRId: currentShoeId }"
-                            ref="productionOrderUpload"
-                        >
-                            <el-button size="small" type="primary">点击上传</el-button>
-                            <div slot="tip" class="el-upload__tip">只能上传xls/xlsx文件</div>
-                        </el-upload>
-                    </el-form-item>
-                </el-form>
-                <template #footer>
-                    <span>
-                        <el-button @click="UploadVis = false">取消</el-button>
-                        <el-button type="primary" @click="confirmUpload">确认上传</el-button>
-                    </span>
-                </template>
-            </el-dialog>
             <el-dialog
                 :title="`投产指令单创建 ${newProductionInstructionId}`"
                 v-model="isProductionOrderCreateDialogVisible"
                 width="90%"
                 style="height: 700px; overflow-y: scroll"
             >
+                <el-descriptions title="投产指令单公用信息" border column="2">
+                    <el-descriptions-item label="本码">
+                        <el-input
+                            v-model="productionInstructionDetail.originSize"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="配码">
+                        <el-input
+                            v-model="productionInstructionDetail.sizeRange"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="码差">
+                        <el-input
+                            v-model="productionInstructionDetail.sizeDifference"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="楦型">
+                        <el-input
+                            v-model="productionInstructionDetail.lastType"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                </el-descriptions>
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane
@@ -294,6 +295,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(0)"
                                     >添加面料</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(0)"
+                                    >手动添加面料</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -303,8 +310,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -329,8 +360,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -380,6 +438,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(1)"
                                     >添加里料</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(1)"
+                                    >手动添加里料</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -389,8 +453,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -415,8 +503,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -465,6 +580,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(2)"
                                     >添加辅料</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(2)"
+                                    >手动添加辅料</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -474,8 +595,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -500,8 +645,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -550,6 +722,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(3)"
                                     >添加大底</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(3)"
+                                    >手动添加大底</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -559,8 +737,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -585,8 +787,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -635,6 +864,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(4)"
                                     >添加中底</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(4)"
+                                    >手动添加中底</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -644,8 +879,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -670,8 +929,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -720,6 +1006,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(5)"
                                     >添加楦头</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(5)"
+                                    >手动添加楦头</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -729,8 +1021,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -755,8 +1071,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -803,7 +1146,13 @@
                             <el-col :span="2" :offset="0"> 烫底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(6)"
-                                    >添加配色</el-button
+                                    >添加烫底</el-button
+                                >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(6)"
+                                    >手动添加烫底</el-button
                                 >
                             </el-col>
                         </el-row>
@@ -814,8 +1163,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -840,8 +1213,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -988,27 +1388,46 @@
                                         :src="currentShoeImageUrl"
                                     />
                                 </el-descriptions-item>
-                                <el-descriptions-item label="型号" align="center"
-                                    >{{ currentShoeId }}</el-descriptions-item
-                                >
-                                <el-descriptions-item label="客户号" align="center"
-                                    >{{ orderShoeData.customerProductName }}</el-descriptions-item
-                                >
-                                <el-descriptions-item label="色号" align="center"
-                                    >{{ orderShoeData.color }}</el-descriptions-item
-                                >
-                                <el-descriptions-item label="设计师" align="center"
-                                    >{{ orderShoeData.shoeDesigner }}</el-descriptions-item
-                                >
-                                <el-descriptions-item label="调版员" align="center"
-                                    >{{ orderShoeData.shoeAdjuster }}</el-descriptions-item
-                                >
-                                <el-descriptions-item label="商标" align="center"
-                                    >{{ orderShoeData.brandName }}</el-descriptions-item
-                                >
+                                <el-descriptions-item label="型号" align="center">{{
+                                    currentShoeId
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="客户号" align="center">{{
+                                    orderShoeData.customerProductName
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="色号" align="center">{{
+                                    orderShoeData.color
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="设计师" align="center">{{
+                                    orderShoeData.shoeDesigner
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="调版员" align="center">{{
+                                    orderShoeData.shoeAdjuster
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="商标" align="center">{{
+                                    orderShoeData.brandName
+                                }}</el-descriptions-item>
                             </el-descriptions>
                         </el-col>
                     </el-row>
+                    <el-row :gutter="20">
+                        <el-col :span="23" :offset="0">
+                            <el-descriptions title="投产指令单公用信息" border column="2">
+                                <el-descriptions-item label="本码">
+                                    {{ productionInstructionDetail.originSize }}
+                                </el-descriptions-item>
+                                <el-descriptions-item label="配码">
+                                    {{ productionInstructionDetail.sizeRange }}
+                                </el-descriptions-item>
+                                <el-descriptions-item label="码差">
+                                    {{ productionInstructionDetail.sizeDifference }}
+                                </el-descriptions-item>
+                                <el-descriptions-item label="楦型">
+                                    {{ productionInstructionDetail.lastType }}
+                                </el-descriptions-item>
+                            </el-descriptions>
+                        </el-col>
+                    </el-row>
+
                     <el-tabs v-model="activeTab">
                         <!-- Generate tabs from backend-provided tabcolor array -->
                         <el-tab-pane
@@ -1028,7 +1447,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1039,8 +1473,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1058,7 +1512,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1069,8 +1538,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1088,7 +1577,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1099,8 +1603,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1118,7 +1642,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1129,8 +1668,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1148,7 +1707,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1159,8 +1733,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1178,7 +1772,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1189,8 +1798,28 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.unit"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1208,7 +1837,22 @@
                                         border
                                         style="width: 100%"
                                     >
+                                        <el-table-column type="index"></el-table-column>
                                         <el-table-column prop="materialType" label="材料类型" />
+                                        <el-table-column
+                                            prop="materialDetailType"
+                                            label="材料二级类型"
+                                        >
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-if="
+                                                        scope !== undefined &&
+                                                        scope.row.manualSymbol === 1
+                                                    "
+                                                    v-model="scope.row.materialDetailType"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="materialName" label="材料名称" />
                                         <el-table-column prop="materialModel" label="材料型号">
                                         </el-table-column>
@@ -1219,8 +1863,18 @@
                                         </el-table-column>
                                         <el-table-column prop="color" label="颜色">
                                         </el-table-column>
-                                        <el-table-column prop="unit" label="单位" />
-                                        <el-table-column prop="supplierName" label="厂家名称" />
+                                        <el-table-column prop="unit" label="单位">
+                                            <template #default="scope">
+                                                <el-input v-model="scope.row.unit"></el-input>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column prop="supplierName" label="厂家名称">
+                                            <template #default="scope">
+                                                <el-input
+                                                    v-model="scope.row.supplierName"
+                                                ></el-input>
+                                            </template>
+                                        </el-table-column>
                                         <el-table-column prop="comment" label="备注">
                                         </el-table-column>
                                         <el-table-column prop="isPurchase" label="是否提前采购">
@@ -1234,7 +1888,9 @@
 
                 <template #footer>
                     <span>
-                        <el-button type="primary" @click="isPreviewDialogVisible = false">确认</el-button>
+                        <el-button type="primary" @click="isPreviewDialogVisible = false"
+                            >确认</el-button
+                        >
                     </span>
                 </template>
             </el-dialog>
@@ -1244,6 +1900,32 @@
                 width="90%"
                 style="height: 700px; overflow-y: scroll"
             >
+                <el-descriptions title="投产指令单公用信息" border column="2">
+                    <el-descriptions-item label="本码">
+                        <el-input
+                            v-model="productionInstructionDetail.originSize"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="配码">
+                        <el-input
+                            v-model="productionInstructionDetail.sizeRange"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="码差">
+                        <el-input
+                            v-model="productionInstructionDetail.sizeDifference"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                    <el-descriptions-item label="楦型">
+                        <el-input
+                            v-model="productionInstructionDetail.lastType"
+                            size="default"
+                        ></el-input>
+                    </el-descriptions-item>
+                </el-descriptions>
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane
@@ -1258,6 +1940,12 @@
                                 <el-button type="primary" size="default" @click="addMaterial(0)"
                                     >添加面料</el-button
                                 >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(0)"
+                                    >手动添加面料</el-button
+                                >
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1267,8 +1955,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1293,8 +2005,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1353,8 +2092,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1379,8 +2142,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1438,8 +2228,32 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1464,8 +2278,35 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1523,8 +2364,23 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1549,8 +2405,22 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1608,8 +2478,23 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1634,8 +2519,22 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1693,8 +2592,23 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1719,8 +2633,22 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1778,8 +2706,23 @@
                                     border
                                     style="width: 100%"
                                 >
+                                    <el-table-column type="index"></el-table-column>
                                     <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialName" label="材料名称" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialModel" label="材料型号">
                                         <template #default="scope">
                                             <el-input
@@ -1804,8 +2747,22 @@
                                             ></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="unit" label="单位" />
-                                    <el-table-column prop="supplierName" label="厂家名称" />
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.unit"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="useDepart" label="使用工段">
                                         <template #default="scope">
                                             <el-select v-model="scope.row.useDepart" size="default">
@@ -1912,7 +2869,7 @@ export default {
             currentColor: '',
             currentShoeImageUrl: '',
             fileList: [],
-            UploadVis: false,
+            isUploadImageDialogVisible: false,
             createEditSymbol: 0,
             sizeData: [],
             currentSizeData: [],
@@ -1950,7 +2907,26 @@ export default {
             inheritIdSearch: '',
             isFinalBOM: false,
             orderProduceInfo: [],
-            newProductionInstructionId: ''
+            newProductionInstructionId: '',
+            defaultManuallyAddedMaterial: {
+                materialType: '',
+                materialDetailType: '',
+                materialName: '',
+                materialModel: '',
+                materialSpecification: '',
+                color: '',
+                unit: '',
+                supplierName: '',
+                comment: '',
+                isPurchase: false,
+                manualSymbol: 1
+            },
+            productionInstructionDetail: {
+                sizeRange: '',
+                originSize: '',
+                lastType: '',
+                sizeDifference: ''
+            }
         }
     },
     async mounted() {
@@ -2004,6 +2980,150 @@ export default {
             )
             this.newProductionInstructionId = response.data.productionInstructionId
             console.log(this.newProductionInstructionId)
+        },
+        addMaterialByManual(typeSymbol) {
+            const preActiveMaterialData = this.materialWholeData.find(
+                (item) => item.color === this.activeTab
+            )
+            if (!preActiveMaterialData) {
+                this.materialWholeData.push({
+                    color: this.activeTab,
+                    surfaceMaterialData: [],
+                    insideMaterialData: [],
+                    accessoryMaterialData: [],
+                    outsoleMaterialData: [],
+                    midsoleMaterialData: [],
+                    lastMaterialData: [],
+                    hotsoleMaterialData: []
+                })
+            }
+            const activeMaterialData = this.materialWholeData.find(
+                (item) => item.color === this.activeTab
+            )
+
+            switch (typeSymbol) {
+                case 0:
+                    this.defaultManuallyAddedMaterial.materialType = '面料'
+                    activeMaterialData.surfaceMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 1:
+                    this.defaultManuallyAddedMaterial.materialType = '里料'
+                    activeMaterialData.insideMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 2:
+                    this.defaultManuallyAddedMaterial.materialType = '辅料'
+                    activeMaterialData.accessoryMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 3:
+                    this.defaultManuallyAddedMaterial.materialType = '底材'
+                    activeMaterialData.outsoleMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 4:
+                    this.defaultManuallyAddedMaterial.materialType = '底材'
+                    activeMaterialData.midsoleMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 5:
+                    this.defaultManuallyAddedMaterial.materialType = '楦头'
+                    activeMaterialData.lastMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                case 6:
+                    this.defaultManuallyAddedMaterial.materialType = '复合'
+                    activeMaterialData.hotsoleMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
+                default:
+                    break
+            }
         },
         addMaterial(typeSymbol) {
             this.typeSymbol = typeSymbol
@@ -2131,6 +3251,7 @@ export default {
             )
             this.newProductionInstructionId = response.data.productionInstructionId
             this.materialWholeData = response.data.instructionData
+            this.productionInstructionDetail = response.data.productionInstructionDetail
             console.log(this.materialWholeData)
         },
         async openPreviewDialog(row) {
@@ -2201,7 +3322,8 @@ export default {
                     orderId: this.orderData.orderId,
                     productionInstructionId: this.newProductionInstructionId,
                     orderShoeId: this.currentShoeId,
-                    uploadData: this.materialWholeData
+                    uploadData: this.materialWholeData,
+                    productionInstructionDetail: this.productionInstructionDetail
                 }
             )
             loadingInstance.close()
@@ -2231,7 +3353,8 @@ export default {
                     orderId: this.orderData.orderId,
                     productionInstructionId: this.newProductionInstructionId,
                     orderShoeId: this.currentShoeId,
-                    uploadData: this.materialWholeData
+                    uploadData: this.materialWholeData,
+                    productionInstructionDetail: this.productionInstructionDetail
                 }
             )
             loadingInstance.close()
@@ -2388,6 +3511,57 @@ export default {
                 default:
                     break
             }
+        },
+        uploadNoteImage(row) {
+            this.isUploadImageDialogVisible = true
+            this.currentShoeId = row.inheritId
+        },
+        submitUpload() {
+            this.$refs.uploadImage.submit()
+        },
+        async queryMaterialNames(queryString, callback) {
+            if (queryString.trim()) {
+                await axios
+                    .get(
+                        `${this.$apiBaseUrl}/devproductionorder/getautofinishedmaterialname?materialName=${queryString}`
+                    )
+                    .then((response) => {
+                        const suggestions = response.data.map((item) => ({
+                            value: item.name
+                        }))
+                        callback(suggestions)
+                    })
+                    .catch((error) => {
+                        console.error('Failed to fetch material names:', error)
+                    })
+            } else {
+                callback([])
+            }
+        },
+        async querySupplierNames(queryString, callback) {
+            if (queryString.trim()) {
+                await axios
+                    .get(
+                        `${this.$apiBaseUrl}/devproductionorder/getautofinishedsuppliername?supplierName=${queryString}`
+                    )
+                    .then((response) => {
+                        const suggestions = response.data.map((item) => ({
+                            value: item.name
+                        }))
+                        callback(suggestions)
+                    })
+                    .catch((error) => {
+                        console.error('Failed to fetch material names:', error)
+                    })
+            } else {
+                callback([])
+            }
+        },
+        handleMaterialNameSelect(row, selectedItem) {
+            row.materialName = selectedItem.value
+        },
+        handleSupplierNameSelect(row, selectedItem) {
+            row.supplierName = selectedItem.value
         }
     }
 }

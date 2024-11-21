@@ -42,6 +42,7 @@ class BomItem(db.Model):
     size_45_total_usage = db.Column(db.Integer, nullable=True)
     size_46_total_usage = db.Column(db.Integer, nullable=True)
     size_type = db.Column(db.String(1), nullable=False, default="E")
+    material_second_type = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -113,8 +114,8 @@ class QuantityReportItem(db.Model):
         primary_key=True,
         nullable=False,
     )
-    quantity_report_id = db.Column(db.BigInteger,nullable=False)
-    order_shoe_type_id = db.Column(db.BigInteger,nullable=False)
+    quantity_report_id = db.Column(db.BigInteger, nullable=False)
+    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     report_amount = db.Column(db.Integer, default=0)
 
     def __repr__(self):
@@ -276,11 +277,13 @@ class OrderShoeStatus(db.Model):
 
     def __repr__(self):
         return f"<OrderShoeStatus(order_shoe_status_id={self.order_shoe_status_id})>"
-    
+
 
 class OutsourceBatchInfo(db.Model):
-    __tablename__ = 'outsource_batch_info'
-    outsource_batch_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    __tablename__ = "outsource_batch_info"
+    outsource_batch_info_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     total_outsource_amount = db.Column(db.Integer, default=0)
     size_34_outsource_amount = db.Column(db.Integer, default=0)
@@ -296,17 +299,16 @@ class OutsourceBatchInfo(db.Model):
     size_44_outsource_amount = db.Column(db.Integer, default=0)
     size_45_outsource_amount = db.Column(db.Integer, default=0)
     size_46_outsource_amount = db.Column(db.Integer, default=0)
-    outsource_info_id = db.Column(db.BigInteger, nullable=False)
+    outsource_info_id = db.Column(db.Integer, nullable=False)
     is_product_arrived = db.Column(db.SmallInteger, nullable=False)
+
 
 class PackagingInfo(db.Model):
     __tablename__ = "packaging_info"
 
     customer_id = db.Column(db.Integer, nullable=False)
-    packaging_info_name = db.Column(db.String(10), nullable=False,unique=True)
-    packaging_info_id = db.Column(
-        db.BigInteger, primary_key=True, autoincrement=True
-    )
+    packaging_info_name = db.Column(db.String(10), nullable=False, unique=True)
+    packaging_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     batch_info_type_id = db.Column(db.Integer, nullable=False)
     packaging_info_locale = db.Column(db.String(10), nullable=False)
     batch_info_type_id = db.Column(db.Integer, nullable=True)
@@ -325,15 +327,12 @@ class PackagingInfo(db.Model):
     size_46_ratio = db.Column(db.Integer, nullable=True)
     total_quantity_ratio = db.Column(db.Integer, nullable=True)
 
-
     def __repr__(self):
         return f"<PackagingInfo(packaging_info_id={self.packaging_info_id})>"
 
     def __name__(self):
         return "PackagingInfo"
-    
 
-    
 
 class OrderShoeBatchInfo(db.Model):
     __tablename__ = "order_shoe_batch_info"
@@ -360,8 +359,8 @@ class OrderShoeBatchInfo(db.Model):
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
-    price_per_pair = db.Column(db.DECIMAL(10,2), nullable=True)
-    total_price = db.Column(db.DECIMAL(10,2), nullable=True)
+    price_per_pair = db.Column(db.DECIMAL(10, 2), nullable=True)
+    total_price = db.Column(db.DECIMAL(10, 2), nullable=True)
     currency_type = db.Column(db.String(3), nullable=True)
 
     def __repr__(self):
@@ -369,7 +368,7 @@ class OrderShoeBatchInfo(db.Model):
 
     def __name__(self):
         return "OrderShoeBatchInfo"
-    
+
 
 class OrderShoeProductionAmount(db.Model):
     __tablename__ = "order_shoe_production_amount"
@@ -399,6 +398,7 @@ class OrderShoeProductionAmount(db.Model):
     def __name__(self):
         return "OrderShoeProductionAmount"
 
+
 class OrderShoe(db.Model):
     __tablename__ = "order_shoe"
     order_shoe_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
@@ -422,11 +422,11 @@ class OutsourceInfo(db.Model):
     __tablename__ = "outsource_info"
 
     outsource_info_id = db.Column(
-        db.BigInteger, primary_key=True, nullable=False, autoincrement=True
+        db.Integer, primary_key=True, nullable=False, autoincrement=True
     )
     outsource_type = db.Column(db.String(20), nullable=False)
     factory_id = db.Column(
-        db.BigInteger,
+        db.Integer,
     )
     outsource_amount = db.Column(db.Integer, nullable=False)
     outsource_start_date = db.Column(db.Date, nullable=True)
@@ -438,15 +438,29 @@ class OutsourceInfo(db.Model):
     material_required = db.Column(db.Boolean, nullable=False)
     material_estimated_outbound_date = db.Column(db.Date, nullable=True)
     rejection_reason = db.Column(db.String(50), nullable=True)
-    total_cost = db.Column(db.DECIMAL(10, 2), nullable=True)
-    order_shoe_id = db.Column(
-        db.BigInteger,
+    order_shoe_id = db.Column(db.BigInteger)
+    outbound_counter = db.Column(db.SmallInteger, default=0)
+    total_cost = db.Column(db.Numeric(10, 2), nullable=True)
+
+
+class OutsourceCostDetail(db.Model):
+    __tablename__ = "outsource_cost_detail"
+
+    outsource_cost_detail_id = db.Column(
+        db.Integer, primary_key=True, autoincrement=True, nullable=False
     )
+    item_name = db.Column(db.String(50), nullable=True)
+    item_cost = db.Column(db.Numeric(10, 2), nullable=True)
+    outsource_info_id = db.Column(db.Integer, nullable=False)
+    remark = db.Column(db.String(50), nullable=True)
+
+    def __repr__(self):
+        return f"<OutsourceCostDetail(id={self.outsource_cost_detail_id}, iteam_name={self.iteam_name}, item_cost={self.item_cost})>"
 
 
 class OutsourceFactory(db.Model):
     __tablename__ = "outsource_factory"
-    factory_id = db.Column(db.BigInteger, primary_key=True, nullable=False)
+    factory_id = db.Column(db.Integer, primary_key=True, nullable=False)
     factory_name = db.Column(db.String(50), nullable=False)
 
 
@@ -811,8 +825,8 @@ class UnitPriceReportDetail(db.Model):
         primary_key=True,
         nullable=False,
     )
-    procedure_name = db.Column(db.String(50),nullable=False)
-    price = db.Column(db.DECIMAL(10,2), nullable=False)
+    procedure_name = db.Column(db.String(50), nullable=False)
+    price = db.Column(db.DECIMAL(10, 2), nullable=False)
     note = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
@@ -831,7 +845,7 @@ class UnitPriceReport(db.Model):
     team = db.Column(db.String(10), nullable=True)
     status = db.Column(db.SmallInteger, nullable=False)
     rejection_reason = db.Column(db.String(40), nullable=True)
-    price_sum = db.Column(db.DECIMAL(10,2), default=0)
+    price_sum = db.Column(db.DECIMAL(10, 2), default=0)
 
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"
@@ -839,7 +853,7 @@ class UnitPriceReport(db.Model):
     def to_dict(obj):
         """Convert SQLAlchemy object to dictionary."""
         return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
-    
+
 
 class UnitPriceReportTemplate(db.Model):
     __tablename__ = "unit_price_report_template"
@@ -882,10 +896,11 @@ class FinishedShoeStorage(db.Model):
         nullable=True,
     )
 
+
 class BatchInfoType(db.Model):
-    __tablename__="batch_info_type"
-    batch_info_type_id =db.Column(db.Integer, primary_key=True, autoincrement=True)
-    batch_info_type_name=db.Column(db.String(10), nullable=False)
+    __tablename__ = "batch_info_type"
+    batch_info_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    batch_info_type_name = db.Column(db.String(10), nullable=False)
     size_34_name = db.Column(db.String(5), nullable=True)
     size_35_name = db.Column(db.String(5), nullable=True)
     size_36_name = db.Column(db.String(5), nullable=True)
@@ -968,6 +983,7 @@ class OutboundRecord(db.Model):
         db.BigInteger,
         nullable=True,
     )
+    outsource_info_id = db.Column(db.Integer, nullable=True)
 
     def __repr__(self):
         return f"<OutboundRecord {self.outbound_rid}>"
@@ -1020,9 +1036,12 @@ class OrderShoeType(db.Model):
     pre_sewing_amount = db.Column(db.Integer, default=0)
     sewing_amount = db.Column(db.Integer, default=0)
     molding_amount = db.Column(db.Integer, default=0)
+    unit_price = db.Column(db.DECIMAL(10, 2), default=0)
+    currency_type = db.Column(db.String(4), nullable=True, default="")
 
     def __repr__(self):
         return f"<OrderShoeType(order_shoe_type_id={self.order_shoe_type_id})>"
+
 
 class TotalBom(db.Model):
     __tablename__ = "total_bom"
@@ -1033,19 +1052,29 @@ class TotalBom(db.Model):
     def __repr__(self):
         return f"<TotalBom(total_bom_id={self.total_bom_id})>"
 
+
 class ProductionInstruction(db.Model):
     __tablename__ = "production_instruction"
-    production_instruction_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    production_instruction_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
     production_instruction_rid = db.Column(db.String(50), nullable=False)
     production_instruction_status = db.Column(db.String(1), nullable=False)
+    origin_size = db.Column(db.String(5), nullable=True)
+    size_range = db.Column(db.String(10), nullable=True)
+    size_difference = db.Column(db.String(15), nullable=True)
+    last_type = db.Column(db.String(20), nullable=True)
 
     def __repr__(self):
         return f"<ProductionInstruction(production_instruction_id={self.production_instruction_id})>"
 
+
 class ProductionInstructionItem(db.Model):
     __tablename__ = "production_instruction_item"
-    production_instruction_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    production_instruction_item_id = db.Column(
+        db.BigInteger, primary_key=True, autoincrement=True
+    )
     production_instruction_id = db.Column(db.BigInteger, nullable=False)
     material_id = db.Column(db.BigInteger, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
@@ -1056,7 +1085,7 @@ class ProductionInstructionItem(db.Model):
     is_pre_purchase = db.Column(db.Boolean, nullable=False)
     material_type = db.Column(db.String(1), nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
-
+    material_second_type = db.Column(db.String(10), nullable=False)
 
     def __repr__(self):
         return f"<ProductionInstructionItem(production_instruction_item_id={self.production_instruction_item_id})>"

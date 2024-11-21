@@ -1,8 +1,5 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center">材料入库</el-col>
-    </el-row>
-    <el-row :gutter="20">
         <el-col :span="6" :offset="0">
             <el-button-group>
                 <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">材料筛选</el-button>
@@ -20,7 +17,16 @@
         </el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-table :data="materialTableData" border stripe height="500" @sort-change="sortData">
+        <el-button v-if="isMultipleSelection" @click="openFinishOutboundDialog">
+            完成入库
+        </el-button>
+        <el-button @click="toggleSelectionMode">
+            {{ isMultipleSelection ? "退出" : "选择材料" }}
+        </el-button>
+    </el-row>
+    <el-row :gutter="20">
+        <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData" @selection-change="handleSelectionChange">
+            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable"/>
             <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120"
                 sortable="custom"></el-table-column>
             <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
@@ -43,8 +49,6 @@
                 <template #default="scope">
                     <el-button-group>
                         <el-button type="primary" size="small" @click="editMaterial(scope.row)">入库</el-button>
-                        <el-button v-if="scope.row.status === '未完成入库'" type="warning" size="small"
-                            @click="finishInbound(scope.row)">完成入库</el-button>
                     </el-button-group>
                 </template>
             </el-table-column>
@@ -107,9 +111,7 @@
     </el-dialog>
     <el-dialog title="多鞋码入库对话框" v-model="isMultiInboundDialogVisible" width="50%">
         <el-table :data="multipleInboundForm" border stripe>
-            <el-table-column prop="shoeSize" label="鞋码"></el-table-column>
-            <el-table-column prop="internalSize" label="内码"></el-table-column>
-            <el-table-column prop="externalSize" label="外显"></el-table-column>
+            <el-table-column prop="shoeSizeName" label="鞋码"></el-table-column>
             <el-table-column prop="predictQuantity" label="预计数量"></el-table-column>
             <el-table-column prop="actualQuantity" label="实际数量"></el-table-column>
             <el-table-column prop="currentQuantity" label="当前数量"></el-table-column>
@@ -135,6 +137,23 @@
                 <el-button @click="isMultiInboundDialogVisible = false">取消</el-button>
                 <el-button type="primary" @click="submitSizeInboundForm">入库</el-button>
             </span>
+        </template>
+    </el-dialog>
+
+    <el-dialog title="推进入库流程" v-model="isFinishInboundDialogOpen" width="50%">
+        <el-descriptions title="已选择订单鞋型" style="margin-top: 20px;">
+        </el-descriptions>
+        <el-table :data="selectedRows" border stripe>
+            <el-table-column prop="orderRId" label="订单号">
+            </el-table-column>
+            <el-table-column prop="shoeRId" label="鞋型号">
+            </el-table-column>
+            <el-table-column prop="materialName" label="材料名称">
+            </el-table-column>
+        </el-table>
+        <template #footer>
+            <el-button @click="isFinishInboundDialogOpen = false">返回</el-button>
+            <el-button @click="finishInbound">完成入库</el-button>
         </template>
     </el-dialog>
 </template>
@@ -167,6 +186,9 @@ export default {
             materialTableData: [],
             currentRow: {},
             totalRows: 0,
+            isMultipleSelection: false,
+            selectedRows: [],
+            isFinishInboundDialogOpen: false,
         }
     },
     mounted() {
@@ -175,6 +197,22 @@ export default {
         this.getMaterialTableData()
     },
     methods: {
+        isSelectable(row) {
+            return row.status === "未完成入库"
+        },
+        handleSelectionChange(selection) {
+            this.selectedRows = selection
+        },
+        openFinishOutboundDialog() {
+            if (this.selectedRows.length == 0) {
+                ElMessage.error("未选择材料")
+                return
+            }
+            this.isFinishInboundDialogOpen = true
+        },
+        toggleSelectionMode() {
+            this.isMultipleSelection = !this.isMultipleSelection;
+        },
         async getAllMaterialTypes() {
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialtypes`)
             this.materialTypeOptions = response.data
@@ -275,7 +313,7 @@ export default {
         async editMaterial(row) {
             this.inboundForm.unitPrice = row.unitPrice
             if (row.materialCategory == 1) {
-                let params = { "sizeMaterialStorageId": row.materialStorageId }
+                let params = { "sizeMaterialStorageId": row.materialStorageId, "orderId": row.orderId }
                 let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
                 this.multipleInboundForm = response.data
                 this.isMultiInboundDialogVisible = true
@@ -285,13 +323,16 @@ export default {
                 this.currentRow = row
             }
         },
-        async finishInbound(row) {
-            ElMessageBox.alert('该操作完成对此鞋型材料入库，是否继续？', '警告', {
+        async finishInbound() {
+            ElMessageBox.alert('该操作完成对选择鞋型材料入库，是否继续？', '警告', {
                 confirmButtonText: '确认',
                 showCancelButton: true,
                 cancelButtonText: '取消'
             }).then(async () => {
-                const data = { "storageId": row.materialStorageId, "materialCategory":  row.materialCategory}
+                let data = []
+                this.selectedRows.forEach(row => {
+                    data.push({ "storageId": row.materialStorageId, "materialCategory": row.materialCategory })
+                })
                 await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinboundmaterial`, data)
                 try {
                     ElMessage.success("操作成功")

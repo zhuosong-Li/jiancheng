@@ -23,7 +23,7 @@
                     <template #default="props">
                         <el-table
                             :data="props.row.orderShoes"
-                            style="width: 100%; margin-bottom: 5px; margin-left: 48px;"
+                            style="width: 100%; margin-bottom: 5px; margin-left: 48px"
                         >
                             <el-table-column prop="shoeRId" label="工厂鞋型编号" sortable />
                             <el-table-column prop="shoeName" label="客户鞋型编号" sortable />
@@ -106,18 +106,16 @@
                 <el-table-column prop="orderStartDate" label="订单开始日期" />
             </el-table-column>
         </el-table>
-        <el-row :gutter="20" style="justify-content: end">
-            <el-col :span="9" :offset="10">
-                <el-pagination
-                    @size-change="chageCurrentPageSize"
-                    @current-change="changeCurrentPage"
-                    :current-page="currentPage"
-                    :page-sizes="[10, 20, 30, 40]"
-                    :page-size="currentPageSize"
-                    layout="total, sizes, prev, pager, next, jumper"
-                    :total="currentTotalRows"
-                />
-            </el-col>
+        <el-row :gutter="20" style="justify-content: end; width: 100%">
+            <el-pagination
+                @size-change="chageCurrentPageSize"
+                @current-change="changeCurrentPage"
+                :current-page="currentPage"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="currentPageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="currentTotalRows"
+            />
         </el-row>
     </div>
 </template>
