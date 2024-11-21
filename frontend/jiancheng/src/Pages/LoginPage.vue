@@ -88,14 +88,14 @@ const handleSubmit = () => {
                     // Store the token in localStorage
                     localStorage.setItem('token', token)
                     localStorage.setItem('role', response.data.role)
-
+                    localStorage.setItem('staffid', response.data.staffid)
                     console.log('Login successful!', response.data)
                     if (response.data.role === 14) {
                         window.location.href = '/humanresourcesdepartment'
                     } else if (response.data.role === 3) {
                         window.location.href = 'productionmanager'
                     } else if (response.data.role === 4) {
-                        window.location.href = 'bussinessmanager'
+                        window.location.href = 'businessmanager'
                     } else if (response.data.role === 5) {
                         window.location.href = 'technicalmanager'
                     } else if (response.data.role === 6) {
@@ -122,6 +122,8 @@ const handleSubmit = () => {
                         window.location.href = 'finishedwarehouse'
                     } else if (response.data.role === 2) {
                         window.location.href = 'companymanager'
+                    } else if (response.data.role === 21) {
+                        window.location.href = 'businessmanager'
                     } else {
                         console.log('Invalid role!')
                     }
