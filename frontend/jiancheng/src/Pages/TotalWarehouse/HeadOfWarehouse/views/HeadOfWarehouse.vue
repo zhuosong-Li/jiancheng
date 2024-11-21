@@ -57,7 +57,8 @@ export default {
         return {
             UserFilled,
             currentComponent:'MaterialInbound',
-            userName: ''
+            userName: '',
+            logout
         }
     },
     mounted() {

@@ -36,6 +36,7 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import FinishedInboundOutbound from '../components/FinishedInboundOutbound.vue'
+import FinishedInOutHistory from '../components/FinishedInOutHistory.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
@@ -43,6 +44,7 @@ export default {
     components: {
         AllHeader,
         FinishedInboundOutbound,
+        FinishedInOutHistory
     },
     data() {
         return {
@@ -66,9 +68,9 @@ export default {
                 case 1:
                     this.currentComponent = 'FinishedInboundOutbound'
                     break
-                // case 2:
-                //     this.currentComponent = 'InboundOutboundHistory'
-                //     break
+                case 2:
+                    this.currentComponent = 'FinishedInOutHistory'
+                    break
             }
         }
     }

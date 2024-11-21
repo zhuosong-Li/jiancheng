@@ -24,7 +24,6 @@
                     '材料出库',
                     '外包生产中',
                     '成品入库',
-                    '成型结束',
                     '外包结束'
                 ]" :key="item" :label="item" :value="item">
                 </el-option>
@@ -116,15 +115,10 @@
 
         <el-descriptions title="外包成本" style="margin-top: 20px;">
         </el-descriptions>
-        <el-table :data="outsourceShoeBatchInfo" border stripe :max-height="500">
-            <el-table-column prop="colorName" label="颜色"></el-table-column>
-            <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
-            <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
-                :label="column.label">
-            </el-table-column>
-        </el-table>
+        <OutsourceCostTable :tableData.sync="outsourceCostTable" :outsourceInfoId="currentRow.outsourceInfoId" />
         <template #footer>
             <el-button type="primary" @click="isApprovalDialogOpen = false">返回</el-button>
+            <el-button type="primary" @click="saveOutsourceCost">保存外包成本</el-button>
             <el-button v-if="currentRow.outsourceStatus === '已提交'" type="success"
                 @click="approveOutsource">通过</el-button>
             <el-button v-if="currentRow.outsourceStatus === '已提交'" type="danger"
@@ -144,7 +138,11 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus';
 import { getShoeSizesName } from '../../utils';
+import OutsourceCostTable from '../../ProductionSharedPages/OutsourceCostTable.vue';
 export default {
+    components: {
+        OutsourceCostTable
+    },
     data() {
         return {
             orderRIdSearch: '',
@@ -159,7 +157,8 @@ export default {
             rejectionInput: null,
             getShoeSizesName,
             shoeSizeColumns: [],
-            outsourceShoeBatchInfo: []
+            outsourceShoeBatchInfo: [],
+            outsourceCostTable: []
         }
     },
     mounted() {
@@ -173,6 +172,17 @@ export default {
         }
     },
     methods: {
+        async saveOutsourceCost() {
+            let data = this.outsourceCostTable
+            try {
+                await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/storeoutsourcecostdata`, data)
+                ElMessage.success("保存成功")
+            } 
+            catch(error) {
+                ElMessage.error("保存失败")
+                console.log(error)
+            }
+        },
         handleSizeChange(val) {
             this.pageSize = val
             this.getOutsourceOverview()
@@ -195,14 +205,19 @@ export default {
         async openApprovalDialog(row) {
             this.currentRow = row
             this.shoeSizeColumns = await this.getShoeSizesName(row.orderId)
-            console.log(this.shoeSizeColumns)
             await this.getOutsourceBatchInfo(row)
+            await this.getOutsourceCostTable(row)
             this.isApprovalDialogOpen = true
         },
         async getOutsourceBatchInfo(row) {
             let params = { "orderShoeId": row.orderShoeId, "outsourceInfoId": row.outsourceInfoId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, { params })
             this.outsourceShoeBatchInfo = response.data
+        },
+        async getOutsourceCostTable(row) {
+            let params = { "outsourceInfoId": row.outsourceInfoId }
+            let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcecostdetail`, { params })
+            this.outsourceCostTable = response.data
         },
         async approveOutsource() {
             try {
