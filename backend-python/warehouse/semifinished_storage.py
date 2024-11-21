@@ -183,7 +183,17 @@ def finish_outsource_outbound():
         return jsonify({"message": "semifinished storage not found"}), 400
     if info_obj.outsource_status not in [2, 4]:
         return jsonify({"message": "invalid status"}), 400
-    info_obj.outsource_status = 5
+    
+    counter = 0
+    if info_obj.material_required:
+        counter += 1
+    if info_obj.semifinished_required:
+        counter += 1
+
+    if info_obj.outbound_counter == counter:
+        info_obj.outsource_status = 5
+    else:
+        info_obj.outsource_counter += 1
     db.session.commit()
     return jsonify({"message": "success"})
 

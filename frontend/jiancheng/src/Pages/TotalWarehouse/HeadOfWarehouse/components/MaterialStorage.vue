@@ -16,7 +16,7 @@
                 @keypress.enter="getTableData()"  @clear="getTableData()"/>
         </el-col>
     </el-row>
-    <el-table :data="tableData" border stripe height="500" @sort-change="sortData">
+    <el-table :data="tableData" border stripe height="600" @sort-change="sortData">
         <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
         <el-table-column prop="purchaseDivideOrderRId" label="采购订单号" show-overflow-tooltip></el-table-column>
         <el-table-column prop="materialType" label="材料类型"></el-table-column>
@@ -86,6 +86,8 @@
 </template>
 <script>
 import axios from 'axios'
+import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
+
 export default {
     data() {
         return {
@@ -105,22 +107,9 @@ export default {
             recordData: [],
             sizeRecordData: [],
             tableData: [],
-            columns: [
-                { prop: 'size34Amount', label: '34码' },
-                { prop: 'size35Amount', label: '35码' },
-                { prop: 'size36Amount', label: '36码' },
-                { prop: 'size37Amount', label: '37码' },
-                { prop: 'size38Amount', label: '38码' },
-                { prop: 'size39Amount', label: '39码' },
-                { prop: 'size40Amount', label: '40码' },
-                { prop: 'size41Amount', label: '41码' },
-                { prop: 'size42Amount', label: '42码' },
-                { prop: 'size43Amount', label: '43码' },
-                { prop: 'size44Amount', label: '44码' },
-                { prop: 'size45Amount', label: '45码' },
-                { prop: 'size46Amount', label: '46码' },
-            ],
+            columns: [],
             totalRows: 0,
+            getShoeSizesName
         }
     },
     mounted() {
@@ -172,6 +161,7 @@ export default {
                 params = { "storageId": row.materialStorageId, "storageName": "sizeMaterial" }
                 response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getmaterialinoutboundrecords`, { params })
                 this.sizeRecordData = response.data
+                this.columns = await this.getShoeSizesName(row.orderId)
                 this.isSizeRecordDialogVisible = true
             } else {
                 params = { "storageId": row.materialStorageId, "storageName": "material" }

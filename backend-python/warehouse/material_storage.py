@@ -9,8 +9,52 @@ from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
 from sqlalchemy import and_, asc, desc, func, or_
+from bussiness.batch_info_type import get_order_batch_type_helper
 
 material_storage_bp = Blueprint("material_storage_bp", __name__)
+
+
+def outbound_size_material_helper(meta_data, outbound_list):
+    for row in outbound_list:
+        storage = SizeMaterialStorage.query.get(row["id"])
+        for i, obj in enumerate(row["outboundAmounts"]):
+            shoe_size = 34 + i
+            if "amount" not in obj:
+                outbound_amount = 0
+                obj["amount"] = 0
+            else:
+                outbound_amount = obj["amount"]
+            column_name = f"size_{shoe_size}_current_amount"
+            current_value = getattr(storage, column_name)
+            if current_value < int(outbound_amount):
+                return jsonify({"message": "invalid outbound amount"}), 400
+            new_value = current_value - int(outbound_amount)
+            setattr(storage, column_name, new_value)
+            storage.total_current_amount -= int(outbound_amount)
+        
+        record = OutboundRecord(
+            outbound_datetime=meta_data["timestamp"],
+            outbound_type=meta_data["type"],
+            size_material_storage_id=row["id"],
+        )
+        for i, obj in enumerate(row["outboundAmounts"]):
+            shoe_size = 34 + i
+            column_name = f"size_{shoe_size}_outbound_amount"
+            setattr(record, column_name, obj["amount"])
+        if meta_data["type"] == 0:
+            if meta_data["department"] not in PRODUCTION_LINE_REFERENCE:
+                return jsonify({"message": "failed"}), 400
+            record.outbound_department = meta_data["department"]
+            record.picker = meta_data["picker"]
+        elif meta_data == 2:
+            record.outbound_address = meta_data["address"]
+        db.session.add(record)
+        db.session.flush()
+        rid = (
+            "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+        )
+        record.outbound_rid = rid
+        db.session.commit()
 
 
 @material_storage_bp.route(
@@ -277,21 +321,23 @@ def get_all_material_info():
 )
 def get_size_material_info_by_id():
     id = request.args.get("sizeMaterialStorageId")
+    order_id = request.args.get("orderId")
     response = SizeMaterialStorage.query.get(id)
     result = []
-    for info in SHOESIZEINFO:
+    # get shoe size name
+    shoe_size_names = get_order_batch_type_helper(order_id)
+    for i, shoe_size in enumerate(SHOESIZEINFO):
         obj = {
-            "shoeSize": info["shoe_size"],
-            "internalSize": info["internal_size"],
-            "externalSize": info["external_size"],
+            "typeName": shoe_size_names[i]['type'],
+            "shoeSizeName": shoe_size_names[i]['label'],
             "predictQuantity": getattr(
-                response, f"size_{info['shoe_size']}_estimated_inbound_amount"
+                response, f"size_{shoe_size}_estimated_inbound_amount"
             ),
             "actualQuantity": getattr(
-                response, f"size_{info['shoe_size']}_actual_inbound_amount"
+                response, f"size_{shoe_size}_actual_inbound_amount"
             ),
             "currentQuantity": getattr(
-                response, f"size_{info['shoe_size']}_current_amount"
+                response, f"size_{shoe_size}_current_amount"
             ),
         }
         result.append(obj)
@@ -407,18 +453,18 @@ def inbound_size_material():
     storage = SizeMaterialStorage.query.get(data["sizeMaterialStorageId"])
     storage.total_actual_inbound_amount = 0
     storage.total_current_amount = 0
-    for info in SHOESIZEINFO:
+    for shoe_size in SHOESIZEINFO:
         # actual inbound amount
-        column_name = f"size_{info['shoe_size']}_actual_inbound_amount"
+        column_name = f"size_{shoe_size}_actual_inbound_amount"
         current_value = getattr(storage, column_name)
-        new_value = current_value + int(data[f"size{info['shoe_size']}Amount"])
+        new_value = current_value + int(data[f"size{shoe_size}Amount"])
         setattr(storage, column_name, new_value)
         storage.total_actual_inbound_amount += new_value
 
         # current_amount
-        column_name = f"size_{info['shoe_size']}_current_amount"
+        column_name = f"size_{shoe_size}_current_amount"
         current_value = getattr(storage, column_name)
-        new_value = current_value + int(data[f"size{info['shoe_size']}Amount"])
+        new_value = current_value + int(data[f"size{shoe_size}Amount"])
         setattr(storage, column_name, new_value)
         storage.total_current_amount += new_value
     record = InboundRecord(
@@ -426,9 +472,9 @@ def inbound_size_material():
         inbound_type=data["type"],
         size_material_storage_id=data["sizeMaterialStorageId"],
     )
-    for info in SHOESIZEINFO:
-        column_name = f"size_{info['shoe_size']}_inbound_amount"
-        setattr(record, column_name, int(data[f"size{info['shoe_size']}Amount"]))
+    for shoe_size in SHOESIZEINFO:
+        column_name = f"size_{shoe_size}_inbound_amount"
+        setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
     db.session.add(record)
     db.session.flush()
     rid = "IR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
@@ -442,29 +488,50 @@ def inbound_size_material():
 )
 def outbound_material():
     data = request.get_json()
-    storage = MaterialStorage.query.get(data["materialStorageId"])
-    if storage.current_amount < Decimal(data["amount"]):
-        return jsonify({"message": "invalid outbound amount"}), 400
-    storage.current_amount -= Decimal(data["amount"])
-    record = OutboundRecord(
-        outbound_amount=data["amount"],
-        outbound_datetime=data["date"],
-        outbound_type=data["type"],
-        material_storage_id=data["materialStorageId"],
-    )
-    if data["type"] == "1":
-        if data["outboundDepartment"] not in PRODUCTION_LINE_REFERENCE:
-            return jsonify({"message": "failed"}), 400
-        record.outbound_department = data["outboundDepartment"]
-        record.picker = data["picker"]
-    elif data == "2":
-        record.outbound_address = data["outboundAddress"]
-    db.session.add(record)
-    db.session.flush()
-    rid = (
-        "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
-    )
-    record.outbound_rid = rid
+    # get meta data
+    meta_data = {
+        "timestamp": data["timestamp"],
+        "type": data["type"],
+        "department": data["outboundDepartment"],
+        "address": data["outboundAddress"],
+        "picker": data["picker"],
+        "outsource_info_id": data["outsourceInfoId"]
+    }
+    # material amount info
+    material_outbound_list = data["materialOutboundList"]
+    size_material_outbound_list = data["sizeMaterialOutboundList"]
+
+    # material
+    for row in material_outbound_list:
+        storage = db.session.query(MaterialStorage).get(row["id"])
+        if not storage:
+            return jsonify({"message": "invalid storage id"}), 400
+        if storage.current_amount < Decimal(row["amount"]):
+            return jsonify({"message": "invalid outbound amount"}), 400
+        storage.current_amount -= Decimal(row["amount"])
+        record = OutboundRecord(
+            outbound_amount=row["amount"],
+            outbound_datetime=meta_data["timestamp"],
+            outbound_type=meta_data["type"],
+            material_storage_id=row["id"],
+        )
+        if data["type"] == 0:
+            if data["outboundDepartment"] not in PRODUCTION_LINE_REFERENCE:
+                return jsonify({"message": "failed"}), 400
+            record.outbound_department = meta_data["department"]
+            record.picker = meta_data["picker"]
+        elif data == 2:
+            record.outbound_address = meta_data["address"]
+            record.outsource_info_id = meta_data["outsource_info_id"]
+        db.session.add(record)
+        db.session.flush()
+        rid = (
+            "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+        )
+        record.outbound_rid = rid
+
+    # size material
+    outbound_size_material_helper(meta_data, size_material_outbound_list)
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -509,22 +576,22 @@ def check_outbound_options():
 def outbound_size_material():
     data = request.get_json()
     storage = SizeMaterialStorage.query.get(data["sizeMaterialStorageId"])
-    for info in SHOESIZEINFO:
-        column_name = f"size_{info['shoe_size']}_current_amount"
+    for shoe_size in SHOESIZEINFO:
+        column_name = f"size_{shoe_size}_current_amount"
         current_value = getattr(storage, column_name)
-        if current_value < int(data[f"size{info['shoe_size']}Amount"]):
+        if current_value < int(data[f"size{shoe_size}Amount"]):
             return jsonify({"message": "invalid outbound amount"}), 400
-        new_value = current_value - int(data[f"size{info['shoe_size']}Amount"])
+        new_value = current_value - int(data[f"size{shoe_size}Amount"])
         setattr(storage, column_name, new_value)
-        storage.total_current_amount -= int(data[f"size{info['shoe_size']}Amount"])
+        storage.total_current_amount -= int(data[f"size{shoe_size}Amount"])
     record = OutboundRecord(
         outbound_datetime=data["date"],
         outbound_type=data["type"],
         size_material_storage_id=data["sizeMaterialStorageId"],
     )
-    for info in SHOESIZEINFO:
-        column_name = f"size_{info['shoe_size']}_outbound_amount"
-        setattr(record, column_name, int(data[f"size{info['shoe_size']}Amount"]))
+    for shoe_size in SHOESIZEINFO:
+        column_name = f"size_{shoe_size}_outbound_amount"
+        setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
     if data["type"] == "1":
         record.outbound_department = data["outboundDepartment"]
         if data["outboundDepartment"] not in PRODUCTION_LINE_REFERENCE:
@@ -570,9 +637,9 @@ def get_material_in_out_bound_records():
     for row in inbound_response:
         obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         if name == "sizeMaterial":
-            for info in SHOESIZEINFO:
-                column_name = f"size_{info['shoe_size']}_inbound_amount"
-                obj[f"size{info['shoe_size']}Amount"] = getattr(row, column_name)
+            for shoe_size in SHOESIZEINFO:
+                column_name = f"size_{shoe_size}_inbound_amount"
+                obj[f"size{shoe_size}Amount"] = getattr(row, column_name)
         else:
             obj["amount"] = row.inbound_amount
         result.append(obj)
@@ -580,9 +647,9 @@ def get_material_in_out_bound_records():
     for row in outbound_response:
         obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
         if name == "sizeMaterial":
-            for info in SHOESIZEINFO:
-                column_name = f"size_{info['shoe_size']}_outbound_amount"
-                obj[f"size{info['shoe_size']}Amount"] = getattr(row, column_name)
+            for shoe_size in SHOESIZEINFO:
+                column_name = f"size_{shoe_size}_outbound_amount"
+                obj[f"size{shoe_size}Amount"] = getattr(row, column_name)
         else:
             obj["amount"] = row.outbound_amount
         result.append(obj)
@@ -594,16 +661,17 @@ def get_material_in_out_bound_records():
 )
 def finish_inbound_material():
     data = request.get_json()
-    storage = None
-    if data["materialCategory"] == 0:
-        storage = MaterialStorage.query.get(data["storageId"])
-    elif data["materialCategory"] == 1:
-        storage = SizeMaterialStorage.query.get(data["storageId"])
-    else:
-        return jsonify({"message": "Invalid material category"}), 400
-    if not storage:
-        return jsonify({"message": "order shoe storage not found"}), 400
-    storage.material_storage_status = 1
+    for row in data:
+        storage = None
+        if row["materialCategory"] == 0:
+            storage = MaterialStorage.query.get(row["storageId"])
+        elif data["materialCategory"] == 1:
+            storage = SizeMaterialStorage.query.get(row["storageId"])
+        else:
+            return jsonify({"message": "Invalid material category"}), 400
+        if not storage:
+            return jsonify({"message": "order shoe storage not found"}), 400
+        storage.material_storage_status = 1
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -613,15 +681,16 @@ def finish_inbound_material():
 )
 def finish_outbound_material():
     data = request.get_json()
-    storage = None
-    if data["materialCategory"] == 0:
-        storage = MaterialStorage.query.get(data["storageId"])
-    elif data["materialCategory"] == 1:
-        storage = SizeMaterialStorage.query.get(data["storageId"])
-    else:
-        return jsonify({"message": "Invalid material category"}), 400
-    if not storage:
-        return jsonify({"message": "order shoe storage not found"}), 400
-    storage.material_storage_status = 2
+    for row in data:
+        storage = None
+        if row["materialCategory"] == 0:
+            storage = MaterialStorage.query.get(row["storageId"])
+        elif row["materialCategory"] == 1:
+            storage = SizeMaterialStorage.query.get(row["storageId"])
+        else:
+            return jsonify({"message": "Invalid material category"}), 400
+        if not storage:
+            return jsonify({"message": "order shoe storage not found"}), 400
+        storage.material_storage_status = 2
     db.session.commit()
     return jsonify({"message": "success"})
