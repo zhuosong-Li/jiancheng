@@ -121,7 +121,7 @@
                             <el-pagination
                                 :total="materialTotal"
                                 :page-size="10"
-                                @current-change="handleCurrentChange"
+                                @current-change="handleCurrentChange(currentPage)"
                             >
                             </el-pagination>
                         </el-col>
@@ -582,7 +582,8 @@ export default {
             newMaterialVis: false,
             newMaterialData: [],
             warehouseOptions: [],
-            factoryOptions: []
+            factoryOptions: [],
+            typeCurrentPage: 1,
         }
     },
     mounted() {
@@ -627,7 +628,17 @@ export default {
                 row.warehouseName = warehouseName
             }
         },
-        handleCurrentChange() {},
+        async handleCurrentChange(currentPage) {
+            console.log(currentPage)
+            await this.getAllMaterialType()
+            this.materialTypeFilterData = this.materialTypeData
+            this.materialTypeFilterData = this.materialTypeFilterData.slice(
+                (currentPage - 1) * 10,
+                currentPage * 10
+            )
+            this.typeCurrentPage = currentPage
+            console.log(this.typeCurrentPage)
+        },
         async handleTypeToOptions() {
             await this.getAllMaterialType()
             this.materialTypeSelectOption = this.materialTypeData.map((item) => {
