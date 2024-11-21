@@ -40,7 +40,7 @@
             <el-table-column prop="nodeName" label="需确认状态点"></el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="openConfirmationPage(scope.row)">确认状态完成</el-button>
+                    <el-button type="primary" size="small" @click="openConfirmationPage(scope.row)">确认状态完成</el-button>
                 </template>
             </el-table-column>
         </el-table>

@@ -66,6 +66,8 @@ def edit_production_schedule():
         if is_valid_date(data["productionInfoList"][index]["endDate"]):
             setattr(entity, f"{team}_end_date", data["productionInfoList"][index]["endDate"])
 
+    entity = db.session.query(OrderShoeStatus).filter(OrderShoeStatus.current_status == 17).first()
+    entity.current_status_value = 1
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -80,31 +82,28 @@ def save_multiple_schedules():
     for entity in response:
         # 裁断
         entity.cutting_line_group = ",".join(map(str, data["scheduleForm"]["cuttingLineNumbers"]))
-        cutting_start_date = data["scheduleForm"]["cuttingStartDate"]
-        entity.cutting_start_date = cutting_start_date
-        cutting_end_date = data["scheduleForm"]["cuttingEndDate"]
-        entity.cutting_end_date = cutting_end_date
+        entity.cutting_start_date = data["scheduleForm"]["cuttingDateRange"][0]
+        entity.cutting_end_date = data["scheduleForm"]["cuttingDateRange"][1]
 
         #针车预备
         entity.pre_sewing_line_group = ','.join(map(str, data["scheduleForm"]["preSewingLineNumbers"]))
-        pre_sewing_start_date = data["scheduleForm"]["preSewingStartDate"]
-        entity.pre_sewing_start_date = pre_sewing_start_date
-        pre_sewing_end_date = data["scheduleForm"]["preSewingEndDate"]
-        entity.pre_sewing_end_date = pre_sewing_end_date
+        entity.pre_sewing_start_date = data["scheduleForm"]["preSewingDateRange"][0]
+        entity.pre_sewing_end_date = data["scheduleForm"]["preSewingDateRange"][1]
 
         # 针车
         entity.sewing_line_group = ','.join(map(str, data["scheduleForm"]["sewingLineNumbers"]))
-        sewing_start_date = data["scheduleForm"]["sewingStartDate"]
-        entity.sewing_start_date = sewing_start_date
-        sewing_end_date = data["scheduleForm"]["sewingEndDate"]
-        entity.sewing_end_date = sewing_end_date
+        entity.sewing_start_date = data["scheduleForm"]["sewingDateRange"][0]
+        entity.sewing_end_date = data["scheduleForm"]["sewingDateRange"][1]
 
         # 成型
         entity.molding_line_group = ','.join(map(str, data["scheduleForm"]["moldingLineNumbers"]))
-        molding_start_date = data["scheduleForm"]["moldingStartDate"]
-        entity.molding_start_date = molding_start_date
-        molding_end_date = data["scheduleForm"]["moldingEndDate"]
-        entity.molding_end_date = molding_end_date
+        entity.molding_start_date = data["scheduleForm"]["moldingDateRange"][0]
+        entity.molding_end_date = data["scheduleForm"]["moldingDateRange"][1]
+
+    response = db.session.query(OrderShoeStatus).filter(OrderShoeStatus.order_shoe_id.in_(order_shoe_id_arr), OrderShoeStatus.current_status == 17).all()
+    for entity in response:
+        entity.current_status_value = 1
+
     db.session.commit()
     return jsonify({"message": "success"}), 200
 

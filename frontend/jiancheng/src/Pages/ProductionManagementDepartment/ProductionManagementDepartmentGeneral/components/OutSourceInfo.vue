@@ -21,10 +21,10 @@
                 <el-table-column prop="shoeRId" label="鞋型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
                 <el-table-column prop="outsourceInfo" label="外包工段"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="外包信息">
                     <template #default="scope">
-                        <el-button type="primary" size="default"
-                            @click="openOutsourceFlow(scope.row)">打开鞋型外包页面</el-button>
+                        <el-button type="primary" size="small"
+                            @click="openOutsourceFlow(scope.row)">查看</el-button>
 
                     </template>
                 </el-table-column>

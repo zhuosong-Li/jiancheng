@@ -32,8 +32,8 @@
                 <el-table-column prop="moldingAmount" label="昨日成型数量上报"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button type="primary" size="default"
-                            @click="openAmountApproval(scope.row)">打开生产数量审批页面</el-button>
+                        <el-button type="primary" size="small"
+                            @click="openAmountApproval(scope.row)">审批</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -117,12 +117,7 @@ export default {
         openAmountApproval(rowData) {
             const params = {
                 "orderId": rowData.orderId,
-                "orderRId": rowData.orderRId,
                 "orderShoeId": rowData.orderShoeId,
-                "shoeRId": rowData.shoeRId,
-                "orderStartDate": rowData.orderStartDate,
-                "orderEndDate": rowData.orderEndDate,
-                "customerProductName": rowData.customerProductName,
             }
             const queryString = new URLSearchParams(params).toString();
             const url = `${window.location.origin}/productiongeneral/productionamountapproval?${queryString}`

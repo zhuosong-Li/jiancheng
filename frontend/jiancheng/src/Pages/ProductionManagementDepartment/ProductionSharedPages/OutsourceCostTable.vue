@@ -7,7 +7,7 @@
         </el-table-column>
         <el-table-column prop="itemCost" label="金额">
             <template #default="scope">
-                <el-input v-model="scope.row.itemCost" placeholder="" clearable></el-input>
+                <el-input v-model="scope.row.itemCost" placeholder="" clearable type="number"></el-input>
             </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注">
@@ -28,20 +28,17 @@ export default {
     props: ["tableData", "outsourceInfoId"],
     methods: {
         addRow() {
-            console.log("hello")
             this.tableData.push(
                 {
                     "itemName": "",
-                    "itemCost": "",
+                    "itemCost": 0,
                     "remark": "",
                     "outsourceInfoId": this.$props.outsourceInfoId
                 }
             )
-            console.log(this.tableData)
         },
         deleteRow(index) {
             this.tableData.splice(index, 1)
-
         }
     }
 }

@@ -3,13 +3,17 @@ from decimal import Decimal
 
 from api_utility import format_date
 from app_config import db
-from constants import (END_OF_PRODUCTION_NUMBER, IN_PRODUCTION_ORDER_NUMBER,
-                       PRODUCTION_LINE_REFERENCE, SHOESIZEINFO)
+from business.batch_info_type import get_order_batch_type_helper
+from constants import (
+    END_OF_PRODUCTION_NUMBER,
+    IN_PRODUCTION_ORDER_NUMBER,
+    PRODUCTION_LINE_REFERENCE,
+    SHOESIZEINFO,
+)
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
 from models import *
-from sqlalchemy import and_, asc, desc, func, or_
-from business.batch_info_type import get_order_batch_type_helper
+from sqlalchemy import and_, asc, desc, exists, func, not_, or_
 
 material_storage_bp = Blueprint("material_storage_bp", __name__)
 
@@ -31,7 +35,7 @@ def outbound_size_material_helper(meta_data, outbound_list):
             new_value = current_value - int(outbound_amount)
             setattr(storage, column_name, new_value)
             storage.total_current_amount -= int(outbound_amount)
-        
+
         record = OutboundRecord(
             outbound_datetime=meta_data["timestamp"],
             outbound_type=meta_data["type"],
@@ -51,7 +55,9 @@ def outbound_size_material_helper(meta_data, outbound_list):
         db.session.add(record)
         db.session.flush()
         rid = (
-            "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+            "OR"
+            + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            + str(record.outbound_record_id)
         )
         record.outbound_rid = rid
         db.session.commit()
@@ -140,13 +146,20 @@ def get_all_material_info():
             Supplier.supplier_name,
             PurchaseDivideOrder.purchase_divide_order_rid,
             PurchaseOrder.purchase_order_issue_date,
-            MaterialStorage.material_storage_color
+            MaterialStorage.material_storage_color,
         )
         .join(Material, Material.material_id == MaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
-        .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == MaterialStorage.purchase_divide_order_id)
-        .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
+        .join(
+            PurchaseDivideOrder,
+            PurchaseDivideOrder.purchase_divide_order_id
+            == MaterialStorage.purchase_divide_order_id,
+        )
+        .join(
+            PurchaseOrder,
+            PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id,
+        )
         .outerjoin(OrderShoe, MaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
@@ -179,14 +192,23 @@ def get_all_material_info():
             Supplier.supplier_name,
             PurchaseDivideOrder.purchase_divide_order_rid,
             PurchaseOrder.purchase_order_issue_date,
-            SizeMaterialStorage.size_material_color
+            SizeMaterialStorage.size_material_color,
         )
         .join(Material, Material.material_id == SizeMaterialStorage.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
-        .join(PurchaseDivideOrder, PurchaseDivideOrder.purchase_divide_order_id == SizeMaterialStorage.purchase_divide_order_id)
-        .join(PurchaseOrder, PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id)
-        .outerjoin(OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            PurchaseDivideOrder,
+            PurchaseDivideOrder.purchase_divide_order_id
+            == SizeMaterialStorage.purchase_divide_order_id,
+        )
+        .join(
+            PurchaseOrder,
+            PurchaseOrder.purchase_order_id == PurchaseDivideOrder.purchase_order_id,
+        )
+        .outerjoin(
+            OrderShoe, SizeMaterialStorage.order_shoe_id == OrderShoe.order_shoe_id
+        )
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(Order, OrderShoe.order_id == Order.order_id)
     )
@@ -220,10 +242,14 @@ def get_all_material_info():
             query2 = query2.filter(size_material_filter_map[key].ilike(f"%{value}%"))
     union_query = query1.union(query2)
     if sort_column and sort_column == "purchaseOrderIssueDate":
-        if sort_order == 'ascending':
-            union_query = union_query.order_by(asc(PurchaseOrder.purchase_order_issue_date))
-        elif sort_order == 'descending':
-            union_query = union_query.order_by(desc(PurchaseOrder.purchase_order_issue_date))
+        if sort_order == "ascending":
+            union_query = union_query.order_by(
+                asc(PurchaseOrder.purchase_order_issue_date)
+            )
+        elif sort_order == "descending":
+            union_query = union_query.order_by(
+                desc(PurchaseOrder.purchase_order_issue_date)
+            )
     count_result = union_query.distinct().count()
     response = union_query.distinct().limit(number).offset((page - 1) * number).all()
     result = []
@@ -249,7 +275,7 @@ def get_all_material_info():
             supplier_name,
             purchase_divide_order_rid,
             purchase_order_issue_date,
-            color
+            color,
         ) = row
         if material_storage_status == 0:
             status = "未完成入库"
@@ -283,7 +309,7 @@ def get_all_material_info():
             "materialArrivalDate": date_value,
             "purchaseDivideOrderRId": purchase_divide_order_rid,
             "purchaseOrderIssueDate": format_date(purchase_order_issue_date),
-            "materialModel": material_model
+            "materialModel": material_model,
         }
         result.append(obj)
     return {"result": result, "total": count_result}
@@ -328,17 +354,15 @@ def get_size_material_info_by_id():
     shoe_size_names = get_order_batch_type_helper(order_id)
     for i, shoe_size in enumerate(SHOESIZEINFO):
         obj = {
-            "typeName": shoe_size_names[i]['type'],
-            "shoeSizeName": shoe_size_names[i]['label'],
+            "typeName": shoe_size_names[i]["type"],
+            "shoeSizeName": shoe_size_names[i]["label"],
             "predictQuantity": getattr(
                 response, f"size_{shoe_size}_estimated_inbound_amount"
             ),
             "actualQuantity": getattr(
                 response, f"size_{shoe_size}_actual_inbound_amount"
             ),
-            "currentQuantity": getattr(
-                response, f"size_{shoe_size}_current_amount"
-            ),
+            "currentQuantity": getattr(response, f"size_{shoe_size}_current_amount"),
         }
         result.append(obj)
     return result
@@ -361,7 +385,11 @@ def inbound_material():
     )
     db.session.add(record)
     db.session.flush()
-    rid = "IR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
+    rid = (
+        "IR"
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        + str(record.inbound_record_id)
+    )
     record.inbound_rid = rid
     db.session.commit()
     return jsonify({"message": "success"})
@@ -372,74 +400,29 @@ def inbound_material():
     "/warehouse/warehousemanager/notifyrequiredmaterialarrival", methods=["GET"]
 )
 def notify_required_material_arrival():
-    order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
-    obj = OrderShoeProductionInfo.query.filter(
+    production_info = OrderShoeProductionInfo.query.filter(
         OrderShoeProductionInfo.order_shoe_id == order_shoe_id
     ).first()
-    is_material_arrived = obj.is_material_arrived
+    is_material_arrived = production_info.is_material_arrived
     if is_material_arrived:
         return jsonify({"message": "no"})
 
-    query1 = db.session.query(
-        MaterialStorage.estimated_inbound_amount, MaterialStorage.actual_inbound_amount
-    ).filter(MaterialStorage.order_shoe_id == order_shoe_id)
-    query2 = db.session.query(
-        SizeMaterialStorage.total_estimated_inbound_amount.label(
-            "estimated_inbound_amount"
-        ),
-        SizeMaterialStorage.total_actual_inbound_amount.label("actual_inbound_amount"),
-    ).filter(SizeMaterialStorage.order_shoe_id == order_shoe_id)
+    query1 = db.session.query(MaterialStorage.material_storage_status).filter(
+        MaterialStorage.order_shoe_id == order_shoe_id
+    )
+    query2 = db.session.query(SizeMaterialStorage.material_storage_status).filter(
+        SizeMaterialStorage.order_shoe_id == order_shoe_id
+    )
     response = query1.union(query2).all()
     notify = True
     for row in response:
-        estimated_inbound_amount, actual_inbound_amount = row
-        if actual_inbound_amount < estimated_inbound_amount:
+        if row.material_storage_status == 0:
             notify = False
 
     if notify:
         # set is_material_arrived to true
-        obj.is_material_arrived = True
-        # process event
-        processor: EventProcessor = current_app.config["event_processor"]
-        try:
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=54,
-                event_order_id=order_id,
-                event_order_shoe_id=order_shoe_id,
-            )
-            result = processor.processEvent(event)
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=55,
-                event_order_id=order_id,
-                event_order_shoe_id=order_shoe_id,
-            )
-            result = processor.processEvent(event)
-
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=68,
-                event_order_id=order_id,
-                event_order_shoe_id=order_shoe_id,
-            )
-            result = processor.processEvent(event)
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.datetime.now(),
-                operation_id=69,
-                event_order_id=order_id,
-                event_order_shoe_id=order_shoe_id,
-            )
-            result = processor.processEvent(event)
-        except Exception as e:
-            print(e)
-        if not result:
-            return jsonify({"message": "failed"}), 500
+        production_info.is_material_arrived = True
         db.session.commit()
         return jsonify({"message": "yes"})
     return jsonify({"message": "no"})
@@ -477,7 +460,11 @@ def inbound_size_material():
         setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
     db.session.add(record)
     db.session.flush()
-    rid = "IR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)
+    rid = (
+        "IR"
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        + str(record.inbound_record_id)
+    )
     record.inbound_rid = rid
     db.session.commit()
     return jsonify({"message": "success"})
@@ -495,7 +482,7 @@ def outbound_material():
         "department": data["outboundDepartment"],
         "address": data["outboundAddress"],
         "picker": data["picker"],
-        "outsource_info_id": data["outsourceInfoId"]
+        "outsource_info_id": data["outsourceInfoId"],
     }
     # material amount info
     material_outbound_list = data["materialOutboundList"]
@@ -526,7 +513,9 @@ def outbound_material():
         db.session.add(record)
         db.session.flush()
         rid = (
-            "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+            "OR"
+            + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            + str(record.outbound_record_id)
         )
         record.outbound_rid = rid
 
@@ -602,7 +591,9 @@ def outbound_size_material():
     db.session.add(record)
     db.session.flush()
     rid = (
-        "OR" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + str(record.outbound_record_id)
+        "OR"
+        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        + str(record.outbound_record_id)
     )
     record.outbound_rid = rid
     db.session.commit()
@@ -635,7 +626,10 @@ def get_material_in_out_bound_records():
 
     result = []
     for row in inbound_response:
-        obj = {"opType": "入库", "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "入库",
+            "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         if name == "sizeMaterial":
             for shoe_size in SHOESIZEINFO:
                 column_name = f"size_{shoe_size}_inbound_amount"
@@ -645,7 +639,10 @@ def get_material_in_out_bound_records():
         result.append(obj)
 
     for row in outbound_response:
-        obj = {"opType": "出库", "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S")}
+        obj = {
+            "opType": "出库",
+            "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
+        }
         if name == "sizeMaterial":
             for shoe_size in SHOESIZEINFO:
                 column_name = f"size_{shoe_size}_outbound_amount"
@@ -661,17 +658,41 @@ def get_material_in_out_bound_records():
 )
 def finish_inbound_material():
     data = request.get_json()
+    unique_order_shoe_ids = set()
     for row in data:
         storage = None
         if row["materialCategory"] == 0:
             storage = MaterialStorage.query.get(row["storageId"])
-        elif data["materialCategory"] == 1:
+        elif row["materialCategory"] == 1:
             storage = SizeMaterialStorage.query.get(row["storageId"])
         else:
             return jsonify({"message": "Invalid material category"}), 400
         if not storage:
             return jsonify({"message": "order shoe storage not found"}), 400
+        unique_order_shoe_ids.add(storage.order_shoe_id)
         storage.material_storage_status = 1
+    db.session.flush()
+    # check if all materials are inbounded for order shoe
+    for order_shoe_id in unique_order_shoe_ids:
+        material_filter = (MaterialStorage.order_shoe_id == order_shoe_id) & (
+            MaterialStorage.material_storage_status != 1
+        )
+        result1 = db.session.query(
+            db.session.query(MaterialStorage).filter(material_filter).exists()
+        ).scalar()
+        size_material_filter = (SizeMaterialStorage.order_shoe_id == order_shoe_id) & (
+            SizeMaterialStorage.material_storage_status != 1
+        )
+        result2 = db.session.query(
+            db.session.query(SizeMaterialStorage).filter(size_material_filter).exists()
+        ).scalar()
+        if not result1 and not result2:
+            production_info = (
+                db.session.query(OrderShoeProductionInfo)
+                .filter_by(order_shoe_id=order_shoe_id)
+                .first()
+            )
+            production_info.is_material_arrived = 1
     db.session.commit()
     return jsonify({"message": "success"})
 

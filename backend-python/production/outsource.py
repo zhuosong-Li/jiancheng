@@ -1,5 +1,6 @@
 import traceback
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from api_utility import (
     format_date,
@@ -336,7 +337,7 @@ def edit_outsource_status():
     data = request.get_json()
     outsource_info_id = data["outsourceInfoId"]
     outsource_obj = db.session.query(OutsourceInfo).get(outsource_info_id)
-    outsource_obj.outsource_status = data["outsourceStatus"]
+    outsource_obj.outsource_status = 4
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -573,7 +574,6 @@ def store_outsource_cost_data():
     data = request.get_json()
     if data:
         outsource_info_id = data[0]["outsourceInfoId"]
-    print(data)
     # delete outsource cost
     db.session.query(OutsourceCostDetail).filter_by(
         outsource_info_id=outsource_info_id
@@ -581,7 +581,9 @@ def store_outsource_cost_data():
     db.session.flush()
     # insert new data
     result = []
+    total_cost = 0
     for row in data:
+        total_cost += Decimal(row["itemCost"])
         entity = OutsourceCostDetail(
             item_name=row["itemName"],
             item_cost=row["itemCost"],
@@ -589,6 +591,8 @@ def store_outsource_cost_data():
             outsource_info_id=row["outsourceInfoId"],
         )
         result.append(entity)
+    outsource_info = db.session.query(OutsourceInfo).get(outsource_info_id)
+    outsource_info.total_cost = total_cost
     db.session.add_all(result)
     db.session.commit()
     return jsonify({"message": "success"})

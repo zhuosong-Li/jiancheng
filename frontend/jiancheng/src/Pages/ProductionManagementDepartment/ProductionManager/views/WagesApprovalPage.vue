@@ -10,34 +10,22 @@
             <el-row :gutter="20">
                 <el-col :span="24" :offset="0">
                     <el-descriptions title="订单信息" border column="2">
-                        <el-descriptions-item label="订单号">{{ $props.orderRId }}</el-descriptions-item>
-                        <el-descriptions-item label="鞋型号">{{ $props.shoeRId }}</el-descriptions-item>
-                        <el-descriptions-item label="客户号">{{ $props.customerName }}</el-descriptions-item>
-                        <el-descriptions-item label="截止日期">{{ $props.orderEndDate }}</el-descriptions-item>
+                        <el-descriptions-item label="订单号">{{ orderInfo.orderRId }}</el-descriptions-item>
+                        <el-descriptions-item label="鞋型号">{{ orderInfo.shoeRId }}</el-descriptions-item>
+                        <el-descriptions-item label="客户号">{{ orderInfo.customerName }}</el-descriptions-item>
+                        <el-descriptions-item label="截止日期">{{ orderInfo.orderEndDate }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
             <el-row :gutter="20" style="margin-top: 20px">
                 <el-col :span="24" :offset="0">
                     鞋型配码信息
-                    <el-table :data="shoeInfo" :span-method="spanMethod" border stripe :max-height="200">
+                    <el-table :data="shoeInfo" border stripe :span-method="spanMethod"
+                        :max-height="500">
                         <el-table-column prop="colorName" label="颜色"></el-table-column>
-                        <el-table-column prop="batchName" label="配码编号"></el-table-column>
-                        <el-table-column prop="size34" label="34"></el-table-column>
-                        <el-table-column prop="size35" label="35"></el-table-column>
-                        <el-table-column prop="size36" label="36"></el-table-column>
-                        <el-table-column prop="size37" label="37"></el-table-column>
-                        <el-table-column prop="size38" label="38"></el-table-column>
-                        <el-table-column prop="size39" label="39"></el-table-column>
-                        <el-table-column prop="size40" label="40"></el-table-column>
-                        <el-table-column prop="size41" label="41"></el-table-column>
-                        <el-table-column prop="size42" label="42"></el-table-column>
-                        <el-table-column prop="size43" label="43"></el-table-column>
-                        <el-table-column prop="size44" label="44"></el-table-column>
-                        <el-table-column prop="size45" label="45"></el-table-column>
-                        <el-table-column prop="size46" label="46"></el-table-column>
-                        <el-table-column prop="pairAmount" label="双数"></el-table-column>
                         <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+                        <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
+                            :label="column.label"></el-table-column>
                     </el-table>
                 </el-col>
             </el-row>
@@ -104,11 +92,12 @@ import axios from 'axios'
 import AllHeader from '@/components/AllHeader.vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { shoeBatchInfoTableSpanMethod } from '../../utils';
+import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
 export default {
     components: {
         AllHeader
     },
-    props: ["orderShoeId", "orderId", "orderRId", "shoeRId", "orderEndDate", "customerName"],
+    props: ["orderShoeId", "orderId"],
     data() {
         return {
             rejectionReason: '',
@@ -118,14 +107,32 @@ export default {
             priceReports: [],
             isWagesApprovalVis: false,
             currentRow: {},
-            spanMethod: null
+            spanMethod: null,
+            orderInfo: [],
+            shoeSizeColumns: [],
+            getShoeSizesName
         }
     },
     async mounted() {
-        await this.getOrderShoeBatchInfo()
-        await this.getPriceReportInfo()
+        this.shoeSizeColumns = await this.getShoeSizesName(this.$props.orderId)
+        this.getOrderInfo()
+        this.getOrderShoeBatchInfo()
+        this.getPriceReportInfo()
+    },
+    computed: {
+        filteredColumns() {
+            return this.shoeSizeColumns.filter(column =>
+                this.shoeInfo.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
+            );
+        }
     },
     methods: {
+        async getOrderInfo() {
+            let params = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId }
+            let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
+            this.orderInfo = response.data
+            console.log(this.orderInfo)
+        },
         async getOrderShoeBatchInfo() {
             try {
                 const params = { "orderShoeId": this.$props.orderShoeId }
@@ -133,7 +140,7 @@ export default {
                 this.shoeInfo = response.data
                 this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeInfo)
             }
-            catch(error) {
+            catch (error) {
                 console.log(error)
             }
         },
@@ -159,7 +166,7 @@ export default {
                     await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvepricereport`, data)
                     ElMessage.success('审批成功')
                 }
-                catch(error) {
+                catch (error) {
                     console.log(error)
                     ElMessage.error('驳回失败')
                 }
@@ -193,7 +200,7 @@ export default {
                     await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/rejectpricereport`, data)
                     ElMessage.success('驳回成功')
                 }
-                catch(error) {
+                catch (error) {
                     console.log(error)
                     ElMessage.error('驳回失败')
                 }

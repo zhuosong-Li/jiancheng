@@ -238,7 +238,7 @@ def get_price_report_detail():
     response = (
         db.session.query(UnitPriceReportDetail)
         .join(
-            UnitPriceReportDetail,
+            UnitPriceReport,
             UnitPriceReport.report_id == UnitPriceReportDetail.report_id,
         )
         .filter(UnitPriceReport.report_id == report_id)

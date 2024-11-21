@@ -13,35 +13,51 @@
                 @keypress.enter="getOrderDataTable" @clear="getOrderDataTable" />
         </el-col>
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-select v-model="statusNodeSearch" placeholder="状态点查询" clearable
-                @change="getOrderDataTable" @clear="getOrderDataTable">
+            <el-date-picker v-model="orderDateRangeSearch" type="daterange" range-separator="至"
+                start-placeholder="订单开始日期" end-placeholder="订单结束日期" @change="getOrderDataTable"
+                @clear="getOrderDataTable" value-format="YYYY-MM-DD" clearable>
+            </el-date-picker>
+        </el-col>
+        <el-col :span="4" :offset="4" style="white-space: nowrap;">
+            <el-select v-model="statusNodeSearch" placeholder="状态点查询" clearable @change="getOrderDataTable"
+                @clear="getOrderDataTable">
                 <el-option v-for="item in [
-                        '未排期',
-                        '已保存排期',
-                        '等待生产开始',
-                        '裁断中',
-                        '针车预备中',
-                        '针车中',
-                        '成型中',
-                        '生产结束',
-                    ]" :key="item" :label="item" :value="item">
-                    </el-option>
+                    '未排期',
+                    '已排期',
+                    '生产前确认',
+                    '裁断开始',
+                    '裁断结束',
+                    '预备开始',
+                    '预备结束',
+                    '针车开始',
+                    '针车结束',
+                    '成型开始',
+                    '成型结束',
+                    '生产结束',
+                ]" :key="item" :label="item" :value="item">
+                </el-option>
             </el-select>
         </el-col>
     </el-row>
-    <el-button v-if="$props.editable && isMultipleSelection" @click="openMultipleShoesDialog">
-        排产
-    </el-button>
-    <el-button v-if="$props.editable" @click="toggleSelectionMode">
-        {{ isMultipleSelection ? "退出" : "选择鞋型" }}
-    </el-button>
-    <p v-if="isSelectedRowsEmpty">未选择鞋型</p>
+    <el-row :gutter="20" style="margin-top: 20px">
+        <el-col :span="4" :offset="21" style="white-space: nowrap;">
+            <el-button type="primary" v-if="$props.editable && isMultipleSelection" @click="openMultipleShoesDialog">
+                排产
+            </el-button>
+            <el-button type="primary" v-if="$props.editable" @click="toggleSelectionMode">
+                {{ isMultipleSelection ? "退出" : "选择鞋型" }}
+            </el-button>
+            <p v-if="isSelectedRowsEmpty">未选择鞋型</p>
+        </el-col>
+    </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="24" :offset="0">
             <el-table :data="orderTableData" stripe border style="height: 600px"
                 @selection-change="handleSelectionChange">
                 <el-table-column v-if="isMultipleSelection" type="selection" width="55" />
                 <el-table-column prop="orderRId" label="订单号" sortable></el-table-column>
+                <el-table-column prop="orderStartDate" label="订单开始日期" sortable></el-table-column>
+                <el-table-column prop="orderEndDate" label="出货日期" sortable></el-table-column>
                 <el-table-column prop="shoeRId" label="公司型号" sortable></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号" sortable></el-table-column>
                 <el-table-column prop="colorName" label="颜色" sortable></el-table-column>
@@ -61,14 +77,13 @@
                             </span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="cuttingLineGroup" label="线别" width="100" header-align="center" />
                 </el-table-column>
 
                 <el-table-column label="针车预备" header-align="center">
                     <el-table-column label="完成数/欠数" sortable>
                         <template #default="scope">
-                            {{ scope.row.preSewingAmount + " / " + (scope.row.colorAmount - scope.row.preSewingAmount)
-                            }}
+                            {{ scope.row.preSewingAmount + " / " +
+                                (scope.row.colorAmount - scope.row.preSewingAmount) }}
                         </template>
                     </el-table-column>
                     <el-table-column label="周期" width="200" header-align="center">
@@ -78,14 +93,13 @@
                             </span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="preSewingLineGroup" label="线别" width="100" header-align="center" />
                 </el-table-column>
 
                 <el-table-column label="针车" header-align="center">
-                    <el-table-column prop="sewingAmount" label="完成数" sortable></el-table-column>
-                    <el-table-column label="欠数" sortable>
+                    <el-table-column label="完成数/欠数" sortable>
                         <template #default="scope">
-                            {{ scope.row.colorAmount - scope.row.sewingAmount }}
+                            {{ scope.row.sewingAmount + " / " +
+                                (scope.row.colorAmount - scope.row.sewingAmount) }}
                         </template>
                     </el-table-column>
                     <el-table-column label="周期" width="200" header-align="center">
@@ -95,14 +109,13 @@
                             </span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="sewingLineGroup" label="线别" width="100" header-align="center" />
                 </el-table-column>
 
                 <el-table-column label="成型" header-align="center">
-                    <el-table-column prop="moldingAmount" label="完成数" sortable></el-table-column>
-                    <el-table-column label="欠数" sortable>
+                    <el-table-column label="完成数/欠数" sortable>
                         <template #default="scope">
-                            {{ scope.row.colorAmount - scope.row.moldingAmount }}
+                            {{ scope.row.moldingAmount + " / " +
+                                (scope.row.colorAmount - scope.row.moldingAmount) }}
                         </template>
                     </el-table-column>
                     <el-table-column label="周期" width="200" header-align="center">
@@ -112,9 +125,7 @@
                             </span>
                         </template>
                     </el-table-column>
-                    <el-table-column prop="moldingLineGroup" label="线别" width="100" header-align="center" />
                 </el-table-column>
-                <el-table-column prop="orderEndDate" label="出货日期" sortable></el-table-column>
                 <el-table-column label="物料">
                     <template #default="scope">
                         <el-button v-if="scope.row.isMaterialArrived == 0" type="warning" size="small"
@@ -137,7 +148,7 @@
                 </el-table-column>
                 <el-table-column prop="logisticsInfo" label="包装资料">
                     <template #default="scope">
-                        <el-button type="primary" size="small" @click="downloadProductionOrderSheet(scope.row)">
+                        <el-button type="primary" size="small" @click="downloadPackagingInfo(scope.row)">
                             下载
                         </el-button>
                     </template>
@@ -265,7 +276,8 @@
                     <el-col :span="10" :offset="0">
                         <span style="white-space: nowrap">
                             {{ tab.lineLabel }}：
-                            <el-select v-model="tab.lineValue" placeholder="" @change="" multiple :disabled="!$props.editable">
+                            <el-select v-model="tab.lineValue" placeholder="" @change="" multiple
+                                :disabled="!$props.editable">
                                 <el-option v-for="item in productionLines[tab.name]" :key="item" :label="item"
                                     :value="item">
                                 </el-option>
@@ -341,7 +353,7 @@
                             <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
                                 :label="column.label">
                                 <template v-slot="scope">
-                                    <el-input v-model="scope.row[column.prop]" :readonly="!$props.editable"/>
+                                    <el-input v-model="scope.row[column.prop]" :readonly="!$props.editable" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="pairAmount" label="双数"></el-table-column>
@@ -369,7 +381,16 @@
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
                 <el-button v-if="$props.editable" type="primary" @click="modifyProductionSchedule">保存</el-button>
-                <el-button v-if="currentRow.status === '未排产' && $props.editable" type="success" @click="startProduction">开始生产</el-button>
+                <el-button v-if="currentRow.status === '未排期' || currentRow.status === '已排期' && $props.editable" type="success" @click="startProduction"
+                    :disabled="currentRow.processSheetUploadStatus != 2">
+                    <el-tooltip v-if="currentRow.processSheetUploadStatus != 2" effect="dark" content="工艺单未下发"
+                        placement="bottom">
+                        完成排期
+                    </el-tooltip>
+                    <span v-if="currentRow.processSheetUploadStatus == 2">
+                        完成排期
+                    </span>
+                </el-button>
             </span>
         </template>
     </el-dialog>
@@ -386,6 +407,7 @@ export default {
     },
     data() {
         return {
+            orderDateRangeSearch: "",
             getShoeSizesName,
             orderRIdSearch: '',
             shoeRIdSearch: '',
@@ -502,6 +524,9 @@ export default {
                 sewingDateRange: [
                     { required: true, message: '此项为必填项', trigger: 'change' },
                 ],
+                sewingLineNumbers: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
                 moldingLineNumbers: [
                     { required: true, message: '此项为必填项', trigger: 'change' },
                 ],
@@ -600,6 +625,7 @@ export default {
             this.$refs.multipleShoesScheduleForm.validate(async (valid) => {
                 if (valid) {
                     try {
+                        console.log(this.multipleShoesScheduleForm)
                         let data = {
                             "orderShoeIdArr": this.selectedRows.map(row => row.orderShoeId),
                             "scheduleForm": this.multipleShoesScheduleForm
@@ -610,7 +636,8 @@ export default {
                     catch (error) {
                         ElMessage.error(error)
                     }
-                    await this.getOrderDataTable()
+                    this.getOrderDataTable()
+                    this.isMultipleShoesDialogVis = false
                 }
                 else {
                     console.log("testing2")
@@ -655,28 +682,29 @@ export default {
             catch (error) {
                 ElMessage.error("修改失败")
             }
+            this.getOrderDataTable()
             this.isScheduleDialogOpen = false
         },
-		async startProduction() {
-			ElMessageBox.alert('点击确认后，你仍可修改排期，但推进流程操作不可撤回', '警告', {
-				confirmButtonText: '确认',
-				showCancelButton: true,
-				cancelButtonText: '取消'
-			}).then(async () => {
-				try {
-					await this.modifyProductionSchedule()
-					const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId }
-					await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
-					ElMessage.success("生产开始")
-				}
-				catch (error) {
-					console.log(error)
-					ElMessage.error("排期异常")
-				}
+        async startProduction() {
+            ElMessageBox.alert('点击确认后，你仍可修改排期，但推进流程操作不可撤回', '警告', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                cancelButtonText: '取消'
+            }).then(async () => {
+                try {
+                    await this.modifyProductionSchedule()
+                    const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId }
+                    await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
+                    ElMessage.success("操作成功。请前往生产管理页面推进该鞋型流程")
+                }
+                catch (error) {
+                    console.log(error)
+                    ElMessage.error("操作失败")
+                }
                 this.getOrderDataTable()
                 this.isScheduleDialogOpen = false
-			})
-		},
+            })
+        },
         openMultipleShoesDialog() {
             if (this.selectedRows.length == 0) {
                 this.isSelectedRowsEmpty = true
@@ -701,9 +729,9 @@ export default {
             this.pageSize = val
             await this.getOrderDataTable()
         },
-        downloadProductionOrderSheet(row) {
+        downloadPackagingInfo(row) {
             window.open(
-                `${this.$apiBaseUrl}/production/productionmanager/downloadproductionordersheet?${row.orderShoeId}`
+                `${this.$apiBaseUrl}/orderimport/downloadorderdoc?orderrid=${row.orderRId}&filetype=2`
             )
         },
         downloadBatchInfo() {
@@ -712,6 +740,11 @@ export default {
             )
         },
         async getOrderDataTable() {
+            let startDate = null, endDate = null
+            if (this.orderDateRangeSearch) {
+                startDate = this.orderDateRangeSearch[0]
+                endDate = this.orderDateRangeSearch[1]
+            }
             let params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
@@ -719,17 +752,17 @@ export default {
                 "shoeRId": this.shoeRIdSearch,
                 "customerProductName": this.customerProductNameSearch,
                 "statusNode": this.statusNodeSearch,
+                "orderStartDate": startDate,
+                "orderEndDate": endDate
             }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallorderproductionprogress`, { params })
             this.orderTableData = response.data.result
             this.orderTotalRows = response.data.totalLength
         },
-        downloadInstructionForm(row) {
-
-        },
         async downloadProcessSheet(row) {
-            let params = {"orderShoeId": row.orderShoeId}
-            await axios.get(`${this.$apiBaseUrl}/production/productionmanager/downloadproductionordersheet`, {params})
+            window.open(
+                `${this.$apiBaseUrl}/processsheet/download?orderid=${row.orderRId}&ordershoerid=${row.shoeRId}`
+            )
         },
         async openLogisticsDialog(rowData) {
             this.logisticsCurrentPage = 1
@@ -769,10 +802,11 @@ export default {
 }
 
 .is-readonly .el-input__inner {
-  cursor: not-allowed;
-  background-color: #f5f5f5;
+    cursor: not-allowed;
+    background-color: #f5f5f5;
 }
+
 .is-readonly .el-input__suffix {
-  display: none;
+    display: none;
 }
 </style>
