@@ -2236,3 +2236,45 @@ def upload_pic_notes():
     file_path = os.path.join(folder_path, new_filename)
     pic_note.save(file_path)
     return jsonify({"message": "Picture notes uploaded successfully"}), 200
+
+@dev_producion_order_bp.route("/devproductionorder/getautofinishedmaterialname", methods=["GET"])
+def get_auto_finished_material_name():
+    material_name = request.args.get("materialName")
+    material = (
+        db.session.query(Material)
+        .filter(
+            Material.material_name.like(f"%{material_name}%"),
+        )
+        .distinct()
+        .all()
+    )
+    material_list = []
+    if material:    
+        for item in material:
+            material_list.append({
+                "name": item.material_name,
+            })
+        return jsonify(material_list), 200
+    else:
+        return jsonify([]), 200
+
+@dev_producion_order_bp.route("/devproductionorder/getautofinishedsuppliername", methods=["GET"])
+def get_auto_finished_supplier_name():
+    supplier_name = request.args.get("supplierName")
+    supplier = (
+        db.session.query(Supplier)
+        .filter(
+            Supplier.supplier_name.like(f"%{supplier_name}%"),
+        )
+        .distinct()
+        .all()
+    )
+    supplier_list = []
+    if supplier:    
+        for item in supplier:
+            supplier_list.append({
+                "name": item.supplier_name,
+            })
+        return jsonify(supplier_list), 200
+    else:
+        return jsonify([]), 200

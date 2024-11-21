@@ -52,3 +52,4 @@ def get_current_staff_and_character():
 
 
     return {"error": "Key not found for given jti"}, 404
+
