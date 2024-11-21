@@ -42,6 +42,7 @@ class BomItem(db.Model):
     size_45_total_usage = db.Column(db.Integer, nullable=True)
     size_46_total_usage = db.Column(db.Integer, nullable=True)
     size_type = db.Column(db.String(1), nullable=False, default="E")
+    material_second_type = db.Column(db.String(10), nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -1039,6 +1040,10 @@ class ProductionInstruction(db.Model):
     order_shoe_id = db.Column(db.BigInteger, nullable=False)
     production_instruction_rid = db.Column(db.String(50), nullable=False)
     production_instruction_status = db.Column(db.String(1), nullable=False)
+    origin_size = db.Column(db.String(5), nullable=True)
+    size_range = db.Column(db.String(10), nullable=True)
+    size_difference = db.Column(db.String(15), nullable=True)
+    last_type = db.Column(db.String(20), nullable=True)
 
     def __repr__(self):
         return f"<ProductionInstruction(production_instruction_id={self.production_instruction_id})>"
@@ -1056,6 +1061,7 @@ class ProductionInstructionItem(db.Model):
     is_pre_purchase = db.Column(db.Boolean, nullable=False)
     material_type = db.Column(db.String(1), nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    material_second_type = db.Column(db.String(10), nullable=False)
 
 
     def __repr__(self):
