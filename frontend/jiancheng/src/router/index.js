@@ -154,15 +154,15 @@ const router = createRouter({
         role: 4
       }
     },
-    // {
-    //   path :'/businessclerk',
-    //   name : 'businessclerk',
-    //   component:BusinessClerk,
-    //   meta:{
-    //     requirsAuth:true,
-    //     role:21
-    //   }
-    // },
+    {
+      path :'/businessmanager',
+      name : 'businessmanager',
+      component:BusinessManager,
+      meta:{
+        requirsAuth:true,
+        role:21
+      }
+    },
     {
       path :'/developmentmanager',
       name : 'developmentmanager',

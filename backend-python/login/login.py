@@ -85,12 +85,20 @@ def current_user():
     
     # Query the database to get user details (assuming you have a User model)
     user = User.query.filter_by(user_name=username).first()
-    
+    staff = Staff.query.filter_by(staff_id=user.staff_id).first()
+    staff_name = staff.staff_name
+    staff_id = staff.staff_id
+    role = staff.character_id
+    department = Department.query.filter_by(department_id=staff.department_id).first()
+    department_name = department.department_name
     if user:
         user_info = {
             "username": user.user_name,
-            "email": user.email,
-            "role": user.user_type
+            # "email": user.email,
+            "role": role,
+            "staffName":staff_name,
+            "staffId":staff_id,
+            "departmentName":department_name
         }
         return jsonify(user_info), 200
     else:

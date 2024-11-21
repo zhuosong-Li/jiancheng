@@ -177,8 +177,10 @@
                     value-format="YYYY-MM-DD"
                 ></el-date-picker>
             </el-form-item>
-            <el-form-item label="业务员">
-                <el-input v-model="newOrderForm.salesman"></el-input>
+            <el-form-item 
+                label="业务员">
+                <el-input v-model="newOrderForm.salesman"
+                disabled="true"></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
@@ -558,6 +560,8 @@ export default {
             batchTypes:[],
             batchTypeNameList:[],
             curBatchType:{},
+            userRole:"",
+            userName:"",
             orderForm: {
                 orderRId: '',
                 orderCid: '',
@@ -657,6 +661,7 @@ export default {
   },
     mounted() {
         this.$setAxiosToken()
+        this.userInfo()
         this.getAllOrders()
         this.getAllCutomers()
         // this.getAllOrderStatus()
@@ -664,6 +669,13 @@ export default {
         this.getAllBatchTypes()
     },
     methods: {
+        async userInfo()
+        {
+           const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
+           this.userName = response.data.staffName
+           this.userRole = response.data.role
+           console.log(this.userRole)
+        },
         formatDateToYYYYMMDD(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed, so we add 1
@@ -696,6 +708,7 @@ export default {
         },
         openCreateOrderDialog() {
             this.newOrderForm.orderStartDate = this.formatDateToYYYYMMDD(new Date())
+            this.newOrderForm.salesman = this.userName
             // this.$refs.startdatepicker.change()
             this.orderCreationInfoVis = true
             this.shoeTableDisplayData = this.shoeTableData
@@ -1301,7 +1314,14 @@ export default {
         },
         openOrderDetail(orderId) {
             let url = ""
-            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}`;
+            if (this.userRole == 4)
+        {
+            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/admin`;
+        }
+            else if (this.userRole == 21)
+        {
+            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/clerk`;
+        }
             window.open(url,'_blank')
 
         }

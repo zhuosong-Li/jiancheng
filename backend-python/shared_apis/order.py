@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from api_utility import to_snake, to_camel
 from constants import IN_PRODUCTION_ORDER_NUMBER
+from login.login import current_user
 
 from models import (
     Order,
@@ -132,6 +133,9 @@ def get_orders_in_production():
     result = {"newOrders": new_orders, "progressOrders": progress_orders}
     return result
 
+@order_bp.route("/order/onmount", methods=["GET"])
+def get_on_mount():
+    return current_user()
 
 @order_bp.route("/order/getorderInfo", methods=["GET"])
 def get_order_info():
