@@ -86,14 +86,14 @@ def generate_excel_file(template_path, new_file_path, data: dict):
     ws["E6"] = data["customer_product_name"]
 
     column_name = "H"
-    for i in range(0, 13):
+    for i in range(0, len(data["shoe_size_names"])):
         ws[f"{column_name}{5}"] = data["shoe_size_names"][i]["label"]
         column_name = get_next_column_name(column_name)
 
     # sum up the shoes
     ws[f"G{6+len(table_data)}"] = f"=SUM(G6:G{6+len(table_data)-1})"
     column_name = "H"
-    for _ in range(0, 13):
+    for _ in range(0, len(data["shoe_size_names"])):
         ws[f"{column_name}{6+len(table_data)}"] = f"=SUM({column_name}6:{column_name}{6+len(table_data)-1})"
         column_name = get_next_column_name(column_name)
     # Save the workbook

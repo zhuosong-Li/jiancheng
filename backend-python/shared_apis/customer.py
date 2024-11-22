@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from app_config import app, db
 from models import *
 from api_utility import to_camel, to_snake
+from sqlalchemy import and_
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -66,6 +67,10 @@ def get_customer_batch_info():
 def add_customer():
     customer_name = request.json.get("customerName")
     customer_brand = request.json.get("customerBrand")
+    existing = (db.session.query(Customer).filter(and_(Customer.customer_name == customer_name ,Customer.customer_brand == customer_brand)).first())
+    print(existing)
+    if existing:
+        return jsonify({"message":"客户及商标信息已存在"}), 400
     try:
         customer = Customer(
             customer_name=customer_name,

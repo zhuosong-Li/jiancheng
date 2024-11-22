@@ -152,6 +152,7 @@ def get_order_info():
     formatted_end_date = entities.Order.end_date.strftime("%Y-%m-%d")
     result = {
         "orderId": entities.Order.order_rid,
+        "orderDBId": entities.Order.order_id,
         "customerName": entities.Customer.customer_name,
         "createTime": formatted_start_date,
         "deadlineTime": formatted_end_date,
@@ -222,7 +223,7 @@ def get_order_info_business():
         response["orderShoeRemarkRep"] = "工艺备注:" + order_shoe.OrderShoe.business_technical_remark + " \n" + "材料备注:" + order_shoe.OrderShoe.business_material_remark
         response["orderShoeTechnicalRemark"] = order_shoe.OrderShoe.business_technical_remark
         response["orderShoeMaterialRemark"] = order_shoe.OrderShoe.business_material_remark
-        response["orderShoeRemarkExist"] = not (order_shoe.OrderShoe.business_technical_remark == "" or order_shoe.OrderShoe.business_material_remark == "")
+        response["orderShoeRemarkExist"] = not (order_shoe.OrderShoe.business_technical_remark == "" and order_shoe.OrderShoe.business_material_remark == "")
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
         # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
         result["orderShoeAllData"].append(response)
@@ -364,10 +365,11 @@ def get_order_info_business():
 
 @order_bp.route("/order/getordershoesizetotal", methods=["GET"])
 def get_order_shoe_size_total():
+    
     order_id = request.args.get("orderid")
     order_shoe_rid = request.args.get("ordershoeid")
     color = request.args.get("color")
-
+    print(order_id)
     # Fetch the order_shoe_type_id based on filters
     order_shoe_type_id = (
         db.session.query(Order, OrderShoe, OrderShoeType, Shoe, ShoeType, Color)
@@ -391,54 +393,25 @@ def get_order_shoe_size_total():
     )
 
     # Initialize accumulators for totals of all sizes
-    total_size_35 = 0
-    total_size_36 = 0
-    total_size_37 = 0
-    total_size_38 = 0
-    total_size_39 = 0
-    total_size_40 = 0
-    total_size_41 = 0
-    total_size_42 = 0
-    total_size_43 = 0
-    total_size_44 = 0
-    total_size_45 = 0
+    mapping = {}
+    for i in range(34, 47):
+        mapping[i] = 0
     overall_total = 0
 
     # Collect results and accumulate totals
     result = []
     for entity in entities:
         # Accumulate totals for each size and overall
-        total_size_35 += entity.size_35_amount
-        total_size_36 += entity.size_36_amount
-        total_size_37 += entity.size_37_amount
-        total_size_38 += entity.size_38_amount
-        total_size_39 += entity.size_39_amount
-        total_size_40 += entity.size_40_amount
-        total_size_41 += entity.size_41_amount
-        total_size_42 += entity.size_42_amount
-        total_size_43 += entity.size_43_amount
-        total_size_44 += entity.size_44_amount
-        total_size_45 += entity.size_45_amount
+        for i in range(34, 47):
+            mapping[i] += getattr(entity, f"size_{i}_amount")
         overall_total += entity.total_amount
 
     # Append the totals for all sizes and overall to the result
-    result.append(
-        {
-            "35": total_size_35,
-            "36": total_size_36,
-            "37": total_size_37,
-            "38": total_size_38,
-            "39": total_size_39,
-            "40": total_size_40,
-            "41": total_size_41,
-            "42": total_size_42,
-            "43": total_size_43,
-            "44": total_size_44,
-            "45": total_size_45,
-            "total": overall_total
-        }
-    )
-
+    obj = {}
+    for i in range(34, 47):
+        obj[f"size{i}Amount"] = mapping[i]
+    obj["total"] = overall_total
+    result.append(obj)
     # Return the result as JSON
     return jsonify(result)
 
@@ -574,6 +547,7 @@ def get_all_orders():
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,
                 "orderStatus": order_status_message,
+                "orderStatusVal":order_status.order_current_status,
             }
         )
     return jsonify(result)
@@ -589,6 +563,24 @@ def get_all_order_status():
         )
     return jsonify(result)
 
+@order_bp.route("/order/deleteorder", methods=["DELETE"])
+def delete_order():
+    order_id = request.args.get("orderId")
+    order_entity = db.session.query(Order).filter_by(order_id = order_id).first()
+    if not order_entity:
+        return jsonify({"message":"delete failed"}), 401
+    order_shoe_entities = db.session.query(OrderShoe).filter_by(order_id = order_id).all()
+    order_shoe_ids = [entity.order_shoe_id for entity in order_shoe_entities]
+    order_shoe_type_entities = db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).all()
+    order_shoe_type_ids = [entity.order_shoe_type_id for entity in order_shoe_type_entities]
+    order_shoe_batch_entities = db.session.query(OrderShoeBatchInfo).filter(OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids)).all()
+
+    db.session.query(OrderShoeBatchInfo).filter(OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids)).delete()
+    db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).delete()
+    db.session.query(OrderShoe).filter_by(order_id = order_id).delete()
+    db.session.delete(order_entity)
+    db.session.commit()
+    return jsonify({"message":"Delete OK"}), 200
 
 @order_bp.route("/order/getordershoeinfo", methods=["GET"])
 def get_order_shoe_info():

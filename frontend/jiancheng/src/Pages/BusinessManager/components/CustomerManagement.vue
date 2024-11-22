@@ -105,7 +105,7 @@
             <el-table :data="this.batchTabDisplayData[currentTab.batchInfoTypeId]" border stripe height="500">
                 <el-table-column prop="packagingInfoName" label="配码名称" sortable
                 width="120px"/>
-                <el-table-column v-for ="col in Object.keys(this.attrMapping).filter(key => currentTab[key] != null)"
+                <el-table-column v-for ="col in Object.keys(this.attrMapping).filter(key => currentTab[key] != '')"
                                 :label="currentTab[col]"
                                 :prop="attrMapping[col]"
                                 width="80px"></el-table-column>
@@ -143,7 +143,7 @@
             <el-form-item label="配码地区">
                 <el-input v-model="batchForm.packagingInfoLocale" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != null)"
+            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != '')"
                                 :label="this.currentBatchType[col]">
                                 <el-input v-model=batchForm[attrMapping[col]]></el-input>
             </el-form-item>
@@ -197,8 +197,8 @@
         </el-form>
         <template #footer>
         <span>
-            <el-button @click="editCustomerDialogVisible = false">Cancel</el-button>
-            <el-button type="primary" @click="submitEditCustomerForm">OK</el-button>
+            <el-button @click="editCustomerDialogVisible = false">取消</el-button>
+            <el-button type="primary" @click="submitEditCustomerForm">确认</el-button>
         </span>
         </template>
     </el-dialog>
@@ -222,6 +222,7 @@ export default {
                 customerId:'',
                 packagingInfoName: '',
                 packagingInfoLocale: '',
+                batchInfoTypeId:'',
                 size34Ratio: 0,
                 size35Ratio: 0,
                 size36Ratio: 0,
@@ -235,7 +236,7 @@ export default {
                 size44Ratio: 0,
                 size45Ratio: 0,
                 size46Ratio: 0,
-                totalQuantityInRatio:0
+                totalQuantityRatio:0
                 },
             attrMapping:{
                 "size34Name":"size34Ratio",
@@ -285,7 +286,7 @@ export default {
         this.$setAxiosToken()
         this.getCustomerList()
         this.userInfo()
-        // this.getAllBatchTypes()
+        this.getAllBatchTypes()
     },
     methods: {
         async userInfo()
@@ -311,12 +312,12 @@ export default {
             this.currentBatchType = this.batchTypeTabs[0]
             this.activeTab = this.currentBatchType.batchInfoTypeId
         },
-        // async getAllBatchTypes(){
-        //     const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
-        //     console.log(response.data["batchDataTypes"])
-        //     this.batchTypeTabs = response.data["batchDataTypes"]
-        //     console.log(this.batchTypeTabs[0].batchInfoTypeName)
-        // },
+        async getAllBatchTypes(){
+            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
+            console.log(response.data["batchDataTypes"])
+            this.batchTypeTabs = response.data["batchDataTypes"]
+            console.log(this.batchTypeTabs[0].batchInfoTypeName)
+        },
         
         updateSelectedTab(){
             console.log(this.activeTab)
@@ -350,8 +351,8 @@ export default {
         },
 
         openAddCustomerBatchDialog() {
-            console.log(this.currentBatchType.batchInfoTypeId)
-            this.resetBatchForm()
+            // console.log(this.)
+            // this.resetBatchForm()
             this.batchForm.customerId = this.batchDialogCurCustomerId
             this.batchForm.batchInfoTypeId = this.activeTab
             this.batchForm.packagingInfoLocale = this.currentBatchType.batchInfoTypeName
@@ -368,7 +369,6 @@ export default {
             console.log(123)
             this.editBatchDialogVisible=false
             this.resetBatchForm()
-            console.log(321)
         },
         closeAddBatchDialog(){
             this.addCustomerBatchDialogVisible=false
@@ -450,8 +450,8 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post(`${this.$apiBaseUrl}/customer/addcustomer`, this.customerForm)
-                if (response.status === 200) {
+                try {
+                    await axios.post(`${this.$apiBaseUrl}/customer/addcustomer`, this.customerForm)
                     this.$message({
                         type: 'success',
                         message: '添加成功'
@@ -463,10 +463,11 @@ export default {
                         customerBrand: ''
                     }
                     this.getCustomerList()
-                } else {
+                }
+                catch(error) {
                     this.$message({
                         type: 'error',
-                        message: '添加失败'
+                        message: error.response.data.message
                     })
                 }
 
