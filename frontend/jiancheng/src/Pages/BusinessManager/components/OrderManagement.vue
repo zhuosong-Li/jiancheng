@@ -64,9 +64,9 @@
                 v-model="orderStartDateFilter"
                 type="daterange"
                 unlink-panels
-                range-separator="To"
-                start-placeholder="Start date"
-                end-placeholder="End date"
+                range-separator="至"
+                start-placeholder="起始开始日期"
+                end-placeholder="日期筛选"
                 :shortcuts="shortcuts"
                 size="default"
                 @change="filterDisplayOrder(5)"
@@ -84,15 +84,19 @@
                 v-model="orderEndDateFilter"
                 type="daterange"
                 unlink-panels
-                range-separator="To"
-                start-placeholder="Start date"
-                end-placeholder="End date"
+                range-separator="至"
+                start-placeholder="起始结束日期"
+                end-placeholder="日期筛选"
                 :shortcuts="shortcuts"
                 size="default"
                 @change="filterDisplayOrder(6)"
             />
             </div>
         </div>
+        </el-col>
+        <el-col :span="2" :offset="1">
+            <el-checkbox label="已下发" v-model="orderNotInCurStatus" @change="filterDisplayOrder"/>
+            <el-checkbox label="未下发" v-model="orderInCurStatus" @change="filterDisplayOrder"/>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -109,6 +113,12 @@
                     <el-button type="primary" size="default" @click="openOrderDetail(scope.row.orderDbId)"
                         >查看订单详情</el-button
                     >
+                        <el-button v-if="allowDeleteOrder"
+                            type="danger"
+                            size="default"
+                            @click="deleteOrder(scope.row)"
+                            >删除订单</el-button
+                        >
                 </template>
             </el-table-column>
         </el-table>
@@ -441,7 +451,7 @@
                 <el-input v-model="batchForm.packagingInfoName"></el-input>
             </el-form-item>
             <el-form-item label="配码地区">
-                <el-input v-model="batchForm.packagingInfoLocale"></el-input>
+                <el-input v-model="batchForm.packagingInfoLocale" disabled="true"></el-input>
             </el-form-item>
             <el-form-item v-for="col in Object.keys(this.attrMapping).filter(key => this.curBatchType[key] != null)"
                           :label="this.curBatchType[col]">
@@ -510,6 +520,8 @@ export default {
     data() {
         return {
             token: localStorage.getItem('token'),
+            orderNotInCurStatus:'',
+            orderInCurStatus:'',
             currentPage:1,
             pageSize:8,
             totalItems:200,
@@ -621,7 +633,7 @@ export default {
                 "size46Name":"size46Ratio",
             },
             shortcuts : [
-                {text:"Last Week", 
+                {text:"过去一周", 
                     value:() =>{
                         const end = new Date()
                         const start = new Date()
@@ -630,7 +642,7 @@ export default {
                     }
                 },
                 {
-                    text:"Last Month",
+                    text:"过去一月",
                     value:() => {
                         const end = new Date()
                         const start = new Date()
@@ -645,6 +657,10 @@ export default {
         }
     },
     computed: {
+    allowDeleteOrder()
+    {
+        return this.userRole == 4
+    },
     uploadHeaders() {
       return {
         Authorization: `Bearer ${this.token}`
@@ -703,6 +719,29 @@ export default {
                 })
 
         },
+        resetBatchForm()
+        {
+            this.batchForm ={
+                customerId:'',
+                packagingInfoName: '',
+                packagingInfoLocale: '',
+                batchInfoTypeId:'',
+                size34Ratio: 0,
+                size35Ratio: 0,
+                size36Ratio: 0,
+                size37Ratio: 0,
+                size38Ratio: 0,
+                size39Ratio: 0,
+                size40Ratio: 0,
+                size41Ratio: 0,
+                size42Ratio: 0,
+                size43Ratio: 0,
+                size44Ratio: 0,
+                size45Ratio: 0,
+                size46Ratio: 0,
+                totalQuantityRatio:0
+                }
+        },
         openImportDialog() {
             this.isImportVis = true
         },
@@ -737,6 +776,7 @@ export default {
         openAddCustomerBatchDialog() {
             this.batchForm.customerId = this.newOrderForm.customerId
             this.batchForm.batchInfoTypeId = this.newOrderForm.batchInfoTypeId
+            this.batchForm.packagingInfoLocale = this.newOrderForm.batchInfoTypeName
             this.addCustomerBatchDialogVisible = true
         },
         submitAddCustomerBatchForm() {
@@ -749,9 +789,22 @@ export default {
                 const result = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
             }).then(async () => {
                 this.getCustomerBatchInfo(this.newOrderForm.customerId)
-
+                this.resetBatchForm()
             })
             this.addCustomerBatchDialogVisible = false
+        },
+        deleteOrder(row)
+        {
+            console.log(row)
+            this.$confirm("确认删除订单?", '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                const result = await axios.delete(`${this.$apiBaseUrl}/order/deleteorder`, {params:{"orderId":row.orderDbId}})
+            }).then(async()=>{
+                this.getAllOrders()
+            })
         },
         backPreviousStep(){
             this.orderCreationSecondInfoVis = false
@@ -963,6 +1016,7 @@ export default {
                     //console.log(this.orderEndDateFilter)
                     this.filterOrderByEndDate()
                     break
+                
             }
             return
         },
@@ -974,6 +1028,7 @@ export default {
             this.indexToFilter = (this.filterList.filter((filter) => filter)).map((filter) => this.filterList.indexOf(filter))
             this.displayData = this.unfilteredData
             this.indexToFilter.forEach((index) => this.filterOrderByFilterType(index + 1))
+            this.filterOrderByStatus()
             this.totalItems = this.displayData.length
             // this.orderCidFilter,
             // this.orderRidFilter,
@@ -983,7 +1038,34 @@ export default {
             // this.orderEndDateFilter,
             return
         },
-        
+        filterOrderByStatus()
+        {
+            console.log(this.displayData)
+            if (this.orderInCurStatus && this.orderNotInCurStatus)
+            {
+                return
+            }
+            else{
+                if(this.orderInCurStatus)
+                {
+                    this.filterData = this.displayData.filter((task) => 
+                    {
+                        const filterMatch = task.orderStatusVal == 6
+                        return filterMatch
+                    })
+                    this.displayData = this.filterData
+                }
+                else if (this.orderNotInCurStatus)
+                {
+                    this.filterData = this.displayData.filter((task) => 
+                    {
+                        const filterMatch = task.orderStatusVal != 6
+                        return filterMatch
+                    })
+                    this.displayData = this.filterData
+                }
+            }
+        },
         filterOrderByStartDate()
         {
             this.filterData = this.displayData.filter((task)=>
@@ -1323,7 +1405,6 @@ export default {
             url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/clerk`;
         }
             window.open(url,'_blank')
-
         }
     }
 }

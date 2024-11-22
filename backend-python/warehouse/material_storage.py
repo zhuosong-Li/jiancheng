@@ -352,7 +352,7 @@ def get_size_material_info_by_id():
     result = []
     # get shoe size name
     shoe_size_names = get_order_batch_type_helper(order_id)
-    for i, shoe_size in enumerate(SHOESIZEINFO):
+    for i, shoe_size in range(len(shoe_size_names)):
         obj = {
             "typeName": shoe_size_names[i]["type"],
             "shoeSizeName": shoe_size_names[i]["label"],

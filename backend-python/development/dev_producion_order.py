@@ -1894,6 +1894,8 @@ def upload_production_order():
 def download_production_order():
     order_shoe_rid = request.args.get("ordershoerid")
     order_id = request.args.get("orderid")
+    print(order_shoe_rid)
+    print(order_id)
     order_shoe = (
         db.session.query(Order, OrderShoe, Shoe)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)

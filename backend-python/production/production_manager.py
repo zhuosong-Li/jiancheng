@@ -7,7 +7,7 @@ from constants import *
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request, send_file, Response
 from models import *
-from sqlalchemy import func, or_, cast, Integer
+from sqlalchemy import func, or_, cast, Integer, and_
 from sqlalchemy.dialects.mysql import insert
 from constants import OUTSOURCE_STATUS_MAPPING
 from general_document.batch_info import generate_excel_file
@@ -231,7 +231,7 @@ def get_in_progress_orders():
 
 PROGRESS_STATUS_MAPPING = {
     "未排期": [17],
-    "已排期": [17],
+    "已保存排期": [17],
     "生产前确认": [18],
     "裁断开始": [23],
     "裁断结束": [23],
@@ -268,6 +268,7 @@ def get_all_order_production_progress():
             ),
         )
         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
+        .filter(OrderShoeStatus.current_status >= 17)
         .group_by(OrderShoe.order_shoe_id)
     )
     if status_node and status_node != "":
@@ -275,7 +276,7 @@ def get_all_order_production_progress():
         status_table = status_table.filter(
             OrderShoeStatus.current_status.in_(status_ids)
         )
-        if status_node == '已排期':
+        if status_node == "已保存排期":
             status_table = status_table.filter(
                 OrderShoeStatus.current_status_value == 1
             )
@@ -329,8 +330,17 @@ def get_all_order_production_progress():
         except ValueError:
             return jsonify({"message": "invalid date range"}), 400
         query = query.filter(
-            Order.start_date >= start_date_search,
-            Order.end_date <= end_date_search,
+            or_(
+                and_(
+                    Order.start_date >= start_date_search,
+                    Order.end_date <= end_date_search,
+                ),
+                and_(Order.start_date <= end_date_search, Order.start_date >= start_date_search),
+                and_(
+                    Order.end_date >= start_date_search,
+                    Order.end_date <= end_date_search,
+                ),
+            ),
         )
     count_result = query.distinct().count()
     response = query.distinct().limit(number).offset((page - 1) * number).all()
@@ -1142,7 +1152,7 @@ def download_batch_info():
     temp3 = get_order_batch_type_helper(order_id)
     result["shoe_size_names"] = temp3
 
-    template_path = os.path.join("./general_document", "test.xlsx")
+    template_path = os.path.join("./general_document", "装箱配码模板.xlsx")
     new_file_path = os.path.join("./general_document", "装箱配码.xlsx")
     new_name = f"鞋型{order_shoe_id}_装箱配码.xlsx"
     generate_excel_file(template_path, new_file_path, result)

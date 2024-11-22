@@ -12,7 +12,7 @@ export default [
   },
   {
     path: '/business/businessorderdetail/orderid=:orderId/clerk',
-    name: 'business-orderdetail',
+    name: 'business-orderdetail-clerk',
     component: BusinessOrderDetail,
     props: true,
     meta: {

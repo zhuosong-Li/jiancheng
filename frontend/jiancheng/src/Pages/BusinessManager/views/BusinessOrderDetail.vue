@@ -96,7 +96,7 @@
                                             <el-table-column
                                                 v-for="col in Object.keys(
                                                     this.attrMappingToRatio
-                                                ).filter((key) => this.batchInfoType[key] != null)"
+                                                ).filter((key) => this.batchInfoType[key] != '')"
                                                 :prop="attrMappingToRatio[col]"
                                                 :label="batchInfoType[col]"
                                                 width="90"
@@ -116,12 +116,12 @@
                                     <el-table-column prop="size46ratio" label ="46"/> -->
                                             <el-table-column
                                                 prop="totalQuantityRatio"
-                                                label="比例和"
+                                                label="对/件"
                                                 width="240"
                                             />
                                             <el-table-column
                                                 prop="unitPerRatio"
-                                                label="比例单位数量"
+                                                label="件数"
                                             />
                                         </el-table>
                                     </template>
@@ -138,7 +138,7 @@
                         </el-table-column> -->
                                 <el-table-column
                                     v-for="col in Object.keys(this.attrMappingToAmount).filter(
-                                        (key) => this.batchInfoType[key] != null
+                                        (key) => this.batchInfoType[key] != ''
                                     )"
                                     :prop="`shoeTypeBatchData.${attrMappingToAmount[col]}`"
                                     :label="batchInfoType[col]"
@@ -156,7 +156,7 @@
                                             controls-position="right"
                                             @change="updateValue(scope.row)"
                                             v-model="scope.row.shoeTypeBatchData.unitPrice"
-                                            :disabled="priceChangeNotAllowed"
+                                            :disabled="!this.unitPriceAccessMapping[scope.row.orderShoeTypeId]"
                                         >
                                         </el-input>
                                     </template>
@@ -168,7 +168,7 @@
                                             controls-position="right"
                                             @change="updateCurrencyValue(scope.row)"
                                             v-model="scope.row.shoeTypeBatchData.currencyType"
-                                            :disabled="unitChangeNotAllowed"
+                                            :disabled="!this.currencyTypeAccessMapping[scope.row.orderShoeTypeId]"
                                         >
                                         </el-input>
                                     </template>
@@ -289,7 +289,14 @@ export default {
         },
         allowNext(){
             return (this.orderCurStatus == 6 && this.orderCurStatusVal == 1)
-        }
+        },
+        // allowChangeUnitPrice: function(row)
+        // {
+        //     return this.unitPriceAccessMapping[row.orderShoeTypeId]
+        // },
+        priceUpdateButtonVis(){
+            return Object.values(this.unitPriceAccessMapping).includes(true) || Object.values(this.currencyTypeAccessMapping).includes(true)
+        },
     },
     data() {
         return {
@@ -309,11 +316,17 @@ export default {
             remarkDialogVis: false,
             priceChangeNotAllowed: false,
             unitChangeNotAllowed: false,
-            priceUpdateButtonVis:true,
             remarkForm: {
                 orderShoeId: '',
                 technicalRemark: '',
                 materialRemark: ''
+            },
+            unitPriceAccessMapping:{
+
+            },
+            currencyTypeAccessMapping:
+            {
+
             },
             batchInfoType: {},
             attrMappingToRatio: {
@@ -353,8 +366,6 @@ export default {
         // this.getOrderOrderShoe()
         // this.getOrderOrderShoe()
         console.log(this.role)
-        this.setFinInfoNotAllowed()
-        
     },
     methods: {
         async getOrderInfo() {
@@ -372,9 +383,12 @@ export default {
                 (orderShoeType) =>{
                     this.orderShoeTypeIdToUnitPrice[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.unitPrice
                     this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.currencyType
+                    this.unitPriceAccessMapping[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.unitPrice == 0
+                    this.currencyTypeAccessMapping[orderShoeType.orderShoeTypeId] = (orderShoeType.shoeTypeBatchData.currencyType == '')
                 }
                 ))
-
+            console.log(this.unitPriceAccessMapping)
+            console.log(this.currencyTypeAccessMapping)
         },
         updateStatus()
         {
@@ -382,9 +396,20 @@ export default {
         },
         toggleFinInfoChange()
         {
-            this.priceChangeNotAllowed = !this.priceChangeNotAllowed
-            this.unitChangeNotAllowed = !this.unitChangeNotAllowed
-            this.priceUpdateButtonVis = !this.priceUpdateButtonVis
+            Object.keys(this.unitPriceAccessMapping).forEach((key) => this.unitPriceAccessMapping[key] = !this.unitPriceAccessMapping[key])
+            Object.keys(this.currencyTypeAccessMapping).forEach((key) => this.currencyTypeAccessMapping[key] = !this.currencyTypeAccessMapping[key])
+        },
+        setfinInfoAccess()
+        {
+
+        },
+        allowChangeCurrencyType(row)
+        {
+            return this.currencyTypeAccessMapping[row.orderShoeTypeId]
+        },
+        allowChangeUnitPrice(row)
+        {
+            return this.unitPriceAccessMapping[row.orderShoeTypeId]
         },
         setFinInfoNotAllowed()
         {
@@ -424,6 +449,7 @@ export default {
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
         updateValue(row) {
+            console.log(row)
             row.shoeTypeBatchData.totalPrice =
                 row.shoeTypeBatchData.unitPrice * row.shoeTypeBatchData.totalAmount
             this.orderShoeTypeIdToUnitPrice[row.orderShoeTypeId] = row.shoeTypeBatchData.unitPrice
@@ -444,7 +470,6 @@ export default {
             if (response.status === 200) {
                 ElMessage.success('变更成功')
                 this.getOrderInfo()
-                this.setFinInfoNotAllowed()
             } else {
                 ElMessage.error('备注变更失败')
             }

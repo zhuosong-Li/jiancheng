@@ -23,7 +23,7 @@
                 @clear="getOrderDataTable">
                 <el-option v-for="item in [
                     '未排期',
-                    '已排期',
+                    '已保存排期',
                     '生产前确认',
                     '裁断开始',
                     '裁断结束',
@@ -380,15 +380,15 @@
             <span>
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
-                <el-button v-if="$props.editable" type="primary" @click="modifyProductionSchedule">保存</el-button>
+                <el-button v-if="$props.editable" type="primary" @click="modifyProductionSchedule">保存排期</el-button>
                 <el-button v-if="currentRow.status === '未排期' || currentRow.status === '已排期' && $props.editable" type="success" @click="startProduction"
                     :disabled="currentRow.processSheetUploadStatus != 2">
                     <el-tooltip v-if="currentRow.processSheetUploadStatus != 2" effect="dark" content="工艺单未下发"
                         placement="bottom">
-                        完成排期
+                        下发排期
                     </el-tooltip>
                     <span v-if="currentRow.processSheetUploadStatus == 2">
-                        完成排期
+                        下发排期
                     </span>
                 </el-button>
             </span>
@@ -548,6 +548,17 @@ export default {
         }
     },
     methods: {
+		openOutsourceFlow() {
+			const params = {
+				"orderId": this.currentRow.orderId,
+				"orderRId": this.currentRow.orderRId,
+				"orderShoeId": this.currentRow.orderShoeId,
+				"shoeRId": this.currentRow.shoeRId,
+			}
+			const queryString = new URLSearchParams(params).toString();
+			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
+			window.open(url, '_blank')
+		},
         handleFocus(event) {
             console.log(event)
             if (!this.$props.editable) event.preventDefault(); // Prevent opening dropdown

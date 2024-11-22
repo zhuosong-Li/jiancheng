@@ -46,7 +46,7 @@
                     <template #default="scope">
                         <el-button
                             type="primary"
-                            size="small"
+                            size="default"
                             @click="openEditShoeDialog(scope.row)"
                             >编辑</el-button
                         >
@@ -125,7 +125,10 @@
         width="50%">
         <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
             <el-form-item label="鞋型编号">
-                <el-input v-model="orderForm.shoeRId"></el-input>
+                <el-input v-model="orderForm.shoeRId" disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="设计师">
+                <el-input v-model="orderForm.shoeDesigner" disabled="true"></el-input>
             </el-form-item>
             <el-form-item label="选择颜色">
                 <el-select v-model="orderForm.shoeColor" placeholder="请选择">
@@ -137,9 +140,7 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="设计师">
-                <el-input v-model="orderForm.shoeDesigner"></el-input>
-            </el-form-item>
+            
         </el-form>
         <template #footer>
         <span>
@@ -240,6 +241,12 @@ export default {
         },
         openAddShoeDialog() {
             this.addShoeDialogVis = true;
+            this.orderForm = {
+                shoeId: "",
+                shoeRId: "",
+                shoeDesigner: "",
+                shoeAdjuster: "",
+            }
         },
         openEditShoeDialog(row) {
             this.orderForm = row;
@@ -310,7 +317,7 @@ export default {
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/editshoe`, this.orderForm);
+                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/editshoetype`, this.orderForm);
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',

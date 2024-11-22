@@ -9,6 +9,7 @@ from event_processor import EventProcessor
 from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from general_document.bom import generate_excel_file
 from collections import defaultdict
+from business.batch_info_type import get_order_batch_type_helper
 
 second_bom_bp = Blueprint("second_bom_bp", __name__)
 
@@ -237,115 +238,44 @@ def get_current_bom_item():
         .filter(BomItem.bom_id == bom.Bom.bom_id)
         .all()
     )
-    print(bom_items)
+    # get shoe size name
+    order_id = (
+        db.session.query(Order.order_id)
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id).scalar()
+    )
+    shoe_size_names = get_order_batch_type_helper(order_id)
     result = []
-    for bom_item in bom_items:
-        item, material, material_type, department, supplier = bom_item
-        sizeInfo = [
-            {
-                "size": "35",
-                "innerSize": "7",
-                "outterSize": "7",
+    for row in bom_items:
+        bom_item, material, material_type, department, supplier = row
+        sizeInfo = []
+        for i in range(len(shoe_size_names)):
+            index = i + 34
+            obj = {
+                "size": shoe_size_names[i]["label"],
                 "approvalAmount": (
-                    item.size_35_total_usage if item.size_35_total_usage else 0.00
+                    getattr(bom_item, f"size_{index}_total_usage")
+                    if getattr(bom_item, f"size_{index}_total_usage")
+                    else 0.00
                 ),
-            },
-            {
-                "size": "36",
-                "innerSize": "7",
-                "outterSize": "7.5",
-                "approvalAmount": (
-                    item.size_36_total_usage if item.size_36_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "37",
-                "innerSize": "8",
-                "outterSize": "8",
-                "approvalAmount": (
-                    item.size_37_total_usage if item.size_37_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "38",
-                "innerSize": "8",
-                "outterSize": "8.5",
-                "approvalAmount": (
-                    item.size_38_total_usage if item.size_38_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "39",
-                "innerSize": "9",
-                "outterSize": "9",
-                "approvalAmount": (
-                    item.size_39_total_usage if item.size_39_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "40",
-                "innerSize": "9",
-                "outterSize": "9.5",
-                "approvalAmount": (
-                    item.size_40_total_usage if item.size_40_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "41",
-                "innerSize": "10",
-                "outterSize": "10",
-                "approvalAmount": (
-                    item.size_41_total_usage if item.size_41_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "42",
-                "innerSize": "10",
-                "outterSize": "10.5",
-                "approvalAmount": (
-                    item.size_42_total_usage if item.size_42_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "43",
-                "innerSize": "11",
-                "outterSize": "11",
-                "approvalAmount": (
-                    item.size_43_total_usage if item.size_43_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "44",
-                "innerSize": "12",
-                "outterSize": "12",
-                "approvalAmount": (
-                    item.size_44_total_usage if item.size_44_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "45",
-                "innerSize": "13",
-                "outterSize": "13",
-                "approvalAmount": (
-                    item.size_45_total_usage if item.size_45_total_usage else 0.00
-                ),
-            },
-        ]
+            }
+            sizeInfo.append(obj)
         result.append(
             {
-                "bomItemId": item.bom_item_id,
+                "bomItemId": bom_item.bom_item_id,
                 "materialName": material.material_name,
                 "materialType": material_type.material_type_name,
-                "materialModel": item.material_model,
-                "materialSpecification": item.material_specification,
+                "materialModel": bom_item.material_model,
+                "materialSpecification": bom_item.material_specification,
                 "supplierName": supplier.supplier_name,
                 "useDepart": department.department_id if department else None,
                 "pairs": 0.00,
-                "unitUsage": item.unit_usage if item.unit_usage else 0.00 if material.material_category == 0 else None,
-                "approvalUsage": item.total_usage if item.total_usage else 0.00,
+                "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material.material_category == 0 else None,
+                "approvalUsage": bom_item.total_usage if bom_item.total_usage else 0.00,
                 "unit": material.material_unit,
-                "color": item.bom_item_color,
-                "comment": item.remark,
+                "color": bom_item.bom_item_color,
+                "comment": bom_item.remark,
                 "materialCategory": material.material_category,
                 "sizeInfo": sizeInfo,
             }
@@ -360,7 +290,7 @@ def save_bom_usage():
     bom_items = request.json.get("bomItems")
     bom = db.session.query(Bom).filter(Bom.bom_rid == bom_rid).first()
     bom.bom_status = "1"
-    db.session.commit()
+    db.session.flush()
     print(bom_items)
     for bom_item in bom_items:
         if not bom_item["bomItemId"]:
@@ -385,43 +315,24 @@ def save_bom_usage():
                 material_specification=bom_item["materialSpecification"] if bom_item["materialSpecification"] else "",
                 bom_item_add_type=1,
                 bom_item_color=bom_item["color"] if bom_item["color"] else None,
-                size_35_total_usage=bom_item["sizeInfo"][0]["approvalAmount"],
-                size_36_total_usage=bom_item["sizeInfo"][1]["approvalAmount"],
-                size_37_total_usage=bom_item["sizeInfo"][2]["approvalAmount"],
-                size_38_total_usage=bom_item["sizeInfo"][3]["approvalAmount"],
-                size_39_total_usage=bom_item["sizeInfo"][4]["approvalAmount"],
-                size_40_total_usage=bom_item["sizeInfo"][5]["approvalAmount"],
-                size_41_total_usage=bom_item["sizeInfo"][6]["approvalAmount"],
-                size_42_total_usage=bom_item["sizeInfo"][7]["approvalAmount"],
-                size_43_total_usage=bom_item["sizeInfo"][8]["approvalAmount"],
-                size_44_total_usage=bom_item["sizeInfo"][9]["approvalAmount"],
-                size_45_total_usage=bom_item["sizeInfo"][10]["approvalAmount"],
             )
+            for i in range(len(bom_item["sizeInfo"])):
+                setattr(bom_item_entity, f"size_{i}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
             db.session.add(bom_item_entity)
             db.session.flush()
             bom_item["bomItemId"] = bom_item_entity.bom_item_id
-            db.session.commit()
-        entity = (
-            db.session.query(BomItem)
-            .filter(BomItem.bom_item_id == bom_item["bomItemId"])
-            .first()
-        )
-            
-        entity.size_35_total_usage = bom_item["sizeInfo"][0]["approvalAmount"]
-        entity.size_36_total_usage = bom_item["sizeInfo"][1]["approvalAmount"]
-        entity.size_37_total_usage = bom_item["sizeInfo"][2]["approvalAmount"]
-        entity.size_38_total_usage = bom_item["sizeInfo"][3]["approvalAmount"]
-        entity.size_39_total_usage = bom_item["sizeInfo"][4]["approvalAmount"]
-        entity.size_40_total_usage = bom_item["sizeInfo"][5]["approvalAmount"]
-        entity.size_41_total_usage = bom_item["sizeInfo"][6]["approvalAmount"]
-        entity.size_42_total_usage = bom_item["sizeInfo"][7]["approvalAmount"]
-        entity.size_43_total_usage = bom_item["sizeInfo"][8]["approvalAmount"]
-        entity.size_44_total_usage = bom_item["sizeInfo"][9]["approvalAmount"]
-        entity.size_45_total_usage = bom_item["sizeInfo"][10]["approvalAmount"]
-        entity.total_usage = bom_item["approvalUsage"]
-        entity.unit_usage = bom_item["unitUsage"]
-        entity.remark = bom_item["comment"] if bom_item["comment"] else ""
-        db.session.commit()
+        else:
+            entity = (
+                db.session.query(BomItem)
+                .filter(BomItem.bom_item_id == bom_item["bomItemId"])
+                .first()
+            )
+            for i in range(len(bom_item["sizeInfo"])):
+                setattr(entity, f"size_{i}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
+            entity.total_usage = bom_item["approvalUsage"]
+            entity.unit_usage = bom_item["unitUsage"]
+            entity.remark = bom_item["comment"] if bom_item["comment"] else ""
+    db.session.commit()
     return jsonify({"status": "success"})
 
 
@@ -438,7 +349,6 @@ def get_bom_details():
         .first()
         .Bom.bom_id
     )
-    print(bom_id)
     bom_rid = db.session.query(Bom).filter(Bom.bom_id == bom_id).first().bom_rid
     bom_items = (
         db.session.query(BomItem, Material, MaterialType, Department, Supplier)
@@ -449,99 +359,23 @@ def get_bom_details():
         .filter(BomItem.bom_id == bom_id)
         .all()
     )
+
+    shoe_size_names = get_order_batch_type_helper(order_id)
     result = []
     for bom_item in bom_items:
         item, material, material_type, department, supplier = bom_item
-        sizeInfo = [
-            {
-                "size": "35",
-                "innerSize": "7",
-                "outterSize": "7",
+        sizeInfo = []
+        for i in range(len(shoe_size_names)):
+            index = i + 34
+            obj = {
+                "size": shoe_size_names[i]["label"],
                 "approvalAmount": (
-                    item.size_35_total_usage if item.size_35_total_usage else 0.00
+                    getattr(bom_item, f"size_{index}_total_usage")
+                    if getattr(bom_item, f"size_{index}_total_usage")
+                    else 0.00
                 ),
-            },
-            {
-                "size": "36",
-                "innerSize": "7",
-                "outterSize": "7.5",
-                "approvalAmount": (
-                    item.size_36_total_usage if item.size_36_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "37",
-                "innerSize": "8",
-                "outterSize": "8",
-                "approvalAmount": (
-                    item.size_37_total_usage if item.size_37_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "38",
-                "innerSize": "8",
-                "outterSize": "8.5",
-                "approvalAmount": (
-                    item.size_38_total_usage if item.size_38_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "39",
-                "innerSize": "9",
-                "outterSize": "9",
-                "approvalAmount": (
-                    item.size_39_total_usage if item.size_39_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "40",
-                "innerSize": "9",
-                "outterSize": "9.5",
-                "approvalAmount": (
-                    item.size_40_total_usage if item.size_40_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "41",
-                "innerSize": "10",
-                "outterSize": "10",
-                "approvalAmount": (
-                    item.size_41_total_usage if item.size_41_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "42",
-                "innerSize": "10",
-                "outterSize": "10.5",
-                "approvalAmount": (
-                    item.size_42_total_usage if item.size_42_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "43",
-                "innerSize": "11",
-                "outterSize": "11",
-                "approvalAmount": (
-                    item.size_43_total_usage if item.size_43_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "44",
-                "innerSize": "12",
-                "outterSize": "12",
-                "approvalAmount": (
-                    item.size_44_total_usage if item.size_44_total_usage else 0.00
-                ),
-            },
-            {
-                "size": "45",
-                "innerSize": "13",
-                "outterSize": "13",
-                "approvalAmount": (
-                    item.size_45_total_usage if item.size_45_total_usage else 0.00
-                ),
-            },
-        ]
+            }
+            sizeInfo.append(obj)
         result.append(
             {
                 "materialName": material.material_name,

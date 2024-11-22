@@ -10,6 +10,7 @@ from general_document.bom import generate_excel_file
 from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
 from api_utility import randomIdGenerater
 from collections import defaultdict
+from business.batch_info_type import get_order_batch_type_helper
 
 usage_calculation_bp = Blueprint("usage_calculation_bp", __name__)
 
@@ -40,11 +41,8 @@ def get_order_first_bom():
             Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id
         )  # Assuming BOM is optional
         .outerjoin(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
-        .outerjoin(
-            PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
-        ).filter(
-            Order.order_id == order_id
-        )
+        .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
+        .filter(Order.order_id == order_id)
         .all()
     )
 
@@ -98,8 +96,12 @@ def get_order_first_bom():
 
         # Check if this color already exists in typeInfos
         existing_entry = next(
-            (info for info in result_dict[shoe.shoe_rid]["typeInfos"] if info["color"] == color.color_name),
-            None
+            (
+                info
+                for info in result_dict[shoe.shoe_rid]["typeInfos"]
+                if info["color"] == color.color_name
+            ),
+            None,
         )
 
         # Prepare BOM and PurchaseOrder details
@@ -122,15 +124,13 @@ def get_order_first_bom():
                     "3": "等待用量填写",
                     "4": "用量填写已保存",
                     "5": "用量填写已提交",
-                    "6": "用量填写已下发"
+                    "6": "用量填写已下发",
                 }.get(bom.bom_status, "未填写")
             elif bom.bom_type == 1:
                 second_bom_id = bom.bom_rid
-                second_bom_status = {
-                    "1": "已保存",
-                    "2": "已提交",
-                    "3": "已下发"
-                }.get(bom.bom_status, "未填写")
+                second_bom_status = {"1": "已保存", "2": "已提交", "3": "已下发"}.get(
+                    bom.bom_status, "未填写"
+                )
 
         # Set PurchaseOrder details based on purchase_order_type
         if purchase_order:
@@ -139,50 +139,61 @@ def get_order_first_bom():
                 first_purchase_order_status = {
                     "1": "已保存",
                     "2": "已提交",
-                    "3": "已下发"
+                    "3": "已下发",
                 }.get(purchase_order.purchase_order_status, "未填写")
             elif purchase_order.purchase_order_type == "S":
                 second_purchase_order_id = purchase_order.purchase_order_rid
                 second_purchase_order_status = {
                     "1": "已保存",
                     "2": "已提交",
-                    "3": "已下发"
+                    "3": "已下发",
                 }.get(purchase_order.purchase_order_status, "未填写")
 
         # If the color entry already exists, update it with BOM details
         if existing_entry:
             print(existing_entry)
             # Update only if fields are not already filled to prevent overwriting
-            if first_bom_id and existing_entry.get("firstBomId") =='未填写':
+            if first_bom_id and existing_entry.get("firstBomId") == "未填写":
                 existing_entry["firstBomId"] = first_bom_id
                 existing_entry["firstBomStatus"] = first_bom_status
                 existing_entry["firstPurchaseOrderId"] = first_purchase_order_id
                 existing_entry["firstPurchaseOrderStatus"] = first_purchase_order_status
 
-            if second_bom_id and existing_entry.get("secondBomId") =='未填写':
+            if second_bom_id and existing_entry.get("secondBomId") == "未填写":
                 existing_entry["secondBomId"] = second_bom_id
                 existing_entry["secondBomStatus"] = second_bom_status
                 existing_entry["secondPurchaseOrderId"] = second_purchase_order_id
-                existing_entry["secondPurchaseOrderStatus"] = second_purchase_order_status
+                existing_entry["secondPurchaseOrderStatus"] = (
+                    second_purchase_order_status
+                )
         else:
             # If the color doesn't exist, create a new entry in typeInfos
-            result_dict[shoe.shoe_rid]["typeInfos"].append({
-                "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
-                "orderShoeRid": shoe.shoe_rid,
-                "color": color.color_name,
-                "image": (
-                    IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
-                    if shoe_type.shoe_image_url else None
-                ),
-                "firstBomId": first_bom_id if first_bom_id else "未填写",
-                "firstBomStatus": first_bom_status,
-                "firstPurchaseOrderId": first_purchase_order_id if first_purchase_order_id else "未填写",
-                "firstPurchaseOrderStatus": first_purchase_order_status,
-                "secondBomId": second_bom_id if second_bom_id else "未填写",
-                "secondBomStatus": second_bom_status,
-                "secondPurchaseOrderId": second_purchase_order_id if second_purchase_order_id else "未填写",
-                "secondPurchaseOrderStatus": second_purchase_order_status,
-            })
+            result_dict[shoe.shoe_rid]["typeInfos"].append(
+                {
+                    "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
+                    "orderShoeRid": shoe.shoe_rid,
+                    "color": color.color_name,
+                    "image": (
+                        IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
+                        if shoe_type.shoe_image_url
+                        else None
+                    ),
+                    "firstBomId": first_bom_id if first_bom_id else "未填写",
+                    "firstBomStatus": first_bom_status,
+                    "firstPurchaseOrderId": (
+                        first_purchase_order_id if first_purchase_order_id else "未填写"
+                    ),
+                    "firstPurchaseOrderStatus": first_purchase_order_status,
+                    "secondBomId": second_bom_id if second_bom_id else "未填写",
+                    "secondBomStatus": second_bom_status,
+                    "secondPurchaseOrderId": (
+                        second_purchase_order_id
+                        if second_purchase_order_id
+                        else "未填写"
+                    ),
+                    "secondPurchaseOrderStatus": second_purchase_order_status,
+                }
+            )
 
         # Add the color to colorSet to prevent future duplicates
         result_dict[shoe.shoe_rid]["colorSet"].add(color.color_name)
@@ -210,120 +221,29 @@ def get_shoe_bom_items():
         .all()
     )
     result = []
+    # get shoe size name
+    order_id = (
+        db.session.query(Order.order_id)
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(Bom, Bom.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
+        .filter(Bom.bom_rid == bom_rid).scalar()
+    )
+    shoe_size_names = get_order_batch_type_helper(order_id)
     for entity in entities:
         bom, bom_item, material, material_type, supplier = entity
-        sizeInfo = [
-            {
-                "size": "35",
-                "innerSize": "7",
-                "outterSize": "7",
+        sizeInfo = []
+        for i in range(len(shoe_size_names)):
+            index = i + 34
+            obj = {
+                "size": shoe_size_names[i]["label"],
                 "approvalAmount": (
-                    bom_item.size_35_total_usage
-                    if bom_item.size_35_total_usage
+                    getattr(bom_item, f"size_{index}_total_usage")
+                    if getattr(bom_item, f"size_{index}_total_usage")
                     else 0.00
                 ),
-            },
-            {
-                "size": "36",
-                "innerSize": "7",
-                "outterSize": "7.5",
-                "approvalAmount": (
-                    bom_item.size_36_total_usage
-                    if bom_item.size_36_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "37",
-                "innerSize": "8",
-                "outterSize": "8",
-                "approvalAmount": (
-                    bom_item.size_37_total_usage
-                    if bom_item.size_37_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "38",
-                "innerSize": "8",
-                "outterSize": "8.5",
-                "approvalAmount": (
-                    bom_item.size_38_total_usage
-                    if bom_item.size_38_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "39",
-                "innerSize": "9",
-                "outterSize": "9",
-                "approvalAmount": (
-                    bom_item.size_39_total_usage
-                    if bom_item.size_39_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "40",
-                "innerSize": "9",
-                "outterSize": "9.5",
-                "approvalAmount": (
-                    bom_item.size_40_total_usage
-                    if bom_item.size_40_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "41",
-                "innerSize": "10",
-                "outterSize": "10",
-                "approvalAmount": (
-                    bom_item.size_41_total_usage
-                    if bom_item.size_41_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "42",
-                "innerSize": "10",
-                "outterSize": "10.5",
-                "approvalAmount": (
-                    bom_item.size_42_total_usage
-                    if bom_item.size_42_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "43",
-                "innerSize": "11",
-                "outterSize": "11",
-                "approvalAmount": (
-                    bom_item.size_43_total_usage
-                    if bom_item.size_43_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "44",
-                "innerSize": "12",
-                "outterSize": "12",
-                "approvalAmount": (
-                    bom_item.size_44_total_usage
-                    if bom_item.size_44_total_usage
-                    else 0.00
-                ),
-            },
-            {
-                "size": "45",
-                "innerSize": "13",
-                "outterSize": "13",
-                "approvalAmount": (
-                    bom_item.size_45_total_usage
-                    if bom_item.size_45_total_usage
-                    else 0.00
-                ),
-            },
-        ]
+            }
+            sizeInfo.append(obj)
 
         result.append(
             {
@@ -471,7 +391,7 @@ def issue_bom_usage():
                     bom_item.Supplier.supplier_name,
                     bom_item.BomItem.bom_item_color,
                 )
-                
+
                 # Update the dictionary: sum the total_usage and add other details
                 if key not in material_dict:
                     material_dict[key] = {
@@ -482,12 +402,20 @@ def issue_bom_usage():
                         "颜色": bom_item.BomItem.bom_item_color,
                         "单位": bom_item.Material.material_unit,
                         "厂家名称": bom_item.Supplier.supplier_name,
-                        "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
+                        "单位用量": (
+                            bom_item.BomItem.unit_usage
+                            if bom_item.BomItem.unit_usage
+                            else ""
+                        ),
                         "核定用量": 0,  # Initialize "核定用量" for summing
-                        "使用工段": bom_item.Department.department_name if bom_item.Department else "",
+                        "使用工段": (
+                            bom_item.Department.department_name
+                            if bom_item.Department
+                            else ""
+                        ),
                         "备注": bom_item.BomItem.remark,
                     }
-                
+
                 # Update the total usage (核定用量)
                 material_dict[key]["核定用量"] += bom_item.BomItem.total_usage
         index = 1
@@ -501,7 +429,9 @@ def issue_bom_usage():
             )
             == False
         ):
-            os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom"))
+            os.mkdir(
+                os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom")
+            )
 
         image_save_path = os.path.join(
             FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom", "shoe_image.jpg"
@@ -516,7 +446,7 @@ def issue_bom_usage():
         )
         shoe_directory = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid)
 
-# Get the list of folders inside the directory
+        # Get the list of folders inside the directory
         folders = os.listdir(shoe_directory)
 
         # Filter out any non-folder entries (just in case)
@@ -525,13 +455,25 @@ def issue_bom_usage():
         # Get the first folder in the directory
         if folders:
             first_folder = folders[0]
-            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, first_folder, "shoe_image.jpg")
+            image_path = os.path.join(
+                IMAGE_UPLOAD_PATH,
+                "shoe",
+                order_shoe_rid,
+                first_folder,
+                "shoe_image.jpg",
+            )
         else:
-            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg")
+            image_path = os.path.join(
+                IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg"
+            )
         generate_excel_file(
             FILE_STORAGE_PATH + "/BOM-V1.0-temp.xlsx",
             os.path.join(
-                FILE_STORAGE_PATH, order_rid, order_shoe_rid, "firstbom", "一次BOM表.xlsx"
+                FILE_STORAGE_PATH,
+                order_rid,
+                order_shoe_rid,
+                "firstbom",
+                "一次BOM表.xlsx",
             ),
             {
                 "order_id": order_rid,
@@ -604,6 +546,5 @@ def issue_bom_usage():
             return jsonify({"status": "failed"})
         db.session.add(event)
         db.session.commit()
-
 
     return jsonify({"status": "success"})

@@ -112,7 +112,7 @@ def format_line_group(line_group_obj):
 def status_converter(current_status_arr, current_status_value_arr):
     status = "未排期"
     if 17 in current_status_arr and current_status_value_arr[current_status_arr.index(17)] == 1:
-        status = "已排期"
+        status = "已保存排期"
     elif 17 in current_status_arr:
         status = "未排期"
     elif 18 in current_status_arr:

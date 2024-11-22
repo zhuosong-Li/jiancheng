@@ -417,6 +417,7 @@ def get_order_shoe_timeline():
                 OrderStatusReference,
                 Operation.operation_modified_status == OrderStatusReference.order_status_id,
             )
+            .join(OrderStatus, OrderStatus.order_id == Order.order_id)
             .join(
                 latest_event_subquery,
                 (Event.operation_id == latest_event_subquery.c.operation_id) &
@@ -800,7 +801,7 @@ def save_production_order_Price():
         for entity in entities:
             entity.price_per_pair = unit_price
             entity.total_price = unit_price * entity.total_amount
-            db.session.commit()
+    db.session.commit()
 
     return jsonify({"msg": "Production order confirmed."})
 
