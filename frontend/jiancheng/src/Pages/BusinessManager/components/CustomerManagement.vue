@@ -14,10 +14,6 @@
                 height="500"
             >
                 <el-table-column
-                    prop="customerId"
-                    label="客户编号"
-                ></el-table-column>
-                <el-table-column
                     prop="customerName"
                     label="客户名称"
                 ></el-table-column>
@@ -28,6 +24,7 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button
+                            v-if = "allowEditCustomer"
                             type="primary"
                             size="small"
                             @click="openEditCustomerDialog(scope.row)"
@@ -39,6 +36,12 @@
                             @click="openEditCustomerBatchDialog(scope.row)"
                             >配码管理</el-button
                         >
+                        <el-button
+                        v-if ="allowEditCustomer"
+                            type="warning"
+                            size="small"
+                            @click="deleteCustomer(scope.row)"
+                        >删除客户</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -265,15 +268,33 @@ export default {
             batchDialogCurCustomerId:'',
             batchTabDisplayData:{},
             colNameToProp:[],
-            currentBatchType:{}
+            currentBatchType:{},
+            userName:'',
+            userRole:'',
         }
+    },
+    computed:
+    {
+        allowEditCustomer()
+        {
+            return this.userRole == 4
+        }
+
     },
     mounted() {
         this.$setAxiosToken()
         this.getCustomerList()
+        this.userInfo()
         // this.getAllBatchTypes()
     },
     methods: {
+        async userInfo()
+        {
+           const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
+           this.userName = response.data.staffName
+           this.userRole = response.data.role
+           console.log(this.userRole)
+        },
         async getCustomerList() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
             this.customerTableData = response.data
@@ -353,6 +374,37 @@ export default {
             this.addCustomerBatchDialogVisible=false
             this.resetBatchForm()
         },
+        deleteCustomer(row)
+        {
+            console.log(row)
+            this.$confirm('确定删除此客户商标吗？', '提示', {
+                confirmButtonText:'确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then( async () => {
+                const body = {
+                        params:{
+                            customerId:row.customerId,
+                        }
+                    }
+                const response = await axios.delete(
+                    `${this.$apiBaseUrl}/customer/deletecustomer`,
+                    body)
+                if (response.status === 200){
+                    this.$message({
+                        type:'success',
+                        message:'删除成功'
+                    })
+                    this.getCustomerList()
+                }
+                else {
+                    this.$message({
+                        type:'error',
+                        message:'删除失败'
+                    })
+                }
+            })
+        },
         deleteBatchInfo(row){
             this.$confirm('确定删除此配码吗？', '提示', {
                 confirmButtonText:'确定',
@@ -365,8 +417,6 @@ export default {
                             packagingInfoId:row.packagingInfoId
                         }
                     }
-                console.log(body)
-                console.log(`${this.$apiBaseUrl}/customer/deletebatchinfo`)
                 const response = await axios.delete(
                     `${this.$apiBaseUrl}/customer/deletebatchinfo`,
                     body)

@@ -3,6 +3,9 @@ from flask import Blueprint, jsonify, request
 from app_config import app, db
 from models import *
 from api_utility import to_camel, to_snake
+from sqlalchemy.exc import SQLAlchemyError
+
+
 customer_bp = Blueprint("customer_bp", __name__)
 
 @customer_bp.route("/customer/getallcustomers", methods=["GET"])
@@ -187,6 +190,39 @@ def edit_customer():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+def delete_customer_all_batch(customer_id):
+    try:
+        db.session.execute(db.delete(PackagingInfo).filter_by(customer_id=customer_id))
+        db.session.commit()
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error:{e}")
+        raise SystemError("Delete Failed")
+    finally:
+        db.session.close()
+    return 1
+        
+@customer_bp.route("/customer/deletecustomer", methods=["DELETE"])
+def delete_customer():
+    try:
+        print(request)
+        customer_id = request.args.get("customerId")
+        customer_entity = (db.session.query(Customer).filter(
+            Customer.customer_id == customer_id
+        ).first())
+        if not customer_entity:
+            return jsonify({"status":"error", "message":"entity doesnt exist"})
+        if delete_customer_all_batch(customer_id) == 1:
+            db.session.delete(customer_entity)
+            db.session.commit()
+        return jsonify({'status':'success'})
+
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        print(f"Error:{e}")
+        return jsonify({"status":"error", "message" :str(e)}), 500
+    finally:
+        db.session.close()
 @customer_bp.route("/customer/deletebatchinfo", methods = ["DELETE"])
 def delete_customer_batch():
     try:

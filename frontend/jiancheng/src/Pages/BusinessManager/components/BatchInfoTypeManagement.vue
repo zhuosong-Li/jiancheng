@@ -69,7 +69,8 @@
                     prop="size46Name"
                     label="码号13"
                 ></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作"
+                v-if="allowModifyBatchInfoType">
                     <template #default="scope">
                         <el-button
                             type="danger"
@@ -84,7 +85,7 @@
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
-            <el-button type="primary" @click="openAddBatchTypeDialog">添加新配码种类</el-button>
+            <el-button v-if="allowModifyBatchInfoType" type="primary" @click="openAddBatchTypeDialog">添加新配码种类</el-button>
         </el-col>
     </el-row>
 
@@ -158,6 +159,9 @@ export default {
             editBatchTypeDialogVis:false,
             displayBatchInfoTypes:[],
             totalBatchInfoTypes:[],
+            userRole:'',
+            userName:'',
+            // allowModifyBatchInfoType:false,
             batchInfoTypeForm:
             {
                 batchInfoTypeId:"",
@@ -179,9 +183,16 @@ export default {
             },
         }
     },
+    computed: {
+        allowModifyBatchInfoType()
+        {
+            return this.userRole == 4
+        }
+    },
     mounted() {
         this.$setAxiosToken()
         this.getBatchTypes()
+        this.userInfo()
     },
     methods: {
         resetForm(inputForm)
@@ -196,6 +207,13 @@ export default {
         },
         async testData(){
             await axios.post(`${this.$apiBaseUrl}/testshoetypesort`)
+        },
+        async userInfo()
+        {
+           const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
+           this.userName = response.data.staffName
+           this.userRole = response.data.role
+           console.log(this.userRole)
         },
         async getBatchTypes(){
             const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)

@@ -1,13 +1,23 @@
 import BusinessOrderDetail from '../views/BusinessOrderDetail.vue'
 export default [
   {
-    path: '/business/businessorderdetail/orderid=:orderId',
+    path: '/business/businessorderdetail/orderid=:orderId/admin',
     name: 'business-orderdetail',
     component: BusinessOrderDetail,
     props: true,
     meta: {
       requiresAuth: true,
       role: 4
+    }
+  },
+  {
+    path: '/business/businessorderdetail/orderid=:orderId/clerk',
+    name: 'business-orderdetail',
+    component: BusinessOrderDetail,
+    props: true,
+    meta: {
+      requiresAuth: true,
+      role: 21
     }
   },
   // {
