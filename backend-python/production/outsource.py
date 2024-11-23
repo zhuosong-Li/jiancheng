@@ -46,7 +46,7 @@ def get_order_outsource_overview():
             OrderShoeProductionInfo,
             OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
         )
-        .filter(OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER)
+        .filter(OrderStatus.order_current_status >= IN_PRODUCTION_ORDER_NUMBER)
     )
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
@@ -88,19 +88,15 @@ def get_order_shoe_outsource_info():
     order_shoe_id = request.args.get("orderShoeId")
     response = (
         (
-            db.session.query(OutsourceInfo, OutsourceFactory)
+            db.session.query(OutsourceInfo)
             .join(OrderShoe, OrderShoe.order_shoe_id == OutsourceInfo.order_shoe_id)
-            .join(
-                OutsourceFactory,
-                OutsourceFactory.factory_id == OutsourceInfo.factory_id,
-            )
         )
         .filter(OrderShoe.order_shoe_id == order_shoe_id)
         .all()
     )
     result = []
     for row in response:
-        outsource_info, factory = row
+        outsource_info = row
         temp = []
         for number in outsource_info.outsource_type.split(","):
             if number == "0":
@@ -112,10 +108,7 @@ def get_order_shoe_outsource_info():
         obj = {
             "outsourceInfoId": outsource_info.outsource_info_id,
             "outsourceType": temp,
-            "outsourceFactory": {
-                "id": factory.factory_id,
-                "value": factory.factory_name,
-            },
+            "outsourceFactory": outsource_info.factory_name,
             "outsourceAmount": outsource_info.outsource_amount,
             "outsourceStartDate": format_date(outsource_info.outsource_start_date),
             "outsourceEndDate": format_date(outsource_info.outsource_end_date),
@@ -192,19 +185,17 @@ def get_outsource_batch_info():
 def store_outsource_for_order_shoe():
     outsource_input = request.get_json()
     departments = ""
-    for line in outsource_input["type"]:
+    for line in outsource_input["type"].split("+"):
         if line == "裁断":
             departments += "0,"
         elif line == "针车":
             departments += "1,"
-        elif line == "成型":
-            departments += "2,"
         else:
             return jsonify({"message": "failed"}), 400
     departments = departments[:-1]
     obj = {
         "outsource_type": departments,
-        "factory_id": outsource_input["factoryId"],
+        "factory_name": outsource_input["factoryName"],
         "outsource_start_date": outsource_input["outsourceStartDate"],
         "outsource_end_date": outsource_input["outsourceEndDate"],
         "deadline_date": outsource_input["deadlineDate"],
@@ -475,12 +466,11 @@ def get_outsource_approval_overview():
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
     query = (
-        db.session.query(Order, OrderShoe, Shoe, OutsourceInfo, OutsourceFactory)
+        db.session.query(Order, OrderShoe, Shoe, OutsourceInfo)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderStatus, OrderStatus.order_id == Order.order_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .join(OutsourceInfo, OutsourceInfo.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id)
         .filter(OutsourceInfo.outsource_status != 0)
     )
     if order_rid and order_rid != "":
@@ -492,7 +482,7 @@ def get_outsource_approval_overview():
     result = []
     mapping = {"0": "裁断", "1": "针车", "2": "成型"}
     for row in response:
-        (order, order_shoe, shoe, outsource_info, outsource_factory) = row
+        (order, order_shoe, shoe, outsource_info) = row
 
         arr = [
             mapping[team_int] for team_int in outsource_info.outsource_type.split(",")
@@ -507,7 +497,7 @@ def get_outsource_approval_overview():
             "orderEndDate": format_date(order.end_date),
             "outsourceInfoId": outsource_info.outsource_info_id,
             "outsourceType": arr,
-            "factoryName": outsource_factory.factory_name,
+            "factoryName": outsource_info.factory_name,
             "outsourceAmount": outsource_info.outsource_amount,
             "outsourceStartDate": format_date(outsource_info.outsource_start_date),
             "outsourceEndDate": format_date(outsource_info.outsource_end_date),

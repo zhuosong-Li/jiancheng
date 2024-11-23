@@ -180,23 +180,19 @@ def get_finished_in_out_bound_records():
     db.session.query()
     storage_id = request.args.get("storageId")
     inbound_response = (
-        db.session.query(ShoeInboundRecord, OutsourceInfo, OutsourceFactory)
+        db.session.query(ShoeInboundRecord, OutsourceInfo)
         .outerjoin(
             OutsourceInfo,
             OutsourceInfo.outsource_info_id == ShoeInboundRecord.outsource_info_id,
         )
-        .outerjoin(OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id)
         .filter(ShoeInboundRecord.finished_shoe_storage_id == storage_id)
         .all()
     )
     outbound_response = (
-        db.session.query(ShoeOutboundRecord, OutsourceInfo, OutsourceFactory)
+        db.session.query(ShoeOutboundRecord, OutsourceInfo)
         .outerjoin(
             OutsourceInfo,
             OutsourceInfo.outsource_info_id == ShoeOutboundRecord.outsource_info_id,
-        )
-        .outerjoin(
-            OutsourceFactory, OutsourceFactory.factory_id == OutsourceInfo.factory_id,
         )
         .filter(ShoeOutboundRecord.finished_shoe_storage_id == storage_id)
         .all()
@@ -204,32 +200,27 @@ def get_finished_in_out_bound_records():
 
     result = {"inboundRecords": [], "outboundRecords": []}
     for row in inbound_response:
-        record, _, factory = row
+        record, outsource_info = row
         obj = {
             "productionType": record.inbound_type,
             "date": format_datetime(record.inbound_datetime),
             "amount": record.inbound_amount,
-            "source": None
+            "source": outsource_info.factory_name
         }
-        if factory:
-            obj["source"] = factory.factory_name
         result["inboundRecords"].append(obj)
 
     for row in outbound_response:
-        record, _, factory = row
+        record, outsource_info = row
         obj = {
             "productionType": record.outbound_type,
             "date": format_datetime(record.outbound_datetime),
             "amount": record.outbound_amount,
-            "destination": None,
+            "destination": outsource_info.factory_name,
             "picker": record.picker,
             "department": record.outbound_department,
             "address": record.outbound_address
         }
-        if factory:
-            obj["destination"] = factory.factory_name
         result["outboundRecords"].append(obj)
-    print(result)
     return result
 
 
