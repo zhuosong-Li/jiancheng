@@ -44,7 +44,7 @@
     </el-row>
     <el-dialog v-model="isNewProcedureDialogOpen" title="新工序" width="50%">
         <el-form :model="newProcedureForm" >
-            <el-form-item prop="username" label="工序名字">
+            <el-form-item prop="name" label="工序名字">
                 <el-input v-model="newProcedureForm.name"></el-input>
             </el-form-item>
             <el-form-item prop="team" label="工组">
@@ -117,10 +117,10 @@ export default {
                 ElMessage.error(error)
             }
         },
-        async deleteProcedure() {
+        async deleteProcedure(row) {
             try {
                 let params = {"procedureId": row.procedureId}
-                await axios.get(`${this.$apiBaseUrl}/production/editprocedure`, params)
+                await axios.delete(`${this.$apiBaseUrl}/production/deleteprocedure`, {params})
                 ElMessage.success("删除成功")
                 this.getProcedureData()
             }

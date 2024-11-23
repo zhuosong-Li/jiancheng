@@ -313,14 +313,9 @@
                                 value-format="YYYY-MM-DD" :readonly="!$props.editable">
                             </el-date-picker>
                         </span>
-                    </el-col>
-                    <el-col :span="5" :offset="0">
                         <el-button type="primary" size="default" @click="checkDateProductionStatus(tab)">{{
                             tab.isDateStatusTableVis ? '关闭表格' : '查看工期内排产情况' }}</el-button>
                     </el-col>
-                    <!-- <el-col :span="5" :offset="0">预计每天生产数量：{{ calculateDailyProduction(currentRow.totalShoes,
-                        tab.dateValue)
-                        }}</el-col> -->
                 </el-row>
                 <el-row :gutter="20">
                     <el-table v-if="tab.isDateStatusTableVis" :data="tab.dateStatusTable" border stripe read>
@@ -376,13 +371,25 @@
                 </el-table>
             </el-col>
         </el-row>
+        <el-row :gutter="20" style="margin-top: 20px">
+            <el-col :span="24" :offset="0">
+                工艺备注
+                <el-input v-model="currentRow.technicalRemark" autosize type="textarea" readonly />
+            </el-col>
+        </el-row>
+        <el-row :gutter="20" style="margin-top: 20px">
+            <el-col :span="24" :offset="0">
+                材料备注
+                <el-input v-model="currentRow.materialRemark" autosize type="textarea" readonly />
+            </el-col>
+        </el-row>
         <template #footer>
             <span>
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
                 <el-button v-if="$props.editable" type="primary" @click="modifyProductionSchedule">保存排期</el-button>
-                <el-button v-if="currentRow.status === '未排期' || currentRow.status === '已排期' && $props.editable" type="success" @click="startProduction"
-                    :disabled="currentRow.processSheetUploadStatus != 2">
+                <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已排期') && $props.editable"
+                    type="success" @click="startProduction" :disabled="currentRow.processSheetUploadStatus != 2">
                     <el-tooltip v-if="currentRow.processSheetUploadStatus != 2" effect="dark" content="工艺单未下发"
                         placement="bottom">
                         下发排期
@@ -548,17 +555,51 @@ export default {
         }
     },
     methods: {
-		openOutsourceFlow() {
-			const params = {
-				"orderId": this.currentRow.orderId,
-				"orderRId": this.currentRow.orderRId,
-				"orderShoeId": this.currentRow.orderShoeId,
-				"shoeRId": this.currentRow.shoeRId,
-			}
-			const queryString = new URLSearchParams(params).toString();
-			const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
-			window.open(url, '_blank')
-		},
+        async checkDateProductionStatus(tab) {
+            if (tab.isDateStatusTableVis === true) {
+                tab.isDateStatusTableVis = false
+            }
+            else {
+                const params = { "startDate": tab.dateValue[0], "endDate": tab.dateValue[1], "team": tab.name }
+                try {
+                    const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/checkdateproductionstatus`, { params })
+                    tab.dateStatusTable = response.data
+                    tab.dateStatusTable.forEach(element => {
+                        let amount = 0
+                        element.detail.forEach(row => {
+                            row.averageAmount = this.calculateDailyProduction(row.totalAmount, [row.productionStartDate, row.productionEndDate])
+                            amount += Number(row.averageAmount)
+                        })
+                        element.predictAmount = amount;
+                        tab.isDateStatusTableVis = true
+                    })
+                }
+                catch(error) {
+                    ElMessage.error(error.response.data.message)
+                }
+            }
+        },
+        calculateDailyProduction(totalShoes, dateRange) {
+            if (dateRange && dateRange.length === 2) {
+                const startDate = new Date(dateRange[0]);
+                const endDate = new Date(dateRange[1]);
+                const timeDiff = Math.abs(endDate - startDate);
+                const diffDays = Math.ceil(timeDiff / (1000 * 60 * 60 * 24)) + 1;
+                return (Number(totalShoes) / diffDays).toFixed(2);
+            }
+            return 0;
+        },
+        openOutsourceFlow() {
+            const params = {
+                "orderId": this.currentRow.orderId,
+                "orderRId": this.currentRow.orderRId,
+                "orderShoeId": this.currentRow.orderShoeId,
+                "shoeRId": this.currentRow.shoeRId,
+            }
+            const queryString = new URLSearchParams(params).toString();
+            const url = `${window.location.origin}/productiongeneral/productionoutsource?${queryString}`
+            window.open(url, '_blank')
+        },
         handleFocus(event) {
             console.log(event)
             if (!this.$props.editable) event.preventDefault(); // Prevent opening dropdown

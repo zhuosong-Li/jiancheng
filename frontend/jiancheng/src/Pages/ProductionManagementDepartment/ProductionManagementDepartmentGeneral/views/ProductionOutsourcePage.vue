@@ -34,7 +34,7 @@
 				现有外包流程
 				<el-table :data="outsourceInfo" border stripe scrollbar-always-on>
 					<el-table-column prop="outsourceType" label="外包类型"></el-table-column>
-					<el-table-column prop="outsourceFactory.value" label="外包厂家"></el-table-column>
+					<el-table-column prop="outsourceFactory" label="外包厂家"></el-table-column>
 					<el-table-column prop="outsourceAmount" label="外包数量"></el-table-column>
 					<el-table-column prop="outsourceStartDate" label="外包开始日期"></el-table-column>
 					<el-table-column prop="outsourceEndDate" label="外包结束日期"></el-table-column>
@@ -76,17 +76,20 @@
 		<el-form :model="outsourceForm" :rules="rules" ref="outsourceForm" class="custom-form">
 			<el-form-item label="外包类型" prop="outsourceType">
 				<el-select v-model="outsourceForm.outsourceType" :disabled="readOnly" placeholder="" filterable
-					multiple>
-					<el-option v-for="item in productionDepartments" :key="item" :label="item" :value="item">
+					clearable>
+					<el-option v-for="item in ['裁断+针车', '针车']" :key="item" :label="item" :value="item">
 					</el-option>
 				</el-select>
 			</el-form-item>
 			<el-form-item label="外包厂家" prop="outsourceFactory">
-				<el-select v-model="outsourceForm.outsourceFactory" :disabled="readOnly" value-key="id" placeholder=""
-					filterable clearable>
-					<el-option v-for="item in factoryOptions" :key="item.id" :label="item.value" :value="item">
-					</el-option>
-				</el-select>
+				<template #default="scope">
+					<div style="display: flex; align-items: center; gap: 10px;">
+						<el-autocomplete v-model="outsourceForm.outsourceFactory" :fetch-suggestions="querySearch"
+							placeholder="" clearable>
+						</el-autocomplete>
+						<el-button @click="addOutsourceFactory(outsourceForm.outsourceFactory)">添加厂家</el-button>
+					</div>
+				</template>
 			</el-form-item>
 			<el-form-item label="外包周期" prop="outsourcePeriodArr">
 				<el-date-picker v-model="outsourceForm.outsourcePeriodArr" :disabled="readOnly" type="daterange"
@@ -123,10 +126,20 @@
 				</el-date-picker>
 			</el-form-item>
 		</el-form>
-		<el-row :gutter="20">
-			<el-col :span="4">外包数量</el-col></el-row>
+		<el-row :gutter="20" style="margin-top: 20px">
+			<el-col :span="24" :offset="0">
+				订单鞋型数量
+				<el-table :data="shoeInfo" :span-method="shoeBatchInfoTableSpanMethod" border stripe :max-height="500">
+					<el-table-column prop="colorName" label="颜色"></el-table-column>
+					<el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
+					<el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
+						:label="column.label"></el-table-column>
+				</el-table>
+			</el-col>
+		</el-row>
 		<el-row :gutter="20">
 			<el-col :span="24">
+				外包数量
 				<el-table :data="outsourceForm.outsourceShoeBatchInfo"
 					:span-method="outsourceShoeBatchInfoTableSpanMethod" border stripe :max-height="500">
 					<el-table-column prop="colorName" label="颜色"></el-table-column>
@@ -190,6 +203,7 @@ export default {
 	},
 	data() {
 		return {
+			currentRow: [],
 			readOnly: false,
 			outsourceReadOnlyStatus,
 			outsourceOutboundStatus,
@@ -280,7 +294,6 @@ export default {
 		this.getShoeSizesName()
 		this.getOrderShoeInfo()
 		this.getProductionDepartments()
-		this.getAllOutsourceFactories()
 		this.getOrderShoeBatchInfo()
 		this.getOutsourceInfo()
 	},
@@ -292,6 +305,39 @@ export default {
 		}
 	},
 	methods: {
+		// onProductSelect(info,) {
+		// 	console.log(info, this.currentRow)
+		// 	this.currentRow.outsourceFactory = info.value
+		// },
+		querySearch(queryString, cb) {
+			let result = []
+			if (queryString === "null" || queryString === '') {
+				this.factoryOptions.forEach(factory => {result.push({value: factory.value})})
+				cb(result);
+			}
+			else {
+				const matchObj = queryString
+					? this.factoryOptions.filter(factory =>
+						factory.value.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+					)
+					: []
+				matchObj.forEach(row => {
+					result.push({ value: row.value })
+				})
+				cb(result)
+			}
+		},
+		async addOutsourceFactory(name) {
+            try {
+				let data = {"name": name}
+                const response = await axios.post(`${this.$apiBaseUrl}/general/addnewoutsourcefactory`, data)
+                ElMessage.success(response.data.message)
+				this.getAllOutsourceFactories()
+            }
+            catch (error) {
+                ElMessage.error(error.response.data.message)
+            }
+		},
 		async getShoeSizesName() {
 			let params = { "orderId": this.$props.orderId }
 			let response = await axios.get(`${this.$apiBaseUrl}/batchtype/getorderbatchtype`, { params })
@@ -305,6 +351,7 @@ export default {
 			this.orderInfo.orderTotalShoes = response.data.orderTotalShoes
 		},
 		async editRow(rowData, number) {
+			this.getAllOutsourceFactories()
 			// 0: read only, 1: edit
 			if (rowData === null) {
 				this.outsourceForm = { ...this.template }
@@ -328,7 +375,7 @@ export default {
 					this.readOnly = false
 				}
 			}
-			// this.outsourceShoeBatchInfoTableSpanMethod = shoeBatchInfoTableSpanMethod(this.outsourceShoeBatchInfo)
+			this.currentRow = rowData
 			this.showOutsourceEditPage = true
 		},
 		async deleteRow(rowData) {
@@ -381,7 +428,7 @@ export default {
 					let element = {
 						"outsourceInfoId": this.outsourceForm.outsourceInfoId,
 						"type": this.outsourceForm.outsourceType,
-						"factoryId": this.outsourceForm.outsourceFactory.id,
+						"factoryName": this.outsourceForm.outsourceFactory,
 						"outsourceStartDate": this.outsourceForm.outsourcePeriodArr[0],
 						"outsourceEndDate": this.outsourceForm.outsourcePeriodArr[1],
 						"semifinishedRequired": this.outsourceForm.semifinishedRequired,

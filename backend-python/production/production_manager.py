@@ -7,7 +7,7 @@ from constants import *
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request, send_file, Response
 from models import *
-from sqlalchemy import func, or_, cast, Integer, and_
+from sqlalchemy import func, or_, cast, Integer, and_, select
 from sqlalchemy.dialects.mysql import insert
 from constants import OUTSOURCE_STATUS_MAPPING
 from general_document.batch_info import generate_excel_file
@@ -257,6 +257,9 @@ def get_all_order_production_progress():
     status_node = request.args.get("statusNode")
     start_date_search = request.args.get("orderStartDate")
     end_date_search = request.args.get("orderEndDate")
+    # check order status >= 生产流程
+    stmt = select(OrderStatus.order_id).where(OrderStatus.order_current_status >= 9)
+    order_ids = db.session.execute(stmt).scalars().all()
     status_table = (
         db.session.query(
             OrderShoe.order_shoe_id,
@@ -268,7 +271,6 @@ def get_all_order_production_progress():
             ),
         )
         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
-        .filter(OrderShoeStatus.current_status >= 17)
         .group_by(OrderShoe.order_shoe_id)
     )
     if status_node and status_node != "":
@@ -310,6 +312,7 @@ def get_all_order_production_progress():
             OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
         )
         .join(status_table, status_table.c.order_shoe_id == OrderShoeType.order_shoe_id)
+        .filter(Order.order_id.in_(order_ids))
         .group_by(
             OrderShoeProductionInfo.production_info_id, OrderShoeType.order_shoe_type_id
         )
@@ -392,6 +395,8 @@ def get_all_order_production_progress():
             "moldingStartDate": format_date(production_info.molding_start_date),
             "moldingEndDate": format_date(production_info.molding_end_date),
             "status": status_converter(status_arr, status_value_arr),
+            "technicalRemark": order_shoe.business_technical_remark,
+            "materialRemark": order_shoe.business_material_remark,
         }
         res.append(obj)
     return {"result": res, "totalLength": count_result}
@@ -490,21 +495,27 @@ def check_date_production_status():
     start_date_str = request.args.get("startDate")
     end_date_str = request.args.get("endDate")
     team = request.args.get("team")
+    if not start_date_str or not end_date_str:
+        return jsonify({"message": "未选择日期"}), 400
     start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date()
     end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date()
 
-    if team == "裁断":
+    if team == "cutting":
         search_start_date = "cutting_start_date"
         search_end_date = "cutting_end_date"
-    elif team == "针车预备":
+        teamId = 0
+    elif team == "preSewing":
         search_start_date = "pre_sewing_start_date"
         search_end_date = "pre_sewing_end_date"
-    elif team == "针车":
+        teamId = 1
+    elif team == "sewing":
         search_start_date = "sewing_start_date"
         search_end_date = "sewing_end_date"
-    elif team == "成型":
+        teamId = 1
+    elif team == "molding":
         search_start_date = "molding_start_date"
         search_end_date = "molding_end_date"
+        teamId = 2
     else:
         return jsonify({"message": "invalid team name"}), 400
 
@@ -512,13 +523,14 @@ def check_date_production_status():
         db.session.query(
             OrderShoe,
             OrderShoeType,
-            func.sum(OrderShoeBatchInfo.total_amount).label("total_amount"),
+            func.sum(OrderShoeProductionAmount.total_production_amount).label("total_amount"),
         )
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
         .join(
-            OrderShoeBatchInfo,
-            OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+            OrderShoeProductionAmount,
+            OrderShoeProductionAmount.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
         )
+        .filter(OrderShoeProductionAmount.production_team == teamId)
         .group_by(OrderShoe.order_shoe_id, OrderShoeType.order_shoe_type_id)
         .subquery()
     )
