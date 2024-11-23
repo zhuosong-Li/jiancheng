@@ -53,12 +53,25 @@
                                     >查看</el-button
                                 >
                             </el-descriptions-item>
-                            <el-descriptions-item label="财务信息操作" align="center"
-	                        >
-                            <el-button v-if ="priceUpdateButtonVis"@click="submitPriceForm" type="primary">保存财务信息</el-button>
-                            <el-button v-if ="this.role == 4" @click="toggleFinInfoChange"> 财务信息修改权限 </el-button>
-                            <el-button v-if ="this.allowNext" type="warning" @click="sendOrderNext"> 下发 </el-button>
-	                    </el-descriptions-item>
+                            <el-descriptions-item label="财务信息操作" align="center">
+                                <el-button
+                                    v-if="priceUpdateButtonVis"
+                                    @click="submitPriceForm"
+                                    type="primary"
+                                    >保存财务信息</el-button
+                                >
+                                <el-button v-if="this.role == 4" @click="toggleFinInfoChange">
+                                    财务信息修改权限
+                                </el-button>
+                                <el-button
+                                    v-if="this.allowNext"
+                                    type="warning"
+                                    @click="sendOrderNext"
+                                    :disabled="this.role == '21' ? true : false"
+                                >
+                                    下发
+                                </el-button>
+                            </el-descriptions-item>
                         </el-descriptions>
                     </el-col>
                 </el-row>
@@ -66,10 +79,10 @@
                     :data="orderShoeData"
                     border
                     stripe
-                    height="900"
+                    height="700"
                     :row-key="
                         (row) => {
-                            return row.orderShoeTypeId
+                            return `${row.orderShoeId}`
                         }
                     "
                 >
@@ -80,7 +93,7 @@
                                 border
                                 :row-key="
                                     (row) => {
-                                        return row.packagingInfoId
+                                        return `${row.orderShoeTypeId}`
                                     }
                                 "
                             >
@@ -119,10 +132,7 @@
                                                 label="对/件"
                                                 width="240"
                                             />
-                                            <el-table-column
-                                                prop="unitPerRatio"
-                                                label="件数"
-                                            />
+                                            <el-table-column prop="unitPerRatio" label="件数" />
                                         </el-table>
                                     </template>
                                 </el-table-column>
@@ -156,7 +166,11 @@
                                             controls-position="right"
                                             @change="updateValue(scope.row)"
                                             v-model="scope.row.shoeTypeBatchData.unitPrice"
-                                            :disabled="!this.unitPriceAccessMapping[scope.row.orderShoeTypeId]"
+                                            :disabled="
+                                                !this.unitPriceAccessMapping[
+                                                    scope.row.orderShoeTypeId
+                                                ]
+                                            "
                                         >
                                         </el-input>
                                     </template>
@@ -168,7 +182,11 @@
                                             controls-position="right"
                                             @change="updateCurrencyValue(scope.row)"
                                             v-model="scope.row.shoeTypeBatchData.currencyType"
-                                            :disabled="!this.currencyTypeAccessMapping[scope.row.orderShoeTypeId]"
+                                            :disabled="
+                                                !this.currencyTypeAccessMapping[
+                                                    scope.row.orderShoeTypeId
+                                                ]
+                                            "
                                         >
                                         </el-input>
                                     </template>
@@ -191,9 +209,10 @@
                                 type="primary"
                                 size="default"
                                 @click="openRemarkDialog(scope.row)"
+                                style="margin-left: 20px"
                                 >添加备注
                             </el-button>
-                            
+
                             <el-text v-if="scope.row.orderShoeRemarkExist">{{
                                 scope.row.orderShoeRemarkRep
                             }}</el-text>
@@ -201,7 +220,9 @@
                                 v-if="scope.row.orderShoeRemarkExist"
                                 type="warning"
                                 size="default"
-                                @click="openEditRemarkDialog(scope.row)">
+                                @click="openEditRemarkDialog(scope.row)"
+                                style="margin-left: 20px; margin-top: -20px"
+                            >
                                 编辑备注
                             </el-button>
                         </template>
@@ -263,12 +284,11 @@
 
         <template #footer>
             <span>
-                <el-button @click="isSubmitDocVis=false">取消</el-button>
+                <el-button @click="isSubmitDocVis = false">取消</el-button>
                 <el-button type="primary" @click="submitDoc">上传</el-button>
             </span>
         </template>
     </el-dialog>
-
 </template>
 
 <script>
@@ -287,16 +307,19 @@ export default {
                 Authorization: `Bearer ${this.token}`
             }
         },
-        allowNext(){
-            return (this.orderCurStatus == 6 && this.orderCurStatusVal == 1)
+        allowNext() {
+            return this.orderCurStatus == 6 && this.orderCurStatusVal == 1
         },
         // allowChangeUnitPrice: function(row)
         // {
         //     return this.unitPriceAccessMapping[row.orderShoeTypeId]
         // },
-        priceUpdateButtonVis(){
-            return Object.values(this.unitPriceAccessMapping).includes(true) || Object.values(this.currencyTypeAccessMapping).includes(true)
-        },
+        priceUpdateButtonVis() {
+            return (
+                Object.values(this.unitPriceAccessMapping).includes(true) ||
+                Object.values(this.currencyTypeAccessMapping).includes(true)
+            )
+        }
     },
     data() {
         return {
@@ -304,9 +327,9 @@ export default {
             role: localStorage.getItem('role'),
             staffId: localStorage.getItem('staffid'),
             orderData: {},
-            orderDBId:'',
-            orderCurStatus:'',
-            orderCurStatusVal:'',
+            orderDBId: '',
+            orderCurStatus: '',
+            orderCurStatusVal: '',
             orderShoeData: [],
             orderDocData: {},
             expandedRowKeys: [],
@@ -321,13 +344,8 @@ export default {
                 technicalRemark: '',
                 materialRemark: ''
             },
-            unitPriceAccessMapping:{
-
-            },
-            currencyTypeAccessMapping:
-            {
-
-            },
+            unitPriceAccessMapping: {},
+            currencyTypeAccessMapping: {},
             batchInfoType: {},
             attrMappingToRatio: {
                 size34Name: 'size34Ratio',
@@ -379,40 +397,41 @@ export default {
             this.orderDBId = this.orderData.orderId
             this.orderCurStatus = this.orderData.orderStatus
             this.orderCurStatusVal = this.orderData.orderStatusVal
-            this.orderData.orderShoeAllData.forEach((orderShoe) => orderShoe.orderShoeTypes.forEach(
-                (orderShoeType) =>{
-                    this.orderShoeTypeIdToUnitPrice[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.unitPrice
-                    this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.currencyType
-                    this.unitPriceAccessMapping[orderShoeType.orderShoeTypeId] = orderShoeType.shoeTypeBatchData.unitPrice == 0
-                    this.currencyTypeAccessMapping[orderShoeType.orderShoeTypeId] = (orderShoeType.shoeTypeBatchData.currencyType == '')
-                }
-                ))
+            this.orderData.orderShoeAllData.forEach((orderShoe) =>
+                orderShoe.orderShoeTypes.forEach((orderShoeType) => {
+                    this.orderShoeTypeIdToUnitPrice[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.shoeTypeBatchData.unitPrice
+                    this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.shoeTypeBatchData.currencyType
+                    this.unitPriceAccessMapping[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.shoeTypeBatchData.unitPrice == 0
+                    this.currencyTypeAccessMapping[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.shoeTypeBatchData.currencyType == ''
+                })
+            )
             console.log(this.unitPriceAccessMapping)
             console.log(this.currencyTypeAccessMapping)
         },
-        updateStatus()
-        {
+        updateStatus() {
             return
         },
-        toggleFinInfoChange()
-        {
-            Object.keys(this.unitPriceAccessMapping).forEach((key) => this.unitPriceAccessMapping[key] = !this.unitPriceAccessMapping[key])
-            Object.keys(this.currencyTypeAccessMapping).forEach((key) => this.currencyTypeAccessMapping[key] = !this.currencyTypeAccessMapping[key])
+        toggleFinInfoChange() {
+            Object.keys(this.unitPriceAccessMapping).forEach(
+                (key) => (this.unitPriceAccessMapping[key] = !this.unitPriceAccessMapping[key])
+            )
+            Object.keys(this.currencyTypeAccessMapping).forEach(
+                (key) =>
+                    (this.currencyTypeAccessMapping[key] = !this.currencyTypeAccessMapping[key])
+            )
         },
-        setfinInfoAccess()
-        {
-
-        },
-        allowChangeCurrencyType(row)
-        {
+        setfinInfoAccess() {},
+        allowChangeCurrencyType(row) {
             return this.currencyTypeAccessMapping[row.orderShoeTypeId]
         },
-        allowChangeUnitPrice(row)
-        {
+        allowChangeUnitPrice(row) {
             return this.unitPriceAccessMapping[row.orderShoeTypeId]
         },
-        setFinInfoNotAllowed()
-        {
+        setFinInfoNotAllowed() {
             this.priceChangeNotAllowed = true
             this.unitChangeNotAllowed = true
             this.priceUpdateButtonVis = false
@@ -422,26 +441,50 @@ export default {
             this.remarkForm.orderShoeId = row.orderShoeId
             this.remarkDialogVis = true
         },
-        openEditRemarkDialog(row){
+        openEditRemarkDialog(row) {
             this.remarkForm.orderShoeId = row.orderShoeId
             this.remarkForm.technicalRemark = row.orderShoeTechnicalRemark
             this.remarkForm.materialRemark = row.orderShoeMaterialRemark
             this.remarkDialogVis = true
         },
-        sendOrderNext()
-        {
-            this.$confirm('确认下发订单？', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(async () => {
-                const result = await axios.post(`${this.$apiBaseUrl}/ordercreate/sendnext`, {'orderId':this.orderDBId,
-                    "staffId":this.staffId,
+        sendOrderNext() {
+            if (this.orderData.wrapRequirementUploadStatus === '已上传包装文件') {
+                const value = [...Object.values(this.orderShoeTypeIdToUnitPrice)]
+                const unit = [...Object.values(this.currencyTypeAccessMapping)]
+                if (value.includes(0)) {
+                    ElMessage.error('请检查订单中的金额数据，不允许值为0')
+                    return
+                }
+                if (unit.includes(true)) {
+                    ElMessage.error('请检查订单中的金额单位，不允许单位为空')
+                    return
+                }
+                this.$confirm('确认下发订单？', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
                 })
-            }).then(async () => {
-                this.getOrderInfo()
-            })
-            // this.addCustomerBatchDialogVisible = false
+                    .then(async () => {
+                        const result = await axios.post(
+                            `${this.$apiBaseUrl}/ordercreate/sendnext`,
+                            {
+                                orderId: this.orderDBId,
+                                staffId: this.staffId
+                            }
+                        )
+                        if (result.status === 200) {
+                            ElMessage.success('下发成功,正在重新加载数据')
+                        } else {
+                            ElMessage.error('下发失败')
+                        }
+                    })
+                    .then(async () => {
+                        this.getOrderInfo()
+                    })
+            } else {
+                ElMessage.error('包装文件未上传,请上传包装文件后再下发！')
+                return
+            }
         },
         expandOpen(row, expand) {
             console.log(this.expandedRowKeys)
@@ -464,8 +507,8 @@ export default {
             const response = await axios.post(`${this.$apiBaseUrl}/ordercreate/updateprice`, {
                 unitPriceForm: this.orderShoeTypeIdToUnitPrice,
                 currencyTypeForm: this.orderShoeTypeIdToCurrencyType,
-                orderId:this.orderDBId,
-                staffId:this.staffId
+                orderId: this.orderDBId,
+                staffId: this.staffId
             })
             if (response.status === 200) {
                 ElMessage.success('变更成功')
@@ -486,6 +529,8 @@ export default {
                 ElMessage.success('信息变更成功')
                 this.getOrderInfo()
                 this.remarkDialogVis = false
+            } else {
+                ElMessage.error('信息变更失败')
             }
         },
         openSubmitDialog() {
@@ -496,6 +541,7 @@ export default {
             console.log('Upload successful:', response)
             ElMessage.success('上传成功')
             this.isSubmitDocVis = false
+            this
         },
         handleUploadError(error, file) {
             // Handle any errors that occurred during the upload

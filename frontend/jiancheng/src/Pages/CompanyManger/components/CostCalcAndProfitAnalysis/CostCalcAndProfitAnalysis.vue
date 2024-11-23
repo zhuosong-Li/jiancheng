@@ -133,6 +133,9 @@ onMounted(() => {
 
 
 function showDialog1(row, column, cell, event) {
+    if (column.getColumnIndex() === 0) {
+        return;
+    }
     // 增加判断展示的是否是人工成本列的单元格
     smallTabelData1.value.splice(0, 1, row)
     dialogVisible1.value = true

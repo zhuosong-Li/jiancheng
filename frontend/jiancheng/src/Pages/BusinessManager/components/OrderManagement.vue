@@ -5,8 +5,7 @@
         >
     </el-row>
     <el-row :gutter="10" style="margin-top: 20px">
-        <el-col :span="2" :offset="0"
-            >
+        <el-col :span="2" :offset="0">
             <el-button size="default" type="primary" @click="openCreateOrderDialog"
                 >创建订单</el-button
             >
@@ -42,7 +41,7 @@
                 @input="filterDisplayOrder(3)"
             ></el-input>
         </el-col>
-        
+
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderCustomerBrandFilter"
@@ -53,50 +52,50 @@
                 @input="filterDisplayOrder(4)"
             ></el-input>
         </el-col>
-        
 
-        <el-col :span="4" :offset="0"
-        >
-        <div class="demo-date-picker">
-            <div class="block">
-            <span class=""></span>
-            <el-date-picker
-                v-model="orderStartDateFilter"
-                type="daterange"
-                unlink-panels
-                range-separator="至"
-                start-placeholder="起始开始日期"
-                end-placeholder="日期筛选"
-                :shortcuts="shortcuts"
-                size="default"
-                @change="filterDisplayOrder(5)"
-            />
+        <el-col :span="4" :offset="0">
+            <div class="demo-date-picker">
+                <div class="block">
+                    <span class=""></span>
+                    <el-date-picker
+                        v-model="orderStartDateFilter"
+                        type="daterange"
+                        unlink-panels
+                        range-separator="至"
+                        start-placeholder="起始开始日期"
+                        end-placeholder="日期筛选"
+                        :shortcuts="shortcuts"
+                        size="default"
+                        @change="filterDisplayOrder(5)"
+                    />
+                </div>
             </div>
-        </div>
         </el-col>
 
-        <el-col :span="4" :offset="1"
-        >
-        <div class="demo-date-picker">
-            <div class="block">
-            <span class=""></span>
-            <el-date-picker
-                v-model="orderEndDateFilter"
-                type="daterange"
-                unlink-panels
-                range-separator="至"
-                start-placeholder="起始结束日期"
-                end-placeholder="日期筛选"
-                :shortcuts="shortcuts"
-                size="default"
-                @change="filterDisplayOrder(6)"
-            />
+        <el-col :span="4" :offset="1">
+            <div class="demo-date-picker">
+                <div class="block">
+                    <span class=""></span>
+                    <el-date-picker
+                        v-model="orderEndDateFilter"
+                        type="daterange"
+                        unlink-panels
+                        range-separator="至"
+                        start-placeholder="起始结束日期"
+                        end-placeholder="日期筛选"
+                        :shortcuts="shortcuts"
+                        size="default"
+                        @change="filterDisplayOrder(6)"
+                    />
+                </div>
             </div>
-        </div>
         </el-col>
-        <el-col :span="2" :offset="1">
-            <el-checkbox label="已下发" v-model="orderNotInCurStatus" @change="filterDisplayOrder"/>
-            <el-checkbox label="未下发" v-model="orderInCurStatus" @change="filterDisplayOrder"/>
+        <el-col :span="3" :offset="1">
+            <el-radio-group v-model="radio" size="small" @change="switchRadio(radio)">
+                <el-radio-button label="全部订单" value="all" />
+                <el-radio-button label="已下发订单" value="已下发" />
+                <el-radio-button label="未下发订单" value="未下发" />
+            </el-radio-group>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -104,35 +103,38 @@
             <el-table-column prop="orderRid" label="订单号" />
             <el-table-column prop="orderCid" label="客户订单号" />
             <el-table-column prop="customerName" label="客户名" />
-            <el-table-column prop="customerBrand" label="客户商标"/>
+            <el-table-column prop="customerBrand" label="客户商标" />
             <el-table-column prop="orderStartDate" label="订单开始日期" sortable />
-            <el-table-column prop="orderEndDate" label="订单结束日期" sortable/>
+            <el-table-column prop="orderEndDate" label="订单结束日期" sortable />
             <el-table-column prop="orderStatus" label="订单状态" />
-            <el-table-column label="操作" width = "300">
+            <el-table-column label="操作" width="300">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="openOrderDetail(scope.row.orderDbId)"
+                    <el-button
+                        type="primary"
+                        size="default"
+                        @click="openOrderDetail(scope.row.orderDbId)"
                         >查看订单详情</el-button
                     >
-                        <el-button v-if="allowDeleteOrder"
-                            type="danger"
-                            size="default"
-                            @click="deleteOrder(scope.row)"
-                            >删除订单</el-button
-                        >
+                    <el-button
+                        v-if="allowDeleteOrder"
+                        type="danger"
+                        size="default"
+                        @click="deleteOrder(scope.row)"
+                        >删除订单</el-button
+                    >
                 </template>
             </el-table-column>
         </el-table>
         <el-pagination
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :total="totalItems"
-        @current-change="handlePageChange"
-        layout="total,prev,pager,next,jumper"
-        style="margin-top:20px;"
+            :current-page="currentPage"
+            :page-size="pageSize"
+            :total="totalItems"
+            @current-change="handlePageChange"
+            layout="total,prev,pager,next,jumper"
+            style="margin-top: 20px"
         ></el-pagination>
-
     </el-row>
-    
+
     <el-dialog title="创建订单鞋型填写" v-model="orderCreationInfoVis" width="80%">
         <el-form :model="newOrderForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="请输入订单号">
@@ -142,7 +144,12 @@
                 <el-input v-model="newOrderForm.orderCid"></el-input>
             </el-form-item>
             <el-form-item label="请选择客户">
-                <el-select v-model="newOrderForm.customerName" filterable placeholder="请选择客户" @change="updateCustomerBrand">
+                <el-select
+                    v-model="newOrderForm.customerName"
+                    filterable
+                    placeholder="请选择客户"
+                    @change="updateCustomerBrand"
+                >
                     <el-option
                         v-for="item in this.customerNameList"
                         :key="item"
@@ -152,7 +159,12 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="请选择客户商标">
-                <el-select v-model="newOrderForm.customerBrand" filterable placeholder="请选择商标" @change="updateCustomerId">
+                <el-select
+                    v-model="newOrderForm.customerBrand"
+                    filterable
+                    placeholder="请选择商标"
+                    @change="updateCustomerId"
+                >
                     <el-option
                         v-for="item in this.customerBrandList"
                         :key="item"
@@ -162,13 +174,19 @@
                 </el-select>
             </el-form-item>
             <el-form-item label="请选择配码种类">
-                <el-select v-model="newOrderForm.batchInfoTypeName" filterable placeholder="请选择种类" @change="updateBatchType">
+                <el-select
+                    v-model="newOrderForm.batchInfoTypeName"
+                    filterable
+                    placeholder="请选择种类"
+                    @change="updateBatchType"
+                >
                     <el-option
                         v-for="item in this.batchTypes"
                         :key="item.batchInfoTypeId"
                         :label="item.batchInfoTypeName"
-                        :value="item.batchInfoTypeName">
-                        </el-option>
+                        :value="item.batchInfoTypeName"
+                    >
+                    </el-option>
                 </el-select>
             </el-form-item>
             <el-form-item label="订单开始日期" ref="startdatepicker">
@@ -187,22 +205,23 @@
                     value-format="YYYY-MM-DD"
                 ></el-date-picker>
             </el-form-item>
-            <el-form-item 
-                label="业务员">
-                <el-input v-model="newOrderForm.salesman"
-                disabled="true"></el-input>
+            <el-form-item label="业务员">
+                <el-input v-model="newOrderForm.salesman" disabled></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
-            <el-col :span="4" :offset="0" style="white-space: nowrap;">
-                鞋型号搜索：
-                <el-input v-model="shoeRidFilter" 
-                placeholder="" size="default" 
-                :suffix-icon="'el-icon-search'"
-                clearable 
-                @input="filterByShoeRidWithSelection">
-            </el-input> 
-            </el-col>
+                <el-col :span="4" :offset="0" style="white-space: nowrap">
+                    鞋型号搜索：
+                    <el-input
+                        v-model="shoeRidFilter"
+                        placeholder=""
+                        size="default"
+                        :suffix-icon="'el-icon-search'"
+                        clearable
+                        @input="filterByShoeRidWithSelection"
+                    >
+                    </el-input>
+                </el-col>
             </el-row>
             <el-table
                 title=""
@@ -221,25 +240,12 @@
                     prop="check" 
                     v-model = "checkgroup"/>
                 </el-table-column> -->
-                <el-table-column
-                    size = "small"
-                    type = "selection"
-                    align = "center">
-                </el-table-column>
-                <el-table-column
-                    prop="shoeRId"
-                    label="鞋型编号"
-                ></el-table-column>
-                <el-table-column
-                    prop="shoeColor"
-                    label="鞋型颜色"
-                ></el-table-column>
-                <el-table-column
-                    prop="shoeImage"
-                    label="鞋型图片"
-                    align="center">
+                <el-table-column size="small" type="selection" align="center"> </el-table-column>
+                <el-table-column prop="shoeRId" label="鞋型编号"></el-table-column>
+                <el-table-column prop="shoeColor" label="鞋型颜色"></el-table-column>
+                <el-table-column prop="shoeImage" label="鞋型图片" align="center">
                     <template #default="scope">
-                        <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;"/>
+                        <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px" />
                     </template>
                 </el-table-column>
             </el-table>
@@ -252,7 +258,6 @@
             </span>
         </template>
     </el-dialog>
-
 
     <el-dialog title="创建订单详情填写" v-model="orderCreationSecondInfoVis" width="90%">
         <el-row :gutter="20">
@@ -275,17 +280,29 @@
                 </el-descriptions>
             </el-col>
         </el-row>
-        <el-table :data="this.newOrderForm.orderShoeTypes" border stripe height = "900"
-        :row-key = "(row) => {return row.shoeTypeId}"
-                >
-            <el-table-column type = "expand" >
-                <template #default = "props">
-                    <el-table :data = "props.row.orderShoeTypeBatchInfo" border>
-                        <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
-                        <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                        <el-table-column v-for="col in Object.keys(this.attrMapping).filter(key=>this.curBatchType[key]!=null)"
-                                         :label="this.curBatchType[col]"
-                                         :prop="this.attrMapping[col]"></el-table-column>
+        <el-table
+            :data="this.newOrderForm.orderShoeTypes"
+            border
+            stripe
+            height="900"
+            :row-key="
+                (row) => {
+                    return row.shoeTypeId
+                }
+            "
+        >
+            <el-table-column type="expand">
+                <template #default="props">
+                    <el-table :data="props.row.orderShoeTypeBatchInfo" border>
+                        <el-table-column prop="packagingInfoName" label="配码名称" sortable />
+                        <el-table-column prop="packagingInfoLocale" label="配码地区" sortable />
+                        <el-table-column
+                            v-for="col in Object.keys(this.attrMapping).filter(
+                                (key) => this.curBatchType[key] != null
+                            )"
+                            :label="this.curBatchType[col]"
+                            :prop="this.attrMapping[col]"
+                        ></el-table-column>
                         <!-- <el-table-column prop="size34Ratio" label="34" />
                         <el-table-column prop="size35Ratio" label="35" />
                         <el-table-column prop="size36Ratio" label="36" />
@@ -299,51 +316,60 @@
                         <el-table-column prop="size44Ratio" label="44" />
                         <el-table-column prop="size45Ratio" label="45" />
                         <el-table-column prop="size46Ratio" label="46" /> -->
-                        <el-table-column prop="totalQuantityRatio" label="比例和"/>
+                        <el-table-column prop="totalQuantityRatio" label="比例和" />
                         <el-table-column label="单位数量">
-                        <template #default="scope">
-                            <el-input size = small
-                            v-model = "props.row.quantityMapping[scope.row.packagingInfoId]"
-                            @change ="updateAmountMapping(props.row, scope.row)"
-                            controls-position = "right"
-                            >
-                            </el-input>
-                        </template>
+                            <template #default="scope">
+                                <el-input
+                                    size="small"
+                                    v-model="props.row.quantityMapping[scope.row.packagingInfoId]"
+                                    @change="updateAmountMapping(props.row, scope.row)"
+                                    controls-position="right"
+                                >
+                                </el-input>
+                            </template>
                         </el-table-column>
                         <el-table-column label="总数量">
-                        <template #default="scope">
-                        <el-input size = small
-                            v-model = "props.row.amountMapping[scope.row.packagingInfoId]"
-                            controls-position = "right"
-                            :disabled="true">
-                        </el-input>
-                        </template>
+                            <template #default="scope">
+                                <el-input
+                                    size="small"
+                                    v-model="props.row.amountMapping[scope.row.packagingInfoId]"
+                                    controls-position="right"
+                                    :disabled="true"
+                                >
+                                </el-input>
+                            </template>
                         </el-table-column>
                     </el-table>
                 </template>
             </el-table-column>
-            <el-table-column prop = "shoeRId" label = "鞋型编号" sortable/>
-            <el-table-column prop = "shoeColor" label = "鞋型颜色" />
-            <el-table-column label = "鞋型图片">
+            <el-table-column prop="shoeRId" label="鞋型编号" sortable />
+            <el-table-column prop="shoeColor" label="鞋型颜色" />
+            <el-table-column label="鞋型图片">
                 <template #default="scope">
-                    <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;" ></el-image>
+                    <el-image
+                        :src="scope.row.shoeImage"
+                        style="width: 150px; height: 100px"
+                    ></el-image>
                 </template>
             </el-table-column>
             <el-table-column>
-            <template #default="scope">
-                    <el-button type="primary" size="default" @click="openAddBatchInfoDialog(scope.row)"
+                <template #default="scope">
+                    <el-button
+                        type="primary"
+                        size="default"
+                        @click="openAddBatchInfoDialog(scope.row)"
                         >编辑鞋型配码</el-button
                     >
-            </template>
+                </template>
             </el-table-column>
-            <el-table-column label = "添加客户鞋型编号">
-            <template #default="scope">
-                    <el-input size="default" v-model = "this.newOrderForm.customerShoeName[scope.row.shoeRId]"
-                        ></el-input
-                    >
-            </template>
+            <el-table-column label="添加客户鞋型编号">
+                <template #default="scope">
+                    <el-input
+                        size="default"
+                        v-model="this.newOrderForm.customerShoeName[scope.row.shoeRId]"
+                    ></el-input>
+                </template>
             </el-table-column>
-
         </el-table>
         <!-- <el-row :gutter="20">
             <el-table :data="customerDisplayBatchData" border stripe height="500">
@@ -361,20 +387,20 @@
         </el-row> -->
         <template #footer>
             <span>
-            <el-button @click="backPreviousStep"> 上一步 </el-button>
+                <el-button @click="backPreviousStep"> 上一步 </el-button>
 
-            <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
-            <el-button @click="submitNewOrder"> 添加订单 </el-button>
+                <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
+                <el-button @click="submitNewOrder"> 添加订单 </el-button>
             </span>
         </template>
-        
     </el-dialog>
 
     <el-dialog
-        title = "配码添加"
+        title="配码添加"
         v-model="addBatchInfoDialogVis"
-        width = "90%"
-        @close = "closeAddBatchInfoDialog()">
+        width="90%"
+        @close="closeAddBatchInfoDialog()"
+    >
         <el-col :span="4" :offset="15"
             ><el-input
                 v-model="batchNameFilter"
@@ -398,19 +424,24 @@
             </el-col>
         </el-row>
         <el-row :gutter="20">
-            <el-table :data="customerDisplayBatchData" border stripe height="500" 
-            @selection-change="handleSelectionBatchData"
-            ref = "batchInfoSelectionTable">
+            <el-table
+                :data="customerDisplayBatchData"
+                border
+                stripe
+                height="500"
+                @selection-change="handleSelectionBatchData"
+                ref="batchInfoSelectionTable"
+            >
+                <el-table-column size="small" type="selection" align="center"> </el-table-column>
+                <el-table-column prop="packagingInfoName" label="配码名称" sortable />
+                <el-table-column prop="packagingInfoLocale" label="配码地区" sortable />
                 <el-table-column
-                    size = "small"
-                    type = "selection"
-                    align = "center">
-                </el-table-column>
-                <el-table-column prop="packagingInfoName" label="配码名称" sortable/>
-                <el-table-column prop="packagingInfoLocale" label="配码地区" sortable/>
-                <el-table-column v-for="col in Object.keys(this.attrMapping).filter(key => this.curBatchType[key] != null)"
-                                 :label="this.curBatchType[col]"
-                                 :prop=this.attrMapping[col]></el-table-column>
+                    v-for="col in Object.keys(this.attrMapping).filter(
+                        (key) => this.curBatchType[key] != null
+                    )"
+                    :label="this.curBatchType[col]"
+                    :prop="this.attrMapping[col]"
+                ></el-table-column>
                 <!-- <el-table-column prop="size34Ratio" label="34" sortable/>
                 <el-table-column prop="size35Ratio" label="35" sortable/>
                 <el-table-column prop="size36Ratio" label="36" sortable/>
@@ -424,7 +455,7 @@
                 <el-table-column prop="size44Ratio" label="44" sortable/>
                 <el-table-column prop="size45Ratio" label="45" sortable/>
                 <el-table-column prop="size46Ratio" label="46" sortable/> -->
-                <el-table-column prop="totalQuantityRatio" label="比例和"sortable/>
+                <el-table-column prop="totalQuantityRatio" label="比例和" sortable />
                 <!-- <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" size="default" @click="openPreviewDialog(scope.row)"
@@ -432,7 +463,8 @@
                         >
                     </template>
                 </el-table-column>
- -->            </el-table>
+ -->
+            </el-table>
         </el-row>
 
         <template #footer>
@@ -442,10 +474,7 @@
         </template>
     </el-dialog>
 
-    <el-dialog
-        title="添加配码"
-        v-model="addCustomerBatchDialogVisible"
-        width="30%">
+    <el-dialog title="添加配码" v-model="addCustomerBatchDialogVisible" width="30%">
         <el-form :model="batchForm" label-width="120px" :inline="false" size="default">
             <el-form-item label="配码名称">
                 <el-input v-model="batchForm.packagingInfoName"></el-input>
@@ -453,9 +482,13 @@
             <el-form-item label="配码地区">
                 <el-input v-model="batchForm.packagingInfoLocale" disabled="true"></el-input>
             </el-form-item>
-            <el-form-item v-for="col in Object.keys(this.attrMapping).filter(key => this.curBatchType[key] != null)"
-                          :label="this.curBatchType[col]">
-                <el-input v-model="batchForm[attrMapping[col]]"></el-input>            
+            <el-form-item
+                v-for="col in Object.keys(this.attrMapping).filter(
+                    (key) => this.curBatchType[key] != null
+                )"
+                :label="this.curBatchType[col]"
+            >
+                <el-input v-model="batchForm[attrMapping[col]]"></el-input>
             </el-form-item>
             <!-- <el-form-item label="34">
                 <el-input v-model="batchForm.size34Ratio"></el-input>
@@ -496,35 +529,32 @@
             <el-form-item label="46">
                 <el-input v-model="batchForm.size46Ratio"></el-input>
             </el-form-item> -->
-
         </el-form>
-        
+
         <template #footer>
-        <span>
-            <el-button @click="addCustomerDialogVisible = false">取消</el-button>
-            <el-button type="primary" @click="submitAddCustomerBatchForm">确认提交</el-button>
-        </span>
+            <span>
+                <el-button @click="addCustomerDialogVisible = false">取消</el-button>
+                <el-button type="primary" @click="submitAddCustomerBatchForm">确认提交</el-button>
+            </span>
         </template>
     </el-dialog>
-
-    
 </template>
 
 <script>
 import { Download, Upload } from '@element-plus/icons-vue'
 import axios from 'axios'
-import { ElMessage,ElPagination } from 'element-plus'
-import { toggleRowStatus } from 'element-plus/es/components/table/src/util';
+import { ElMessage, ElPagination, ElMessageBox } from 'element-plus'
+import { toggleRowStatus } from 'element-plus/es/components/table/src/util'
 
 export default {
     data() {
         return {
             token: localStorage.getItem('token'),
-            orderNotInCurStatus:'',
-            orderInCurStatus:'',
-            currentPage:1,
-            pageSize:8,
-            totalItems:200,
+            orderNotInCurStatus: '',
+            orderInCurStatus: '',
+            currentPage: 1,
+            pageSize: 8,
+            totalItems: 200,
             submitDocType: 0,
             orderShoePreviewData: [],
             orderData: {},
@@ -532,12 +562,12 @@ export default {
             customerNameList: [],
             customerBrandList: [],
             customerBatchData: [],
-            customerDisplayBatchData:[],
-            selectedShoeList:[],
+            customerDisplayBatchData: [],
+            selectedShoeList: [],
             // orderStatusList: [],
-            currentBatch:[],
-            expandedRowKeys:[],
-            addCustomerBatchDialogVisible:false,
+            currentBatch: [],
+            expandedRowKeys: [],
+            addCustomerBatchDialogVisible: false,
             previewOrderVis: false,
             orderInfoVis: false,
             fileList: [],
@@ -545,19 +575,19 @@ export default {
             isSubmitDocVis: false,
             orderCreationInfoVis: false,
             orderCreationSecondInfoVis: false,
-            parentBoarder:false,
-            childBoarder:false,
-            addBatchInfoDialogVis:false,
+            parentBoarder: false,
+            childBoarder: false,
+            addBatchInfoDialogVis: false,
             Upload,
-            batchNameFilter:'',
+            batchNameFilter: '',
             orderRidFilter: '',
             orderCidFilter: '',
-            orderStartDateFilter:'',
-            orderEndDateFilter:'',
-            orderCustomerNameFilter:'',
-            orderCustomerBrandFilter:'',
+            orderStartDateFilter: '',
+            orderEndDateFilter: '',
+            orderCustomerNameFilter: '',
+            orderCustomerBrandFilter: '',
             displayData: [],
-            prevDisplayData:[],
+            prevDisplayData: [],
             filterData: [],
             unfilteredData: [],
             uploadData: [],
@@ -565,15 +595,15 @@ export default {
             tempFileName: '',
             shoeTableData: [],
             shoeTableDisplayData: [],
-            shoeTableTemp:[],
+            shoeTableTemp: [],
             shoeRidFilter: '',
-            checkgroup:[],
-            curShoeTypeId : '',
-            batchTypes:[],
-            batchTypeNameList:[],
-            curBatchType:{},
-            userRole:"",
-            userName:"",
+            checkgroup: [],
+            curShoeTypeId: '',
+            batchTypes: [],
+            batchTypeNameList: [],
+            curBatchType: {},
+            userRole: '',
+            userName: '',
             orderForm: {
                 orderRId: '',
                 orderCid: '',
@@ -583,25 +613,25 @@ export default {
                 status: '',
                 salesman: ''
             },
-            newOrderForm:{
-                orderRId:'',
+            newOrderForm: {
+                orderRId: '',
                 orderCid: '',
                 customerId: null,
-                batchInfoTypeName:'',
-                batchInfoTypeId:'',
+                batchInfoTypeName: '',
+                batchInfoTypeId: '',
                 orderStartDate: '',
                 orderEndDate: '',
                 status: '',
                 salesman: '',
-                orderShoeTypes:[],
-                batchInfoQuantity:[],
-                customerShoeName:{}
+                orderShoeTypes: [],
+                batchInfoQuantity: [],
+                customerShoeName: {}
             },
             batchForm: {
-                customerId:'',
+                customerId: '',
                 packagingInfoName: '',
                 packagingInfoLocale: '',
-                batchInfoTypeId:'',
+                batchInfoTypeId: '',
                 size34Ratio: 0,
                 size35Ratio: 0,
                 size36Ratio: 0,
@@ -615,66 +645,64 @@ export default {
                 size44Ratio: 0,
                 size45Ratio: 0,
                 size46Ratio: 0,
-                totalQuantityRatio:0
-                },
-                attrMapping:{
-                "size34Name":"size34Ratio",
-                "size35Name":"size35Ratio",
-                "size36Name":"size36Ratio",
-                "size37Name":"size37Ratio",
-                "size38Name":"size38Ratio",
-                "size39Name":"size39Ratio",
-                "size40Name":"size40Ratio",
-                "size41Name":"size41Ratio",
-                "size42Name":"size42Ratio",
-                "size43Name":"size43Ratio",
-                "size44Name":"size44Ratio",
-                "size45Name":"size45Ratio",
-                "size46Name":"size46Ratio",
+                totalQuantityRatio: 0
             },
-            shortcuts : [
-                {text:"过去一周", 
-                    value:() =>{
+            attrMapping: {
+                size34Name: 'size34Ratio',
+                size35Name: 'size35Ratio',
+                size36Name: 'size36Ratio',
+                size37Name: 'size37Ratio',
+                size38Name: 'size38Ratio',
+                size39Name: 'size39Ratio',
+                size40Name: 'size40Ratio',
+                size41Name: 'size41Ratio',
+                size42Name: 'size42Ratio',
+                size43Name: 'size43Ratio',
+                size44Name: 'size44Ratio',
+                size45Name: 'size45Ratio',
+                size46Name: 'size46Ratio'
+            },
+            shortcuts: [
+                {
+                    text: '过去一周',
+                    value: () => {
                         const end = new Date()
                         const start = new Date()
-                        start.setTime(start.getTime() - 3600*1000*24*7)
+                        start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
                         return [start, end]
                     }
                 },
                 {
-                    text:"过去一月",
-                    value:() => {
+                    text: '过去一月',
+                    value: () => {
                         const end = new Date()
                         const start = new Date()
                         start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
                         return [start, end]
-                        
+                    }
                 }
-            }
-
-            ]
-
+            ],
+            radio: 'all'
         }
     },
     computed: {
-    allowDeleteOrder()
-    {
-        return this.userRole == 4
+        allowDeleteOrder() {
+            return this.userRole == 4
+        },
+        uploadHeaders() {
+            return {
+                Authorization: `Bearer ${this.token}`
+            }
+        },
+        computeTotal(row) {
+            console.log(row)
+        },
+        paginatedDisplayData() {
+            const start = (this.currentPage - 1) * this.pageSize
+            const end = this.currentPage * this.pageSize
+            return this.displayData.slice(start, end)
+        }
     },
-    uploadHeaders() {
-      return {
-        Authorization: `Bearer ${this.token}`
-      };
-    },
-    computeTotal(row){
-        console.log(row)
-    },
-    paginatedDisplayData(){
-        const start = (this.currentPage - 1)*this.pageSize
-        const end = this.currentPage * this.pageSize
-        return this.displayData.slice(start,end)
-    }
-  },
     mounted() {
         this.$setAxiosToken()
         this.userInfo()
@@ -685,47 +713,44 @@ export default {
         this.getAllBatchTypes()
     },
     methods: {
-        async userInfo()
-        {
-           const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
-           this.userName = response.data.staffName
-           this.userRole = response.data.role
-           console.log(this.userRole)
+        async userInfo() {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
+            this.userName = response.data.staffName
+            this.userRole = response.data.role
+            console.log(this.userRole)
         },
         formatDateToYYYYMMDD(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0'); // months are 0-indexed, so we add 1
-        const day = String(date.getDate()).padStart(2, '0'); // pad the day with leading zero if needed
-        return `${year}-${month}-${day}`;
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0') // months are 0-indexed, so we add 1
+            const day = String(date.getDate()).padStart(2, '0') // pad the day with leading zero if needed
+            return `${year}-${month}-${day}`
         },
-        handlePageChange(newPage)
-        {
+        handlePageChange(newPage) {
             this.currentPage = newPage
         },
-        findOrderShoeTypeById(id){
-            return this.newOrderForm.orderShoeTypes.find(orderShoeType => { return orderShoeType.shoeTypeId == id
+        findOrderShoeTypeById(id) {
+            return this.newOrderForm.orderShoeTypes.find((orderShoeType) => {
+                return orderShoeType.shoeTypeId == id
             })
         },
-        reselectSelected(ref, selected, displaydataentity,id){
-
-            this.$nextTick(()=>{
-                    selected.forEach(item =>
-                    {
+        reselectSelected(ref, selected, displaydataentity, id) {
+            this.$nextTick(() => {
+                selected.forEach((item) => {
                     ref.toggleRowSelection(
-                        displaydataentity.find(row => {
-                        return row[id] == item[id]
-                    }),true)
-                    }) 
+                        displaydataentity.find((row) => {
+                            return row[id] == item[id]
+                        }),
+                        true
+                    )
                 })
-
+            })
         },
-        resetBatchForm()
-        {
-            this.batchForm ={
-                customerId:'',
+        resetBatchForm() {
+            this.batchForm = {
+                customerId: '',
                 packagingInfoName: '',
                 packagingInfoLocale: '',
-                batchInfoTypeId:'',
+                batchInfoTypeId: '',
                 size34Ratio: 0,
                 size35Ratio: 0,
                 size36Ratio: 0,
@@ -739,8 +764,8 @@ export default {
                 size44Ratio: 0,
                 size45Ratio: 0,
                 size46Ratio: 0,
-                totalQuantityRatio:0
-                }
+                totalQuantityRatio: 0
+            }
         },
         openImportDialog() {
             this.isImportVis = true
@@ -751,7 +776,7 @@ export default {
             // this.$refs.startdatepicker.change()
             this.orderCreationInfoVis = true
             this.shoeTableDisplayData = this.shoeTableData
-        },  
+        },
         async openPreviewDialog(row) {
             this.orderData = row
             await this.getOrderOrderShoe(row.orderRid)
@@ -770,8 +795,12 @@ export default {
             this.curShoeTypeId = row.shoeTypeId
             this.addBatchInfoDialogVis = true
             const idField = 'packagingInfoId'
-            this.reselectSelected(this.$refs.batchInfoSelectionTable,
-                row.orderShoeTypeBatchInfo, this.customerDisplayBatchData, idField)
+            this.reselectSelected(
+                this.$refs.batchInfoSelectionTable,
+                row.orderShoeTypeBatchInfo,
+                this.customerDisplayBatchData,
+                idField
+            )
         },
         openAddCustomerBatchDialog() {
             this.batchForm.customerId = this.newOrderForm.customerId
@@ -785,95 +814,118 @@ export default {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            }).then(async () => {
-                const result = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
-            }).then(async () => {
-                this.getCustomerBatchInfo(this.newOrderForm.customerId)
-                this.resetBatchForm()
             })
+                .then(async () => {
+                    const result = await axios.post(
+                        `${this.$apiBaseUrl}/customer/addcustomerbatchinfo`,
+                        this.batchForm
+                    )
+                })
+                .then(async () => {
+                    this.getCustomerBatchInfo(this.newOrderForm.customerId)
+                    this.resetBatchForm()
+                })
             this.addCustomerBatchDialogVisible = false
         },
-        deleteOrder(row)
-        {
+        deleteOrder(row) {
             console.log(row)
-            this.$confirm("确认删除订单?", '提示', {
+            this.$confirm('确认删除订单?', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
-            }).then(async () => {
-                const result = await axios.delete(`${this.$apiBaseUrl}/order/deleteorder`, {params:{"orderId":row.orderDbId}})
-            }).then(async()=>{
-                this.getAllOrders()
             })
+                .then(async () => {
+                    const result = await axios.delete(`${this.$apiBaseUrl}/order/deleteorder`, {
+                        params: { orderId: row.orderDbId }
+                    })
+                })
+                .then(async () => {
+                    this.getAllOrders()
+                })
         },
-        backPreviousStep(){
+        backPreviousStep() {
             this.orderCreationSecondInfoVis = false
             this.orderCreationInfoVis = true
         },
-        closeAddBatchInfoDialog(){
+        closeAddBatchInfoDialog() {
             this.addBatchInfoDialogVis = false
             this.$refs.batchInfoSelectionTable.clearSelection()
         },
         orderCreationSecondStep() {
             this.orderCreationInfoVis = false
             this.orderCreationSecondInfoVis = true
-            this.newOrderForm.orderShoeTypes.forEach(item => {
+            this.newOrderForm.orderShoeTypes.forEach((item) => {
                 item.orderShoeTypeBatchInfo = []
                 item.quantityMapping = {}
                 item.amountMapping = {}
-                this.newOrderForm.customerShoeName[item.shoeRId] = ""
-
+                this.newOrderForm.customerShoeName[item.shoeRId] = ''
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
             // console.log(this.newOrderForm)
-
         },
-        updateAmountMapping(out_row, inner_row){
-            out_row.amountMapping[inner_row.packagingInfoId] = out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityRatio 
+        updateAmountMapping(out_row, inner_row) {
+            out_row.amountMapping[inner_row.packagingInfoId] =
+                out_row.quantityMapping[inner_row.packagingInfoId] * inner_row.totalQuantityRatio
         },
         handleSelectionShoeType(selection) {
             this.selectedShoeList = selection
             this.newOrderForm.orderShoeTypes = selection
         },
-        handleSelectionBatchData(selection){
+        handleSelectionBatchData(selection) {
             this.currentBatch = selection
             // console.log(this.currentBatch)
         },
         async getCustomerBatchInfo(customerId) {
-            const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{
+            const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`, {
                 params: {
                     customerid: customerId
                 }
             })
-            this.customerBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
-            this.customerDisplayBatchData = response.data.filter(batch=> batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId)[0].batchInfoList
+            this.customerBatchData = response.data.filter(
+                (batch) => batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId
+            )[0].batchInfoList
+            this.customerDisplayBatchData = response.data.filter(
+                (batch) => batch.batchInfoTypeId == this.newOrderForm.batchInfoTypeId
+            )[0].batchInfoList
         },
         async getAllCutomers() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
             this.customerDetails = response.data
-            this.customerNameList = [... new Set(response.data.map(item => item.customerName))]
+            this.customerNameList = [...new Set(response.data.map((item) => item.customerName))]
         },
         async getAllBatchTypes() {
             const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
             this.batchTypes = response.data.batchDataTypes
-            this.batchTypeNameList = [... new Set(this.batchTypes.map(item => item.batchInfoTypeName))]
+            this.batchTypeNameList = [
+                ...new Set(this.batchTypes.map((item) => item.batchInfoTypeName))
+            ]
         },
         updateCustomerBrand() {
-            this.customerBrandList = [... new Set(this.customerDetails.filter(item =>item.customerName == this.newOrderForm.customerName).map(item => item.customerBrand))]
+            this.customerBrandList = [
+                ...new Set(
+                    this.customerDetails
+                        .filter((item) => item.customerName == this.newOrderForm.customerName)
+                        .map((item) => item.customerBrand)
+                )
+            ]
         },
         updateCustomerId() {
-            this.newOrderForm.customerId = this.customerDetails.filter(item => item.customerName == this.newOrderForm.customerName)
-            .filter(item => item.customerBrand == this.newOrderForm.customerBrand)[0].customerId
+            this.newOrderForm.customerId = this.customerDetails
+                .filter((item) => item.customerName == this.newOrderForm.customerName)
+                .filter(
+                    (item) => item.customerBrand == this.newOrderForm.customerBrand
+                )[0].customerId
         },
-        updateBatchType(){
-            this.curBatchType = this.batchTypes.filter(item => item.batchInfoTypeName == this.newOrderForm.batchInfoTypeName)[0]
+        updateBatchType() {
+            this.curBatchType = this.batchTypes.filter(
+                (item) => item.batchInfoTypeName == this.newOrderForm.batchInfoTypeName
+            )[0]
             this.newOrderForm.batchInfoTypeId = this.curBatchType.batchInfoTypeId
         },
-        filterBatchData(){
-            if (!this.batchNameFilter){
+        filterBatchData() {
+            if (!this.batchNameFilter) {
                 this.customerDisplayBatchData = this.customerBatchData
-            }
-            else{
+            } else {
                 this.customerFilteredBatchData = this.customerBatchData.filter((task) => {
                     const filteredData = task.packagingInfoName.includes(this.batchNameFilter)
                     return filteredData
@@ -881,42 +933,45 @@ export default {
                 this.customerDisplayBatchData = this.customerFilteredBatchData
             }
         },
-        filterBatchDataWithSelection(){
+        filterBatchDataWithSelection() {
             const selectedBatch = this.currentBatch
-            if (!this.batchNameFilter){
-                this.customerDisplayBatchData = Array.from(new Set([...selectedBatch.concat(this.customerBatchData)]))
-            }
-            else{
+            if (!this.batchNameFilter) {
+                this.customerDisplayBatchData = Array.from(
+                    new Set([...selectedBatch.concat(this.customerBatchData)])
+                )
+            } else {
                 this.customerFilteredBatchData = this.customerBatchData.filter((task) => {
                     const filteredData = task.packagingInfoName.includes(this.batchNameFilter)
                     return filteredData
                 })
-                this.customerDisplayBatchData = Array.from(new Set([...selectedBatch.concat(this.customerFilteredBatchData)]))
+                this.customerDisplayBatchData = Array.from(
+                    new Set([...selectedBatch.concat(this.customerFilteredBatchData)])
+                )
             }
-            this.$nextTick(()=>{
-                    selectedBatch.forEach(item =>
-                    {
-                    this.$refs.batchInfoSelectionTable.toggleRowSelection(this.customerDisplayBatchData.find(row => {
-                        return row.packagingInfoId == item.packagingInfoId
-                    }),true)
-                    }) 
+            this.$nextTick(() => {
+                selectedBatch.forEach((item) => {
+                    this.$refs.batchInfoSelectionTable.toggleRowSelection(
+                        this.customerDisplayBatchData.find((row) => {
+                            return row.packagingInfoId == item.packagingInfoId
+                        }),
+                        true
+                    )
                 })
-
+            })
         },
         addShoeTypeBatchInfo() {
-
-            this.newOrderForm.orderShoeTypes.find(row => {
+            this.newOrderForm.orderShoeTypes.find((row) => {
                 return row.shoeTypeId == this.curShoeTypeId
             }).orderShoeTypeBatchInfo = this.currentBatch
 
-            const curQuantityMapping = this.newOrderForm.orderShoeTypes.find(row => {
+            const curQuantityMapping = this.newOrderForm.orderShoeTypes.find((row) => {
                 return row.shoeTypeId == this.curShoeTypeId
             }).quantityMapping
-            const curAmountMapping = this.newOrderForm.orderShoeTypes.find(row => {
+            const curAmountMapping = this.newOrderForm.orderShoeTypes.find((row) => {
                 return row.shoeTypeId == this.curShoeTypeId
             }).amountMapping
 
-            this.currentBatch.forEach(batch => {
+            this.currentBatch.forEach((batch) => {
                 {
                     curQuantityMapping[batch.packagingInfoId] = 0
                     curAmountMapping[batch.packagingInfoId] = 0
@@ -930,15 +985,14 @@ export default {
             //     return row.shoeTypeId == this.curShoeTypeId
             // }).
             this.addBatchInfoDialogVis = false
-
         },
-        expandOpen(row, expand){
+        expandOpen(row, expand) {
             return
             // console.log(this.expandedRowKeys)
             // this.expandedRowKeys.push(row.shoeTypeId)
             // row.batchQuantityMapping = row.orderShoeTypeBatchInfo.map((batchInfo) => { return batchInfo.packagingInfoId:batchInfo.unitQuantityInPair})Id})
         },
-        closeAddBatchInfodialog(){
+        closeAddBatchInfodialog() {
             return
         },
         async getAllOrders() {
@@ -960,8 +1014,8 @@ export default {
             this.orderShoePreviewData = response.data
         },
         async getAllShoes() {
-            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
-            this.shoeTableData = response.data;
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`)
+            this.shoeTableData = response.data
         },
         async getOrderDocInfo(orderRid) {
             const response = await axios.get(`${this.$apiBaseUrl}/order/getorderdocinfo`, {
@@ -974,24 +1028,21 @@ export default {
         async submitUpload() {
             try {
                 const loadingInstance = this.$loading({
-                        lock: true,
-                        text: '等待中，请稍后...',
-                        background: 'rgba(0, 0, 0, 0.7)'
-                    })
+                    lock: true,
+                    text: '等待中，请稍后...',
+                    background: 'rgba(0, 0, 0, 0.7)'
+                })
                 // Manually submit the file without reopening the dialog
                 await this.$refs.uploadDoc.submit().then(() => {
                     loadingInstance.close()
                 })
-            }
-            catch (error) {
+            } catch (error) {
                 console.error('Upload error:', error)
                 ElMessage.error('上传失败')
             }
         },
-        filterOrderByFilterType(filterType)
-        {
-            switch(filterType)
-            {
+        filterOrderByFilterType(filterType) {
+            switch (filterType) {
                 case 1:
                     //console.log(this.orderRidFilter)
                     this.filterByRid()
@@ -1016,16 +1067,22 @@ export default {
                     //console.log(this.orderEndDateFilter)
                     this.filterOrderByEndDate()
                     break
-                
             }
             return
         },
 
-        filterDisplayOrder()
-        {   
-            this.filterList = [this.orderRidFilter, this.orderCidFilter, this.orderCustomerNameFilter, this.orderCustomerBrandFilter, this.orderStartDateFilter
-                , this.orderEndDateFilter]            
-            this.indexToFilter = (this.filterList.filter((filter) => filter)).map((filter) => this.filterList.indexOf(filter))
+        filterDisplayOrder() {
+            this.filterList = [
+                this.orderRidFilter,
+                this.orderCidFilter,
+                this.orderCustomerNameFilter,
+                this.orderCustomerBrandFilter,
+                this.orderStartDateFilter,
+                this.orderEndDateFilter
+            ]
+            this.indexToFilter = this.filterList
+                .filter((filter) => filter)
+                .map((filter) => this.filterList.indexOf(filter))
             this.displayData = this.unfilteredData
             this.indexToFilter.forEach((index) => this.filterOrderByFilterType(index + 1))
             this.filterOrderByStatus()
@@ -1038,27 +1095,19 @@ export default {
             // this.orderEndDateFilter,
             return
         },
-        filterOrderByStatus()
-        {
+        filterOrderByStatus() {
             console.log(this.displayData)
-            if (this.orderInCurStatus && this.orderNotInCurStatus)
-            {
+            if (this.orderInCurStatus && this.orderNotInCurStatus) {
                 return
-            }
-            else{
-                if(this.orderInCurStatus)
-                {
-                    this.filterData = this.displayData.filter((task) => 
-                    {
+            } else {
+                if (this.orderInCurStatus) {
+                    this.filterData = this.displayData.filter((task) => {
                         const filterMatch = task.orderStatusVal == 6
                         return filterMatch
                     })
                     this.displayData = this.filterData
-                }
-                else if (this.orderNotInCurStatus)
-                {
-                    this.filterData = this.displayData.filter((task) => 
-                    {
+                } else if (this.orderNotInCurStatus) {
+                    this.filterData = this.displayData.filter((task) => {
                         const filterMatch = task.orderStatusVal != 6
                         return filterMatch
                     })
@@ -1066,89 +1115,107 @@ export default {
                 }
             }
         },
-        filterOrderByStartDate()
-        {
-            this.filterData = this.displayData.filter((task)=>
-            {
-                const filterMatch = new Date(task.orderStartDate) >= this.orderStartDateFilter[0] && new Date(task.orderStartDate) <= this.orderStartDateFilter[1]
-                return filterMatch 
-            })
-            this.displayData = this.filterData
-        },
-        filterOrderByEndDate()
-        {
-            this.filterData = this.displayData.filter((task)=>
-            {
-                const filterMatch = new Date(task.orderEndDate) >= this.orderEndDateFilter[0] && new Date(task.orderEndDate) <= this.orderEndDateFilter[1]
-                return filterMatch 
-            })
-            this.displayData = this.filterData
-        },
-        filterByCustomerName()
-        {
-            this.filterData = this.displayData.filter((task)=>
-            {
-                const filterMatch = task.customerName.toLowerCase().includes(this.orderCustomerNameFilter.toLowerCase())
+        filterOrderByStartDate() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch =
+                    new Date(task.orderStartDate) >= this.orderStartDateFilter[0] &&
+                    new Date(task.orderStartDate) <= this.orderStartDateFilter[1]
                 return filterMatch
             })
-                this.displayData = this.filterData
+            this.displayData = this.filterData
         },
-        filterByCustomerBrand()
-        {
-                this.filterData = this.displayData.filter((task)=> {
-                    const filterMatch = task.customerBrand.toLowerCase().includes(this.orderCustomerBrandFilter.toLowerCase())
+        filterOrderByEndDate() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch =
+                    new Date(task.orderEndDate) >= this.orderEndDateFilter[0] &&
+                    new Date(task.orderEndDate) <= this.orderEndDateFilter[1]
+                return filterMatch
+            })
+            this.displayData = this.filterData
+        },
+        filterByCustomerName() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch = task.customerName
+                    .toLowerCase()
+                    .includes(this.orderCustomerNameFilter.toLowerCase())
+                return filterMatch
+            })
+            this.displayData = this.filterData
+        },
+        filterByCustomerBrand() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch = task.customerBrand
+                    .toLowerCase()
+                    .includes(this.orderCustomerBrandFilter.toLowerCase())
+                return filterMatch
+            })
+            this.displayData = this.filterData
+        },
+        filterByCid() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch = task.orderCid
+                    .toLowerCase()
+                    .includes(this.orderCidFilter.toLowerCase())
+                return filterMatch
+            })
+            this.displayData = this.filterData
+        },
+        filterByRid() {
+            this.filterData = this.displayData.filter((task) => {
+                const filterMatch = task.orderRid
+                    .toLowerCase()
+                    .includes(this.orderRidFilter.toLowerCase())
+                return filterMatch
+            })
+            this.displayData = this.filterData
+        },
+        filterByShoeRid() {
+            if (!this.shoeRidFilter) {
+                this.shoeTableDisplayData = this.shoeTableData
+            } else {
+                this.shoeTableTemp = this.shoeTableData.filter((task) => {
+                    const filterMatch = task.shoeRId
+                        .toLowerCase()
+                        .includes(this.shoeRidFilter.toLowerCase())
                     return filterMatch
                 })
-                this.displayData = this.filterData
-        },
-        filterByCid(){
-                this.filterData = this.displayData.filter((task) => {
-                const filterMatch = task.orderCid.toLowerCase().includes(this.orderCidFilter.toLowerCase())
-                return filterMatch
-            })
-                this.displayData = this.filterData
-        },
-        filterByRid(){
-                this.filterData = this.displayData.filter((task) => {
-                const filterMatch = task.orderRid.toLowerCase().includes(this.orderRidFilter.toLowerCase())
-                return filterMatch
-            })
-                this.displayData = this.filterData
-        },
-        filterByShoeRid(){
-            if (!this.shoeRidFilter){
-                this.shoeTableDisplayData = this.shoeTableData
-            }
-            else{
-                this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                const filterMatch = task.shoeRId.toLowerCase().includes(this.shoeRidFilter.toLowerCase())
-                return filterMatch})
 
-                this.shoeTableDisplayData = this.shoeTableTemp}
+                this.shoeTableDisplayData = this.shoeTableTemp
+            }
         },
-        filterByShoeRidWithSelection(){
-            const selectedShoeTypeIds = this.selectedShoeList.map(row => row.shoeTypeId)
-            if (!this.shoeRidFilter){
-                this.shoeTableDisplayData = Array.from(new Set([...this.selectedShoeList.concat(this.shoeTableData)]))
-            }
-            else
-            {
+        filterByShoeRidWithSelection() {
+            const selectedShoeTypeIds = this.selectedShoeList.map((row) => row.shoeTypeId)
+            if (!this.shoeRidFilter) {
+                this.shoeTableDisplayData = Array.from(
+                    new Set([...this.selectedShoeList.concat(this.shoeTableData)])
+                )
+            } else {
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
-                return filterMatch})
-                this.shoeTableDisplayData = Array.from(new Set([...this.selectedShoeList.concat(this.shoeTableTemp)]))
+                    const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
+                    return filterMatch
+                })
+                this.shoeTableDisplayData = Array.from(
+                    new Set([...this.selectedShoeList.concat(this.shoeTableTemp)])
+                )
             }
-            const rowsToToggle = this.shoeTableDisplayData.filter(row => selectedShoeTypeIds.includes(row.shoeTypeId))
+            const rowsToToggle = this.shoeTableDisplayData.filter((row) =>
+                selectedShoeTypeIds.includes(row.shoeTypeId)
+            )
 
             const fieldName = 'shoeTypeId'
-            this.reselectSelected(this.$refs.shoeSelectionTable, rowsToToggle, this.shoeTableDisplayData,fieldName)
+            this.reselectSelected(
+                this.$refs.shoeSelectionTable,
+                rowsToToggle,
+                this.shoeTableDisplayData,
+                fieldName
+            )
             // this.$nextTick(()=>{
             //         selectedShoeTypeIds.forEach(item =>
             //         {
             //         this.$refs.shoeSelectionTable.toggleRowSelection(this.shoeTableDisplayData.find(row => {
             //             return row.shoeTypeId == item
             //         }),true)
-            //         }) 
+            //         })
             //     })
         },
         handleUploadSuccess(response, file) {
@@ -1176,7 +1243,6 @@ export default {
             this.fileList = []
             this.getOrderDocInfo(this.orderData.orderRid)
             this.isSubmitDocVis = false
-
         },
         downloadDoc(type) {
             window.open(
@@ -1279,8 +1345,8 @@ export default {
                 }
             }
         },
-        handleDialogClose(){
-            console.log("TODO handle dialog close in OrderManagement.Vue")
+        handleDialogClose() {
+            console.log('TODO handle dialog close in OrderManagement.Vue')
         },
         async closeClearUploadData() {
             this.isImportVis = false
@@ -1357,54 +1423,85 @@ export default {
                 })
         },
         async submitNewOrder() {
-            
-            this.$confirm('确认导入订单信息？', '提示', {
-                confirmButtonText: '确定',
-                cancelButtonText: '取消',
-                type: 'warning'
-            }).then(async ()=> {
-                const loadingInstance = this.$loading({
-                        lock: true,
-                        text: '等待中，请稍后...',
-                        background: 'rgba(0, 0, 0, 0.7)'
-            })
-                loadingInstance.close()
-                const response = await axios.post(
-                        `${this.$apiBaseUrl}/ordercreate/createneworder`,
-                        {
-                            orderInfo:this.newOrderForm
-                        }
-                )
-                loadingInstance.close()
-                this.orderCreationSecondInfoVis = false
-                this.newOrderForm = 
-                {
-                orderRId:'',
-                orderCid: '',
-                batchInfoTypeId:'',
-                customerId: null,
-                orderStartDate: '',
-                orderEndDate: '',
-                status: '',
-                salesman: '',
-                orderShoeTypes:[],
-                batchInfoQuantity:[],
-                customerShoeName:{}
+            for (let key in this.newOrderForm) {
+                if (key !== 'status' && key !== 'batchInfoQuantity') {
+                    if (key === 'customerId' && this.newOrderForm[key] === null) {
+                        ElMessage.error('数据未填写完成，不允许添加订单')
+                        return
+                    } else if (key === 'orderShoeTypes' && this.newOrderForm[key].length === 0) {
+                        ElMessage.error('数据未填写完成，不允许添加订单')
+                        return
+                    } else if (this.newOrderForm[key] === '') {
+                        ElMessage.error('数据未填写完成，不允许添加订单')
+                        return this.newOrderForm[key] !== ''
+                    }
                 }
-                this.getAllOrders()
+            }
+
+            ElMessageBox.alert('请检查配码单位数量是否已填写', '', {
+                confirmButtonText: '已填写',
+                showCancelButton: true,
+                callback: (action) => {
+                    if (action === 'confirm') {
+                        this.$confirm('确认导入订单信息？', '提示', {
+                            confirmButtonText: '确定',
+                            cancelButtonText: '取消',
+                            type: 'warning'
+                        }).then(async () => {
+                            const loadingInstance = this.$loading({
+                                lock: true,
+                                text: '等待中，请稍后...',
+                                background: 'rgba(0, 0, 0, 0.7)'
+                            })
+                            loadingInstance.close()
+                            const response = await axios.post(
+                                `${this.$apiBaseUrl}/ordercreate/createneworder`,
+                                {
+                                    orderInfo: this.newOrderForm
+                                }
+                            )
+                            loadingInstance.close()
+                            this.orderCreationSecondInfoVis = false
+                            this.newOrderForm = {
+                                orderRId: '',
+                                orderCid: '',
+                                batchInfoTypeId: '',
+                                customerId: null,
+                                orderStartDate: '',
+                                orderEndDate: '',
+                                status: '',
+                                salesman: '',
+                                orderShoeTypes: [],
+                                batchInfoQuantity: [],
+                                customerShoeName: {}
+                            }
+                            this.getAllOrders()
+                        })
+                    }
+                }
             })
         },
         openOrderDetail(orderId) {
-            let url = ""
-            if (this.userRole == 4)
-        {
-            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/admin`;
-        }
-            else if (this.userRole == 21)
-        {
-            url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/clerk`;
-        }
-            window.open(url,'_blank')
+            let url = ''
+            if (this.userRole == 4) {
+                url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/admin`
+            } else if (this.userRole == 21) {
+                url = `${window.location.origin}/business/businessorderdetail/orderid=${orderId}/clerk`
+            }
+            window.open(url, '_blank')
+        },
+        switchRadio (value) {
+            if (value === 'all') {
+                this.orderInCurStatus = '已下发'
+                this.orderNotInCurStatus = '未下发'
+            } else if (value === '已下发') {
+                this.orderInCurStatus = ''
+                this.orderNotInCurStatus = 'all'
+            } else {
+                this.orderInCurStatus = 'all'
+                this.orderNotInCurStatus = ''
+            }
+            this.filterDisplayOrder()
         }
     }
 }
