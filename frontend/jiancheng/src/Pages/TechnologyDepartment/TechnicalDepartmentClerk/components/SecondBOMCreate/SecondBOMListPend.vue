@@ -54,7 +54,7 @@ export default {
             let url;
             if (row.taskName === '二次BOM填写') {
                 url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单生成') {
+            } else if (row.taskName === '二次采购订单创建') {
                 url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
             }
             if (url) {

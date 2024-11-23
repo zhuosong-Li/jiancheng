@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="20">
     <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-      >二次采购订单生成</el-col
+      >二次采购订单创建</el-col
     >
   </el-row>
   <component

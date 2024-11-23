@@ -11,7 +11,7 @@ def get_all_outsource_factories():
     name_search = request.args.get("nameSearch")
     query = db.session.query(OutsourceFactory).filter_by(is_deleted=False)
     if name_search and name_search != '':
-        query = query.filter(Shoe.shoe_rid.ilike(f"%{name_search}%"))
+        query = query.filter(OutsourceFactory.factory_name.ilike(f"%{name_search}%"))
     factories = query.all()
     result = []
     for factory in factories:

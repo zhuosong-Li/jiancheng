@@ -3,7 +3,7 @@ import datetime
 import os
 import shutil
 from app_config import db
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from models import *
 from event_processor import EventProcessor
 from general_document.bom import generate_excel_file
@@ -212,8 +212,8 @@ def get_order_first_bom():
 def get_shoe_bom_items():
     bom_rid = request.args.get("bomrid")
     entities = (
-        db.session.query(Bom, BomItem, Material, MaterialType, Supplier)
-        .join(BomItem, Bom.bom_id == BomItem.bom_id)
+        db.session.query(BomItem, Material, MaterialType, Supplier)
+        .join(Bom, Bom.bom_id == BomItem.bom_id)
         .join(Material, Material.material_id == BomItem.material_id)
         .join(MaterialType, MaterialType.material_type_id == Material.material_type_id)
         .join(Supplier, Supplier.supplier_id == Material.material_supplier)
@@ -231,7 +231,7 @@ def get_shoe_bom_items():
     )
     shoe_size_names = get_order_batch_type_helper(order_id)
     for entity in entities:
-        bom, bom_item, material, material_type, supplier = entity
+        bom_item, material, material_type, supplier = entity
         sizeInfo = []
         for i in range(len(shoe_size_names)):
             index = i + 34
@@ -276,7 +276,6 @@ def save_bom_usage():
     bom_items = request.json.get("bomItems")
     bom = db.session.query(Bom).filter(Bom.bom_rid == bom_rid).first()
     bom.bom_status = "4"
-    db.session.commit()
     print(bom_items)
     for bom_item in bom_items:
         entity = (
@@ -284,21 +283,13 @@ def save_bom_usage():
             .filter(BomItem.bom_item_id == bom_item["bomItemId"])
             .first()
         )
-        entity.size_35_total_usage = bom_item["sizeInfo"][0]["approvalAmount"]
-        entity.size_36_total_usage = bom_item["sizeInfo"][1]["approvalAmount"]
-        entity.size_37_total_usage = bom_item["sizeInfo"][2]["approvalAmount"]
-        entity.size_38_total_usage = bom_item["sizeInfo"][3]["approvalAmount"]
-        entity.size_39_total_usage = bom_item["sizeInfo"][4]["approvalAmount"]
-        entity.size_40_total_usage = bom_item["sizeInfo"][5]["approvalAmount"]
-        entity.size_41_total_usage = bom_item["sizeInfo"][6]["approvalAmount"]
-        entity.size_42_total_usage = bom_item["sizeInfo"][7]["approvalAmount"]
-        entity.size_43_total_usage = bom_item["sizeInfo"][8]["approvalAmount"]
-        entity.size_44_total_usage = bom_item["sizeInfo"][9]["approvalAmount"]
-        entity.size_45_total_usage = bom_item["sizeInfo"][10]["approvalAmount"]
-        entity.total_usage = bom_item["approvalUsage"]
-        entity.unit_usage = bom_item["unitUsage"]
-        entity.remark = bom_item["remark"]
-        db.session.commit()
+        for i in range(len(bom_item["sizeInfo"])):
+            name = i + 34
+            setattr(entity, f"size_{name}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
+            entity.total_usage = bom_item["approvalUsage"]
+            entity.unit_usage = bom_item["unitUsage"]
+            entity.remark = bom_item["remark"]
+    db.session.commit()
     return jsonify({"status": "success"})
 
 
@@ -365,7 +356,7 @@ def issue_bom_usage():
             )
             bom.bom_status = "6"
             bom.total_bom_id = total_bom.total_bom_id
-            db.session.commit()
+            db.session.flush()
             bom_id = bom.bom_id
             bom_items = (
                 db.session.query(BomItem, Material, MaterialType, Supplier, Department)
@@ -494,57 +485,22 @@ def issue_bom_usage():
             image_save_path,
         )
 
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=46,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
+        processor: EventProcessor = current_app.config["event_processor"]
+        event_arr = []
+        try:
+            for operation_id in [46, 47, 48, 49]:
+                event = Event(
+                    staff_id=1,
+                    handle_time=datetime.datetime.now(),
+                    operation_id=operation_id,
+                    event_order_id=order_id,
+                    event_order_shoe_id=order_shoe_id,
+                )
+                processor.processEvent(event)
+                event_arr.append(event)
+        except Exception:
             return jsonify({"status": "failed"})
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=47,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"status": "failed"})
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=48,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"status": "failed"})
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=49,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"status": "failed"})
-        db.session.add(event)
-        db.session.commit()
-
+        db.session.add_all(event_arr)
+        db.session.flush()
+    db.session.commit()
     return jsonify({"status": "success"})

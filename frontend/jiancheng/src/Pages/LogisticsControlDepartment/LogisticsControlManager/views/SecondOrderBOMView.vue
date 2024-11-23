@@ -1,12 +1,12 @@
 <template>
-    <el-container :direction="vertical">
+    <el-container direction="vertical">
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>
         <el-main height="">
             <el-row :gutter="20" style="text-align: center">
                 <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-                    >二次采购订单生成</el-col
+                    >二次采购订单创建</el-col
                 >
             </el-row>
             <el-row :gutter="20">
@@ -59,7 +59,7 @@
                                             <el-image
                                                 style="width: 150px; height: 100px"
                                                 :src="scope.row.image"
-                                                :fit="contain"
+                                                fit="contain"
                                             />
                                         </template>
                                     </el-table-column>

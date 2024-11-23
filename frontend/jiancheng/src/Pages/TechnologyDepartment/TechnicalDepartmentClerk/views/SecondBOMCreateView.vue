@@ -1,5 +1,5 @@
 <template>
-    <el-container :direction="vertical">
+    <el-container direction="vertical">
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>
@@ -54,7 +54,7 @@
                                     <el-table-column label="鞋图">
                                         <template #default="scope">
                                             <el-image style="width: 150px; height: 100px" :src="scope.row.image"
-                                                :fit="contain" />
+                                                fit="contain" />
                                         </template>
                                     </el-table-column>
                                     <el-table-column prop="firstBomStatus" label="一次BOM表"></el-table-column>

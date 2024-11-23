@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, send_file
+from flask import Blueprint, jsonify, request, send_file, current_app
 import os
 import datetime
 from app_config import app, db
@@ -994,19 +994,13 @@ def get_production_instruction():
     order_shoe_rid = request.args.get("ordershoeid")
 
     # Fetch order_shoe_id based on order_id and order_shoe_rid
-    order_shoe_id = (
-        db.session.query(Order, OrderShoe, Shoe)
-        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
-        .first()
-        .OrderShoe.order_shoe_id
-    )
-
     # Get the production instruction
     production_instruction = (
         db.session.query(ProductionInstruction)
-        .filter(ProductionInstruction.order_shoe_id == order_shoe_id)
+        .join(OrderShoe, ProductionInstruction.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(Order, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
         .first()
     )
 
@@ -1016,7 +1010,6 @@ def get_production_instruction():
     production_instruction_id = production_instruction.production_instruction_id
     production_instruction_rid = production_instruction.production_instruction_rid
 
-    # Fetch all items related to the production instruction
     production_instruction_items = (
         db.session.query(ProductionInstructionItem)
         .filter(
@@ -1026,25 +1019,27 @@ def get_production_instruction():
         .all()
     )
 
+    # Fetch all items related to the production instruction
+    production_instruction_items = (
+        db.session.query(ProductionInstructionItem, Color)
+        .join(
+            OrderShoeType,
+            OrderShoeType.order_shoe_type_id
+            == ProductionInstructionItem.order_shoe_type_id,
+        )
+        .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
+        .join(Color, ShoeType.color_id == Color.color_id)
+        .filter(
+            ProductionInstructionItem.production_instruction_id
+            == production_instruction_id
+        )
+        .all()
+    )
     # Dictionary to hold the organized data by color
     result_dict = {}
-
-    for item in production_instruction_items:
-        # Retrieve color based on order_shoe_type_id
-        order_shoe_type = (
-            db.session.query(OrderShoeType, ShoeType, Color)
-            .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
-            .join(Color, ShoeType.color_id == Color.color_id)
-            .filter(OrderShoeType.order_shoe_type_id == item.order_shoe_type_id)
-            .first()
-        )
-
-        # Skip if color information is not found
-        if not order_shoe_type:
-            continue
-
-        color_name = order_shoe_type.Color.color_name
-
+    for row in production_instruction_items:
+        item, color = row
+        color_name = color.color_name
         # Initialize color entry if it doesn't exist
         if color_name not in result_dict:
             result_dict[color_name] = {
@@ -1066,7 +1061,6 @@ def get_production_instruction():
             .filter(Material.material_id == item.material_id)
             .first()
         )
-
         # Map material type to the appropriate array in the dictionary
         material_data = {
             "materialId": item.material_id,
@@ -1429,7 +1423,7 @@ def edit_production_instruction():
                         db.session.add(material)
                         db.session.flush()
                         material_id = material.material_id
-                        
+
                 material_model = (
                     material_data.get("materialModel")
                     if material_data.get("materialModel")
@@ -1929,14 +1923,12 @@ def issue_production_order():
         if order_shoe.OrderShoe.production_order_upload_status != "1":
             return jsonify({"error": "Production order not uploaded yet"}), 500
         order_shoe.OrderShoe.production_order_upload_status = "2"
-        db.session.commit()
         production_instruction = (
             db.session.query(ProductionInstruction)
             .filter(ProductionInstruction.order_shoe_id == order_shoe_id)
             .first()
         )
         production_instruction.production_instruction_status = "2"
-        db.session.commit()
         production_instruction_items = (
             db.session.query(ProductionInstructionItem)
             .filter(
@@ -2006,7 +1998,7 @@ def issue_production_order():
                             material_second_type=item.material_second_type,
                         )
                         db.session.add(second_bom_item)
-        db.session.commit()
+        db.session.flush()
         # create excel file
         insert_data = []
         transdict = {
@@ -2100,127 +2092,48 @@ def issue_production_order():
             image_path = os.path.join(
                 IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg"
             )
-        generate_instruction_excel_file(
-            os.path.join(FILE_STORAGE_PATH,"投产指令单模版.xlsx"),
-            os.path.join(
-                FILE_STORAGE_PATH, order_rid, order_shoe_rid, "投产指令单.xlsx"
-            ),
-            {
-                "order_id": order_rid,
-                "inherit_id": order_shoe_rid,
-                "customer_id": customer_shoe_name,
-                "last_type": last_type,
-                "size_range": size_range,
-                "size_difference": size_difference,
-                "origin_size": origin_size,
-                "designer": designer,
-                "brand": brand,
-                "colors": color_string,
-            },
-            insert_data,
-            image_path,
-            image_save_path,
-
-        )
-
-        processor = EventProcessor()
-        event1 = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=38,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result1 = processor.processEvent(event1)
-        if not result1:
+        try:
+            generate_instruction_excel_file(
+                os.path.join(FILE_STORAGE_PATH, "投产指令单模版.xlsx"),
+                os.path.join(
+                    FILE_STORAGE_PATH, order_rid, order_shoe_rid, "投产指令单.xlsx"
+                ),
+                {
+                    "order_id": order_rid,
+                    "inherit_id": order_shoe_rid,
+                    "customer_id": customer_shoe_name,
+                    "last_type": last_type,
+                    "size_range": size_range,
+                    "size_difference": size_difference,
+                    "origin_size": origin_size,
+                    "designer": designer,
+                    "brand": brand,
+                    "colors": color_string,
+                },
+                insert_data,
+                image_path,
+                image_save_path,
+            )
+        except Exception:
             return jsonify({"error": "Failed to issue production order"}), 500
-        db.session.add(event1)
-        db.session.commit()
-        event2 = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=39,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result2 = processor.processEvent(event2)
-        db.session.add(event2)
-        db.session.commit()
-        event3 = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=40,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result3 = processor.processEvent(event3)
-        db.session.add(event3)
-        db.session.commit()
-        event4 = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=41,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result4 = processor.processEvent(event4)
-        db.session.add(event4)
-        db.session.commit()
-        if not result2:
+        event_arr = []
+        processor: EventProcessor = current_app.config["event_processor"]
+        try:
+            for operation_id in [38, 39, 40, 41, 42, 43, 44, 45]:
+                event = Event(
+                    staff_id=1,
+                    handle_time=datetime.datetime.now(),
+                    operation_id=operation_id,
+                    event_order_id=order_id,
+                    event_order_shoe_id=order_shoe_id,
+                )
+                processor.processEvent(event)
+                event_arr.append(event)
+        except Exception:
             return jsonify({"error": "Failed to issue production order"}), 500
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=42,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"message": "failed"}), 400
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=43,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"message": "failed"}), 400
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=44,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"message": "failed"}), 400
-        db.session.add(event)
-        db.session.commit()
-        processor = EventProcessor()
-        event = Event(
-            staff_id=1,
-            handle_time=datetime.datetime.now(),
-            operation_id=45,
-            event_order_id=order_id,
-            event_order_shoe_id=order_shoe_id,
-        )
-        result = processor.processEvent(event)
-        if not result:
-            return jsonify({"message": "failed"}), 400
-        db.session.add(event)
-        db.session.commit()
-
+        db.session.add_all(event_arr)
+        db.session.flush()
+    db.session.commit()
     return jsonify({"message": "Production order issued successfully"})
 
 
@@ -2239,7 +2152,10 @@ def upload_pic_notes():
     pic_note.save(file_path)
     return jsonify({"message": "Picture notes uploaded successfully"}), 200
 
-@dev_producion_order_bp.route("/devproductionorder/getautofinishedmaterialname", methods=["GET"])
+
+@dev_producion_order_bp.route(
+    "/devproductionorder/getautofinishedmaterialname", methods=["GET"]
+)
 def get_auto_finished_material_name():
     material_name = request.args.get("materialName")
     material = (
@@ -2251,16 +2167,21 @@ def get_auto_finished_material_name():
         .all()
     )
     material_list = []
-    if material:    
+    if material:
         for item in material:
-            material_list.append({
-                "name": item.material_name,
-            })
+            material_list.append(
+                {
+                    "name": item.material_name,
+                }
+            )
         return jsonify(material_list), 200
     else:
         return jsonify([]), 200
 
-@dev_producion_order_bp.route("/devproductionorder/getautofinishedsuppliername", methods=["GET"])
+
+@dev_producion_order_bp.route(
+    "/devproductionorder/getautofinishedsuppliername", methods=["GET"]
+)
 def get_auto_finished_supplier_name():
     supplier_name = request.args.get("supplierName")
     supplier = (
@@ -2272,16 +2193,21 @@ def get_auto_finished_supplier_name():
         .all()
     )
     supplier_list = []
-    if supplier:    
+    if supplier:
         for item in supplier:
-            supplier_list.append({
-                "name": item.supplier_name,
-            })
+            supplier_list.append(
+                {
+                    "name": item.supplier_name,
+                }
+            )
         return jsonify(supplier_list), 200
     else:
         return jsonify([]), 200
 
-@dev_producion_order_bp.route("/devproductionorder/downloadproductioninstruction", methods=["GET"])
+
+@dev_producion_order_bp.route(
+    "/devproductionorder/downloadproductioninstruction", methods=["GET"]
+)
 def download_production_instruction():
     order_shoe_rid = request.args.get("ordershoerid")
     order_id = request.args.get("orderid")
@@ -2297,6 +2223,7 @@ def download_production_instruction():
     file_path = os.path.join(folder_path, "投产指令单.xlsx")
     new_name = order_id + "-" + order_shoe_rid + "_投产指令单.xlsx"
     return send_file(file_path, as_attachment=True, download_name=new_name)
+
 
 @dev_producion_order_bp.route("/devproductionorder/downloadpicnotes", methods=["GET"])
 def download_pic_notes():

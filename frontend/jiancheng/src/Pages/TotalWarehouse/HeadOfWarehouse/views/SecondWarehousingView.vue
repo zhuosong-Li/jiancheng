@@ -1,5 +1,5 @@
 <template>
-    <el-container :direction="vertical">
+    <el-container direction="vertical">
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>

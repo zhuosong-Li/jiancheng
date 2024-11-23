@@ -1,5 +1,5 @@
 <template>
-    <el-container :direction="vertical">
+    <el-container direction="vertical">
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>
@@ -38,7 +38,7 @@
             <el-row :gutter="20" style="margin-top: 10px">
                 <el-col :span="4" :offset="0">
                     <div style="display: flex; align-items: center; white-space: nowrap">
-                        工厂型号搜索：<el-input v-model="inheritIdSearch" placeholder="" size="default" :suffix-icon="Search"
+                        工厂型号搜索：<el-input v-model="inheritIdSearch" placeholder="" size="default" :suffix-icon="searchIcon"
                             clearable @input="tableWholeFilter"></el-input>
                     </div>
                 </el-col>
@@ -54,7 +54,7 @@
                                     <el-table-column label="鞋图">
                                         <template #default="scope">
                                             <el-image style="width: 150px; height: 100px" :src="scope.row.image"
-                                                :fit="contain" />
+                                                fit="contain" />
                                         </template>
                                     </el-table-column>
                                     <el-table-column prop="firstBomStatus" label="一次BOM表"></el-table-column>
@@ -167,7 +167,7 @@
                             <el-table-column prop="unitUsage" label="单位用量">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
-                                        v-model="scope.row.unitUsage" step="0.001" size="default"
+                                        v-model="scope.row.unitUsage" :step="0.001" size="default"
                                         @change="calculateApprovalUsage(scope.row)" />
                                     <el-button v-else-if="scope.row.materialCategory == 1" type="primary" size="default"
                                         @click="openSizeDialog(scope.row, scope.$index)">尺码用量填写</el-button>
@@ -176,7 +176,7 @@
                             <el-table-column prop="approvalUsage" label="核定用量">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
-                                        v-model="scope.row.approvalUsage" step="0.001" size="default" />
+                                        v-model="scope.row.approvalUsage" :step="0.001" size="default" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="useDepart" label="使用工段">
@@ -187,11 +187,7 @@
                                     </el-select>
                                 </template>
                             </el-table-column>
-                            <el-table-column label="备注">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.comment" size="default" />
-                                </template>
-                            </el-table-column>
+                            <el-table-column prop="remark" label="备注" />
                         </el-table>
                     </el-row>
                 </div>
@@ -269,7 +265,7 @@
                                         </el-select>
                                     </template>
                                 </el-table-column>
-                                <el-table-column prop="comment" label="备注" />
+                                <el-table-column prop="remark" label="备注" />
                             </el-table>
                         </el-col>
                     </el-row>
@@ -322,7 +318,7 @@
                                             <el-table-column label="鞋图">
                                                 <template #default="scope">
                                                     <el-image style="width: 150px; height: 100px" :src="scope.row.image"
-                                                        :fit="contain" />
+                                                        fit="contain" />
                                                 </template>
                                             </el-table-column>
                                             <el-table-column prop="firstBomStatus" label="一次BOM表"></el-table-column>
@@ -409,7 +405,7 @@
 import AllHeader from '@/components/AllHeader.vue'
 import Arrow from '@/components/OrderArrowView.vue'
 import { Search } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import axios from 'axios'
 import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName'
 
@@ -419,6 +415,11 @@ export default {
         Arrow
     },
     props: ['orderId'],
+    computed: {
+        searchIcon() {
+            return Search
+        }
+    },
     data() {
         return {
             getShoeSizesName,
@@ -438,7 +439,6 @@ export default {
             newBomId: '',
             currentBomShoeId: '',
             materialSelectRow: null,
-            Search,
             materialAddfinished: false,
             materialTypeSearch: '',
             materialSearch: '',
@@ -756,6 +756,10 @@ export default {
                 })
         },
         async issueBOMs(selectedShoe) {
+            if (selectedShoe.length == 0) {
+                ElMessage.error("未选中鞋型")
+                return
+            }
             const loadingInstance = this.$loading({
                 lock: true,
                 text: '等待中，请稍后...',

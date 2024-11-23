@@ -17,10 +17,10 @@
                             <span>任务看板</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
-                            <span>一次采购订单生成</span>
+                            <span>一次采购订单创建</span>
                         </el-menu-item>
                         <el-menu-item index="3" @click="handleMenuClick(3)">
-                            <span>二次采购订单生成</span>
+                            <span>二次采购订单创建</span>
                         </el-menu-item>
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>耗材/固定资产订单生成</span>

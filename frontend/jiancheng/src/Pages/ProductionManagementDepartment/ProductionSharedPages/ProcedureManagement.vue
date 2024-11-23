@@ -43,12 +43,14 @@
         </el-table>
     </el-row>
     <el-dialog v-model="isNewProcedureDialogOpen" title="新工序" width="50%">
-        <el-form :model="newProcedureForm" >
+        <el-form :model="newProcedureForm">
             <el-form-item prop="name" label="工序名字">
                 <el-input v-model="newProcedureForm.name"></el-input>
             </el-form-item>
             <el-form-item prop="team" label="工组">
-                <el-input v-model="newProcedureForm.team"></el-input>
+                <el-select v-model="newProcedureForm.team">
+                    <el-option v-for="item in teams" :key="item" :label="item" :value="item"></el-option>
+                </el-select>
             </el-form-item>
             <el-form-item prop="price" label="工价">
                 <el-input v-model="newProcedureForm.price"></el-input>
@@ -69,7 +71,7 @@ export default {
             isNewProcedureDialogOpen: false,
             newProcedureForm: {
                 name: "",
-                team: "",
+                team: this.$props.teams[0],
                 price: "",
             },
             isEditing: false
@@ -87,19 +89,19 @@ export default {
                 await axios.post(`${this.$apiBaseUrl}/production/addnewprocedure`, this.newProcedureForm)
                 ElMessage.success("添加成功")
             }
-            catch(error) {
+            catch (error) {
                 ElMessage.error(error)
             }
             this.newProcedureForm = {
                 name: "",
-                team: "",
+                team: this.$props.teams[0],
                 price: "",
             }
             this.isNewProcedureDialogOpen = false
             this.getProcedureData()
         },
         async getProcedureData() {
-            let params = {"teams": this.$props.teams.toString(), "procedureName": this.procedureSearch}
+            let params = { "teams": this.$props.teams.toString(), "procedureName": this.procedureSearch }
             let response = await axios.get(`${this.$apiBaseUrl}/production/getallprocedures`, { params })
             this.procedureData = response.data
         },
@@ -113,18 +115,18 @@ export default {
                 this.isEditing = false
                 this.getProcedureData()
             }
-            catch(error) {
+            catch (error) {
                 ElMessage.error(error)
             }
         },
         async deleteProcedure(row) {
             try {
-                let params = {"procedureId": row.procedureId}
-                await axios.delete(`${this.$apiBaseUrl}/production/deleteprocedure`, {params})
+                let params = { "procedureId": row.procedureId }
+                await axios.delete(`${this.$apiBaseUrl}/production/deleteprocedure`, { params })
                 ElMessage.success("删除成功")
                 this.getProcedureData()
             }
-            catch(error) {
+            catch (error) {
                 ElMessage.error(error)
             }
         }
