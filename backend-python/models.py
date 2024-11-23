@@ -113,6 +113,7 @@ class QuantityReportItem(db.Model):
         db.BigInteger,
         primary_key=True,
         nullable=False,
+        autoincrement=True
     )
     quantity_report_id = db.Column(db.BigInteger, nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
@@ -425,9 +426,7 @@ class OutsourceInfo(db.Model):
         db.Integer, primary_key=True, nullable=False, autoincrement=True
     )
     outsource_type = db.Column(db.String(20), nullable=False)
-    factory_id = db.Column(
-        db.Integer,
-    )
+    factory_name = db.Column(db.String(50), nullable=False)
     outsource_amount = db.Column(db.Integer, nullable=False)
     outsource_start_date = db.Column(db.Date, nullable=True)
     outsource_end_date = db.Column(db.Date, nullable=True)
@@ -460,8 +459,9 @@ class OutsourceCostDetail(db.Model):
 
 class OutsourceFactory(db.Model):
     __tablename__ = "outsource_factory"
-    factory_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    factory_id = db.Column(db.Integer, primary_key=True, nullable=False, autoincrement=True)
     factory_name = db.Column(db.String(50), nullable=False)
+    is_deleted = db.Column(db.Boolean, default=0, nullable=False)
 
 
 class OrderShoeProductionInfo(db.Model):

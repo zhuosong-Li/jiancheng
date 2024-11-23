@@ -39,7 +39,10 @@
             <el-menu-item index="6" @click="handleMenuClick(6)">
               <span>数量审批</span>
             </el-menu-item>
-            <el-menu-item index="7" @click="logout()">
+            <el-menu-item index="7" @click="handleMenuClick(7)">
+              <span>外包厂家</span>
+            </el-menu-item>
+            <el-menu-item index="8" @click="logout()">
               <span>退出系统</span>
             </el-menu-item>
           </el-menu>
@@ -67,6 +70,7 @@ import { UserFilled } from '@element-plus/icons-vue'
 import { ref } from 'vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
+import OutsourceFactoryInfo from '../components/OutsourceFactoryInfo.vue'
 
 export default {
   components: {
@@ -79,7 +83,8 @@ export default {
     OutSourceInfo,
     ApprovalPage,
     ProductionManagement,
-    OrderProgress
+    OrderProgress,
+    OutsourceFactoryInfo
   },
   data() {
     return {
@@ -114,6 +119,9 @@ export default {
           break
         case 6:
           this.currentComponent = 'ApprovalPage'
+          break
+        case 7:
+          this.currentComponent = 'OutsourceFactoryInfo'
           break
       }
     },
