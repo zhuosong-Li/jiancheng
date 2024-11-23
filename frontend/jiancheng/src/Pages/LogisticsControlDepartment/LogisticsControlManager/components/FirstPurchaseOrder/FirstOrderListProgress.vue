@@ -6,18 +6,15 @@
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="4" :offset="0"><el-button size="default" @click="backToAll">返回全部任务</el-button></el-col>    
-        <el-col :span="4" :offset="15"><el-input v-model="searchOrder" placeholder="请输入订单号" size="normal" :suffix-icon="Search" clearable @input="filterData"></el-input>
+        <el-col :span="4" :offset="15"><el-input v-model="searchOrder" placeholder="请输入订单号" :suffix-icon="Search" clearable @input="filterData"></el-input>
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px;">
         <el-col :span="24">
             <el-table :data="displayData" style="height: 500px" @row-click="handleRowClick">
                 <el-table-column prop="taskName" label="任务名称"></el-table-column>
-                <el-table-column prop="orderId" label="订单号"></el-table-column>
+                <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="createTime" label="订单创建时间"></el-table-column>
-                <el-table-column prop="prevTime" label="前序流程下发时间"></el-table-column>
-                <el-table-column prop="prevDepart" label="前序处理部门"></el-table-column>
-                <el-table-column prop="prevUser" label="前序处理人"></el-table-column>
             </el-table>
 
         </el-col>
@@ -47,9 +44,9 @@ export default {
         },
         handleRowClick(row) {
             let url;
-            if (row.taskName === '一次采购订单生成') {
+            if (row.taskName === '一次采购订单创建') {
                 url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单生成') {
+            } else if (row.taskName === '二次采购订单创建') {
                 url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
             }
             if (url) {

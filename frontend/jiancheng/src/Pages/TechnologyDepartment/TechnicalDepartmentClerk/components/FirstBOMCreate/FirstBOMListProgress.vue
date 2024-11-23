@@ -52,7 +52,7 @@ export default {
             let url;
             if (row.taskName === '一次BOM填写') {
                 url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单生成') {
+            } else if (row.taskName === '二次采购订单创建') {
                 url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${row.orderId}`;
             }
             if (url) {

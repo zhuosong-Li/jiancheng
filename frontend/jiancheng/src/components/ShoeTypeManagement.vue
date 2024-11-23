@@ -7,7 +7,7 @@
     <el-row :gutter="20">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             鞋型号搜索：
-            <el-input v-model="inheritIdSearch" placeholder="" size="normal" clearable @change="getFilterShoes" :suffix-icon="Search"></el-input>
+            <el-input v-model="inheritIdSearch" placeholder="" clearable @change="getFilterShoes" :suffix-icon="Search"></el-input>
         </el-col>
         
     </el-row>

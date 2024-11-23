@@ -354,8 +354,8 @@ def edit_procedure():
 
 @price_report_bp.route("/production/deleteprocedure", methods=["DELETE"])
 def delete_procedure():
-    data = request.get_json()
-    entity = db.session.query(ProcedureReference).get(data["procedureId"])
+    procedure_id = request.args.get("procedureId")
+    entity = db.session.query(ProcedureReference).get(procedure_id)
     db.session.delete(entity)
     db.session.commit()
     return jsonify({"message": "删除成功"})

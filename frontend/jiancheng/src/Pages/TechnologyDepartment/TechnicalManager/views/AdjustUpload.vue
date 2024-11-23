@@ -1,5 +1,5 @@
 <template>
-    <el-container :direction="vertical">
+    <el-container direction="vertical">
         <el-header height="">
             <AllHeader></AllHeader>
         </el-header>
@@ -74,7 +74,7 @@
                                 <el-image
                                     style="width: 150px; height: 100px"
                                     :src="scope.row.image"
-                                    :fit="contain"
+                                    fit="contain"
                                 />
                             </template>
                         </el-table-column>
@@ -172,7 +172,7 @@
                                         <el-image
                                             style="width: 150px; height: 100px"
                                             :src="scope.row.image"
-                                            :fit="contain"
+                                            fit="contain"
                                         />
                                     </template>
                                 </el-table-column>
