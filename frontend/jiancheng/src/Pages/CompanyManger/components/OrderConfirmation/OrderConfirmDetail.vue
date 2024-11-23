@@ -12,7 +12,7 @@
                     height="700"
                     :row-key="
                         (row) => {
-                            return row.orderShoeTypeId
+                            return `${row.orderShoeId}`
                         }
                     "
                 >
@@ -23,7 +23,7 @@
                                 border
                                 :row-key="
                                     (row) => {
-                                        return row.packagingInfoId
+                                        return `${row.orderShoeTypeId}`
                                     }
                                 "
                             >
@@ -46,11 +46,12 @@
                                             ></el-table-column>
                                             <el-table-column
                                                 prop="totalQuantityRatio"
-                                                label="比例和"
+                                                label="对/件"
+                                                width="240"
                                             />
                                             <el-table-column
                                                 prop="unitPerRatio"
-                                                label="比例单位数量"
+                                                label="件数"
                                             />
                                         </el-table>
                                     </template>
@@ -58,6 +59,7 @@
                                 <el-table-column
                                     prop="shoeTypeColorName"
                                     label="颜色名称"
+                                    width="150"
                                     sortable
                                 />
                                 <el-table-column
@@ -73,7 +75,7 @@
                                     label="总数量"
                                     width="120"
                                 />
-                                <el-table-column label="金额">
+                                <el-table-column label="金额" width="120">
                                     <template #default="scope">
                                         <el-input
                                             size="small"
@@ -106,7 +108,7 @@
                     </el-table-column>
                     <el-table-column prop="shoeRid" label="鞋型编号" sortable />
                     <el-table-column prop="shoeCid" label="客户鞋型编号" sortable />
-                    <el-table-column prop="currentStatus" label="订单状态" />
+                    <el-table-column prop="currentStatus" label="鞋型状态" />
                     <el-table-column label="备注">
                         <template #default="scope">
                             <el-button
@@ -136,7 +138,7 @@
 
                 <span>
                     <el-button type="primary" @click="saveFormData">保存数据</el-button>
-                    <el-button type="primary" @click="showMessage">完成修改</el-button>
+                    <el-button type="primary" @click="showMessage">完成审批</el-button>
                 </span>
             </el-main>
         </el-container>
@@ -248,9 +250,10 @@ async function submitFormData() {
         orderId: location.pathname.split('=')[1]
     })
     if (response.status === 200) {
+        ElMessage.success('审批成功')
         getOrderInfo()
     } else {
-        ElMessage.error('修改失败')
+        ElMessage.error('审批失败')
     }
 }
 async function saveFormData() {
@@ -259,6 +262,7 @@ async function saveFormData() {
         currencyTypeForm: orderShoeTypeIdToCurrencyType
     })
     if (response.status === 200) {
+        ElMessage.success('保存成功')
         getOrderInfo()
     } else {
         ElMessage.error('保存失败')
@@ -294,6 +298,8 @@ async function submitRemarkForm() {
         ElMessage.success('信息变更成功')
         getOrderInfo()
         remarkDialogVis.value = false
+    } else {
+        ElMessage.error('信息变更失败')
     }
 }
 </script>
