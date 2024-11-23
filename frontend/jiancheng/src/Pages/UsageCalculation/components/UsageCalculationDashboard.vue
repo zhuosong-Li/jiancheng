@@ -50,7 +50,7 @@ onMounted(()=> {
     };
 
 
-    proxy.$axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
+    proxy.$axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {

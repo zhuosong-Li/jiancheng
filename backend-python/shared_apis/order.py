@@ -31,6 +31,7 @@ from datetime import datetime
 
 order_bp = Blueprint("order_bp", __name__)
 ORDER_CREATION_STATUS = 6
+ORDER_IN_PROD_STATUS = 9
 PACKAGING_SPECS_UPLOADED = "2"
 
 
@@ -47,7 +48,7 @@ def get_order_shoe_by_order():
     return
 
 
-@order_bp.route("/order/getorderbystatus", methods=["GET"])
+@order_bp.route("/order/getprodordershoebystatus", methods=["GET"])
 def get_orders_by_status():
     t_s = time.time()
     print("ORDERSHOESTATUS GET REQUEST WITH STATUS OF")
@@ -60,11 +61,14 @@ def get_orders_by_status():
             func.count(OrderShoe.order_shoe_id),
             OrderShoeStatus.current_status_value,
         )
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(OrderStatus.order_current_status == ORDER_IN_PROD_STATUS)
         .filter(OrderShoeStatus.current_status == status_val)
         .group_by(Order.order_id, OrderShoeStatus.current_status_value)
+        .order_by (Order.start_date.desc())
         .all()
     )
     print(entities)

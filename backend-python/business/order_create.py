@@ -51,10 +51,11 @@ def create_new_order():
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
 
-	exist_order = Order.query.filter_by(order_rid = order_rid).first()
-	if exist_order:
-		print("order exists")
-		return jsonify({'error':'invalid request'}), 400
+	rid_exist_order = Order.query.filter_by(order_rid = order_rid).first()
+	cid_exist_order = Order.query.filter_by(order_cid = order_cid).first()
+	if rid_exist_order or cid_exist_order:
+		print("order rid or cid exists, must be unique")
+		return jsonify({'message':'订单号或客户订单号已经存在 单号不可重复'}), 400
 
 	new_order = Order(
     	order_rid = order_rid,

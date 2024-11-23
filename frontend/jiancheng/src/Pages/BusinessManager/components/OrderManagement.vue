@@ -116,7 +116,7 @@
                         >查看订单详情</el-button
                     >
                     <el-button
-                        v-if="allowDeleteOrder"
+                        v-if="scope.row.orderStatusVal < 9"
                         type="danger"
                         size="default"
                         @click="deleteOrder(scope.row)"
@@ -290,6 +290,7 @@
                     return row.shoeTypeId
                 }
             "
+            :default-expand-all="true"
         >
             <el-table-column type="expand">
                 <template #default="props">
@@ -686,8 +687,8 @@ export default {
         }
     },
     computed: {
-        allowDeleteOrder() {
-            return this.userRole == 4
+        allowDeleteOrder(row) {
+            return this.userRole == 4  
         },
         uploadHeaders() {
             return {
@@ -1000,6 +1001,7 @@ export default {
             this.unfilteredData = response.data
             this.displayData = this.unfilteredData
             this.totalItems = this.unfilteredData.length
+            console.log(response)
         },
         // async getAllOrderStatus() {
         //     const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)

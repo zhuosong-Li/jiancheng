@@ -15,6 +15,7 @@
                             return `${row.orderShoeId}`
                         }
                     "
+                    :default-expand-all="true"
                 >
                     <el-table-column type="expand">
                         <template #default="props">
@@ -26,6 +27,8 @@
                                         return `${row.orderShoeTypeId}`
                                     }
                                 "
+                                :default-expand-all="true"
+
                             >
                                 <el-table-column type="expand">
                                     <template #default="scope">
