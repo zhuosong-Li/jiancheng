@@ -30,7 +30,7 @@
     <el-row :gutter="20">
         <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData"
             @selection-change="handleSelectionChange">
-            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable"/>
+            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable" />
             <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom">
             </el-table-column>
             <el-table-column label="采购订单号" width="100">
@@ -224,6 +224,7 @@ export default {
                 receiver: null,
                 address: null,
                 deadlineDate: null,
+                outsourceInfoId: null,
                 outsourceInfo: [],
                 selectedOutsource: null,
                 materials: [],
@@ -448,9 +449,10 @@ export default {
                         "outboundDepartment": this.outboundForm.section,
                         "outboundAddress": this.outboundForm.address,
                         "picker": this.outboundForm.receiver,
+                        "outsourceInfoId": null
                     }
                     if (this.outboundForm.selectedOutsource) {
-                        data["outsourceInfoId"] =this.outboundForm.selectedOutsource.outsourceInfoId
+                        data["outsourceInfoId"] = this.outboundForm.selectedOutsource.outsourceInfoId
                     }
                     console.log(data)
                     try {
@@ -518,7 +520,7 @@ export default {
             }).then(async () => {
                 let data = []
                 this.selectedRows.forEach(row => {
-                    data.push({storageId: row.materialStorageId, materialCategory: row.materialCategory})
+                    data.push({ storageId: row.materialStorageId, materialCategory: row.materialCategory })
                 })
                 try {
                     await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishoutboundmaterial`, data)
