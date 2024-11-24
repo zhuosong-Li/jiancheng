@@ -14,16 +14,16 @@
                     <el-descriptions title="" :column="2" border>
                         <el-descriptions-item label="订单编号" align="center">{{
                             orderData.orderId
-                        }}</el-descriptions-item>
+                            }}</el-descriptions-item>
                         <el-descriptions-item label="订单创建时间" align="center">{{
                             orderData.createTime
-                        }}</el-descriptions-item>
+                            }}</el-descriptions-item>
                         <el-descriptions-item label="客户名称" align="center">{{
                             orderData.customerName
-                        }}</el-descriptions-item>
+                            }}</el-descriptions-item>
                         <el-descriptions-item label="订单预计截止日期" align="center">{{
                             orderData.deadlineTime
-                        }}</el-descriptions-item>
+                            }}</el-descriptions-item>
                     </el-descriptions>
                 </el-col>
             </el-row>
@@ -91,30 +91,39 @@
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号" align="center">{{
                         orderData.orderId
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="订单创建时间" align="center">{{
                         orderData.createTime
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="客户名称" align="center">{{
                         orderData.customerName
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="投产指令单" align="center">
                         <el-button type="primary" size="default" @click="downloadProductionOrderList">
                             查看投产指令单
                         </el-button>
                     </el-descriptions-item>
                     <el-descriptions-item label="生产订单" align="center">
-                        <el-button type="primary" size="default"
-                            @click="downloadProductionOrder">查看生产订单
+                        <el-button type="primary" size="default" @click="downloadProductionOrder">查看生产订单
                         </el-button>
                     </el-descriptions-item>
                 </el-descriptions>
 
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">
+                    <el-row>
+                        订单鞋型数量
+                        <el-table :data="orderProduceInfo" border style="width: 100%" :span-method="batchInfoSpanMethod">
+                            <el-table-column prop="colorName" label="颜色" />
+                            <el-table-column prop="totalAmount" label="合计" />
+                            <el-table-column v-for="column in filteredColumns(orderProduceInfo)" :key="column.prop" :prop="column.prop"
+                            :label="column.label"></el-table-column>
+                        </el-table>
+                    </el-row>
                     <el-row style="margin-top: 10px">
+                        采购信息
                         <el-table :data="bomTestData" border>
                             <el-table-column prop="materialType" label="材料类型">
                             </el-table-column>
@@ -199,12 +208,11 @@
                                     <el-table-column prop="unit" label="单位" />
 
                                     <el-table-column prop="purchaseAmount" label="采购数量" />
-                                    <el-table-column label="分码数量（中国/美标内码/美标外显）">
-                                        <el-table-column label="35" width="50">
-                                            <el-table-column label="7" width="50">
-                                                <el-table-column prop="size35" label="7" width="50"></el-table-column>
-                                            </el-table-column>
-                                        </el-table-column>
+                                    <el-table-column :label="`分码数量 (${currentShoeSizeType})`">
+                                        <el-table-column
+                                            v-for="column in filteredColumns(purchaseDivideOrder.assetsItems)"
+                                            :key="column.prop" :prop="column.prop"
+                                            :label="column.label"></el-table-column>
                                     </el-table-column>
                                 </el-table>
                             </div>
@@ -235,6 +243,7 @@
         </el-main>
     </el-container>
     <el-dialog title="尺码数量填写" v-model="isSizeDialogVisible" width="60%" :close-on-click-modal="false">
+        <span>{{ `尺码名称: ${currentShoeSizeType}` }}</span>
         <el-table :data="sizeData" border stripe>
             <el-table-column prop="size" label="尺码"></el-table-column>
             <el-table-column prop="approvalAmount" label="核定用量"> </el-table-column>
@@ -252,7 +261,10 @@
         </template>
     </el-dialog>
     <el-dialog title="采购订单创建页面" v-model="purchaseOrderCreateVis" width="80%" :close-on-click-modal="false">
-        <el-tabs v-model="activeTab" type="card" tab-position="top">
+        <span v-if="activeTab === ''">
+            无需购买材料，推进流程即可。
+        </span>
+        <el-tabs v-if="activeTab !== ''" v-model="activeTab" type="card" tab-position="top">
             <el-tab-pane v-for="item in tabPlaneData" :key="item.purchaseDivideOrderId"
                 :label="item.purchaseDivideOrderId + '    ' + item.supplierName" :name="item.purchaseDivideOrderId"
                 style="min-height: 500px">
@@ -293,12 +305,9 @@
                                 <el-table-column prop="unit" label="单位" />
 
                                 <el-table-column prop="amount" label="采购数量" />
-                                <el-table-column label="分码数量（中国/美标内码/美标外显）">
-                                    <el-table-column label="35" width="50">
-                                        <el-table-column label="7" width="50">
-                                            <el-table-column prop="size35" label="7" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
+                                <el-table-column :label="`分码数量(${currentShoeSizeType})`">
+                                    <el-table-column v-for="column in filteredColumns(item.assetsItems)"
+                                        :key="column.prop" :prop="column.prop" :label="column.label"></el-table-column>
                                 </el-table-column>
                             </el-table>
                         </div>
@@ -334,6 +343,8 @@
 import AllHeader from '@/components/AllHeader.vue'
 import Arrow from '@/components/OrderArrowView.vue'
 import axios from 'axios'
+import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
+import { shoeBatchInfoTableSpanMethod } from '@/Pages/ProductionManagementDepartment/utils';
 export default {
     props: ['orderId'],
     components: {
@@ -342,6 +353,7 @@ export default {
     },
     data() {
         return {
+            batchInfoSpanMethod: null,
             currentSizeIndex: 0,
             purchaseOrderCreateVis: false,
             createEditSymbol: 0,
@@ -370,10 +382,15 @@ export default {
             purchaseTestData: [],
             isPreviewDialogVisible: false,
             selectedFile: null,
-            inheritIdSearch: ''
+            inheritIdSearch: '',
+            currentShoeSizeType: '',
+            getShoeSizesName,
+            shoeSizeColumns: []
         }
     },
-    mounted() {
+    async mounted() {
+        this.shoeSizeColumns = await this.getShoeSizesName(this.$props.orderId)
+        this.currentShoeSizeType = this.shoeSizeColumns[0].type
         this.getAllColorOptions()
         this.getAllDepartmentOptions()
         this.$setAxiosToken()
@@ -410,15 +427,14 @@ export default {
             this.testTableData = response.data
             this.tableWholeFilter()
         },
-        async getOrderShoeBatchInfo(orderId, orderShoeId, color) {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoesizetotal`, {
+        async getOrderShoeBatchInfo(orderShoeId) {
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, {
                 params: {
-                    orderid: orderId,
-                    ordershoeid: orderShoeId,
-                    color: color
+                    orderShoeId: orderShoeId,
                 }
             })
             this.orderProduceInfo = response.data
+            this.batchInfoSpanMethod = shoeBatchInfoTableSpanMethod(this.orderProduceInfo)
         },
         async getBOMDetails(row) {
             const response = await this.$axios.get(
@@ -467,11 +483,12 @@ export default {
         },
         async handleGenerate(row) {
             await this.getNewPurchaseOrderId()
-            this.createVis = true
+            await this.getOrderShoeBatchInfo(row.orderShoeId)
             await this.getBOMDetails(row)
             this.currentBOMId = row.totalBomId
             this.currentPurchaseShoeId = row.inheritId
             this.createEditSymbol = 0
+            this.createVis = true
         },
         handleGenerateClose() {
             this.createVis = false
@@ -526,7 +543,9 @@ export default {
             this.currentSubmitPurchaseOrderId = row.purchaseOrderId
             this.tabPlaneData = response.data
             console.log(this.tabPlaneData)
-            this.activeTab = this.tabPlaneData[0].purchaseDivideOrderId
+            if (this.tabPlaneData.length > 0) {
+                this.activeTab = this.tabPlaneData[0].purchaseDivideOrderId
+            }
             this.purchaseOrderCreateVis = true
         },
         closePreviewDialog() {

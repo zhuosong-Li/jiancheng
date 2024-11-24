@@ -382,7 +382,6 @@ def save_purchase():
         material_list_sorted, key=itemgetter("supplierName")
     ):
         grouped_materials[supplier_name] = list(items)
-    print(grouped_materials)
     for supplier_name, items in grouped_materials.items():
         supplier_id = (
             db.session.query(Supplier)
@@ -425,46 +424,20 @@ def save_purchase():
                 db.session.add(purchase_order_item)
         elif items[0]["materialCategory"] == 1:
             for item in items:
-                material_35_quantity = item["sizeInfo"][0]["purchaseAmount"]
-                material_36_quantity = item["sizeInfo"][1]["purchaseAmount"]
-                material_37_quantity = item["sizeInfo"][2]["purchaseAmount"]
-                material_38_quantity = item["sizeInfo"][3]["purchaseAmount"]
-                material_39_quantity = item["sizeInfo"][4]["purchaseAmount"]
-                material_40_quantity = item["sizeInfo"][5]["purchaseAmount"]
-                material_41_quantity = item["sizeInfo"][6]["purchaseAmount"]
-                material_42_quantity = item["sizeInfo"][7]["purchaseAmount"]
-                material_43_quantity = item["sizeInfo"][8]["purchaseAmount"]
-                material_44_quantity = item["sizeInfo"][9]["purchaseAmount"]
-                material_45_quantity = item["sizeInfo"][10]["purchaseAmount"]
-                material_quantity = (
-                    material_35_quantity
-                    + material_36_quantity
-                    + material_37_quantity
-                    + material_38_quantity
-                    + material_39_quantity
-                    + material_40_quantity
-                    + material_41_quantity
-                    + material_42_quantity
-                    + material_43_quantity
-                    + material_44_quantity
-                    + material_45_quantity
-                )
+                material_quantity = 0
                 purchase_order_item = PurchaseOrderItem(
                     purchase_divide_order_id=purchase_divide_order_id,
                     bom_item_id=item["bomItemId"],
-                    purchase_amount=material_quantity,
-                    size_35_purchase_amount=material_35_quantity,
-                    size_36_purchase_amount=material_36_quantity,
-                    size_37_purchase_amount=material_37_quantity,
-                    size_38_purchase_amount=material_38_quantity,
-                    size_39_purchase_amount=material_39_quantity,
-                    size_40_purchase_amount=material_40_quantity,
-                    size_41_purchase_amount=material_41_quantity,
-                    size_42_purchase_amount=material_42_quantity,
-                    size_43_purchase_amount=material_43_quantity,
-                    size_44_purchase_amount=material_44_quantity,
-                    size_45_purchase_amount=material_45_quantity,
                 )
+                for i in range(len(item["sizeInfo"])):
+                    name = i + 34
+                    material_quantity += item["sizeInfo"][i]["purchaseAmount"]
+                    setattr(
+                        purchase_order_item,
+                        f"size_{name}_purchase_amount",
+                        item["sizeInfo"][i]["purchaseAmount"],
+                    )
+                setattr(purchase_order_item, "purchase_amount", material_quantity)
                 db.session.add(purchase_order_item)
     db.session.commit()
     return jsonify({"status": "success"})
@@ -528,31 +501,23 @@ def get_purchase_divide_orders():
             }
 
         # Append the assets item details to the corresponding group
-        grouped_results[divide_order_rid]["assetsItems"].append(
-            {
-                "materialId": bom_item.material_id,
-                "materialType": material_type.material_type_name,
-                "materialName": material.material_name,
-                "materialModel": bom_item.material_model,
-                "materialSpecification": bom_item.material_specification,
-                "color": bom_item.bom_item_color,
-                "unit": material.material_unit,
-                "purchaseAmount": purchase_order_item.purchase_amount,
-                "size35": purchase_order_item.size_35_purchase_amount,
-                "size36": purchase_order_item.size_36_purchase_amount,
-                "size37": purchase_order_item.size_37_purchase_amount,
-                "size38": purchase_order_item.size_38_purchase_amount,
-                "size39": purchase_order_item.size_39_purchase_amount,
-                "size40": purchase_order_item.size_40_purchase_amount,
-                "size41": purchase_order_item.size_41_purchase_amount,
-                "size42": purchase_order_item.size_42_purchase_amount,
-                "size43": purchase_order_item.size_43_purchase_amount,
-                "size44": purchase_order_item.size_44_purchase_amount,
-                "size45": purchase_order_item.size_45_purchase_amount,
-                "remark": bom_item.remark,
-                "sizeType": bom_item.size_type,
-            }
-        )
+        obj = {
+            "materialId": bom_item.material_id,
+            "materialType": material_type.material_type_name,
+            "materialName": material.material_name,
+            "materialModel": bom_item.material_model,
+            "materialSpecification": bom_item.material_specification,
+            "color": bom_item.bom_item_color,
+            "unit": material.material_unit,
+            "purchaseAmount": purchase_order_item.purchase_amount,
+            "remark": bom_item.remark,
+            "sizeType": bom_item.size_type,
+        }
+        for size in SHOESIZERANGE:
+            obj[f"size{size}Amount"] = getattr(
+                purchase_order_item, f"size_{size}_purchase_amount"
+            )
+        grouped_results[divide_order_rid]["assetsItems"].append(obj)
 
     # Convert the grouped results to a list
     result = list(grouped_results.values())

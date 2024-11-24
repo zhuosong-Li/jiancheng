@@ -130,9 +130,6 @@
                     <el-descriptions-item label="生产订单"><el-button type="primary" size="default"
                             @click="downloadProductionOrder">查看生产订单</el-button>
                     </el-descriptions-item>
-                    <el-descriptions-item label="一次BOM"><el-button type="primary" size="default"
-                            @click="openFirstBOM">查看一次BOM</el-button>
-                    </el-descriptions-item>
                 </el-descriptions>
 
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">
@@ -629,13 +626,13 @@ export default {
             console.log(this.sizeFormatterData)
         },
         // TODO
-        openFirstBOM() {
-            let url
-            url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${this.orderId}`
-            if (url) {
-                window.open(url, '_blank')
-            }
-        },
+        // openFirstBOM() {
+        //     let url
+        //     url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${this.orderId}`
+        //     if (url) {
+        //         window.open(url, '_blank')
+        //     }
+        // },
         async getNewBomId() {
             const response = await axios.get(`${this.$apiBaseUrl}/secondbom/getnewbomid`)
             this.newBomId = response.data.bomId

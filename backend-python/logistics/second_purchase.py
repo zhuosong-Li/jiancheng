@@ -37,21 +37,21 @@ def get_order_shoe_list():
             PurchaseOrder,
         )
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(OrderShoeType, OrderShoe.order_shoe_id == OrderShoeType.order_shoe_id)
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Shoe, Shoe.shoe_id == ShoeType.shoe_id)
         .join(Color, ShoeType.color_id == Color.color_id)
+        .outerjoin(TotalBom, OrderShoe.order_shoe_id == TotalBom.order_shoe_id)
         .outerjoin(
-            Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id
+            Bom, TotalBom.total_bom_id == Bom.total_bom_id
         )  # Assuming BOM is optional
-        .outerjoin(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(Order.order_id == order_id)
-        .filter(TotalBom.total_bom_rid.like("%TS%"))
         .all()
     )
 
-    print(entities)
+    for row in entities:
+        print(row)
 
     # Initialize the result list
     result_dict = {}
