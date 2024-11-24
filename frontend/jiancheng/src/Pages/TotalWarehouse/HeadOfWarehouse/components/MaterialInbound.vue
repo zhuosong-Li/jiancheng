@@ -95,22 +95,26 @@
     </el-dialog>
 
     <el-dialog title="入库对话框" v-model="isInboundDialogVisible" width="30%">
-        <el-form-item label="入库日期">
-            <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
-                value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
-        </el-form-item>
-        <el-form-item label="材料单价">
-            <el-input v-model="inboundForm.unitPrice" placeholder="请输入单价"></el-input>
-        </el-form-item>
-        <el-form-item label="入库数量">
-            <el-input v-model="inboundForm.quantity" placeholder="请输入入库数量"></el-input>
-        </el-form-item>
-        <el-form-item label="入库类型">
-            <el-radio-group v-model="inboundForm.inboundType">
-                <el-radio :value="0">采购入库</el-radio>
-                <el-radio :value="1">生产剩余</el-radio>
-            </el-radio-group>
-        </el-form-item>
+        <el-form :model="inboundForm" :rules="rules" ref="inboundForm">
+            <el-form-item prop="date" label="入库日期">
+                <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
+                    value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
+            </el-form-item>
+            <el-form-item prop="unitPrice" label="材料单价">
+                <el-input-number :min="0" :precision="2" :step="0.01" v-model="inboundForm.unitPrice"
+                    placeholder="请输入单价"></el-input-number>
+            </el-form-item>
+            <el-form-item prop="quantity" label="入库数量">
+                <el-input-number :min="0" :precision="5" :step="0.00001" v-model="inboundForm.quantity"
+                    placeholder="请输入入库数量"></el-input-number>
+            </el-form-item>
+            <el-form-item prop="inboundType" label="入库类型">
+                <el-radio-group v-model="inboundForm.inboundType">
+                    <el-radio :value="0">采购入库</el-radio>
+                    <el-radio :value="1">生产剩余</el-radio>
+                </el-radio-group>
+            </el-form-item>
+        </el-form>
         <template #footer>
             <span>
                 <el-button @click="isInboundDialogVisible = false">取消</el-button>
@@ -186,18 +190,41 @@ export default {
             isMaterialDialogVisible: false,
             pageSize: 10,
             currentPage: 1,
-            inboundForm: {
-                quantity: '',
+            inboundFormTemplate: {
+                quantity: 0,
                 date: '',
-                inboundType: '',
+                inboundType: 0,
                 unitPrice: 0,
             },
+            inboundForm: {},
             materialTableData: [],
             currentRow: {},
             totalRows: 0,
             isMultipleSelection: false,
             selectedRows: [],
             isFinishInboundDialogOpen: false,
+            rules: {
+                date: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                inboundType: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                quantity: [
+                    {
+                        required: true,
+                        validator: (rule, value, callback) => {
+                            console.log(value)
+                            if (!(value > 0)) {
+                                callback(new Error("入库数量不能零"));
+                            } else {
+                                callback();
+                            }
+                        },
+                        trigger: "change",
+                    },
+                ]
+            },
         }
     },
     mounted() {
@@ -249,23 +276,30 @@ export default {
             this.totalRows = response.data.total
         },
         async submitInboundForm() {
-            let data = {
-                "materialStorageId": this.currentRow.materialStorageId,
-                "date": this.inboundForm.date,
-                "amount": this.inboundForm.quantity,
-                "type": this.inboundForm.inboundType,
-                "unitPrice": this.inboundForm.unitPrice
-            }
-            let response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
-            if (response.status == 200) {
-                ElMessage.success("入库成功")
-            }
-            else {
-                ElMessage.error("入库失败")
-            }
-            this.isInboundDialogVisible = false
-            this.getMaterialTableData()
-
+            this.$refs.inboundForm.validate(async (valid) => {
+                if (valid) {
+                    let data = {
+                        "materialStorageId": this.currentRow.materialStorageId,
+                        "date": this.inboundForm.date,
+                        "amount": this.inboundForm.quantity,
+                        "type": this.inboundForm.inboundType,
+                        "unitPrice": this.inboundForm.unitPrice
+                    }
+                    try {
+                        await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundmaterial`, data)
+                        ElMessage.success("入库成功")
+                    }
+                    catch (error) {
+                        console.log(error)
+                        ElMessage.error("入库失败")
+                    }
+                    this.isInboundDialogVisible = false
+                    this.getMaterialTableData()
+                }
+                else {
+                    console.log("invalid")
+                }
+            })
         },
         async submitSizeInboundForm() {
             try {
@@ -312,6 +346,7 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async editMaterial(row) {
+            this.inboundForm = { ...this.inboundFormTemplate }
             this.inboundForm.unitPrice = row.unitPrice
             if (row.materialCategory == 1) {
                 let params = { "sizeMaterialStorageId": row.materialStorageId, "orderId": row.orderId }
@@ -333,7 +368,7 @@ export default {
                 try {
                     let data = []
                     this.selectedRows.forEach(row => {
-                        data.push({ "storageId": row.materialStorageId, "materialCategory": row.materialCategory })
+                        data.push({ "orderId": row.orderId, "storageId": row.materialStorageId, "materialCategory": row.materialCategory })
                     })
                     await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/finishinboundmaterial`, data)
                     ElMessage.success("操作成功")
@@ -343,6 +378,7 @@ export default {
                     ElMessage.error("操作异常")
                 }
                 this.getMaterialTableData()
+                this.isFinishInboundDialogOpen = false
             })
         },
         async sortData({ prop, order }) {

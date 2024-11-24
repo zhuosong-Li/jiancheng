@@ -190,8 +190,8 @@
                     <el-table-column prop="colorName" label="颜色"></el-table-column>
                     <el-table-column prop="estimatedInboundAmount" label="核定用量"></el-table-column>
                     <el-table-column prop="actualInboundAmount" label="采购数量"></el-table-column>
+                    <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
                     <el-table-column prop="supplierName" label="供应商名称"></el-table-column>
-                    <el-table-column prop="materialArrivalDate" label="材料预计到达日期"></el-table-column>
                     <el-table-column prop="status" label="材料状态"></el-table-column>
                 </el-table>
             </el-col>

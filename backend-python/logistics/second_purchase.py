@@ -724,7 +724,8 @@ def submit_purchase_divide_orders():
 
         material_id = bom_item.material_id
         material_quantity = purchase_order_item.purchase_amount
-        material_specification = bom_item.material_specification
+        material_specification = bom_item.material_specification,
+        material_model = bom_item.material_model
         color = bom_item.bom_item_color
         remark = bom_item.remark
         size_type = bom_item.size_type
@@ -738,6 +739,7 @@ def submit_purchase_divide_orders():
                 unit_price=0,
                 material_outsource_status="0",
                 material_specification=material_specification,
+                material_model=material_model,
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
             )

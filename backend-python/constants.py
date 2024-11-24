@@ -21,7 +21,7 @@ PRICE_REPORT_REFERENCE = {
 
 QUANTTIY_REPORT_REFERENCE = {"裁断": 23, "针车预备": 30, "针车": 32, "成型": 40}
 
-SHOESIZEINFO = [i for i in range(34, 47)]
+SHOESIZERANGE = [i for i in range(34, 47)]
 
 IN_PRODUCTION_ORDER_NUMBER = 9
 END_OF_ORDER_NUMBER = 18
