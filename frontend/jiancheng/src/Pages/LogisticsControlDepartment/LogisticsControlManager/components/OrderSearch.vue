@@ -102,17 +102,17 @@
         </el-table>
     </el-row>
     <el-row :gutter="20">
-        <el-col :span="6" :offset="16">
-            <el-pagination
-                @current-change="handlePageChange"
-                v-model:current-page="currentPage"
-                :page-sizes="[10, 20, 30, 40]"
-                :page-size="10"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="totalData"
-            ></el-pagination>
-        </el-col>
-    </el-row>
+    <el-col :span="6" :offset="16">
+        <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="pageSize"
+            layout="total, prev, pager, next, jumper"
+            :total="totalData"
+            @current-change="handlePageChange"
+        ></el-pagination>
+    </el-col>
+</el-row>
+
 </template>
 
 <script>
@@ -136,40 +136,41 @@ export default {
     },
     async mounted() {
         this.$setAxiosToken()
-        await this.getOrderPageInfo()
         await this.getOrderData(this.currentPage)
     },
     methods: {
-        async getOrderPageInfo() {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderpageinfo`, {
+        async getOrderData() {
+            try {
+                const response = await axios.get(`${this.$apiBaseUrl}/order/getorderfullinfo`, {
+                    params: {
+                        page: this.currentPage,
+                        pageSize: this.pageSize,
+                        orderSearch: this.orderSearch,
+                        customerSearch: this.customerSearch,
+                    },
+                })
+                this.orderFilterData = response.data // Update table data
+                const response2 = await axios.get(`${this.$apiBaseUrl}/order/getorderpageinfo`, {
                 params: {
                     orderSearch: this.orderSearch,
                     customerSearch: this.customerSearch,
                 },
-            })
-            this.totalData = response.data.totalOrders
-            this.totalPages = Math.ceil(this.totalData / this.pageSize)
-        },
-        async getOrderData(page) {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderfullinfo`, {
-                params: {
-                    page: page,
-                    pageSize: this.pageSize,
-                    orderSearch: this.orderSearch,
-                    customerSearch: this.customerSearch,
-                },
-            })
-            this.orderFilterData = response.data
+                })
+                this.totalData = response2.data.totalOrders // Total orders for pagination
+                console.log("Total orders:", response2)
+                console.log("Total orders:", this.totalData)
+            } catch (error) {
+                console.error("Error fetching order data:", error)
+            }
         },
         handlePageChange(page) {
             this.currentPage = page
-            this.getOrderData(page)
+            this.getOrderData()
         },
         tableFilter() {
             // Reset to the first page on filter
             this.currentPage = 1
-            this.getOrderPageInfo()
-            this.getOrderData(this.currentPage)
+            this.getOrderData()
         },
         handleRowClick(row) {
             const url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;

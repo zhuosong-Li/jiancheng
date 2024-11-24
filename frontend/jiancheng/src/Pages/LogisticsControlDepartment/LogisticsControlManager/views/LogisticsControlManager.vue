@@ -37,7 +37,7 @@
                         <el-menu-item index="8" @click="handleMenuClick(8)">
                             <span>订单查询</span>
                         </el-menu-item>
-                        <el-menu-item index="9">
+                        <el-menu-item index="9" @click="handleMenuClick(9)">
                             <span>个人信息</span>
                         </el-menu-item>
                         <el-menu-item index="10" @click="logout">
@@ -64,6 +64,7 @@ import MaterialManagement from '../components/MaterialManagementView.vue'
 import WarehouseManagement from '../components/WarehouseManagementView.vue'
 import SupplierManagement from '../components/SupplierManagementView.vue'
 import OrderSearch from '../components/OrderSearch.vue'
+import PersonalInfo from '@/components/PersonalInfo.vue'
 import TestPage from '../components/TestPage.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
@@ -77,7 +78,8 @@ export default {
         WarehouseManagement,
         SupplierManagement,
         TestPage,
-        OrderSearch
+        OrderSearch,
+        PersonalInfo
 
     },
     data() {
@@ -122,6 +124,9 @@ export default {
                     break
                 case 8:
                     this.currentComponent = 'OrderSearch'
+                    break
+                case 9:
+                    this.currentComponent = 'PersonalInfo'
                     break
                 case 10:
                     this.currentComponent = 'TestPage' 

@@ -13,7 +13,7 @@
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @change=""
+                @change="tableFilter"
             ></el-input>
         </el-col>
         <el-col :span="6" :offset="6" style="white-space: nowrap">
@@ -24,12 +24,12 @@
                 size="normal"
                 :suffix-icon="Search"
                 clearable
-                @change=""
+                @change="tableFilter"
             ></el-input>
         </el-col>
     </el-row>
     <el-row>
-        <el-table :data="orderData" border stripe height="600" @row-click="handleRowClick">
+        <el-table :data="orderFilterData" border stripe height="600">
             <el-table-column type="expand">
                 <template #default="props">
                     <el-table :data="props.row.shoes" :border="true">
@@ -92,27 +92,26 @@
             <el-table-column prop="createTime" label="订单日期"></el-table-column>
             <el-table-column prop="deadlineTime" label="交货日期"></el-table-column>
             <el-table-column prop="status" label="订单状态"></el-table-column>
-            <el-table-column label="操作">
+            <el-table-column label="操作" width="350">
                 <template #default="scope">
-                    <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看</el-button>
+                    <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看用量填写页面</el-button>
                 </template>
             </el-table-column>
             
         </el-table>
     </el-row>
     <el-row :gutter="20">
-        <el-col :span="6" :offset="16">
-            <el-pagination
-                @size-change=""
-                @current-change=""
-                :current-page="1"
-                :page-sizes="[10, 20, 30, 40]"
-                :page-size="10"
-                layout="total, sizes, prev, pager, next, jumper"
-                :total="orderData.length"
-            ></el-pagination>
-        </el-col>
-    </el-row>
+    <el-col :span="6" :offset="16">
+        <el-pagination
+            v-model:current-page="currentPage"
+            :page-size="pageSize"
+            layout="total, prev, pager, next, jumper"
+            :total="totalData"
+            @current-change="handlePageChange"
+        ></el-pagination>
+    </el-col>
+</el-row>
+
 </template>
 
 <script>
@@ -126,26 +125,56 @@ export default {
             Search,
             orderSearch: '',
             orderData: [],
+            orderFilterData: [],
             customerSearch: '',
-            currentPage: 1
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 0,
+            totalData: 0,
         }
     },
-    mounted() {
+    async mounted() {
         this.$setAxiosToken()
-        this.getOrderData(this.currentPage)
+        await this.getOrderData(this.currentPage)
     },
     methods: {
-        async getOrderData(page) {
-            const response = await axios.get(
-                `${this.$apiBaseUrl}/order/getorderfullinfo?page=${page}&orderSearch=${this.orderSearch}&customerSearch=${this.customerSearch}`
-            )
-            this.orderData = response.data
+        async getOrderData() {
+            try {
+                const response = await axios.get(`${this.$apiBaseUrl}/order/getorderfullinfo`, {
+                    params: {
+                        page: this.currentPage,
+                        pageSize: this.pageSize,
+                        orderSearch: this.orderSearch,
+                        customerSearch: this.customerSearch,
+                    },
+                })
+                this.orderFilterData = response.data // Update table data
+                const response2 = await axios.get(`${this.$apiBaseUrl}/order/getorderpageinfo`, {
+                params: {
+                    orderSearch: this.orderSearch,
+                    customerSearch: this.customerSearch,
+                },
+                })
+                this.totalData = response2.data.totalOrders // Total orders for pagination
+                console.log("Total orders:", response2)
+                console.log("Total orders:", this.totalData)
+            } catch (error) {
+                console.error("Error fetching order data:", error)
+            }
+        },
+        handlePageChange(page) {
+            this.currentPage = page
+            this.getOrderData()
+        },
+        tableFilter() {
+            // Reset to the first page on filter
+            this.currentPage = 1
+            this.getOrderData()
         },
         handleRowClick(row) {
-            // Use orderRid to open a new page, here using window.open
             const url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
-            window.open(url, '_blank'); // Opens in a new tab
+            window.open(url, '_blank');
         },
-    }
+    },
 }
 </script>

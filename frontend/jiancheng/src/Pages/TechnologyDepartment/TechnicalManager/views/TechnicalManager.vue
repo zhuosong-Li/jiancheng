@@ -22,6 +22,9 @@
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>订单查询</span>
                         </el-menu-item>
+                        <el-menu-item index="8" @click="handleMenuClick(8)">
+                            <span>个人信息</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -41,12 +44,14 @@ import AllHeader from '@/components/AllHeader.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import Dashboard from '../components/TechnicalManagerDashboard.vue';
 import OrderSearch from '../components/OrderSearch.vue';
+import PersonalInfo from '@/components/PersonalInfo.vue';
 import axios from 'axios'
 export default {
     components: {
         AllHeader,
         Dashboard,
-        OrderSearch
+        OrderSearch,
+        PersonalInfo
     },
     data() {
         return {
@@ -75,6 +80,9 @@ export default {
                     break
                 case 3:
                     this.currentComponent = 'OrderSearch'
+                    break
+                case 8:
+                    this.currentComponent = 'PersonalInfo'
                     break
             }
         },

@@ -32,7 +32,7 @@ import { getCurrentInstance, reactive, ref } from 'vue'
 import { Avatar, Lock } from '@element-plus/icons-vue'
 import axios from 'axios'
 import CryptoJS from 'crypto-js'
-import { ElLoading } from 'element-plus'
+import { ElLoading, ElMessageBox } from 'element-plus'
 
 
 
@@ -130,6 +130,11 @@ const handleSubmit = () => {
                     loading.close()
                 })
                 .catch((error) => {
+                    ElMessageBox.alert('登录失败，请检查用户名和密码', '错误', {
+                        confirmButtonText: '确定',
+                        type: 'error'
+                    })
+                    
                     console.log('Login failed!')
                     loading.close()
                 })
