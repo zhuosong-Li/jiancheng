@@ -47,7 +47,7 @@ def add_new_shoe():
     existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first()
     try:
         existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first()
-        if not existing_shoe:  
+        if not existing_shoe:
             shoe = Shoe(
                 shoe_rid=shoe_rid,
                 shoe_designer=shoe_designer,
@@ -56,10 +56,14 @@ def add_new_shoe():
             db.session.commit()
         else:
             shoe = existing_shoe
-        
+
         # if shoe_type_exists
-        if db.session.query(ShoeType).filter(ShoeType.color_id == shoe_color, ShoeType.shoe_id == shoe.shoe_id).first():
-            return jsonify({"message":"该鞋款已存在"})
+        if (
+            db.session.query(ShoeType)
+            .filter(ShoeType.color_id == shoe_color, ShoeType.shoe_id == shoe.shoe_id)
+            .first()
+        ):
+            return jsonify({"message": "该鞋款已存在"})
         shoe_type = ShoeType(shoe_id=shoe.shoe_id, color_id=shoe_color)
         db.session.add(shoe_type)
         db.session.commit()
@@ -68,59 +72,40 @@ def add_new_shoe():
         return jsonify({"error": str(e)}), 500
 
 
-@shoe_manage_bp.route("/shoemanage/editshoe", methods=["POST"])
-def edit_shoe():
-    shoe_id = request.json.get("shoeId")
-    shoe_rid = request.json.get("shoeRId")
-    shoe_designer = request.json.get("shoeDesigner")
-    shoe_color = request.json.get("shoeColor")
-    shoe_type_id =request.json.get("shoeTypeId")
-    print(shoe_id, shoe_rid, shoe_designer)
-
-    try:
-        # check if shoeRid exists
-        db_shoe_id = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first().shoe_id
-        # existing shoeRid have different entity, merge them
-        if db_shoe_id != shoe_id:
-            #use db_shoe_id
-            return jsonify({"error":"impletment shoeType merge Shoeid"}), 500
-        else:
-            shoe = Shoe.query.get(shoe_id)
-            shoe.shoe_rid = shoe_rid
-            shoe.shoe_designer = shoe_designer
-            shoe.color_id = shoe_color
-            db.session.commit()
-            return jsonify({"message": "Shoe updated successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
 @shoe_manage_bp.route("/shoemanage/editshoetype", methods=["POST"])
 def edit_shoe_type():
     shoe_type_id = request.json.get("shoeTypeId")
     shoe_color = request.json.get("shoeColor")
-    entity = db.session.query(ShoeType).filter(ShoeType.shoe_type_id == shoe_type_id).first()
+    entity = (
+        db.session.query(ShoeType).filter(ShoeType.shoe_type_id == shoe_type_id).first()
+    )
     if entity:
         entity.color_id = shoe_color
         db.session.commit()
     else:
-        return jsonify({"error":"entity not found"}), 500
-    return jsonify({"message":"Shoe Type updated successfully"}), 200
+        return jsonify({"error": "entity not found"}), 500
+    return jsonify({"message": "Shoe Type updated successfully"}), 200
 
 
-@shoe_manage_bp.route("/shoemanage/addshoetype", methods=['POST'])
+@shoe_manage_bp.route("/shoemanage/addshoetype", methods=["POST"])
 def add_shoe_type():
-    color_id = request.json.get('colorId')
-    shoe_id = request.json.get('shoeId')
-    shoe_type_existing = (db.session.query(ShoeType).filter(ShoeType.color_id == color_id, ShoeType.shoe_id == shoe_id).first())
+    color_id = request.json.get("colorId")
+    shoe_id = request.json.get("shoeId")
+    shoe_type_existing = (
+        db.session.query(ShoeType)
+        .filter(ShoeType.color_id == color_id, ShoeType.shoe_id == shoe_id)
+        .first()
+    )
     if shoe_type_existing:
-        return jsonify({"error":"shoe_type combination exists"}), 400
+        return jsonify({"error": "shoe_type combination exists"}), 400
     else:
         shoe_type_entity = ShoeType()
         shoe_type_entity.color_id = color_id
         shoe_type_entity.shoe_id = shoe_id
         db.session.add(shoe_type_entity)
         db.session.commit()
-        return jsonify({"message":"shoe type added"}), 200
+        return jsonify({"message": "shoe type added"}), 200
+
 
 # @shoe_manage_bp.route("/shoemanage/deleteshoetype", methods=["DELETE"])
 # def delete_shoe_type():
@@ -132,32 +117,33 @@ def add_shoe_type():
 #     else:
 #         return
 
+
 @shoe_manage_bp.route("/shoemanage/addshoe", methods=["POST"])
 def add_shoe():
     shoe_rid = request.json.get("shoeRid")
     shoe_desinger = request.json.get("shoeDesigner")
-    existing_shoe = (db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first())
+    existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first()
     if existing_shoe:
-        return jsonify({"error":"shoe_rid already exists"}), 200
+        return jsonify({"error": "shoe_rid already exists"}), 200
     else:
         shoe_entity = Shoe()
         shoe_entity.shoe_rid = shoe_rid
         shoe_entity.shoe_designer = shoe_desinger
         db.session.add(shoe_entity)
         db.session.commit()
-        return jsonify({"message":"shoe added"}), 200
+        return jsonify({"message": "shoe added"}), 200
+
 
 @shoe_manage_bp.route("/shoemanage/editshoe", methods=["POST"])
 def edit_shoe():
     shoe_id = request.json.get("shoeId")
     shoe_rid = request.json.get("shoeRid")
     shoe_designer = request.json.get("shoeDesigner")
-    existing_shoe = (db.session.query(Shoe).filter(Shoe.shoe_id == shoe_id).first())
+    existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_id == shoe_id).first()
     if existing_shoe:
         existing_shoe.shoe_rid = shoe_rid
         existing_shoe.shoe_designer = shoe_designer
         db.session.commit()
-        return jsonify({"message":"edit shoe OK"}), 200
+        return jsonify({"message": "edit shoe OK"}), 200
     else:
         return jsonify({"error": "shoe not found given shoe_id"}), 400
-    
