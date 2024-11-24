@@ -38,7 +38,7 @@
                         >
                         <el-button
                         v-if ="allowEditCustomer"
-                            type="warning"
+                            type="danger"
                             size="small"
                             @click="deleteCustomer(scope.row)"
                         >删除客户</el-button>

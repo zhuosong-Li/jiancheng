@@ -85,6 +85,7 @@
                             return `${row.orderShoeId}`
                         }
                     "
+                    :default-expand-all="true"
                 >
                     <el-table-column type="expand">
                         <template #default="props">
@@ -96,6 +97,7 @@
                                         return `${row.orderShoeTypeId}`
                                     }
                                 "
+                                :default-expand-all="true"
                             >
                                 <el-table-column type="expand">
                                     <template #default="scope">
@@ -541,7 +543,7 @@ export default {
             console.log('Upload successful:', response)
             ElMessage.success('上传成功')
             this.isSubmitDocVis = false
-            this
+            this.getOrderInfo()
         },
         handleUploadError(error, file) {
             // Handle any errors that occurred during the upload

@@ -31,7 +31,7 @@ onMounted(()=> {
         orderstatus: 9,
         ordershoestatus: 11
     };
-    axios.get(`${apiBaseUrl}/order/getorderbystatus`, { params }).then(response => {
+    axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, { params }).then(response => {
         const fetchPending = response.data.pendingOrders
         const fetchInProgress = response.data.inProgressOrders
         console.log("fetchPending is ")

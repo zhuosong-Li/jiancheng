@@ -51,7 +51,7 @@ onMounted(()=> {
     };
 
 
-    axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {
@@ -64,7 +64,7 @@ onMounted(()=> {
         });
     })
     params['ordershoestatus']  = secondBomStatus
-    axios.get(`${apiBaseUrl}/order/getorderbystatus`, {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params}).then(response => {
         const secondBomPending = response.data.pendingOrders
         const secondBomProgress = response.data.inProgressOrders
         secondBomPending.forEach(element => {
