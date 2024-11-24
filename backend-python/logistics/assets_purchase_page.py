@@ -601,6 +601,7 @@ def submit_purchase_order():
         material_id = assets_item.material_id
         material_quantity = assets_item.purchase_amount
         material_specification = assets_item.material_specification
+        material_model = assets_item.material_model
         color = assets_item.color
         remark = assets_item.remark
         size_type = assets_item.size_type
@@ -613,6 +614,7 @@ def submit_purchase_order():
                 unit_price=0,
                 material_outsource_status="0",
                 material_specification=material_specification,
+                material_model=material_model,
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
             )

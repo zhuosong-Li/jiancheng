@@ -11,7 +11,6 @@ TABLE_ATTRNAMES = BatchInfoType.__table__.columns.keys()
 
 def get_order_batch_type_helper(order_id):
     # get batch info type (US, EU)
-    print(order_id)
     shoe_size_locale = (
         db.session.query(BatchInfoType)
         .join(Order, BatchInfoType.batch_info_type_id == Order.batch_info_type_id)

@@ -8,7 +8,7 @@ from constants import (
     END_OF_PRODUCTION_NUMBER,
     IN_PRODUCTION_ORDER_NUMBER,
     PRODUCTION_LINE_REFERENCE,
-    SHOESIZEINFO,
+    SHOESIZERANGE,
 )
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
@@ -436,7 +436,7 @@ def inbound_size_material():
     storage = SizeMaterialStorage.query.get(data["sizeMaterialStorageId"])
     storage.total_actual_inbound_amount = 0
     storage.total_current_amount = 0
-    for shoe_size in SHOESIZEINFO:
+    for shoe_size in SHOESIZERANGE:
         # actual inbound amount
         column_name = f"size_{shoe_size}_actual_inbound_amount"
         current_value = getattr(storage, column_name)
@@ -455,7 +455,7 @@ def inbound_size_material():
         inbound_type=data["type"],
         size_material_storage_id=data["sizeMaterialStorageId"],
     )
-    for shoe_size in SHOESIZEINFO:
+    for shoe_size in SHOESIZERANGE:
         column_name = f"size_{shoe_size}_inbound_amount"
         setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
     db.session.add(record)
@@ -565,7 +565,7 @@ def check_outbound_options():
 def outbound_size_material():
     data = request.get_json()
     storage = SizeMaterialStorage.query.get(data["sizeMaterialStorageId"])
-    for shoe_size in SHOESIZEINFO:
+    for shoe_size in SHOESIZERANGE:
         column_name = f"size_{shoe_size}_current_amount"
         current_value = getattr(storage, column_name)
         if current_value < int(data[f"size{shoe_size}Amount"]):
@@ -578,7 +578,7 @@ def outbound_size_material():
         outbound_type=data["type"],
         size_material_storage_id=data["sizeMaterialStorageId"],
     )
-    for shoe_size in SHOESIZEINFO:
+    for shoe_size in SHOESIZERANGE:
         column_name = f"size_{shoe_size}_outbound_amount"
         setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
     if data["type"] == "1":
@@ -631,7 +631,7 @@ def get_material_in_out_bound_records():
             "date": row.inbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
         }
         if name == "sizeMaterial":
-            for shoe_size in SHOESIZEINFO:
+            for shoe_size in SHOESIZERANGE:
                 column_name = f"size_{shoe_size}_inbound_amount"
                 obj[f"size{shoe_size}Amount"] = getattr(row, column_name)
         else:
@@ -644,7 +644,7 @@ def get_material_in_out_bound_records():
             "date": row.outbound_datetime.strftime("%Y-%m-%d %H:%M:%S"),
         }
         if name == "sizeMaterial":
-            for shoe_size in SHOESIZEINFO:
+            for shoe_size in SHOESIZERANGE:
                 column_name = f"size_{shoe_size}_outbound_amount"
                 obj[f"size{shoe_size}Amount"] = getattr(row, column_name)
         else:
@@ -669,11 +669,12 @@ def finish_inbound_material():
             return jsonify({"message": "Invalid material category"}), 400
         if not storage:
             return jsonify({"message": "order shoe storage not found"}), 400
-        unique_order_shoe_ids.add(storage.order_shoe_id)
+        unique_order_shoe_ids.add((row["orderId"], storage.order_shoe_id))
         storage.material_storage_status = 1
     db.session.flush()
     # check if all materials are inbounded for order shoe
-    for order_shoe_id in unique_order_shoe_ids:
+    # TODO: join purchase divide order, bom, to find bom type
+    for order_id, order_shoe_id in unique_order_shoe_ids:
         material_filter = (MaterialStorage.order_shoe_id == order_shoe_id) & (
             MaterialStorage.material_storage_status != 1
         )
@@ -686,6 +687,7 @@ def finish_inbound_material():
         result2 = db.session.query(
             db.session.query(SizeMaterialStorage).filter(size_material_filter).exists()
         ).scalar()
+        # if all material are arrived
         if not result1 and not result2:
             production_info = (
                 db.session.query(OrderShoeProductionInfo)
@@ -693,6 +695,21 @@ def finish_inbound_material():
                 .first()
             )
             production_info.is_material_arrived = 1
+            processor: EventProcessor = current_app.config["event_processor"]
+            try:
+                for operation_id in [54, 55]:
+                    event = Event(
+                        staff_id=11,
+                        handle_time=datetime.datetime.now(),
+                        operation_id=operation_id,
+                        event_order_id=order_id,
+                        event_order_shoe_id=order_shoe_id,
+                    )
+                    processor.processEvent(event)
+                    db.session.add(event)
+            except Exception:
+                return jsonify({"message": "event processor error"}), 500
+
     db.session.commit()
     return jsonify({"message": "success"})
 

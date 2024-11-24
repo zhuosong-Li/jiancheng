@@ -7,7 +7,7 @@ from constants import (
     END_OF_PRODUCTION_NUMBER,
     IN_PRODUCTION_ORDER_NUMBER,
     PRODUCTION_LINE_REFERENCE,
-    SHOESIZEINFO,
+    SHOESIZERANGE,
 )
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request
