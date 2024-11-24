@@ -235,7 +235,6 @@ export default {
             // const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`);
             // console.log(response.data)
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
-            console.log(response.data)
             this.shoeTableData = response.data;
         },
         async getFilterShoes() {

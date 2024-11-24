@@ -116,7 +116,7 @@
                         >查看订单详情</el-button
                     >
                     <el-button
-                        v-if="scope.row.orderStatusVal < 9"
+                        v-if="scope.row.orderStatusVal < 9 && this.userRole == 4"
                         type="danger"
                         size="default"
                         @click="deleteOrder(scope.row)"
@@ -137,13 +137,33 @@
 
     <el-dialog title="创建订单鞋型填写" v-model="orderCreationInfoVis" width="80%">
         <el-form :model="newOrderForm" label-width="120px" :inline="false" size="default">
-            <el-form-item label="请输入订单号">
+            <el-form-item
+                label="请输入订单号"
+                prop="orderRId"
+                :rules="[
+                    {
+                        required: true,
+                        message: '订单号不能为空',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-input v-model="newOrderForm.orderRId"></el-input>
             </el-form-item>
-            <el-form-item label="请输入客户订单号">
+            <el-form-item label="客户订单号">
                 <el-input v-model="newOrderForm.orderCid"></el-input>
             </el-form-item>
-            <el-form-item label="请选择客户">
+            <el-form-item
+                label="请选择客户"
+                prop="customerName"
+                :rules="[
+                    {
+                        required: true,
+                        message: '客户不能为空',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-select
                     v-model="newOrderForm.customerName"
                     filterable
@@ -158,7 +178,17 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="请选择客户商标">
+            <el-form-item
+                label="请选择客户商标"
+                prop="customerBrand"
+                :rules="[
+                    {
+                        required: true,
+                        message: '客户商标不能为空',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-select
                     v-model="newOrderForm.customerBrand"
                     filterable
@@ -173,7 +203,17 @@
                     ></el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="请选择配码种类">
+            <el-form-item
+                label="请选择配码种类"
+                prop="batchInfoTypeName"
+                :rules="[
+                    {
+                        required: true,
+                        message: '请选择配码种类',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-select
                     v-model="newOrderForm.batchInfoTypeName"
                     filterable
@@ -189,7 +229,18 @@
                     </el-option>
                 </el-select>
             </el-form-item>
-            <el-form-item label="订单开始日期" ref="startdatepicker">
+            <el-form-item
+                label="订单开始日期"
+                ref="startdatepicker"
+                prop="orderStartDate"
+                :rules="[
+                    {
+                        required: true,
+                        message: '请选择订单开始日期',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-date-picker
                     v-model="newOrderForm.orderStartDate"
                     type="date"
@@ -197,7 +248,17 @@
                     value-format="YYYY-MM-DD"
                 ></el-date-picker>
             </el-form-item>
-            <el-form-item label="订单结束日期">
+            <el-form-item
+                label="订单结束日期"
+                prop="orderEndDate"
+                :rules="[
+                    {
+                        required: true,
+                        message: '请选择订单结束日期',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-date-picker
                     v-model="newOrderForm.orderEndDate"
                     type="date"
@@ -205,16 +266,26 @@
                     value-format="YYYY-MM-DD"
                 ></el-date-picker>
             </el-form-item>
-            <el-form-item label="业务员">
+            <el-form-item
+                label="业务员"
+                prop="salesman"
+                :rules="[
+                    {
+                        required: true,
+                        message: '请选择业务员',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
                 <el-input v-model="newOrderForm.salesman" disabled></el-input>
             </el-form-item>
 
             <el-row :gutter="20">
                 <el-col :span="4" :offset="0" style="white-space: nowrap">
-                    鞋型号搜索：
+                    请选择鞋型号：
                     <el-input
                         v-model="shoeRidFilter"
-                        placeholder=""
+                        placeholder="鞋型号搜索"
                         size="default"
                         :suffix-icon="'el-icon-search'"
                         clearable
@@ -390,7 +461,7 @@
             <span>
                 <el-button @click="backPreviousStep"> 上一步 </el-button>
 
-                <el-button @click="editCustomerBatchDialogVisible = false">取消</el-button>
+                <el-button @click="orderCreationSecondInfoVis = false">取消</el-button>
                 <el-button @click="submitNewOrder"> 添加订单 </el-button>
             </span>
         </template>
@@ -617,6 +688,8 @@ export default {
             newOrderForm: {
                 orderRId: '',
                 orderCid: '',
+                customerName: '',
+                customerBrand: '',
                 customerId: null,
                 batchInfoTypeName: '',
                 batchInfoTypeId: '',
@@ -626,7 +699,8 @@ export default {
                 salesman: '',
                 orderShoeTypes: [],
                 batchInfoQuantity: [],
-                customerShoeName: {}
+                customerShoeName: {},
+                flag: false
             },
             batchForm: {
                 customerId: '',
@@ -688,7 +762,7 @@ export default {
     },
     computed: {
         allowDeleteOrder(row) {
-            return this.userRole == 4  
+            return this.userRole == 4
         },
         uploadHeaders() {
             return {
@@ -853,6 +927,34 @@ export default {
             this.$refs.batchInfoSelectionTable.clearSelection()
         },
         orderCreationSecondStep() {
+            if (this.newOrderForm.orderRId === '') {
+                ElMessage.error('未输入订单号，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.customerName === '') {
+                ElMessage.error('未选择客户，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.customerBrand === '') {
+                ElMessage.error('未选择客户商标，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.batchInfoTypeName === '') {
+                ElMessage.error('未选择配码种类，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.orderStartDate === '') {
+                ElMessage.error('未选择订单开始日期，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.orderEndDate === '') {
+                ElMessage.error('未选择订单结束日期，不允许创建订单')
+                return
+            }
+            if (this.newOrderForm.orderShoeTypes.length === 0) {
+                ElMessage.error('请至少选择一种鞋型号')
+                return
+            }
             this.orderCreationInfoVis = false
             this.orderCreationSecondInfoVis = true
             this.newOrderForm.orderShoeTypes.forEach((item) => {
@@ -985,6 +1087,7 @@ export default {
             // this.newOrderForm.orderShoeTypes.find(row => {
             //     return row.shoeTypeId == this.curShoeTypeId
             // }).
+            this.newOrderForm.flag = true
             this.addBatchInfoDialogVis = false
         },
         expandOpen(row, expand) {
@@ -1425,19 +1528,9 @@ export default {
                 })
         },
         async submitNewOrder() {
-            for (let key in this.newOrderForm) {
-                if (key !== 'status' && key !== 'batchInfoQuantity') {
-                    if (key === 'customerId' && this.newOrderForm[key] === null) {
-                        ElMessage.error('数据未填写完成，不允许添加订单')
-                        return
-                    } else if (key === 'orderShoeTypes' && this.newOrderForm[key].length === 0) {
-                        ElMessage.error('数据未填写完成，不允许添加订单')
-                        return
-                    } else if (this.newOrderForm[key] === '') {
-                        ElMessage.error('数据未填写完成，不允许添加订单')
-                        return this.newOrderForm[key] !== ''
-                    }
-                }
+            if (this.newOrderForm.flag === false) {
+                ElMessage.error('请添加鞋型配码')
+                return
             }
 
             ElMessageBox.alert('请检查配码单位数量是否已填写', '', {
@@ -1467,15 +1560,19 @@ export default {
                             this.newOrderForm = {
                                 orderRId: '',
                                 orderCid: '',
-                                batchInfoTypeId: '',
+                                customerName: '',
+                                customerBrand: '',
                                 customerId: null,
+                                batchInfoTypeName: '',
+                                batchInfoTypeId: '',
                                 orderStartDate: '',
                                 orderEndDate: '',
                                 status: '',
                                 salesman: '',
                                 orderShoeTypes: [],
                                 batchInfoQuantity: [],
-                                customerShoeName: {}
+                                customerShoeName: {},
+                                flag: false
                             }
                             this.getAllOrders()
                         })
@@ -1492,7 +1589,7 @@ export default {
             }
             window.open(url, '_blank')
         },
-        switchRadio (value) {
+        switchRadio(value) {
             if (value === 'all') {
                 this.orderInCurStatus = '已下发'
                 this.orderNotInCurStatus = '未下发'

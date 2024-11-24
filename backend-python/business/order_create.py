@@ -318,7 +318,7 @@ def order_cid_update():
 	.filter(Order.order_id == order_id)
 	.first())
 	if order_entity:
-		order_entity.customer_id = order_cid
+		order_entity.order_cid = order_cid
 		db.session.commit()
 	else:
 		return jsonify({"error":"order not found"}), 400
