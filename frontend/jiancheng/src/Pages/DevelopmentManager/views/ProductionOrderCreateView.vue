@@ -107,7 +107,7 @@
                 <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
             </el-dialog>
 
-            <el-dialog title="正式BOM表下发页面" v-model="isFinalBOM" width="90%">
+            <el-dialog title="正式投产指令单下发页面" v-model="isFinalBOM" width="90%">
                 <el-descriptions title="订单信息" :column="2" border>
                     <el-descriptions-item label="订单编号" align="center">{{
                         orderData.orderId
@@ -146,7 +146,7 @@
                 <template #footer>
                     <span>
                         <el-button @click="isFinalBOM = false">取消</el-button>
-                        <el-button type="primary" @click="issueBOMs(selectedShoe)">下发选定BOM表</el-button>
+                        <el-button type="primary" @click="issueBOMs(selectedShoe)">下发选定投产指令单</el-button>
                     </span>
                 </template>
             </el-dialog>
