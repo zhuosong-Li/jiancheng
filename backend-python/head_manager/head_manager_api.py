@@ -616,7 +616,7 @@ def get_material_price_info():
             and (not material_model or sms.SizeMaterialStorage.size_material_model == material_model)
             and (
                 not material_specification
-                or sms.SizeMaterialStorage.material_specification == size_material_specification
+                or sms.SizeMaterialStorage.material_specification == material_specification
             )
             and (not supplier_name or sms.Supplier.supplier_name == supplier_name)
         ):
