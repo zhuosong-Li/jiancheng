@@ -10,6 +10,7 @@ from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_P
 from general_document.bom import generate_excel_file
 from collections import defaultdict
 from business.batch_info_type import get_order_batch_type_helper
+from constants import SHOESIZERANGE
 
 second_bom_bp = Blueprint("second_bom_bp", __name__)
 
@@ -402,7 +403,7 @@ def edit_bom():
     bom_data = request.json.get("bomData")
     bom_id = Bom.query.filter(Bom.bom_rid == bom_rid,Bom.bom_type == 1).first().bom_id
     db.session.query(BomItem).filter(BomItem.bom_id == bom_id).delete()
-    db.session.commit()
+    db.session.flush()
 
     for item in bom_data:
         material_id = (
@@ -426,21 +427,11 @@ def edit_bom():
             material_model = item["materialModel"] if item["materialModel"] else "",
             bom_item_add_type=1,
             bom_item_color=item["color"],
-            size_35_total_usage=item["sizeInfo"][0]["approvalAmount"],
-            size_36_total_usage=item["sizeInfo"][1]["approvalAmount"],
-            size_37_total_usage=item["sizeInfo"][2]["approvalAmount"],
-            size_38_total_usage=item["sizeInfo"][3]["approvalAmount"],
-            size_39_total_usage=item["sizeInfo"][4]["approvalAmount"],
-            size_40_total_usage=item["sizeInfo"][5]["approvalAmount"],
-            size_41_total_usage=item["sizeInfo"][6]["approvalAmount"],
-            size_42_total_usage=item["sizeInfo"][7]["approvalAmount"],
-            size_43_total_usage=item["sizeInfo"][8]["approvalAmount"],
-            size_44_total_usage=item["sizeInfo"][9]["approvalAmount"],
-            size_45_total_usage=item["sizeInfo"][10]["approvalAmount"],
         )
+        for i, size in enumerate(SHOESIZERANGE):
+            setattr(bom_item, f"size_{size}_total_usage", item["sizeInfo"][i]["approvalAmount"])
         db.session.add(bom_item)
     db.session.commit()
-
     return jsonify({"status": "success"})
 
 @second_bom_bp.route("/secondbom/submitbom", methods=["POST"])

@@ -112,7 +112,18 @@
                 </el-descriptions>
 
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">
+                    <el-row>
+                        订单鞋型数量
+                        <el-table :data="orderProduceInfo" border style="width: 100%" :span-method="batchInfoSpanMethod">
+                            <el-table-column prop="colorName" label="颜色" />
+                            <el-table-column prop="totalAmount" label="合计" />
+                            <el-table-column v-for="column in filteredColumns(orderProduceInfo)" :key="column.prop" :prop="column.prop"
+                            :label="column.label"></el-table-column>
+                            
+                        </el-table>
+                    </el-row>
                     <el-row style="margin-top: 10px">
+                        采购信息
                         <el-table :data="bomTestData" border>
                             <el-table-column prop="materialType" label="材料类型">
                             </el-table-column>
@@ -330,6 +341,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import Arrow from '@/components/OrderArrowView.vue'
 import axios from 'axios'
 import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
+import { shoeBatchInfoTableSpanMethod } from '@/Pages/ProductionManagementDepartment/utils';
 export default {
     props: ['orderId'],
     components: {
@@ -338,6 +350,7 @@ export default {
     },
     data() {
         return {
+            batchInfoSpanMethod: null,
             currentSizeIndex: 0,
             purchaseOrderCreateVis: false,
             createEditSymbol: 0,
@@ -422,15 +435,14 @@ export default {
             this.testTableData = response.data
             this.tableWholeFilter()
         },
-        async getOrderShoeBatchInfo(orderId, orderShoeId, color) {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getordershoesizetotal`, {
+        async getOrderShoeBatchInfo(orderShoeId) {
+            const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, {
                 params: {
-                    orderid: orderId,
-                    ordershoeid: orderShoeId,
-                    color: color
+                    orderShoeId: orderShoeId,
                 }
             })
             this.orderProduceInfo = response.data
+            this.batchInfoSpanMethod = shoeBatchInfoTableSpanMethod(this.orderProduceInfo)
         },
         async getBOMDetails(row) {
             const response = await this.$axios.get(
@@ -478,11 +490,12 @@ export default {
         },
         async handleGenerate(row) {
             await this.getNewPurchaseOrderId()
-            this.createVis = true
+            await this.getOrderShoeBatchInfo(row.orderShoeId)
             await this.getBOMDetails(row)
             this.currentBOMId = row.totalBomId
             this.currentPurchaseShoeId = row.inheritId
             this.createEditSymbol = 0
+            this.createVis = true
         },
         handleGenerateClose() {
             this.createVis = false
