@@ -70,6 +70,7 @@ def upload_production_order():
     if os.path.exists(folder_path) == False:
         os.mkdir(folder_path)
     file_path = os.path.join(folder_path, "生产工艺单.xlsx")
+    print("upload path is " + str(file_path))
     file.save(file_path)
     order_shoe = (
         db.session.query(Order, OrderShoe, Shoe)
@@ -100,6 +101,7 @@ def download_production_order():
         return jsonify({"error": "Production order not uploaded yet"}), 500
     folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
     file_path = os.path.join(folder_path, "生产工艺单.xlsx")
+    print("download path is "+ str(file_path))
     new_name = order_id + "-" + order_shoe_rid + "_生产工艺单.xlsx"
     return send_file(file_path, as_attachment=True, download_name=new_name)
 

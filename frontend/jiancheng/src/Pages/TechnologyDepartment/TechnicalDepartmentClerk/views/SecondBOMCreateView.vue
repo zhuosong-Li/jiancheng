@@ -46,7 +46,8 @@
 
             <el-row :gutter="20" style="margin-top: 20px">
                 <el-col :span="24" :offset="0">
-                    <el-table :data="testTableFilterData" border style="height: 400px">
+                    <el-table :data="testTableFilterData" border style="height: 400px"
+                    :default-expand-all="true">
                         <el-table-column type="expand">
                             <template #default="parentScope">
                                 <el-table :data="parentScope.row.typeInfos" border>
@@ -302,7 +303,8 @@
                     <el-row :gutter="20" style="margin-bottom: 20px">
                         <el-col :span="24">
                             <el-table :data="unIssueBOMData" border style="height: 400px"
-                                @selection-change="handleShoeSelectionChange">
+                                @selection-change="handleShoeSelectionChange"
+                                :default-expand-all="true">
                                 <el-table-column type="selection" width="55"></el-table-column>
                                 <el-table-column type="expand">
                                     <template #default="parentScope">
