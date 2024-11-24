@@ -1,7 +1,10 @@
-import shutil
-from openpyxl import load_workbook
 import os
+import shutil
+
+from openpyxl import load_workbook
 from openpyxl.styles import Border, Side
+from openpyxl.utils import column_index_from_string, get_column_letter
+
 
 # Function to load the Excel template and prepare for modification
 def load_template(template_path, new_file_path):
@@ -39,6 +42,7 @@ def insert_series_data(ws, series_data, start_row=6):
         print(f"Inserting series data into row {row}")
         ws[f"B{row}"] = i + 1
         ws[f"C{row}"] = item.get("物品名称", "")
+        # insert shoe size names
         ws[f"E{row}"] = item.get("34", "")
         ws[f"F{row}"] = item.get("35", "")
         ws[f"G{row}"] = item.get("36", "")
@@ -67,9 +71,20 @@ def insert_series_data(ws, series_data, start_row=6):
 def save_workbook(wb, new_file_path):
     wb.save(new_file_path)
 
+
+def get_next_column_name(current_column_name):
+    # Convert column letter to index
+    column_index = column_index_from_string(current_column_name)
+    # Increment the index to get the next column
+    next_column_index = column_index + 1
+    # Convert the new index back to a column letter
+    next_column_name = get_column_letter(next_column_index)
+    return next_column_name
+
 # Main function to generate the Excel file
-def generate_size_excel_file(template_path, new_file_path, order_data):
+def generate_size_excel_file(template_path, new_file_path, order_data: dict):
     print(f"Generating Excel file for order {order_data.get('订单信息', '')}")
+    print(order_data)
     # Load template
     wb, ws = load_template(template_path, new_file_path)
     
@@ -77,6 +92,13 @@ def generate_size_excel_file(template_path, new_file_path, order_data):
     ws["D2"] = order_data.get("订单信息", "")
     ws["B2"] = order_data.get("供应商", "")
     ws["L2"] = order_data.get("日期", "")
+
+    # Insert shoe size names
+    column = "E"
+    shoe_size_names = order_data.get("shoe_size_names", "")
+    for obj in shoe_size_names:
+        ws[f"{column}4"] = obj["label"]
+        column = get_next_column_name(column)
     
     # Insert series data from row 4 to 9
     row = insert_series_data(ws, order_data.get("seriesData", []))

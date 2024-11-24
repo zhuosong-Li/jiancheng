@@ -330,10 +330,6 @@ class EventProcessor:
             + str(modifiedValue)
         )
         result = False
-        # if the event is outsource event
-        if event.event_type == 1:
-            logger.debug("outsource event")
-            return self.handleOutsourceEvent(curStat, modifiedStatus, event)
         # check operation validility
         if modifiedStatus in curStat and (
             modifiedValue - curVal[curStat.index(modifiedStatus)] == 1
@@ -405,23 +401,8 @@ class EventProcessor:
         )
         entity.current_status = operation.operation_modified_status
         entity.current_status_value = operation.operation_modified_value
-        db.session.commit()
+        db.session.flush()
         return True
-
-    def handleOutsourceEvent(self, current_status_arr, modified_status, event):
-        query = db.session.query(OrderShoeStatus).filter(OrderShoeStatus.order_shoe_id == event.event_order_shoe_id)
-        if 18 in current_status_arr and modified_status in [23, 32, 40]:
-            status = query.filter(OrderShoeStatus.current_status==18).first()
-        elif 24 in current_status_arr and modified_status in [32, 40]:
-            status = query.filter(OrderShoeStatus.current_status==24).first()
-        elif 33 in current_status_arr and modified_status in [40]:
-            status = query.filter(OrderShoeStatus.current_status==33).first()
-        if status:
-            status.current_status = modified_status
-            status.current_status_value = 0
-            db.session.commit()
-            return True
-        return False
 
     def dbSetOrderShoeStatus(self, event, operation, next_status=None):
         ### if setting next status
@@ -525,7 +506,7 @@ class EventProcessor:
                 .first()
             )
             entity.current_status_value = operation.operation_modified_value
-        db.session.commit()
+        db.session.flush()
         return True
 
     def getNextShoeStatus(self, currentStatus, currentValue, operation, order_shoe_id):
@@ -681,7 +662,7 @@ class EventProcessor:
         if next_status:
             entity.order_current_status = next_status
             entity.order_status_value = 0
-        db.session.commit()
+        db.session.flush()
         return True
 
     def getNextOrderStatus(self, currentstatus):
