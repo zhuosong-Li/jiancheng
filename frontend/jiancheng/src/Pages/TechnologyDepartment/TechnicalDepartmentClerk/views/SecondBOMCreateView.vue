@@ -411,7 +411,7 @@
 
                 <template #footer>
                     <span>
-                        <el-button @click="handleGenerateClose">取消</el-button>
+                        <el-button @click="newMaterialVis = false">取消</el-button>
                         <el-button v-if="createVis == true" type="primary"
                             @click="confirmNewMaterialAdd(0)">保存</el-button>
                         <el-button v-else-if="editVis == true" type="primary"
