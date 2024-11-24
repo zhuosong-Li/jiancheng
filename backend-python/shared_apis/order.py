@@ -7,6 +7,7 @@ from api_utility import to_snake, to_camel
 from constants import IN_PRODUCTION_ORDER_NUMBER
 from login.login import current_user
 import math
+from sqlalchemy import or_, text
 
 from models import (
     Order,
@@ -724,12 +725,11 @@ def get_order_full_info():
         .outerjoin(Customer, Order.customer_id == Customer.customer_id)
         .outerjoin(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .outerjoin(TotalBom, TotalBom.order_shoe_id == OrderShoe.order_shoe_id)
+        .outerjoin(Bom, Bom.total_bom_id == TotalBom.total_bom_id)
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(
-            or_(
                 Order.order_rid.like(f"%{order_search}%"),
                 Customer.customer_name.like(f"%{customer_search}%"),
-            )
         )
         .order_by(Order.order_id.desc())
         .all()
@@ -844,19 +844,18 @@ def get_order_full_info():
 def get_order_page_info():
     order_search = request.args.get("orderSearch", "", type=str)
     customer_search = request.args.get("customerSearch", "", type=str)
+    print(order_search)
 
     # Query to get the total number of orders
     total_orders = (
-        db.session.query(Order)
+        db.session.query(Order, Customer)
         .join(Customer, Order.customer_id == Customer.customer_id)
         .filter(
-            or_(
                 Order.order_rid.like(f"%{order_search}%"),
                 Customer.customer_name.like(f"%{customer_search}%"),
             )
-        )
-        .count()
-    )
+        ).count()
+    print(total_orders)
 
     # Calculate the total number of pages
     total_pages = math.ceil(total_orders / 10)

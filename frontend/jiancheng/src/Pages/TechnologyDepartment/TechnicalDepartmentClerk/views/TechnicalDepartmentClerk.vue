@@ -16,14 +16,17 @@
                         <el-menu-item index="1" @click="handleMenuClick(1)">
                             <span>任务看板</span>
                         </el-menu-item>
-                        <el-menu-item index="2" @click="handleMenuClick(2)">
+                        <!-- <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>一次BOM表填写</span>
-                        </el-menu-item>
+                        </el-menu-item> -->
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>二次BOM表填写</span>
                         </el-menu-item>
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>订单查询</span>
+                        </el-menu-item>
+                        <el-menu-item index="8" @click="handleMenuClick(8)">
+                            <span>个人信息</span>
                         </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
@@ -46,6 +49,7 @@ import Dashboard from '../components/TechnicalClerkDashboard.vue';
 import FirstBOMCreate from '../components/FirstBOMListView.vue';
 import SecondBOMCreate from '../components/SecondBOMListView.vue'
 import OrderSearch from '../components/OrderSearch.vue';
+import PersonalInfo from '@/components/PersonalInfo.vue';
 import axios from 'axios'
 export default {
     components: {
@@ -53,7 +57,8 @@ export default {
         Dashboard,
         FirstBOMCreate,
         SecondBOMCreate,
-        OrderSearch
+        OrderSearch,
+        PersonalInfo
     },
     data() {
         return {
@@ -78,14 +83,17 @@ export default {
                 case 1:
                     this.currentComponent = 'Dashboard'
                     break
-                case 2:
-                    this.currentComponent = 'FirstBOMCreate'
-                    break
+                // case 2:
+                //     this.currentComponent = 'FirstBOMCreate'
+                //     break
                 case 3:
                     this.currentComponent = 'SecondBOMCreate'
                     break
                 case 4:
                     this.currentComponent = 'OrderSearch'
+                    break
+                case 8:
+                    this.currentComponent = 'PersonalInfo'
                     break
             }
         },

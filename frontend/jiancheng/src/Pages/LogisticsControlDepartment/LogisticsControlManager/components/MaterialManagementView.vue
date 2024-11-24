@@ -11,6 +11,7 @@
                 type="border-card"
                 class="demo-tabs"
                 @tab-click="handleClick"
+                style="height: 700px"
             >
                 <el-tab-pane label="材料类型管理" name="材料类型管理">
                     <el-row :gutter="20" style="margin-top: 20px">
@@ -73,7 +74,7 @@
                         </el-col>
                     </el-row>
 
-                    <el-row :gutter="20" style="margin-top: 20px">
+                    <el-row :gutter="20" style="margin-top: 20px" >
                         <el-col :span="24" :offset="0">
                             <el-table
                                 :data="materialTypeFilterData"
@@ -121,7 +122,8 @@
                             <el-pagination
                                 :total="materialTotal"
                                 :page-size="10"
-                                @current-change="handleCurrentChange"
+                                :v-model:current-page="currentPage1"
+                                @current-change="handleCurrentChange1"
                             >
                             </el-pagination>
                         </el-col>
@@ -295,7 +297,8 @@
                             <el-pagination
                                 :total="materialStorageTotal"
                                 :page-size="10"
-                                @current-change="handleCurrentChange"
+                                :v-model:current-page="currentPage2"
+                                @current-change="handleCurrentChange2"
                             >
                             </el-pagination>
                         </el-col>
@@ -571,7 +574,9 @@ export default {
             isSimilarMaterialDialogVisible: false,
             materialSimiliarData: [],
             materialTypeFilterData: [],
+            materialTypeAllData: [],
             materialStorageData: [],
+            materialStorageAllData: [],
             materialNameSearch: '',
             warehouseNameSearch: '',
             factoryNameSearch: '',
@@ -582,15 +587,19 @@ export default {
             newMaterialVis: false,
             newMaterialData: [],
             warehouseOptions: [],
-            factoryOptions: []
+            factoryOptions: [],
+            currentPage1: 1,
+            currentPage2: 1,
         }
     },
-    mounted() {
-        this.getMaterialTypeData()
+    async mounted() {
+        await this.getMaterialTypeData()
         this.getAllFactoryName()
         this.getAllWarehouseName()
         this.handleTypeToOptions()
         this.getMaterialStorageData()
+        this.handleCurrentChange1(1)
+        this.handleCurrentChange2(1)
     },
     methods: {
         async checkMaterialName() {
@@ -627,7 +636,6 @@ export default {
                 row.warehouseName = warehouseName
             }
         },
-        handleCurrentChange() {},
         async handleTypeToOptions() {
             await this.getAllMaterialType()
             this.materialTypeSelectOption = this.materialTypeData.map((item) => {
@@ -656,6 +664,7 @@ export default {
             this.datafinished = true
             const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterial`)
             this.materialTypeFilterData = response.data.materials
+            this.materialTypeAllData = response.data.materials
             this.materialTotal = response.data.amount
             this.datafinished = false
         },
@@ -663,6 +672,7 @@ export default {
             this.datafinished = true
             const response = await axios.get(`${this.$apiBaseUrl}/logistics/allmaterialstorage`)
             this.materialStorageData = response.data
+            this.materialStorageAllData = response.data
             this.materialStorageTotal = response.data.length
             this.datafinished = false
         },
@@ -694,6 +704,7 @@ export default {
                 }
             })
             this.materialStorageData = response.data
+            this.materialStorageAllData = response.data
             this.materialStorageTotal = response.data.length
             this.datafinished = false
         },
@@ -708,6 +719,7 @@ export default {
                 }
             })
             this.materialTypeFilterData = response.data.materials
+            this.materialTypeAllData = response.data.materials
             this.materialTotal = response.data.amount
             this.datafinished = false
         },
@@ -950,6 +962,21 @@ export default {
                         message: '已取消修改'
                     })
                 })
+        },
+        handleCurrentChange1(val) {
+            this.currentPage1 = val
+            console.log(this.materialTypeAllData)
+            this.materialTypeFilterData = this.materialTypeAllData.slice(
+                (this.currentPage1 - 1) * 10,
+                this.currentPage1 * 10
+            )
+        },
+        handleCurrentChange2(val) {
+            this.currentPage2 = val
+            this.materialStorageData = this.materialStorageAllData.slice(
+                (this.currentPage2 - 1) * 10,
+                this.currentPage2 * 10
+            )
         }
     }
 }

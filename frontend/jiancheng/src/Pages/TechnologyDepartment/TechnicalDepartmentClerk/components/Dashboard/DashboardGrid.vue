@@ -84,9 +84,9 @@ export default {
             let url = ""
             const orderId = task.orderId.toString().replace(' ','-')
             switch(task.taskName) {
-                case "一次BOM填写":
-                    url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${orderId}`;
-                    break
+                // case "一次BOM填写":
+                //     url = `${window.location.origin}/technicalclerk/firstBOM/orderid=${orderId}`;
+                //     break
                 case "二次BOM填写":
                     url = `${window.location.origin}/technicalclerk/secondBOM/orderid=${orderId}`;
                     break

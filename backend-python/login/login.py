@@ -15,6 +15,7 @@ def decrypt_password(encrypted_password, iv, secret_key):
     # Decode Base64 encoded password and IV
     encrypted_password_bytes = base64.b64decode(encrypted_password) 
     iv_bytes = base64.b64decode(iv)
+    print(iv_bytes)
 
     # Create AES cipher in CBC mode with the provided IV
     cipher = AES.new(secret_key.encode('utf-8'), AES.MODE_CBC, iv=iv_bytes)

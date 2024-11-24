@@ -31,6 +31,9 @@
                         <el-menu-item index="6" @click="handleMenuClick(6)">
                             <span>供应商管理</span>
                         </el-menu-item>
+                        <el-menu-item index="8" @click="handleMenuClick(8)">
+                            <span>个人信息</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -53,6 +56,7 @@ import ShoeManagement from '../components/ShoeManagement.vue'
 import OrderSearch from '../components/OrderSearch.vue'
 import MaterialManagement from '../components/MaterialManagementView.vue'
 import SupplierManagement from '../components/SupplierManagementView.vue'
+import PersonalInfo from '@/components/PersonalInfo.vue'
 import axios from 'axios'
 
 
@@ -64,7 +68,8 @@ export default {
         ShoeManagement,
         OrderSearch,
         MaterialManagement,
-        SupplierManagement
+        SupplierManagement,
+        PersonalInfo
     },
     data() {
         return {
@@ -101,6 +106,9 @@ export default {
                     break
                 case 6:
                     this.currentComponent = 'SupplierManagement'
+                    break
+                case 8:
+                    this.currentComponent = 'PersonalInfo'
                     break
             }
         },

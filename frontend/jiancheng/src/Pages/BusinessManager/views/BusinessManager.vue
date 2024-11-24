@@ -25,6 +25,9 @@
                         <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>配码种类管理</span>
                         </el-menu-item>
+                        <el-menu-item index="8" @click="handleMenuClick(8)">
+                            <span>个人信息</span>
+                        </el-menu-item>
                         <el-menu-item index="9" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -43,6 +46,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import OrderManagement from '../components/OrderManagement.vue';
 import CustomerManagement from '../components/CustomerManagement.vue';
+import PersonalInfo from '@/components/PersonalInfo.vue';
 import axios from 'axios'
 import ShoeTypeManagement from '@/components/ShoeTypeManagement.vue';
 import BatchInfoTypeManagement from '../components/BatchInfoTypeManagement.vue';
@@ -52,7 +56,8 @@ export default {
         OrderManagement,
         CustomerManagement,
         ShoeTypeManagement,
-        BatchInfoTypeManagement
+        BatchInfoTypeManagement,
+        PersonalInfo
     },
     data() {
         return {
@@ -86,6 +91,9 @@ export default {
                     break
                 case 5:
                     this.currentComponent = "BatchInfoTypeManagement"
+                    break
+                case 8:
+                    this.currentComponent = 'PersonalInfo'
                     break
                 case 9:
                     this.$router.push('/')
