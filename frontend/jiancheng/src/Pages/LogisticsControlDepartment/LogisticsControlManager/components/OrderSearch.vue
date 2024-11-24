@@ -104,13 +104,12 @@
     <el-row :gutter="20">
         <el-col :span="6" :offset="16">
             <el-pagination
-                @size-change=""
-                @current-change=""
-                :current-page="1"
+                @current-change="handlePageChange"
+                v-model:current-page="currentPage"
                 :page-sizes="[10, 20, 30, 40]"
                 :page-size="10"
                 layout="total, sizes, prev, pager, next, jumper"
-                :total="orderData.length"
+                :total="totalData"
             ></el-pagination>
         </el-col>
     </el-row>
@@ -129,44 +128,57 @@ export default {
             orderData: [],
             orderFilterData: [],
             customerSearch: '',
-            currentPage: 1
+            currentPage: 1,
+            pageSize: 10,
+            totalPages: 0,
+            totalData: 0,
         }
     },
     async mounted() {
         this.$setAxiosToken()
+        await this.getOrderPageInfo()
         await this.getOrderData(this.currentPage)
-        this.orderFilterData = this.orderData
     },
     methods: {
+        async getOrderPageInfo() {
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderpageinfo`, {
+                params: {
+                    orderSearch: this.orderSearch,
+                    customerSearch: this.customerSearch,
+                },
+            })
+            this.totalData = response.data.totalOrders
+            this.totalPages = Math.ceil(this.totalData / this.pageSize)
+        },
         async getOrderData(page) {
-            const response = await axios.get(
-                `${this.$apiBaseUrl}/order/getorderfullinfo?page=${page}&orderSearch=${this.orderSearch}&customerSearch=${this.customerSearch}`
-            )
-            this.orderData = response.data
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getorderfullinfo`, {
+                params: {
+                    page: page,
+                    pageSize: this.pageSize,
+                    orderSearch: this.orderSearch,
+                    customerSearch: this.customerSearch,
+                },
+            })
+            this.orderFilterData = response.data
         },
-        handleRowClick(row) {
-            // Use orderRid to open a new page, here using window.open
-            const url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
-            window.open(url, '_blank'); // Opens in a new tab
-        },
-        handleSecondRowClick(row) {
-            // Use orderRid to open a new page, here using window.open
-            const url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
-            window.open(url, '_blank'); // Opens in a new tab
+        handlePageChange(page) {
+            this.currentPage = page
+            this.getOrderData(page)
         },
         tableFilter() {
+            // Reset to the first page on filter
+            this.currentPage = 1
+            this.getOrderPageInfo()
             this.getOrderData(this.currentPage)
-            if (this.orderSearch === '' && this.customerSearch === '') {
-                this.orderFilterData = this.orderData
-            } else {
-                this.orderFilterData = this.orderData.filter((item) => {
-                    return (
-                        item.orderRid.includes(this.orderSearch) &&
-                        item.customerName.includes(this.customerSearch)
-                    )
-                })
-            }
-        }
-    }
+        },
+        handleRowClick(row) {
+            const url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+            window.open(url, '_blank');
+        },
+        handleSecondRowClick(row) {
+            const url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            window.open(url, '_blank');
+        },
+    },
 }
 </script>

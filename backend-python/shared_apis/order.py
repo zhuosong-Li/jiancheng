@@ -6,6 +6,7 @@ from sqlalchemy import func
 from api_utility import to_snake, to_camel
 from constants import IN_PRODUCTION_ORDER_NUMBER
 from login.login import current_user
+import math
 
 from models import (
     Order,
@@ -838,3 +839,26 @@ def get_order_full_info():
     result = result[offset : offset + per_page]
 
     return jsonify(result)
+
+@order_bp.route("/order/getorderpageinfo", methods=["GET"])
+def get_order_page_info():
+    order_search = request.args.get("orderSearch", "", type=str)
+    customer_search = request.args.get("customerSearch", "", type=str)
+
+    # Query to get the total number of orders
+    total_orders = (
+        db.session.query(Order)
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(
+            or_(
+                Order.order_rid.like(f"%{order_search}%"),
+                Customer.customer_name.like(f"%{customer_search}%"),
+            )
+        )
+        .count()
+    )
+
+    # Calculate the total number of pages
+    total_pages = math.ceil(total_orders / 10)
+
+    return jsonify({"totalOrders": total_orders, "totalPages": total_pages})

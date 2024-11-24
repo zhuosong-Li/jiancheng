@@ -399,7 +399,7 @@ def save_purchase():
             purchase_divide_order_type=(
                 "N" if items[0]["materialCategory"] == 0 else "S"
             ),
-            purchase_order_remark=items["remark"],
+            purchase_order_remark="",
             purchase_order_environmental_request="",
             shipment_address="温州市瓯海区梧田工业基地镇南路8号（健诚集团）",
             shipment_deadline="请在7-10日内交货",

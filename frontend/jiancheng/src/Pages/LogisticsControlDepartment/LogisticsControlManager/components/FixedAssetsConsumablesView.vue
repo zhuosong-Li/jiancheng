@@ -17,7 +17,7 @@
         </el-col>
         <el-col :span="4" :offset="8"
             ><el-button type="warning" size="large" @click="openUnsubmitDialog"
-                >待提交订单 {{ finishedNum }}</el-button
+                >待提交订单</el-button
             >
         </el-col>
     </el-row>
