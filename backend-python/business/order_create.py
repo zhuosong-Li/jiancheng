@@ -308,5 +308,34 @@ def order_remark_update():
 	order_shoe_entity.business_material_remark = business_material_remark
 	order_shoe_entity.business_technical_remark = business_technical_remark
 	db.session.commit()
-
 	return jsonify({'msg':"ok"}), 200
+
+@order_create_bp.route("/ordercreate/updateordercid", methods=['POST'])
+def order_cid_update():
+	order_id = request.json.get('orderId')
+	order_cid = request.json.get('orderCid')
+	order_entity = (db.session.query(Order)
+	.filter(Order.order_id == order_id)
+	.first())
+	if order_entity:
+		order_entity.customer_id = order_cid
+		db.session.commit()
+	else:
+		return jsonify({"error":"order not found"}), 400
+	
+	return jsonify({"msg":"ok"}), 200
+
+
+@order_create_bp.route("/ordercreate/updateordershoecustomername", methods=['POST'])
+def order_shoe_customer_name_update():
+	order_shoe_id = request.json.get("orderShoeId")
+	order_shoe_customer_name = request.json.get("shoeCid")
+	order_shoe_entity = (db.session.query(OrderShoe)
+					  .filter(OrderShoe.order_shoe_id == order_shoe_id)
+					  .first())
+	if order_shoe_entity:
+		order_shoe_entity.customer_product_name = order_shoe_customer_name
+		db.session.commit()
+	else:
+		return jsonify({"errror":"order shoe not found"}), 500
+	return jsonify({"msg":"OK"}), 200

@@ -29,7 +29,8 @@
         </el-col>
     </el-row>
     <el-row>
-        <el-table :data="orderData" border stripe height="600">
+        <el-table :data="orderData" border stripe height="600"
+        >
             <el-table-column type="expand">
                 <template #default="props">
                     <el-table :data="props.row.shoes" :border="true">
