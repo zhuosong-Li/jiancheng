@@ -11,9 +11,21 @@
                             <el-descriptions-item label="订单编号" align="center">{{
                                 orderData.orderRid
                             }}</el-descriptions-item>
-                            <el-descriptions-item label="客户订单" align="center">{{
-                                orderData.orderCid
-                            }}</el-descriptions-item>
+                            <el-descriptions-item label="客户订单" align="center">
+                                <el-input
+                                    style="width: 100px"
+                                    v-model="orderData.orderCid"
+                                    :disabled="isEdit"
+                                >
+                                </el-input>
+                                <el-button
+                                    v-if="isShowBtn(orderData.orderCid)"
+                                    type="primary"
+                                    @click="updateCustomInfo('customOrderId', orderData.orderCid)"
+                                    style="margin-left: 15px"
+                                    >{{btnContent1}}</el-button
+                                >
+                            </el-descriptions-item>
                             <el-descriptions-item label="客户名称" align="center">{{
                                 orderData.customerName
                             }}</el-descriptions-item>
@@ -201,7 +213,23 @@
                         </template>
                     </el-table-column>
                     <el-table-column prop="shoeRid" label="鞋型编号" sortable />
-                    <el-table-column prop="shoeCid" label="客户鞋型编号" sortable />
+                    <el-table-column label="客户鞋型编号">
+                        <template #default="scope">
+                            <el-input
+                                style="width: 100px"
+                                v-model="scope.row.shoeCid"
+                                :disabled="isCellEdit"
+                            >
+                            </el-input>
+                            <el-button
+                                v-if="isShowBtn(scope.row.shoeCid)"
+                                type="primary"
+                                @click="updateCustomInfo('customShoeId', scope.row)"
+                                style="margin-left: 15px"
+                                >{{btnContent2}}</el-button
+                            >
+                        </template>
+                    </el-table-column>
                     <el-table-column prop="currentStatus" label="鞋型状态" />
 
                     <el-table-column label="备注">
@@ -296,7 +324,7 @@
 <script>
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 
 export default {
     props: ['orderId'],
@@ -378,7 +406,11 @@ export default {
                 size44Name: 'size44Amount',
                 size45Name: 'size45Amount',
                 size46Name: 'size46Amount'
-            }
+            },
+            btnContent1: '修改数据',
+            btnContent2: '修改数据',
+            isEdit: true,
+            isCellEdit: true,
         }
     },
     mounted() {
@@ -583,6 +615,86 @@ export default {
         downloadDoc() {},
         handleDialogClose() {
             console.log('TODO handle dialog close in OrderManagement.Vue')
+        },
+        updateCustomInfo(key, value) {
+            if (key === 'customOrderId') {
+                this.isEdit = false
+                if (this.btnContent1 === '提交数据') {
+                    this.showMessage(key, value)
+                }
+                this.btnContent1 = '提交数据'
+            }
+            if (key === 'customShoeId') {
+                this.isCellEdit = false 
+                if (this.btnContent2 === '提交数据') {
+                    this.showMessage(key, value)
+                }
+                this.btnContent2 = '提交数据'
+            }
+        },
+        isEmpty(value) {
+            if (value === '') {
+                return false
+            } else {
+                if (this.role == 21) {
+                    return true
+                } else {
+                    return false
+                }
+            }
+        },
+        isShowBtn(value) {
+            if (value === '') {
+                return true
+            } else {
+                if (this.role == 21) {
+                    return false
+                } else {
+                    return true
+                }
+            }
+        },
+        showMessage (key, value) {
+            ElMessageBox.alert('是否确认更新数据', '', {
+                confirmButtonText: '确认',
+                showCancelButton: true,
+                callback: async (action) => {
+                    if (action === 'confirm') {
+                        if (key === 'customOrderId') {
+                            const response = await axios.post(`${this.$apiBaseUrl}/ordercreate/updateordercid`, {
+                                orderId: this.orderId,
+                                orderCid: value
+                            })
+                            if (response.status === 200) {
+                                ElMessage.success('更新成功，正在重新加载数据')
+                                this.isEdit = false
+                                this.isCellEdit = false 
+                                this.btnContent1 = '修改数据'
+                                this.btnContent2 = '修改数据'
+                                this.getOrderInfo()
+                            } else {
+                                ElMessage.error('更新失败')
+                            }
+                        }
+                        if (key === 'customShoeId') {
+                            const response = await axios.post(`${this.$apiBaseUrl}//ordercreate/updateordershoecustomername`, {
+                                orderShoeId: value.orderShoeId,
+                                shoeCid: value.shoeCid
+                            })
+                            if (response.status === 200) {
+                                ElMessage.success('更新成功，正在重新加载数据')
+                                this.isEdit = false
+                                this.isCellEdit = false 
+                                this.btnContent1 = '修改数据'
+                                this.btnContent2 = '修改数据'
+                                this.getOrderInfo()
+                            } else {
+                                ElMessage.error('更新失败')
+                            }
+                        }
+                    }
+                }
+            })
         }
     }
 }
