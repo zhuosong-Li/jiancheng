@@ -235,9 +235,8 @@ def get_new_purchase_order_id():
 def get_shoe_bom_items():
     bom_rid = request.args.get("bomrid")
     order_id = request.args.get("orderid")
-    # TODO: get shoe size names
+    # get shoe size names
     size_name_info = get_order_batch_type_helper(order_id)
-    print(size_name_info)
     # Query all Bom items under the given TotalBom, based on the bom_rid
     entities = (
         db.session.query(
@@ -877,6 +876,7 @@ def submit_purchase_divide_orders():
         )
         generate_excel_file(template_path, new_file_path, data)
         generated_files.append(new_file_path)
+    shoe_size_names = get_order_batch_type_helper(order_id)
     for purchase_order_id, data in size_purchase_divide_order_dict.items():
         new_file_path = os.path.join(
             FILE_STORAGE_PATH,
@@ -885,6 +885,7 @@ def submit_purchase_divide_orders():
             "purchase_order",
             purchase_order_id + "_" + data["供应商"] + ".xlsx",
         )
+        data["shoe_size_names"] = shoe_size_names
         generate_size_excel_file(size_template_path, new_file_path, data)
         generated_files.append(new_file_path)
     zip_file_path = os.path.join(
@@ -907,7 +908,7 @@ def submit_purchase_divide_orders():
         event_arr = []
         for operation_id in [50, 51, 52, 53]:
             event = Event(
-                staff_id=1,
+                staff_id=3,
                 handle_time=datetime.datetime.now(),
                 operation_id=operation_id,
                 event_order_id=order_id,

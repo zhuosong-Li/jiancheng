@@ -86,7 +86,7 @@
                         </el-table-column>
                     </el-table></el-col>
             </el-row>
-            <el-dialog :title="`一次BOM填写 ${newPurchaseOrderId}`" v-model="createVis" width="100%"
+            <el-dialog :title="`一次采购订单创建 ${newPurchaseOrderId}`" v-model="createVis" width="100%"
                 @close="handleGenerateClose">
                 <el-descriptions title="订单信息" :column="2">
                     <el-descriptions-item label="订单编号" align="center">{{
@@ -101,11 +101,15 @@
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
                     }}</el-descriptions-item>
-                    <el-descriptions-item label="工艺单"><el-button type="primary" size="default"
-                            @click="downloadProductionOrderList">查看投产指令单</el-button>
+                    <el-descriptions-item label="投产指令单" align="center">
+                        <el-button type="primary" size="default" @click="downloadProductionOrderList">
+                            查看投产指令单
+                        </el-button>
                     </el-descriptions-item>
-                    <el-descriptions-item label="生产订单"><el-button type="primary" size="default"
-                            @click="downloadProductionOrder">查看生产订单</el-button>
+                    <el-descriptions-item label="生产订单" align="center">
+                        <el-button type="primary" size="default"
+                            @click="downloadProductionOrder">查看生产订单
+                        </el-button>
                     </el-descriptions-item>
                 </el-descriptions>
 
