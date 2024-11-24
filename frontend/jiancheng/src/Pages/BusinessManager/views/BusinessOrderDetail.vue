@@ -79,7 +79,7 @@
                                     v-if="this.allowNext"
                                     type="warning"
                                     @click="sendOrderNext"
-                                    :disabled="this.role == '21' ? true : false"
+                                    :disabled="this.role == 21 ? true : false"
                                 >
                                     下发
                                 </el-button>

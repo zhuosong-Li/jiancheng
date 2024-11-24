@@ -128,6 +128,7 @@ def start_production():
     except Exception as e:
         print(e)
         return jsonify({"message": "failed"}), 400
+    db.session.commit()
     return jsonify({"message": "success"}), 200
 
 

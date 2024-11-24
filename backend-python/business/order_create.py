@@ -179,13 +179,13 @@ def create_new_order():
 				packaging_info_quantity = quantity_per_ratio)
 			batch_info_entity_array.append(new_entity)
 		db.session.add_all(batch_info_entity_array)
-	db.session.commit()
 	print("order added to DB")
 	result = jsonify({"message": "Order imported successfully"}), 200
 	# except Exception as e:
 	# 	result = jsonify({"message": str(e)}, 500)
 	time_t = time.time()
 	print("time taken is " + str(time_t - time_s))
+	db.session.commit()
 	return result
 
 
@@ -223,18 +223,19 @@ def order_price_update():
 			  .first())
 		entity.unit_price = unit_price
 		entity.currency_type = currency_type
-	db.session.commit()
 	if 0 not in unit_price_form.values() and '' not in currency_type_form.values():
 		cur_time = format_date(datetime.datetime.now())
 		new_event = Event(staff_id = staff_id, handle_time = cur_time, operation_id = NEW_ORDER_STEP_OP, event_order_id = order_id)
 		processor: EventProcessor = current_app.config["event_processor"]
 		processor.processEvent(new_event)
+	
 	# find all orderShoeTypes belong to this order
 	# db.session.query(OrderShoeType)
 	# .filter(OrderShoeType.order_shoe_type_id == )
 	# sync_order_shoe_status(list(set(unit_price_form.keys()).union(set(currency_type_form.keys()))))
 	time_t = time.time()
 	print("time taken is update price is" + str(time_t - time_s))
+	db.session.commit()
 	return jsonify({'msg':"ok"}), 200
 
 
@@ -295,7 +296,9 @@ def order_next_step():
 		new_event = Event(staff_id = staff_id, handle_time = cur_time, operation_id = NEW_ORDER_NEXT_STEP_OP, event_order_id = order_id)
 		processor: EventProcessor = current_app.config["event_processor"]
 		processor.processEvent(new_event)
+	db.session.commit()
 	return "Event Processed In Order Create API CALL", 200
+
 @order_create_bp.route("/ordercreate/updateremark", methods=['POST'])
 def order_remark_update():
 	remark_form = request.json.get('orderShoeRemarkForm')
@@ -319,10 +322,9 @@ def order_cid_update():
 	.first())
 	if order_entity:
 		order_entity.order_cid = order_cid
-		db.session.commit()
 	else:
 		return jsonify({"error":"order not found"}), 400
-	
+	db.session.commit()
 	return jsonify({"msg":"ok"}), 200
 
 
@@ -335,7 +337,7 @@ def order_shoe_customer_name_update():
 					  .first())
 	if order_shoe_entity:
 		order_shoe_entity.customer_product_name = order_shoe_customer_name
-		db.session.commit()
 	else:
 		return jsonify({"errror":"order shoe not found"}), 500
+	db.session.commit()
 	return jsonify({"msg":"OK"}), 200
