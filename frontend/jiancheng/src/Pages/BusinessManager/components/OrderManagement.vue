@@ -301,24 +301,29 @@
                 stripe
                 border
                 height="500"
-                ref="shoeSelectionTable"
-                @selection-change="handleSelectionShoeType"
             >
-                <!-- <el-table-column>
-                    <el-input type = "checkbox" id= shoeRid v-model = "checkedgroup">
-                    </el-input>
-                    <el-checkbox 
-                    prop="check" 
-                    v-model = "checkgroup"/>
-                </el-table-column> -->
-                <el-table-column size="small" type="selection" align="center"> </el-table-column>
-                <el-table-column prop="shoeRId" label="鞋型编号"></el-table-column>
-                <el-table-column prop="shoeColor" label="鞋型颜色"></el-table-column>
-                <el-table-column prop="shoeImage" label="鞋型图片" align="center">
-                    <template #default="scope">
-                        <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px" />
+                <el-table-column type="expand">
+                    <template #default="props">
+                        <el-table 
+                            :data="props.row.shoeTypeData" 
+                            border 
+                            :row-key="(row) => {
+                                return `${row.shoeId}`
+                            }"
+                            @selection-change="handleSelectionShoeType"
+                            ref="shoeSelectionTable"
+                            >
+                            <el-table-column size="small" type="selection" align="center"> </el-table-column>
+                            <el-table-column prop="colorName" label="鞋型颜色" width="100px" />
+                            <el-table-column prop="shoeImageUrl" label="鞋型图片" align="center">
+                                <template #default="scope">
+                                    <el-image :src="scope.row.shoeImageUrl" style="width: 150px; height: 100px" />
+                                </template>
+                            </el-table-column>
+                        </el-table>
                     </template>
                 </el-table-column>
+                <el-table-column prop="shoeRid" label="鞋型编号"></el-table-column>
             </el-table>
         </el-form>
 
@@ -414,12 +419,12 @@
                     </el-table>
                 </template>
             </el-table-column>
-            <el-table-column prop="shoeRId" label="鞋型编号" sortable />
-            <el-table-column prop="shoeColor" label="鞋型颜色" />
+            <el-table-column prop="shoeRid" label="鞋型编号" sortable />
+            <el-table-column prop="colorName" label="鞋型颜色" />
             <el-table-column label="鞋型图片">
                 <template #default="scope">
                     <el-image
-                        :src="scope.row.shoeImage"
+                        :src="scope.row.shoeImageUrl"
                         style="width: 150px; height: 100px"
                     ></el-image>
                 </template>
@@ -850,7 +855,17 @@ export default {
             this.newOrderForm.salesman = this.userName
             // this.$refs.startdatepicker.change()
             this.orderCreationInfoVis = true
+            // const array = [];
+            // for (let index = 0; index < this.shoeTableData.length; index++) {
+            //     array[index] = this.shoeTableData[index];
+            //     for (let i = 0; i < array[index].shoeTypeData.length; i++) {
+            //         array[index].shoeTypeData[i].shoeRid = this.shoeTableData[index].shoeRid
+            //     }
+            // }
+            // this.shoeTableDisplayData = array
             this.shoeTableDisplayData = this.shoeTableData
+            console.log(this.shoeTableDisplayData);
+            
         },
         async openPreviewDialog(row) {
             this.orderData = row
@@ -961,7 +976,7 @@ export default {
                 item.orderShoeTypeBatchInfo = []
                 item.quantityMapping = {}
                 item.amountMapping = {}
-                this.newOrderForm.customerShoeName[item.shoeRId] = ''
+                this.newOrderForm.customerShoeName[item.shoeRid] = ''
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
             // console.log(this.newOrderForm)
@@ -1119,7 +1134,7 @@ export default {
             this.orderShoePreviewData = response.data
         },
         async getAllShoes() {
-            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`)
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`)
             this.shoeTableData = response.data
         },
         async getOrderDocInfo(orderRid) {
@@ -1279,7 +1294,7 @@ export default {
                 this.shoeTableDisplayData = this.shoeTableData
             } else {
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                    const filterMatch = task.shoeRId
+                    const filterMatch = task.shoeRid
                         .toLowerCase()
                         .includes(this.shoeRidFilter.toLowerCase())
                     return filterMatch
@@ -1296,7 +1311,7 @@ export default {
                 )
             } else {
                 this.shoeTableTemp = this.shoeTableData.filter((task) => {
-                    const filterMatch = task.shoeRId.includes(this.shoeRidFilter)
+                    const filterMatch = task.shoeRid.includes(this.shoeRidFilter)
                     return filterMatch
                 })
                 this.shoeTableDisplayData = Array.from(

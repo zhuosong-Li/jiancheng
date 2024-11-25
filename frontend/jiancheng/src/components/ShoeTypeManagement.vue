@@ -1,57 +1,46 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-            >鞋型管理</el-col
-        >
+        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center">鞋型管理</el-col>
     </el-row>
     <el-row :gutter="20">
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
+        <el-col :span="4" :offset="0" style="white-space: nowrap">
             鞋型号搜索：
-            <el-input v-model="inheritIdSearch" placeholder="" clearable @change="getFilterShoes" :suffix-icon="Search"></el-input>
+            <el-input v-model="inheritIdSearch" placeholder="" clearable @change="getFilterShoes"
+                :suffix-icon="Search"></el-input>
         </el-col>
-        
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
-            <el-table
-                :data="shoeTableData"
-                style="width: 100%"
-                stripe
-                border
-                height="500"
-            >
-                <el-table-column
-                    prop="shoeRId"
-                    label="鞋型编号"
-                    width="90px"
-                    ></el-table-column>
-                <el-table-column
-                    prop="shoeColor"
-                    label="鞋型颜色"
-                    width="100px">
-                </el-table-column>
-                <el-table-column
-                    prop="shoeImage"
-                    label="鞋型图片"
-                    align="center">
-                    <template #default="scope">
-                        <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;"/>
+            <el-table :data="shoeTableData" style="width: 100%" stripe border height="580">
+                <el-table-column type="expand">
+                    <template #default="props">
+                        <el-table :data="props.row.shoeTypeData" border :row-key="(row) => {
+                                return `${row.shoeId}`
+                            }
+                            ">
+                            <el-table-column type="index" />
+                            <el-table-column prop="colorName" label="鞋型颜色" width="100px">
+                            </el-table-column>
+                            <el-table-column prop="shoeImageUrl" label="鞋型图片" align="center">
+                                <template #default="scope">
+                                    <el-image :src="scope.row.shoeImageUrl" style="width: 150px; height: 100px" />
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="操作">
+                                <template #default="scope">
+                                    <el-button type="primary"
+                                        @click="openReUploadImageDialog(scope.row)">重新上传鞋图</el-button>
+                                    <!-- <el-button type="danger" @click="deleteShoeModel(scope.row)">删除</el-button> -->
+                                </template>
+                            </el-table-column>
+                        </el-table>
                     </template>
                 </el-table-column>
-                <el-table-column
-                    prop="shoeDesigner"
-                    label="设计师"
-                ></el-table-column>
+                <el-table-column prop="shoeRid" label="鞋型编号" width="90px"></el-table-column>
+                <el-table-column prop="shoeDesigner" label="设计师"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button
-                            type="primary"
-                            size="default"
-                            @click="openEditShoeDialog(scope.row)"
-                            >编辑</el-button
-                        >
-                        <el-button type="primary" size="default" @click="openReUploadImageDialog(scope.row)">重新上传鞋图</el-button>
-                        
+                        <el-button type="primary" @click="openEditShoeDialog(scope.row)">编辑</el-button>
                     </template>
                 </el-table-column>
             </el-table>
@@ -60,14 +49,11 @@
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
             <el-button type="primary" @click="openAddShoeDialog">添加新鞋型</el-button>
+            <el-button type="primary" size="default" @click="addShoeModel">添加鞋款</el-button>
         </el-col>
     </el-row>
-    <el-dialog
-        title="添加鞋款颜色"
-        v-model="addShoeColorDialogVis"
-        width="50%"
-        >
-        <el-form :model="colorForm" label-width="120px" :inline="false" size="normal">
+    <el-dialog title="添加鞋款颜色" v-model="addShoeColorDialogVis" width="50%">
+        <el-form :model="colorForm" label-width="120px" :inline="false">
             <el-form-item label="颜色中文名称">
                 <el-input v-model="colorForm.colorName"></el-input>
             </el-form-item>
@@ -83,140 +69,122 @@
         </el-form>
         <template #footer>
             <span>
-            <el-button @click="addShoeColorDialogVis=false">取消</el-button>
-            <el-button type="primary" @click="addShoeColor">提交新颜色</el-button>
-        </span>
+                <el-button @click="addShoeColorDialogVis = false">取消</el-button>
+                <el-button type="primary" @click="addShoeColor">提交新颜色</el-button>
+            </span>
         </template>
     </el-dialog>
-    <el-dialog
-        title="添加新鞋型"
-        v-model="addShoeDialogVis"
-        width="50%"
-        >
-        <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
+    <el-dialog title="添加新鞋型" v-model="addShoeDialogVis" width="50%">
+        <el-form :model="orderForm" label-width="120px" :inline="false">
             <el-form-item label="鞋型编号">
-                <el-input v-model="orderForm.shoeRId"></el-input>
-            </el-form-item>
-            <el-form-item label="选择颜色">
-                <el-select v-model="orderForm.shoeColor" placeholder="请选择">
-                    <el-option
-                        v-for="item in colorOptions"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    ></el-option>
-                </el-select>
+                <el-input v-model="orderForm.shoeRid"></el-input>
             </el-form-item>
             <el-form-item label="设计师">
                 <el-input v-model="orderForm.shoeDesigner"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>
-        <span>
-            <el-button @click="addShoeDialogVis = false">取消</el-button>
-            <el-button type="primary" icon = "Edit" @click="openShoeColorDialog">添加鞋款颜色</el-button>
-            <el-button type="primary" @click="addNewShoe">确认上传</el-button>
-        </span>
+            <span>
+                <el-button @click="addShoeDialogVis = false">取消</el-button>
+                <el-button type="primary" @click="addNewShoe">确认上传</el-button>
+            </span>
         </template>
     </el-dialog>
-    <el-dialog
-        title="编辑鞋型"
-        v-model="editShoeDialogVis"
-        width="50%">
-        <el-form :model="orderForm" label-width="120px" :inline="false" size="normal">
-            <el-form-item label="鞋型编号">
-                <el-input v-model="orderForm.shoeRId" disabled="true"></el-input>
-            </el-form-item>
-            <el-form-item label="设计师">
-                <el-input v-model="orderForm.shoeDesigner" disabled="true"></el-input>
-            </el-form-item>
-            <el-form-item label="选择颜色">
-                <el-select v-model="orderForm.shoeColor" placeholder="请选择">
-                    <el-option
-                        v-for="item in colorOptions"
-                        :key="item.value"
-                        :label="item.label"
-                        :value="item.value"
-                    ></el-option>
+    <el-dialog title="添加鞋款" v-model="shoeModel" width="50%">
+        <el-form :model="orderForm" label-width="120px" :inline="false">
+            <el-form-item label="所属鞋型编号">
+                <el-select v-model="orderForm.shoeId" placeholder="请选择">
+                    <el-option v-for="item in colorModel" :key="item.value" :label="item.label"
+                        :value="item.value"></el-option>
                 </el-select>
             </el-form-item>
-            
+            <el-form-item label="选择颜色">
+                <el-select v-model="orderForm.colorId" placeholder="请选择">
+                    <el-option v-for="item in colorOptions" :key="item.value" :label="item.label"
+                        :value="item.value"></el-option>
+                </el-select>
+            </el-form-item>
         </el-form>
         <template #footer>
-        <span>
-            <el-button @click="editShoeDialogVis = false">取消</el-button>
-            <el-button type="primary" @click="editExistingShoe">确认</el-button>
-        </span>
+            <span>
+                <el-button @click="shoeModel = false">取消</el-button>
+                <el-button type="primary" icon="Edit" @click="openShoeColorDialog">添加鞋款颜色</el-button>
+                <el-button type="primary" @click="addShoeModel">确认上传</el-button>
+            </span>
         </template>
     </el-dialog>
-    <el-dialog
-        title="重新上传鞋图"
-        v-model="reUploadImageDialogVis"
-        width="50%">
-        <el-upload
-            :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`"
-            :on-success="handleUploadSuccess"
-            :on-error="handleUploadError"
-            :on-exceed="handleUploadExceed"
-            :headers="uploadHeaders"
-            :list-type="'picture-card'"
-            :auto-upload="false"
-            :data="{shoeRId: currentShoeImageId, shoeColor: currentShoeColor}"
-            :limit="1"
-            :file-list="fileList"
-            accept="image/*"
-            ref="imageReUpload"
-            :drag="true"
-        ></el-upload>
+    <el-dialog title="编辑鞋型" v-model="editShoeDialogVis" width="50%">
+        <el-form :model="orderForm" label-width="120px" :inline="false">
+            <el-form-item label="鞋型编号">
+                <el-input v-model="orderForm.shoeRid" :disabled="this.userRole == 21 ? true : false"></el-input>
+            </el-form-item>
+            <el-form-item label="设计师">
+                <el-input v-model="orderForm.shoeDesigner" :disabled="this.userRole == 21 ? true : false"></el-input>
+            </el-form-item>
+        </el-form>
         <template #footer>
-        <span>
-            <el-button @click="reUploadImageDialogVis = false">取消</el-button>
-            <el-button type="primary" @click="submitNewImage">确认上传</el-button>
-        </span>
+            <span>
+                <el-button @click="editShoeDialogVis = false">取消</el-button>
+                <el-button type="primary" @click="editExistingShoe">确认</el-button>
+            </span>
         </template>
     </el-dialog>
-    
-    
-    
+    <el-dialog title="重新上传鞋图" v-model="reUploadImageDialogVis" width="50%">
+        <el-upload :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`" :on-success="handleUploadSuccess"
+            :on-error="handleUploadError" :on-exceed="handleUploadExceed" :headers="uploadHeaders"
+            :list-type="'picture-card'" :auto-upload="false"
+            :data="{ shoeRId: currentShoeImageId, shoeColor: currentShoeColor }" :limit="1" :file-list="fileList"
+            accept="image/*" ref="imageReUpload" :drag="true"></el-upload>
+        <template #footer>
+            <span>
+                <el-button @click="reUploadImageDialogVis = false">取消</el-button>
+                <el-button type="primary" @click="submitNewImage">确认上传</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 
 <script>
-import axios from 'axios';
-import { Search } from '@element-plus/icons-vue';
+import axios from 'axios'
+import { Search } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus';
 
 export default {
     data() {
         return {
             token: localStorage.getItem('token'),
-            currentShoeImageId: "",
+            currentShoeImageId: '',
             currentShoeColor: 0,
             fileList: [],
             orderForm: {
-                shoeId: "",
-                shoeRId: "",
-                shoeDesigner: "",
-                shoeAdjuster: "",
-                shoeColor: "",
+                shoeId: '',
+                shoeRid: '',
+                shoeDesigner: '',
+                shoeAdjuster: '',
+                colorId: ''
             },
-            colorForm:{
-                colorName:"",
-                colorNameEN:"",
-                colorNameIT:"",
-                colorNameSP:""
+            colorForm: {
+                colorName: '',
+                colorNameEN: '',
+                colorNameIT: '',
+                colorNameSP: ''
             },
             reUploadImageDialogVis: false,
             editShoeDialogVis: false,
             addShoeDialogVis: false,
-            addShoeColorDialogVis:false,
+            addShoeColorDialogVis: false,
             Search,
-            inheritIdSearch: "",
+            inheritIdSearch: '',
             shoeTableData: [],
             colorOptions: [],
-        };
+            userRole: localStorage.getItem('role'),
+            shoeModel: false,
+            colorModel: [],
+        }
     },
     mounted() {
-        this.getAllColors();
-        this.getAllShoes();
+        this.getAllColors()
+        this.getAllShoes()
     },
     computed: {
         uploadHeaders() {
@@ -227,118 +195,193 @@ export default {
     },
     methods: {
         async getAllColors() {
-            const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`);
-            this.colorOptions = response.data;
+            const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`)
+            this.colorOptions = response.data
         },
         async getAllShoes() {
             // new api call
-            // const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`);
-            // console.log(response.data)
-            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`);
-            this.shoeTableData = response.data;
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`)
+            this.shoeTableData = response.data
+            const array = response.data
+            for (let index = 0; index < array.length; index++) {
+                this.colorModel.splice(index, 1, { 'label': array[index].shoeRid, 'value': array[index].shoeId })
+            }
         },
         async getFilterShoes() {
-            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, 
-                {params: {shoerid: this.inheritIdSearch}});
-            this.shoeTableData = response.data;
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, {
+                params: { shoerid: this.inheritIdSearch }
+            })
+            this.shoeTableData = response.data
         },
         openAddShoeDialog() {
-            this.addShoeDialogVis = true;
+            this.addShoeDialogVis = true
             this.orderForm = {
-                shoeId: "",
-                shoeRId: "",
-                shoeDesigner: "",
-                shoeAdjuster: "",
+                shoeId: '',
+                shoeRid: '',
+                shoeDesigner: '',
+                shoeAdjuster: ''
             }
         },
         openEditShoeDialog(row) {
-            this.orderForm = row;
-            this.editShoeDialogVis = true;
+            this.orderForm = row
+            this.editShoeDialogVis = true
         },
         openReUploadImageDialog(row) {
-            this.reUploadImageDialogVis = true;
-            this.currentShoeImageId = row.shoeRId;
-            this.currentShoeColor = row.shoeColor;
+            this.reUploadImageDialogVis = true
+            this.currentShoeImageId = row.shoeRId
+            this.currentShoeColor = row.shoeColor
         },
         handleUploadSuccess() {
             this.$message({
                 message: '上传成功',
                 type: 'success'
-            });
-            this.reUploadImageDialogVis = false;
-            this.getAllShoes();
+            })
+            this.reUploadImageDialogVis = false
+            this.getAllShoes()
         },
         handleUploadError() {
-            this.$message.error('上传失败');
+            this.$message.error('上传失败')
         },
         handleUploadExceed() {
-            this.$message.error('上传文件数量超出限制');
-            this.fileList.pop();
+            this.$message.error('上传文件数量超出限制')
+            this.fileList.pop()
         },
         submitNewImage() {
-            this.$refs.imageReUpload.submit();
+            this.$refs.imageReUpload.submit()
         },
-        openShoeColorDialog(){
+        openShoeColorDialog() {
             this.addShoeColorDialogVis = true
         },
         async addShoeColor() {
-            const response = await axios.post(`${this.$apiBaseUrl}/general/addnewcolor`, this.colorForm)
+            const response = await axios.post(
+                `${this.$apiBaseUrl}/general/addnewcolor`,
+                this.colorForm
+            )
+            if (response.status === 200) {
+                this.$message({
+                        type: 'success',
+                        message: '添加成功'
+                    })
+            }
             this.getAllColors()
             this.addShoeColorDialogVis = false
             // to do handle on success/ fail
             return
         },
         addNewShoe() {
-            console.log(this.orderForm);
             this.$confirm('确认添加新鞋型？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                this.currentShoeImageId = this.orderForm.shoeRId;
-                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/addnewshoe`, this.orderForm);
+                this.currentShoeImageId = this.orderForm.shoeRid
+                const response = await axios.post(
+                    `${this.$apiBaseUrl}/shoemanage/addshoe`,
+                    this.orderForm
+                )
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',
                         message: '添加成功'
-                    });
-                    this.addShoeDialogVis = false;
+                    })
+                    this.addShoeDialogVis = false
                     this.orderForm = {
-                        shoeId: "",
-                        shoeRId: "",
-                        shoeDesigner: "",
-                        shoeAdjuster: "",
-                    };
-                    this.getAllShoes();
+                        shoeId: '',
+                        shoeRid: '',
+                        shoeDesigner: '',
+                        shoeAdjuster: ''
+                    }
+                    this.getAllShoes()
                 }
-            });
+            })
         },
         editExistingShoe() {
-            console.log(this.orderForm);
             this.$confirm('确认修改鞋型信息？', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
                 type: 'warning'
             }).then(async () => {
-                const response = await axios.post(`${this.$apiBaseUrl}/shoemanage/editshoetype`, this.orderForm);
+                const response = await axios.post(
+                    `${this.$apiBaseUrl}/shoemanage/editshoe`,
+                    this.orderForm
+                )
                 if (response.status === 200) {
                     this.$message({
                         type: 'success',
                         message: '修改成功'
-                    });
-                    this.editShoeDialogVis = false;
+                    })
+                    this.editShoeDialogVis = false
                     this.orderForm = {
-                        shoeId: "",
-                        shoeRId: "",
-                        shoeDesigner: "",
-                        shoeAdjuster: "",
-                    };
-                    this.getAllShoes();
+                        shoeId: '',
+                        shoeRid: '',
+                        shoeDesigner: '',
+                        shoeAdjuster: ''
+                    }
+                    this.getAllShoes()
                 }
-            });
+            })
         },
-    },
+        addShoeModel() {
+            if (!this.shoeModel) {
+                this.shoeModel = true
+            } else {
+                this.$confirm('确认上传鞋款？', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning'
+                }).then(async () => {
+                    if (this.orderForm.colorId == '') {
+                        ElMessage.warning('请选择鞋款颜色')
+                    } else {
+                        // 更换上传鞋款的路由
+                        const response = await axios.post(
+                            `${this.$apiBaseUrl}//shoemanage/addshoetype`,
+                            this.orderForm
+                        )
+                        if (response.status === 200) {
+                            this.$message({
+                                type: 'success',
+                                message: '上传成功'
+                            })
+                            this.shoeModel = false
+                            this.orderForm = {
+                                shoeId: '',
+                                shoeRid: '',
+                                shoeDesigner: '',
+                                shoeAdjuster: ''
+                            }
+                            this.getAllShoes()
+                        }
+                    }
+                })
+            }
+        },
+        deleteShoeModel(value) {
+            this.$confirm('确认删除鞋款？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            }).then(async () => {
+                // 更换删除鞋款的路由
+                const response = await axios.post(
+                    `${this.$apiBaseUrl}/shoemanage/deleteshoetype`,
+                    {
+                        colorId: value.colorId,
+                        shoeId: value.shoeId,
+                        shoeImageUrl: value.shoeImageUrl,
+                        shoeTypeId: value.shoeTypeId
+                    }
+                )
+                if (response.status === 200) {
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功'
+                    })
+                    this.getAllShoes()
+                }
+            })
 
-};
-
+        }
+    }
+}
 </script>

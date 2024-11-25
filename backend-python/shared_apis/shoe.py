@@ -68,6 +68,7 @@ def get_all_shoes_new():
             for attr in SHOETYPE_TABLE_ATTRNAMES:
                 shoe_type_response_data[to_camel(attr)] = getattr(shoe_type.ShoeType, attr)
                 shoe_type_response_data['colorName'] = shoe_type.Color.color_name
+                shoe_type_response_data['shoeRid'] = shoe.shoe_rid
             shoe_type_list.append(shoe_type_response_data)
         shoe_response_data['shoeTypeData'] = shoe_type_list
         print(shoe_response_data)
