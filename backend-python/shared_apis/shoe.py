@@ -57,14 +57,17 @@ def get_all_shoes_new():
         shoe_response_data = dict()
         for attr in SHOE_TABLE_ATTRNAMES:
             shoe_response_data[to_camel(attr)] = getattr(shoe, attr)
-        shoe_type_entities = (db.session.query(ShoeType)
+        shoe_type_entities = (db.session.query(ShoeType, Color)
+                              .join(Color, ShoeType.color_id == Color.color_id)
                               .filter(ShoeType.shoe_id == shoe.shoe_id)
                               .all())
         shoe_type_list = []
         for shoe_type in shoe_type_entities:
+            print(shoe_type)
             shoe_type_response_data = dict()
             for attr in SHOETYPE_TABLE_ATTRNAMES:
-                shoe_type_response_data[to_camel(attr)] = getattr(shoe_type, attr)
+                shoe_type_response_data[to_camel(attr)] = getattr(shoe_type.ShoeType, attr)
+                shoe_type_response_data['colorName'] = shoe_type.Color.color_name
             shoe_type_list.append(shoe_type_response_data)
         shoe_response_data['shoeTypeData'] = shoe_type_list
         print(shoe_response_data)
