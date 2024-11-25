@@ -127,9 +127,9 @@
                     <el-descriptions-item label="工艺单"><el-button type="primary" size="default"
                             @click="downloadProductionOrderList">查看投产指令单</el-button>
                     </el-descriptions-item>
-                    <el-descriptions-item label="生产订单"><el-button type="primary" size="default"
+                    <!-- <el-descriptions-item label="生产订单"><el-button type="primary" size="default"
                             @click="downloadProductionOrder">查看生产订单</el-button>
-                    </el-descriptions-item>
+                    </el-descriptions-item> -->
                 </el-descriptions>
 
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">

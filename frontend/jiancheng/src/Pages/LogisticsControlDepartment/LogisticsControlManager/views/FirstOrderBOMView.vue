@@ -106,10 +106,10 @@
                             查看投产指令单
                         </el-button>
                     </el-descriptions-item>
-                    <el-descriptions-item label="生产订单" align="center">
+                    <!-- <el-descriptions-item label="生产订单" align="center">
                         <el-button type="primary" size="default" @click="downloadProductionOrder">查看生产订单
                         </el-button>
-                    </el-descriptions-item>
+                    </el-descriptions-item> -->
                 </el-descriptions>
 
                 <div style="height: 600px; overflow-y: scroll; overflow-x: hidden">
