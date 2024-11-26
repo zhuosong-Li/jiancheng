@@ -1,7 +1,7 @@
 <template>
     <el-timeline style="max-width: 100%">
         <el-timeline-item
-            v-for="(activity, index) in activities.reverse()"
+            v-for="(activity, index) in activities"
             :key="index"
             :timestamp="activity.handleTime"
         >
@@ -32,8 +32,15 @@ async function queryOrderMsg(orderId) {
     // 后续需放开进行根据订单id查询时间线数据，显示对应状态
     if (orderId) {
         const params = { 'orderId': orderId }
-        const response = await axios.get(routeMsg, {params});
-        activities.value = response.data;
+        try {
+            const response = await axios.get(routeMsg, {params});
+            activities.value = response.data;
+            activities.value.reverse();
+        }
+        catch(error) {
+            console.log(error)
+        }
+
     }
 }
 </script>
