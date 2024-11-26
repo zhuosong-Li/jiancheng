@@ -52,9 +52,8 @@ def create_new_order():
 	customer_shoe_names = order_info["customerShoeName"]
 
 	rid_exist_order = Order.query.filter_by(order_rid = order_rid).first()
-	cid_exist_order = Order.query.filter_by(order_cid = order_cid).first()
-	if rid_exist_order or cid_exist_order:
-		print("order rid or cid exists, must be unique")
+	if rid_exist_order:
+		print("order rid exists, must be unique")
 		return jsonify({'message':'订单号或客户订单号已经存在 单号不可重复'}), 400
 
 	new_order = Order(
@@ -89,7 +88,7 @@ def create_new_order():
 	for shoe_type_id in shoe_type_ids:
 		db_shoe_entity = ShoeType.query.filter_by(shoe_type_id = shoe_type_id).first()
 		shoe_type_id_to_shoe_id[shoe_type_id] = db_shoe_entity.shoe_id
-		shoe_id_to_rid[db_shoe_entity.shoe_id] = shoe_type_id_to_shoe_type[shoe_type_id]["shoeRId"] 
+		shoe_id_to_rid[db_shoe_entity.shoe_id] = shoe_type_id_to_shoe_type[shoe_type_id]["shoeRid"] 
 
 	shoe_id_to_order_shoe_id = {}
 
@@ -153,7 +152,6 @@ def create_new_order():
 			new_entity = existing_entity
 		batch_info_entity_array = []
 		for batch in batch_info:
-			print(batch)
 			quantity_per_ratio = int(quantity_mapping[str(batch['packagingInfoId'])])
 			new_entity = OrderShoeBatchInfo(
 				order_shoe_type_id = new_entity.order_shoe_type_id,
@@ -180,12 +178,12 @@ def create_new_order():
 			batch_info_entity_array.append(new_entity)
 		db.session.add_all(batch_info_entity_array)
 	print("order added to DB")
+	db.session.commit()
 	result = jsonify({"message": "Order imported successfully"}), 200
 	# except Exception as e:
 	# 	result = jsonify({"message": str(e)}, 500)
 	time_t = time.time()
 	print("time taken is " + str(time_t - time_s))
-	db.session.commit()
 	return result
 
 
