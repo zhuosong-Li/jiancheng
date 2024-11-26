@@ -194,8 +194,8 @@
                                         <el-input
                                             size="small"
                                             controls-position="right"
-                                            @change="updateCurrencyValue(scope.row)"
-                                            v-model="scope.row.shoeTypeBatchData.currencyType"
+                                            @change="updateCurrencyUnit(scope.row)"
+                                            v-model="this.orderCurrencyUnit"
                                             :disabled="
                                                 !this.currencyTypeAccessMapping[
                                                     scope.row.orderShoeTypeId
@@ -360,6 +360,7 @@ export default {
             orderDBId: '',
             orderCurStatus: '',
             orderCurStatusVal: '',
+            orderCurrencyUnit:'',
             orderShoeData: [],
             orderDocData: {},
             expandedRowKeys: [],
@@ -531,10 +532,12 @@ export default {
                 row.shoeTypeBatchData.unitPrice * row.shoeTypeBatchData.totalAmount
             this.orderShoeTypeIdToUnitPrice[row.orderShoeTypeId] = row.shoeTypeBatchData.unitPrice
         },
-        updateCurrencyValue(row) {
-            this.orderShoeTypeIdToCurrencyType[row.orderShoeTypeId] =
-                row.shoeTypeBatchData.currencyType
-            console.log(this.orderShoeTypeIdToCurrencyType)
+        updateCurrencyUnit(row) {
+            this.orderData.orderShoeAllData.forEach((orderShoe) =>
+                orderShoe.orderShoeTypes.forEach((orderShoeType) => {
+                    this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] = this.orderCurrencyUnit
+                        orderShoeType.shoeTypeBatchData.currencyType = this.orderCurrencyUnit
+                }))
         },
         async submitPriceForm() {
             console.log(this.orderShoeTypeIdToCurrencyType)
