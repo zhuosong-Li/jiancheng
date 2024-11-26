@@ -19,6 +19,9 @@
                         <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>材料出库</span>
                         </el-menu-item>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
+                            <span>文件下载</span>
+                        </el-menu-item>
                         <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>出/入库历史</span>
                         </el-menu-item>
@@ -42,6 +45,7 @@ import Dashboard from '../components/HeadOfWarehouseDashboard.vue'
 import MaterialInbound from '../components/MaterialInbound.vue'
 import InboundOutboundHistory from '../components/InboundOutboundHistory.vue'
 import MaterialOutbound from '../components/MaterialOutbound.vue'
+import FileDownload from '../components/FileDownload.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
@@ -52,6 +56,7 @@ export default {
         MaterialInbound,
         MaterialOutbound,
         InboundOutboundHistory,
+        FileDownload
     },
     data() {
         return {
@@ -77,6 +82,9 @@ export default {
                     break
                 case 2:
                     this.currentComponent = 'MaterialOutbound' 
+                    break
+                case 3:
+                    this.currentComponent = 'FileDownload' 
                     break
                 case 5:
                     this.currentComponent = 'InboundOutboundHistory'

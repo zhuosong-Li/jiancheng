@@ -1,5 +1,5 @@
 <template>
-    <el-table :data="$props.tableData" border style="width: 100%">
+    <el-table :data="tableData" border style="width: 100%">
         <el-table-column type="index"></el-table-column>
         <el-table-column prop="materialType" label="材料类型" />
         <el-table-column prop="materialDetailType" label="材料二级类型">

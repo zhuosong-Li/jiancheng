@@ -20,19 +20,19 @@
                             <el-descriptions title="" :column="2" border>
                                 <el-descriptions-item label="订单编号" align="center">{{
                                     orderData.orderId
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="订单创建时间" align="center">{{
                                     orderData.createTime
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="客户名称" align="center">{{
                                     orderData.customerName
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                                 <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
                                 <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
                                 <el-descriptions-item label="订单预计截止日期" align="center">{{
                                     orderData.deadlineTime
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                             </el-descriptions>
                         </el-col>
                     </el-row>
@@ -111,16 +111,16 @@
                 <el-descriptions title="订单信息" :column="2" border>
                     <el-descriptions-item label="订单编号" align="center">{{
                         orderData.orderId
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="订单创建时间" align="center">{{
                         orderData.createTime
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="客户名称" align="center">{{
                         orderData.customerName
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
-                    }}</el-descriptions-item>
+                        }}</el-descriptions-item>
                 </el-descriptions>
                 <div style="height: 400px; overflow-y: scroll; overflow-x: hidden">
                     <el-row :gutter="20" style="margin-bottom: 20px">
@@ -169,12 +169,20 @@
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane v-for="color in tabcolor" :label="color" :key="color" :name="color">
+                        <el-row>
+                            <el-col :span="2" :offset="20">
+                                <el-button>同步所有材料至所有颜色</el-button>
+                            </el-col>
+                        </el-row>
                         <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 面料： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(0)">添加面料</el-button>
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(0)">手动添加面料</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(0)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -270,6 +278,9 @@
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(1)">手动添加里料</el-button>
                             </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(1)">{{ this.syncMaterialButtonText }}</el-button>
+                            </el-col>
                         </el-row>
                         <el-row :gutter="20">
                             <el-col :span="23" :offset="0">
@@ -362,6 +373,9 @@
                                 <el-button type="primary" size="default" @click="addMaterial(2)">添加辅料</el-button>
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(2)">手动添加辅料</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(2)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -456,6 +470,9 @@
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(3)">手动添加大底</el-button>
                             </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(3)">{{ this.syncMaterialButtonText }}</el-button>
+                            </el-col>
                         </el-row>
                         <el-row :gutter="20">
                             <el-col :span="23" :offset="0">
@@ -548,6 +565,9 @@
                                 <el-button type="primary" size="default" @click="addMaterial(4)">添加中底</el-button>
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(4)">手动添加中底</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(4)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -642,6 +662,9 @@
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(5)">手动添加楦头</el-button>
                             </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(5)">{{ this.syncMaterialButtonText }}</el-button>
+                            </el-col>
                         </el-row>
                         <el-row :gutter="20">
                             <el-col :span="23" :offset="0">
@@ -733,6 +756,9 @@
                                 <el-button type="primary" size="default" @click="addMaterial(6)">添加烫底</el-button>
                                 <el-button type="primary" size="default"
                                     @click="addMaterialByManual(6)">手动添加烫底</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(6)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -883,22 +909,22 @@
                                 </el-descriptions-item>
                                 <el-descriptions-item label="型号" align="center">{{
                                     currentShoeId
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="客户号" align="center">{{
                                     orderShoeData.customerProductName
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="色号" align="center">{{
                                     orderShoeData.color
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="设计师" align="center">{{
                                     orderShoeData.shoeDesigner
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="调版员" align="center">{{
                                     orderShoeData.shoeAdjuster
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                                 <el-descriptions-item label="商标" align="center">{{
                                     orderShoeData.brandName
-                                }}</el-descriptions-item>
+                                    }}</el-descriptions-item>
                             </el-descriptions>
                         </el-col>
                     </el-row>
@@ -1010,11 +1036,20 @@
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane v-for="color in tabcolor" :label="color" :key="color" :name="color">
+                        <el-row>
+                            <el-col :span="2" :offset="20">
+                                <el-button>同步所有材料至所有颜色</el-button>
+                            </el-col>
+                        </el-row>
                         <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 面料： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(0)">添加面料</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(0)">手动添加面料</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(0)">手动添加面料</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(0)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1107,7 +1142,11 @@
                             <el-col :span="2" :offset="0"> 里料： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(1)">添加里料</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(1)">手动添加里料</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(1)">手动添加里料</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(1)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1199,7 +1238,11 @@
                             <el-col :span="2" :offset="0"> 辅料： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(2)">添加辅料</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(2)">手动添加里料</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(2)">手动添加辅料</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(2)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1291,7 +1334,11 @@
                             <el-col :span="2" :offset="0"> 大底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(3)">添加大底</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(2)">手动添加大底</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(3)">手动添加大底</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(3)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1368,7 +1415,11 @@
                             <el-col :span="2" :offset="0"> 中底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(4)">添加中底</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(4)">手动添加中底</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(4)">手动添加中底</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(4)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1445,7 +1496,11 @@
                             <el-col :span="2" :offset="0"> 楦头： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(5)">添加楦头</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(5)">手动添加楦头</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(5)">手动添加楦头</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(5)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1521,7 +1576,11 @@
                             <el-col :span="2" :offset="0"> 烫底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(6)">添加烫底</el-button>
-                                <el-button type="primary" size="default" @click="addMaterialByManual(6)">手动添加烫底</el-button>
+                                <el-button type="primary" size="default"
+                                    @click="addMaterialByManual(6)">手动添加烫底</el-button>
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(6)">{{ this.syncMaterialButtonText }}</el-button>
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
@@ -1623,19 +1682,6 @@ export default {
     props: ['orderId'],
     data() {
         return {
-            originalData: {
-                surface: ['surfaceData1', 'surfaceData2', 'surfaceData3'],
-                inside: ['insideData1', 'insideData2', 'insideData3'],
-                accessory: ['accessoryData1', 'accessoryData2', 'accessoryData3']
-                // add more types as needed
-            },
-            // Mapping of internal keys to display labels
-            labels: {
-                surface: '面料',
-                inside: '里料',
-                accessory: '辅料'
-                // Add more mappings as needed
-            },
             orderShoeData: {},
             departmentOptions: [],
             activeTab: '',
@@ -1685,12 +1731,6 @@ export default {
             bomTestData: [],
             editBomData: [],
             originalBomTestData: [],
-            factoryOptions: [
-                { materialName: '黑色超软镜面PU', factoryName: '一一鞋材' },
-                { materialName: '黑色超软镜面PU', factoryName: '深源皮革' },
-                { materialName: '黑色超软镜面PU', factoryName: '嘉泰皮革' }
-                // Add more options here
-            ],
             selectedFile: null,
             inheritIdSearch: '',
             isFinalBOM: false,
@@ -1714,7 +1754,8 @@ export default {
                 originSize: '',
                 lastType: '',
                 sizeDifference: ''
-            }
+            },
+            syncMaterialButtonText: "同步该材料表格至所有颜色"
         }
     },
     async mounted() {
@@ -1770,7 +1811,67 @@ export default {
                 `${this.$apiBaseUrl}/devproductionorder/getnewproductioninstructionid`
             )
             this.newProductionInstructionId = response.data.productionInstructionId
-            console.log(this.newProductionInstructionId)
+        },
+        syncMaterials(materialTypeNumber) {
+            switch (materialTypeNumber) {
+                case 0:
+                    let surfaceMaterialData = this.getMaterialDataByType('surfaceMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.surfaceMaterialData = JSON.parse(JSON.stringify(surfaceMaterialData))
+                        }
+                    })
+                    break
+                case 1:
+                    let insideMaterialData = this.getMaterialDataByType('insideMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.insideMaterialData = JSON.parse(JSON.stringify(insideMaterialData))
+                        }
+                    })
+                    break
+                case 2:
+                    let accessoryMaterialData = this.getMaterialDataByType('accessoryMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.accessoryMaterialData = JSON.parse(JSON.stringify(accessoryMaterialData))
+                        }
+                    })
+                    break
+                case 3:
+                    let outsoleMaterialData = this.getMaterialDataByType('outsoleMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.outsoleMaterialData = JSON.parse(JSON.stringify(outsoleMaterialData))
+                        }
+                    })
+                    break
+                case 4:
+                    let midsoleMaterialData = this.getMaterialDataByType('midsoleMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.midsoleMaterialData = JSON.parse(JSON.stringify(midsoleMaterialData))
+                        }
+                    })
+                    break
+                case 5:
+                    let lastMaterialData = this.getMaterialDataByType('lastMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.lastMaterialData = JSON.parse(JSON.stringify(lastMaterialData))
+                        }
+                    })
+                    break
+                case 6:
+                    let hotsoleMaterialData = this.getMaterialDataByType('hotsoleMaterialData')
+                    this.materialWholeData.forEach(shoeTypeData => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.hotsoleMaterialData = JSON.parse(JSON.stringify(hotsoleMaterialData))
+                        }
+                    })
+                    break
+            }
+            ElMessage.success("复制成功")
         },
         addMaterialByManual(typeSymbol) {
             const preActiveMaterialData = this.materialWholeData.find(
@@ -2030,12 +2131,6 @@ export default {
             this.assetFilterTable = response.data
             this.materialAddfinished = false
         },
-        getFilteredFactoryOptions(materialName) {
-            const filteredOptions = this.factoryOptions.filter(
-                (option) => option.materialName === materialName
-            )
-            return [{ factoryName: '询价' }, ...filteredOptions]
-        },
         async getInstructionData(row) {
             const response = await axios.get(
                 `${this.$apiBaseUrl}/devproductionorder/getproductioninstruction?orderid=${this.orderData.orderId}&ordershoeid=${row.inheritId}`
@@ -2043,14 +2138,12 @@ export default {
             this.newProductionInstructionId = response.data.productionInstructionId
             this.materialWholeData = response.data.instructionData
             this.productionInstructionDetail = response.data.productionInstructionDetail
-            console.log(this.materialWholeData)
         },
         async openPreviewDialog(row) {
             this.newProductionInstructionId = ''
             this.materialWholeData = []
             this.currentShoeId = row.inheritId
             this.currentShoeImageUrl = row.typeInfos[0].image
-            console.log(this.currentShoeImageUrl)
             await this.getOrderShoeInfo(row.inheritId)
             this.getInstructionData(row)
             this.tabcolor = row.typeInfos.map((info) => info.color)
@@ -2083,15 +2176,28 @@ export default {
                 })
             }
             this.isProductionOrderCreateDialogVisible = true
-            console.log(this.tabcolor)
-            console.log(this.currentShoeId)
         },
         async openEditDialog(row) {
             this.newProductionInstructionId = ''
-            this.materialWholeData = []
             this.currentShoeId = row.inheritId
-            this.getInstructionData(row)
+            await this.getInstructionData(row)
             this.tabcolor = row.typeInfos.map((info) => info.color)
+            if (this.materialWholeData.length === 0) {
+                // create a empty template for it
+                this.tabcolor.forEach(colorName => {
+                    let obj = {
+                        color: colorName,
+                        surfaceMaterialData: [],
+                        insideMaterialData: [],
+                        accessoryMaterialData: [],
+                        outsoleMaterialData: [],
+                        midsoleMaterialData: [],
+                        lastMaterialData: [],
+                        hotsoleMaterialData: [],
+                    }
+                    this.materialWholeData.push(obj)
+                })
+            }
             this.activeTab = this.tabcolor[0]
             this.isEditDialogVisible = true
         },
