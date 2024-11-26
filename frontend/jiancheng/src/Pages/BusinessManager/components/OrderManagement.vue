@@ -627,6 +627,7 @@ export default {
     data() {
         return {
             token: localStorage.getItem('token'),
+            staffId:localStorage.getItem('staffid'), 
             orderNotInCurStatus: '',
             orderInCurStatus: '',
             currentPage: 1,
@@ -701,10 +702,15 @@ export default {
                 orderStartDate: '',
                 orderEndDate: '',
                 status: '',
+                //显示名字用 建议改为salesmanName
                 salesman: '',
+                //新参数, 应该为当前用户的staff_id
+                salesmanId:'',
                 orderShoeTypes: [],
                 batchInfoQuantity: [],
                 customerShoeName: {},
+                //新参数 应该为被下发经理用户的staff_id
+                supervisorId:'',
                 flag: false
             },
             batchForm: {
@@ -853,6 +859,7 @@ export default {
         openCreateOrderDialog() {
             this.newOrderForm.orderStartDate = this.formatDateToYYYYMMDD(new Date())
             this.newOrderForm.salesman = this.userName
+            this.newOrderForm.salesmanId = this.staffId
             // this.$refs.startdatepicker.change()
             this.orderCreationInfoVis = true
             // const array = [];

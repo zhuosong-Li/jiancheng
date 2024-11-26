@@ -250,11 +250,11 @@ class Order(db.Model):
     customer_id = db.Column(
         db.Integer,
     )
-    salesman = db.Column(db.String(10), nullable=False)
+    salesman_id = db.Column(db.Integer,nullable=False)
     production_list_upload_status = db.Column(db.String(1), nullable=True)
     amount_list_upload_status = db.Column(db.String(1), nullable=True)
     batch_info_type_id = db.Column(db.Integer, nullable=False)
-
+    supervisor_id = db.Column(db.Integer)
     def __repr__(self):
         return f"<Order(order_id={self.order_id})>"
 
@@ -1037,6 +1037,7 @@ class OrderShoeType(db.Model):
     sewing_amount = db.Column(db.Integer, default=0)
     molding_amount = db.Column(db.Integer, default=0)
     unit_price = db.Column(db.DECIMAL(10, 2), default=0)
+    customer_color_name = db.Column(db.String(10), default="")
     currency_type = db.Column(db.String(4), nullable=True, default="")
 
     def __repr__(self):

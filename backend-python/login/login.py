@@ -7,7 +7,7 @@ import hashlib
 
 from models import *
 from flask import Blueprint, jsonify, request
-from app_config import app, db, redis_client, jwt
+from app_config import app, db, redis_client ,jwt
 
 login_bp = Blueprint("login_bp", __name__)
 
