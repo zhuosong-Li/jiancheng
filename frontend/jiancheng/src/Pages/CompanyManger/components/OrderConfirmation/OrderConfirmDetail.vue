@@ -106,6 +106,14 @@
                                     prop="shoeTypeBatchData.totalPrice"
                                     label="总金额"
                                 />
+                                <el-table-column label="鞋型">
+                                    <template #default="scope">
+                                        <el-image
+                                            :src="scope.row.shoeImageUrl"
+                                            style="width: 150px; height: 100px"
+                                        ></el-image>
+                                    </template>
+                                </el-table-column>
                             </el-table>
                         </template>
                     </el-table-column>

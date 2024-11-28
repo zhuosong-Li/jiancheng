@@ -14,7 +14,7 @@
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderRidFilter"
-                placeholder="请输入订单号"
+                placeholder="订单号"
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
@@ -24,7 +24,7 @@
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderCidFilter"
-                placeholder="请输入客户订单号"
+                placeholder="客户订单号"
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
@@ -34,7 +34,7 @@
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderCustomerNameFilter"
-                placeholder="请输入客户名称"
+                placeholder="客户名称"
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
@@ -45,7 +45,7 @@
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderCustomerBrandFilter"
-                placeholder="请输入客户商标"
+                placeholder="客户商标"
                 size="default"
                 :suffix-icon="'el-icon-search'"
                 clearable
