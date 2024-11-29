@@ -30,9 +30,9 @@
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
             </el-menu-item>
-            <el-menu-item index="4" @click="handleMenuClick(4)">
+            <!-- <el-menu-item index="4" @click="handleMenuClick(4)">
               <span>生产管理</span>
-            </el-menu-item>
+            </el-menu-item> -->
             <el-menu-item index="5" @click="handleMenuClick(5)">
               <span>外包信息</span>
             </el-menu-item>
@@ -110,9 +110,6 @@ export default {
           break
         case 3:
           this.currentComponent = 'LogisticInfo'
-          break
-        case 4:
-          this.currentComponent = 'ProductionManagement'
           break
         case 5:
           this.currentComponent = 'OutSourceInfo'

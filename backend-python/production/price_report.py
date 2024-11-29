@@ -296,7 +296,7 @@ def get_price_report_detail_by_order_shoe_id():
             {
                 "rowId": report_detail.row_id,
                 "procedure": report_detail.procedure_name,
-                "price": report_detail.price,
+                "price": float(report_detail.price),
                 "note": report_detail.note,
             }
         )
@@ -385,7 +385,6 @@ def save_template():
     arr = []
     # insert new rows
     for row in report_rows:
-        print(template.template_id)
         entity = ReportTemplateDetail(
             report_template_id=template.template_id,
             row_id=row["rowId"],
@@ -437,7 +436,7 @@ def download_production_form():
         .first()
     )
     response = (
-        db.session.query(UnitPriceReportDetail)
+        db.session.query(UnitPriceReportDetail, UnitPriceReport.team)
         .join(
             UnitPriceReport,
             UnitPriceReportDetail.report_id == UnitPriceReport.report_id,
@@ -447,11 +446,13 @@ def download_production_form():
     )
     res = {}
     res["shoe_rid"] = meta_response[0]
+    res["team"] = response[0][1]
     res["procedures"] = []
     for row in response:
+        detail, _ = row
         obj = {
-            "row_id": row.row_id,
-            "procedure_name": row.procedure_name,
+            "row_id": detail.row_id,
+            "procedure_name": detail.procedure_name,
         }
         res["procedures"].append(obj)
     template_path = os.path.join("./general_document", "流程卡模板.xlsx")

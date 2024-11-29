@@ -67,7 +67,8 @@ def edit_production_schedule():
             setattr(entity, f"{team}_end_date", data["productionInfoList"][index]["endDate"])
 
     entity = db.session.query(OrderShoeStatus).filter(OrderShoeStatus.current_status == 17).first()
-    entity.current_status_value = 1
+    if entity:
+        entity.current_status_value = 1
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -113,18 +114,91 @@ def save_multiple_schedules():
 )
 def start_production():
     data = request.get_json()
+    order_shoe_id = data["orderShoeId"]
+    order_shoe_type_ids = (
+        db.session.query(func.sum(OrderShoeBatchInfo.total_amount), OrderShoeType.order_shoe_type_id)
+        .join(OrderShoeBatchInfo, OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
+        .filter(OrderShoeType.order_shoe_id==order_shoe_id)
+        .group_by(OrderShoeType.order_shoe_type_id)
+        .all()
+    )
+    # 0：裁片，1：鞋包
+    arr = []
+    for row in order_shoe_type_ids:
+        color_total_amount, id = row
+        for obj in [0, 1]:
+            semi_entity = SemifinishedShoeStorage(
+                order_shoe_type_id=id,
+                semifinished_status=0,
+                semifinished_object=obj,
+                semifinished_estimated_amount=color_total_amount
+            )
+            arr.append(semi_entity)
+        finished_entity = FinishedShoeStorage(
+            order_shoe_type_id=id,
+            finished_status=0,
+            finished_estimated_amount=color_total_amount
+        )
+        arr.append(finished_entity)
+    db.session.add_all(arr)
+
+    production_amount = (
+        db.session.query(
+            func.sum(OrderShoeProductionAmount.total_production_amount),
+            OrderShoeProductionAmount.production_team
+        )
+        .join(
+            OrderShoeType,
+            OrderShoeProductionAmount.order_shoe_type_id
+            == OrderShoeType.order_shoe_type_id,
+        )
+        .join(OrderShoe, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .filter(
+            OrderShoe.order_shoe_id == order_shoe_id,
+        )
+        .group_by(
+            OrderShoe.order_shoe_id, OrderShoeProductionAmount.production_team
+        )
+        .all()
+    )
+    print(production_amount)
+    # 0：裁断，1：针车，2：成型
+    # 只有针车，裁断+针车 的外包，一定有成型工价obj
+    skip_cutting, skip_sewing = True, True
+    report_arr = []
+    for row in production_amount:
+        amount, team = row
+        if team == 0 and amount != 0:
+            report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="裁断", status=0)
+            report_arr.append(report1)
+            skip_cutting = False
+        if team == 1 and amount != 0:
+            report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="针车预备", status=0)
+            report2 = UnitPriceReport(order_shoe_id=order_shoe_id, team="针车", status=0)
+            report_arr.append(report1)
+            report_arr.append(report2)
+            skip_sewing = False
+        if team == 2:
+            report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="成型", status=0)
+            report_arr.append(report1)
+
+    db.session.add_all(report_arr)
+    # 裁断+针车外包，跳到针车结束。针车外包情况到半成品仓跳
     # pass to event processor
     processor: EventProcessor = current_app.config["event_processor"]
     try:
-        for operation in [72, 73]:
-            event = Event(
-                staff_id=1,
-                handle_time=datetime.now(),
-                operation_id=operation,
-                event_order_id=data["orderId"],
-                event_order_shoe_id=data["orderShoeId"],
-            )
-            processor.processEvent(event)
+        if skip_cutting and skip_sewing:
+            processor.processOutsourceEvent(order_shoe_id, 1)
+        else:
+            for operation in [72, 73, 74, 75]:
+                event = Event(
+                    staff_id=1,
+                    handle_time=datetime.now(),
+                    operation_id=operation,
+                    event_order_id=data["orderId"],
+                    event_order_shoe_id=data["orderShoeId"],
+                )
+                processor.processEvent(event)
     except Exception as e:
         print(e)
         return jsonify({"message": "failed"}), 400

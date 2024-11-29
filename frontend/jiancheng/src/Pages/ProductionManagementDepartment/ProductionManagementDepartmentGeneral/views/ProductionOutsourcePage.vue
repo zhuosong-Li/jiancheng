@@ -356,12 +356,12 @@ export default {
 			if (rowData === null) {
 				this.outsourceForm = { ...this.template }
 				this.outsourceForm.outsourceShoeBatchInfo = JSON.parse(JSON.stringify(this.shoeInfo));
-				this.outsourceForm.outsourceShoeBatchInfo.forEach(row => {
-					for (let i = 34; i < 47; i++) {
-						row[`size${i}Amount`] = 0
-					}
-					row["totalAmount"] = 0
-				})
+				// this.outsourceForm.outsourceShoeBatchInfo.forEach(row => {
+				// 	for (let i = 34; i < 47; i++) {
+				// 		row[`size${i}Amount`] = 0
+				// 	}
+				// 	row["totalAmount"] = 0
+				// })
 			}
 			else {
 				this.outsourceForm = rowData

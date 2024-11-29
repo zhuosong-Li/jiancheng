@@ -398,6 +398,11 @@ export default {
         this.getAllShoeListInfo()
     },
     methods: {
+        filteredColumns(array) {
+            return this.shoeSizeColumns.filter(column =>
+                array.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
+            );
+        },
         async getAllDepartmentOptions() {
             const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data

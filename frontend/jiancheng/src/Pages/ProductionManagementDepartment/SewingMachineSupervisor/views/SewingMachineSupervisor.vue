@@ -21,15 +21,17 @@ import AmountProduced from '../components/AmountProduced.vue'
 import ProcedureManagement from '../components/ProcedureManagement.vue'
 import Setting from '../components/Setting.vue'
 import Dashboard from '../components/Dashboard.vue'
+import OrderProgress from '../../ProductionSharedPages/OrderProgress.vue'
 import { ref } from 'vue'
 const components = {
     Dashboard,
     LaborPriceReport,
     Setting,
     AmountProduced,
-    ProcedureManagement
+    ProcedureManagement,
+    OrderProgress
 }
-const currentTab = ref('LaborPriceReport')
+const currentTab = ref('OrderProgress')
 const optionFn = (option) => {
     currentTab.value = option
 }

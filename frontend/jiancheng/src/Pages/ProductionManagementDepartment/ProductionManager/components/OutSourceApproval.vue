@@ -115,7 +115,7 @@
 
         <el-descriptions title="外包成本" style="margin-top: 20px;">
         </el-descriptions>
-        <OutsourceCostTable :tableData.sync="outsourceCostTable" :outsourceInfoId="currentRow.outsourceInfoId" />
+        <OutsourceCostTable :tableData.sync="outsourceCostTable" :outsourceInfoId="currentRow.outsourceInfoId" :totalShoes="outsourceTotalShoes" />
         <template #footer>
             <el-button type="primary" @click="isApprovalDialogOpen = false">返回</el-button>
             <el-button type="primary" @click="saveOutsourceCost">保存外包成本</el-button>
@@ -158,7 +158,9 @@ export default {
             getShoeSizesName,
             shoeSizeColumns: [],
             outsourceShoeBatchInfo: [],
-            outsourceCostTable: []
+            outsourceCostTable: [],
+            nodeNameSearch: '',
+            outsourceTotalShoes: 0
         }
     },
     mounted() {
@@ -213,6 +215,9 @@ export default {
             let params = { "orderShoeId": row.orderShoeId, "outsourceInfoId": row.outsourceInfoId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, { params })
             this.outsourceShoeBatchInfo = response.data
+            this.outsourceShoeBatchInfo.forEach(row => {
+                this.outsourceTotalShoes += row.totalAmount
+            })
         },
         async getOutsourceCostTable(row) {
             let params = { "outsourceInfoId": row.outsourceInfoId }

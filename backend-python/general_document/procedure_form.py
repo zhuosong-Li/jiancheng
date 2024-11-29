@@ -28,13 +28,13 @@ def save_workbook(wb, new_file_path):
 # Main function to generate the Excel file
 def generate_excel_file(template_path, new_file_path, data: dict):
     print(f"Generating Excel file")
-    print(data)
     # Load template
     wb, ws = load_template(template_path, new_file_path)
 
+    team = data.get("team", "")
+    ws["A1"] = f"浙江健诚鞋业集团股份有限公司\n{team}产量流程卡"
     # create new sheet for every 20 rows
     table_data = data.get("procedures", [])
-    table_data = table_data * 7
     for i in range(0, len(table_data), 20):
         if i > 0:
             copied_ws = wb.copy_worksheet(ws)

@@ -110,10 +110,7 @@ class Message(db.Model):
 class QuantityReportItem(db.Model):
     __tablename__ = "quantity_report_item"
     quantity_report_item_id = db.Column(
-        db.BigInteger,
-        primary_key=True,
-        nullable=False,
-        autoincrement=True
+        db.BigInteger, primary_key=True, nullable=False, autoincrement=True
     )
     quantity_report_id = db.Column(db.BigInteger, nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
@@ -160,8 +157,15 @@ class Material(db.Model):
     material_creation_date = db.Column(db.Date, nullable=True)
     material_category = db.Column(db.SmallInteger, nullable=False, default=0)
 
+    __table_args__ = (
+        db.UniqueConstraint("material_supplier", "material_name", name="unq_material"),
+    )
+
     def __repr__(self):
         return f"<Material(material_id={self.material_id})>"
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 
 class MaterialType(db.Model):
@@ -202,26 +206,38 @@ class MaterialStorage(db.Model):
     material_storage_id = db.Column(
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
-    material_model = db.Column(db.String(50), nullable=True)
+    material_model = db.Column(db.String(50), default='', nullable=True)
     order_shoe_id = db.Column(db.BigInteger)
     material_id = db.Column(db.BigInteger, nullable=False)
-    estimated_inbound_amount = db.Column(db.DECIMAL(10, 5))
-    actual_inbound_amount = db.Column(db.DECIMAL(10, 5))
-    current_amount = db.Column(db.DECIMAL(10, 5), nullable=False)
+    estimated_inbound_amount = db.Column(
+        db.DECIMAL(10, 5),
+        default=0,
+    )
+    actual_inbound_amount = db.Column(
+        db.DECIMAL(10, 5),
+        default=0,
+    )
+    current_amount = db.Column(db.DECIMAL(10, 5), default=0, nullable=False)
     unit_price = db.Column(db.DECIMAL(10, 2))
-    material_specification = db.Column(db.String(40), nullable=True)
+    material_specification = db.Column(db.String(40), default='', nullable=True)
     material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
-    material_storage_color = db.Column(db.String(40), nullable=True)
+    material_storage_color = db.Column(db.String(40), default='', nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    craft_name = db.Column(db.String(60), nullable=True)
+    composite_unit_cost = db.Column(db.DECIMAL(10, 2))
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
 
     def __name__(self):
         return "MaterialStorage"
+    
+    def to_dict(obj):
+        """Convert SQLAlchemy object to dictionary."""
+        return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
 
 class Operation(db.Model):
@@ -449,7 +465,8 @@ class OutsourceCostDetail(db.Model):
         db.Integer, primary_key=True, autoincrement=True, nullable=False
     )
     item_name = db.Column(db.String(50), nullable=True)
-    item_cost = db.Column(db.Numeric(10, 2), nullable=True)
+    item_cost = db.Column(db.Numeric(10, 2), default=0)
+    item_total_cost = db.Column(db.Numeric(10, 2), default=0)
     outsource_info_id = db.Column(db.Integer, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
 
@@ -459,7 +476,9 @@ class OutsourceCostDetail(db.Model):
 
 class OutsourceFactory(db.Model):
     __tablename__ = "outsource_factory"
-    factory_id = db.Column(db.Integer, primary_key=True, nullable=False, autoincrement=True)
+    factory_id = db.Column(
+        db.Integer, primary_key=True, nullable=False, autoincrement=True
+    )
     factory_name = db.Column(db.String(50), nullable=False)
     is_deleted = db.Column(db.Boolean, default=0, nullable=False)
 
@@ -655,6 +674,7 @@ class SemifinishedShoeStorage(db.Model):
     )
     semifinished_inbound_datetime = db.Column(db.DateTime)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    semifinished_estimated_amount = db.Column(db.Integer, default=0, nullable=False)
     semifinished_amount = db.Column(db.Integer, default=0, nullable=False)
     semifinished_status = db.Column(db.SmallInteger)
     semifinished_object = db.Column(db.SmallInteger)
@@ -752,8 +772,8 @@ class SizeMaterialStorage(db.Model):
     size_material_storage_id = db.Column(
         db.BigInteger, primary_key=True, autoincrement=True
     )
-    size_material_specification = db.Column(db.String(40), nullable=False)
-    size_material_model = db.Column(db.String(50), nullable=True)
+    size_material_specification = db.Column(db.String(40), default='', nullable=False)
+    size_material_model = db.Column(db.String(50), default='', nullable=True)
     size_34_estimated_inbound_amount = db.Column(db.Integer, default=0)
     size_35_estimated_inbound_amount = db.Column(db.Integer, default=0)
     size_36_estimated_inbound_amount = db.Column(db.Integer, default=0)
@@ -802,15 +822,21 @@ class SizeMaterialStorage(db.Model):
     material_id = db.Column(
         db.BigInteger,
     )
-    size_material_color = db.Column(db.String(40), nullable=True)
+    size_material_color = db.Column(db.String(40), default='', nullable=True)
     order_shoe_id = db.Column(db.BigInteger)
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    craft_name = db.Column(db.String(60), nullable=True)
+    composite_unit_cost = db.Column(db.DECIMAL(10, 2))
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
+    
+    def to_dict(obj):
+        """Convert SQLAlchemy object to dictionary."""
+        return {c.name: getattr(obj, c.name) for c in obj.__table__.columns}
 
 
 class UnitPriceReportDetail(db.Model):
@@ -890,6 +916,7 @@ class FinishedShoeStorage(db.Model):
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
+    finished_estimated_amount = db.Column(db.Integer, default=0, nullable=False)
     finished_amount = db.Column(db.Integer, default=0, nullable=False)
     finished_status = db.Column(
         db.SmallInteger,
@@ -939,14 +966,8 @@ class InboundRecord(db.Model):
     size_46_inbound_amount = db.Column(db.Integer, nullable=True)
     inbound_datetime = db.Column(db.DateTime, nullable=False)
     inbound_type = db.Column(db.SmallInteger, nullable=False)
-    material_storage_id = db.Column(
-        db.BigInteger,
-        nullable=True,
-    )
-    size_material_storage_id = db.Column(
-        db.BigInteger,
-        nullable=True,
-    )
+    material_storage_id = db.Column(db.BigInteger, nullable=True)
+    size_material_storage_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<InboundRecord {self.inbound_rid}>"

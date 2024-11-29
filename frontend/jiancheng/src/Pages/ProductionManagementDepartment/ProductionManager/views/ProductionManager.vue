@@ -15,8 +15,6 @@
           <el-menu
             default-active="2"
             class="el-menu-vertical-demo"
-            @open="handleOpen"
-            @close="handleClose"
           >
             <el-menu-item index="2" @click="handleMenuClick(2)">
               <span>生产排期表</span>

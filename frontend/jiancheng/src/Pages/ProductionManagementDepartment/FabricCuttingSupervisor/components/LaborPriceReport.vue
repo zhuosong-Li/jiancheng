@@ -85,7 +85,7 @@ const getOrderTableData = async () => {
 }
 const handleView = (row) => {
     let url = ""
-    let params = {"orderId": row.orderId, "orderShoeId": row.orderShoeId}
+    let params = {"orderId": row.orderId, "orderShoeId": row.orderShoeId, 'teams': ['裁断'].join(',')}
     const queryString = new URLSearchParams(params).toString();
     url = `${window.location.origin}/fabriccutting/pricereport?${queryString}`;
     window.open(url, '_blank');

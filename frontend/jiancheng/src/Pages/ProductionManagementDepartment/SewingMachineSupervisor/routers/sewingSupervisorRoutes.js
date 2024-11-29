@@ -1,38 +1,27 @@
-import AmountReportList from '../views/AmountReportList.vue'
-import PriceReport from '../views/PriceReportView.vue'
+import QuantityReportList from '../../ProductionSharedPages/QuantityReportPages/QuantityReportList.vue'
+import PriceReportView from '../../ProductionSharedPages/PriceReportPages/PriceReportView.vue'
 
 export default [
     {
         path: '/sewingmachine/amountreportlist',
         name: 'sewingmachine-amountreportlist',
-        component: AmountReportList,
+        component: QuantityReportList,
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate,
-                teamName: route.query.team
+                team: route.query.team
             })
     },
     {
         path: '/sewingmachine/pricereport',
         name: 'sewingmachine-priceReport',
-        component: PriceReport,
+        component: PriceReportView,
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate,
-                preSewingProductionStartDate: route.query.preSewingProductionStartDate,
-                preSewingProductionEndDate: route.query.preSewingProductionEndDate,
+                teams: route.query.teams
             })
     }
 ]

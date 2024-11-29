@@ -17,9 +17,12 @@
                             <span>半成品出/入库</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
+                            <span>生产动态明细</span>
+                        </el-menu-item>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>出/入库历史</span>
                         </el-menu-item>
-                        <el-menu-item index="3" @click="logout">
+                        <el-menu-item index="4" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -37,6 +40,7 @@
 import AllHeader from '@/components/AllHeader.vue'
 import SemiInboundOutbound from '../components/SemiInboundOutbound.vue'
 import SemifinishedInOutHistory from '../components/SemifinishedInOutHistory.vue'
+import OrderProgress from '@/Pages/ProductionManagementDepartment/ProductionSharedPages/OrderProgress.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
@@ -44,7 +48,8 @@ export default {
     components: {
         AllHeader,
         SemiInboundOutbound,
-        SemifinishedInOutHistory
+        SemifinishedInOutHistory,
+        OrderProgress
     },
     data() {
         return {
