@@ -4,11 +4,11 @@
             <AllHeader></AllHeader>
         </el-header> <!--引用header-->
         <el-container>
-            <el-aside><!--引用aside-->
+            <el-aside width="250px"><!--引用aside-->
                 <div>
                     <el-avatar :icon="UserFilled" :size="100" />
                 </div>
-                <div style="font-size: x-large;">
+                <div style="font-size: x-middle;">
                     {{ userName }}
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">

@@ -30,10 +30,11 @@
                                 <template #default="scope">
                                     <el-button type="primary"
                                         @click="openReUploadImageDialog(scope.row)">重新上传鞋图</el-button>
-                                    <!-- <el-button type="danger" @click="deleteShoeModel(scope.row)">删除</el-button> -->
+                                    <el-button type="danger" @click="deleteShoeModel(scope.row)">删除</el-button>
                                 </template>
                             </el-table-column>
                         </el-table>
+                        <el-button type="primary" size="default" @click="addShoeModel(props.row)">添加鞋款</el-button>
                     </template>
                 </el-table-column>
                 <el-table-column prop="shoeRid" label="鞋型编号" width="90px"></el-table-column>
@@ -49,7 +50,7 @@
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
             <el-button type="primary" @click="openAddShoeDialog">添加新鞋型</el-button>
-            <el-button type="primary" size="default" @click="addShoeModel">添加鞋款</el-button>
+            <el-button type="primary" icon="Edit" @click="openShoeColorDialog">添加鞋款颜色</el-button>
         </el-col>
     </el-row>
     <el-dialog title="添加鞋款颜色" v-model="addShoeColorDialogVis" width="50%">
@@ -93,13 +94,10 @@
     <el-dialog title="添加鞋款" v-model="shoeModel" width="50%">
         <el-form :model="orderForm" label-width="120px" :inline="false">
             <el-form-item label="所属鞋型编号">
-                <el-select v-model="orderForm.shoeId" placeholder="请选择">
-                    <el-option v-for="item in colorModel" :key="item.value" :label="item.label"
-                        :value="item.value"></el-option>
-                </el-select>
+                <el-input v-model="colorModel" :disabled="true"></el-input>
             </el-form-item>
             <el-form-item label="选择颜色">
-                <el-select v-model="orderForm.colorId" placeholder="请选择">
+                <el-select v-model="orderForm.colorId" placeholder="请选择" multiple>
                     <el-option v-for="item in colorOptions" :key="item.value" :label="item.label"
                         :value="item.value"></el-option>
                 </el-select>
@@ -108,7 +106,6 @@
         <template #footer>
             <span>
                 <el-button @click="shoeModel = false">取消</el-button>
-                <el-button type="primary" icon="Edit" @click="openShoeColorDialog">添加鞋款颜色</el-button>
                 <el-button type="primary" @click="addShoeModel">确认上传</el-button>
             </span>
         </template>
@@ -179,7 +176,8 @@ export default {
             colorOptions: [],
             userRole: localStorage.getItem('role'),
             shoeModel: false,
-            colorModel: [],
+            colorModel: '',
+            idModel: '',
         }
     },
     mounted() {
@@ -202,10 +200,6 @@ export default {
             // new api call
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`)
             this.shoeTableData = response.data
-            const array = response.data
-            for (let index = 0; index < array.length; index++) {
-                this.colorModel.splice(index, 1, { 'label': array[index].shoeRid, 'value': array[index].shoeId })
-            }
         },
         async getFilterShoes() {
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, {
@@ -321,9 +315,11 @@ export default {
                 }
             })
         },
-        addShoeModel() {
+        addShoeModel(value) {
             if (!this.shoeModel) {
                 this.shoeModel = true
+                this.colorModel = value.shoeRid
+                this.idModel = value.shoeId
             } else {
                 this.$confirm('确认上传鞋款？', '提示', {
                     confirmButtonText: '确定',
@@ -333,9 +329,9 @@ export default {
                     if (this.orderForm.colorId == '') {
                         ElMessage.warning('请选择鞋款颜色')
                     } else {
-                        // 更换上传鞋款的路由
+                        this.orderForm.shoeId = this.idModel
                         const response = await axios.post(
-                            `${this.$apiBaseUrl}//shoemanage/addshoetype`,
+                            `${this.$apiBaseUrl}/shoemanage/addshoetype`,
                             this.orderForm
                         )
                         if (response.status === 200) {
@@ -350,6 +346,8 @@ export default {
                                 shoeDesigner: '',
                                 shoeAdjuster: ''
                             }
+                            this.colorModel = ''
+                            this.idModel = ''
                             this.getAllShoes()
                         }
                     }
