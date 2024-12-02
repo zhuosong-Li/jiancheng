@@ -34,7 +34,6 @@
                     align="center">
                     <template #default="scope">
                         <el-image :src="scope.row.shoeImage" style="width: 150px; height: 100px;"/>
-                        {{ scope.row.shoeImage }}
                     </template>
                 </el-table-column>
                 <el-table-column

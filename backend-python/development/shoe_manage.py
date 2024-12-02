@@ -10,10 +10,9 @@ shoe_manage_bp = Blueprint("shoe_manage_bp", __name__)
 @shoe_manage_bp.route("/shoemanage/uploadshoeimage", methods=["POST"])
 def upload_shoe_image():
     print(request.form)
-    shoe_rid = request.form.get("shoeRid")
-    shoe_id = request.form.get('shoeId')
-    shoe_color_name = request.form.get("shoeColorName")
-    shoe_color_id = request.form.get("shoeColorId")
+    shoe_rid = request.form.get("shoeRId")
+    shoe_color = request.form.get("shoeColor")
+    print(shoe_rid)
     if "file" not in request.files:
         return jsonify({"error": "No file part"}), 500
     file = request.files["file"]
@@ -21,22 +20,20 @@ def upload_shoe_image():
     if file.filename == "":
         return jsonify({"error": "No selected file"}), 500
 
-    folder_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", shoe_rid, shoe_color_name)
+    folder_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", shoe_rid, shoe_color)
     if os.path.exists(folder_path) == False:
         os.makedirs(folder_path)
     file_path = os.path.join(folder_path, "shoe_image.jpg")
     file.save(file_path)
-    print("shoe_rid is " + str(shoe_rid))
     shoe_type = (
         db.session.query(Shoe, ShoeType, Color)
         .join(ShoeType, Shoe.shoe_id == ShoeType.shoe_id)
         .join(Color, ShoeType.color_id == Color.color_id)
         .filter(Shoe.shoe_rid == shoe_rid)
-        .filter(Color.color_id == shoe_color_id)
+        .filter(Color.color_name == shoe_color)
         .first()
     )
-    print(shoe_type)
-    db_path = os.path.join("shoe", shoe_rid, shoe_color_name, "shoe_image.jpg")
+    db_path = os.path.join("shoe", shoe_rid, shoe_color, "shoe_image.jpg")
     shoe_type.ShoeType.shoe_image_url = db_path
     db.session.commit()
     return jsonify({"message": "Shoe image uploaded successfully"})
@@ -132,7 +129,6 @@ def add_shoe_type():
 def add_shoe():
     shoe_rid = request.json.get("shoeRid")
     shoe_desinger = request.json.get("shoeDesigner")
-    shoe_department_id = request.json.get("shoeDepartmentId")
     existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_rid == shoe_rid).first()
     if existing_shoe:
         return jsonify({"error": "shoe_rid already exists"}), 200
@@ -140,7 +136,6 @@ def add_shoe():
         shoe_entity = Shoe()
         shoe_entity.shoe_rid = shoe_rid
         shoe_entity.shoe_designer = shoe_desinger
-        shoe_entity.shoe_department_id = shoe_department_id
         db.session.add(shoe_entity)
         db.session.commit()
         return jsonify({"message": "shoe added"}), 200
@@ -151,12 +146,10 @@ def edit_shoe():
     shoe_id = request.json.get("shoeId")
     shoe_rid = request.json.get("shoeRid")
     shoe_designer = request.json.get("shoeDesigner")
-    shoe_department_id = request.json.get("shoeDepartmentId")
     existing_shoe = db.session.query(Shoe).filter(Shoe.shoe_id == shoe_id).first()
     if existing_shoe:
         existing_shoe.shoe_rid = shoe_rid
         existing_shoe.shoe_designer = shoe_designer
-        existing_shoe.shoe_department_id = shoe_department_id
         db.session.commit()
         return jsonify({"message": "edit shoe OK"}), 200
     else:
