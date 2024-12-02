@@ -45,9 +45,11 @@ def create_new_order():
 	customer_id = order_info["customerId"]
 	order_start_date = order_info["orderStartDate"]
 	order_end_date = order_info["orderEndDate"]
+	# 订单对应下发业务经理, 应该为staff_id
+	supervisor_id = order_info['supervisorId']
 	# new order status should be fixed
 	order_status = NEW_ORDER_STATUS
-	order_salesman = order_info["salesman"]
+	order_salesman_id = order_info["salesmanId"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
 
@@ -63,9 +65,10 @@ def create_new_order():
     	customer_id = customer_id,
     	start_date = order_start_date,
     	end_date = order_end_date,
-    	salesman = order_salesman,
+    	salesman_id = order_salesman_id,
     	production_list_upload_status="0",
-    	amount_list_upload_status="0"
+    	amount_list_upload_status="0",
+		supervisor_id = supervisor_id
     	)
 
 	db.session.add(new_order)
@@ -139,13 +142,16 @@ def create_new_order():
 		order_shoe_id = shoe_id_to_order_shoe_id[shoe_id]
 		quantity_mapping = shoe_type["quantityMapping"]
 		batch_info = shoe_type["orderShoeTypeBatchInfo"]
+		#业务部改动 客户颜色
+		customer_color_name = shoe_type["customerColorName"]
 		existing_entity = OrderShoeType.query.filter_by(
 			order_shoe_id = order_shoe_id,
 			shoe_type_id = shoe_type_id).first()
 		if not existing_entity:
 			new_entity = OrderShoeType(
 				order_shoe_id = order_shoe_id,
-				shoe_type_id = shoe_type_id)
+				shoe_type_id = shoe_type_id,
+				customer_color_name = customer_color_name)
 			db.session.add(new_entity)
 			db.session.flush()
 		else:
@@ -226,14 +232,14 @@ def order_price_update():
 		new_event = Event(staff_id = staff_id, handle_time = cur_time, operation_id = NEW_ORDER_STEP_OP, event_order_id = order_id)
 		processor: EventProcessor = current_app.config["event_processor"]
 		processor.processEvent(new_event)
-	
+	db.session.commit()
+
 	# find all orderShoeTypes belong to this order
 	# db.session.query(OrderShoeType)
 	# .filter(OrderShoeType.order_shoe_type_id == )
 	# sync_order_shoe_status(list(set(unit_price_form.keys()).union(set(currency_type_form.keys()))))
 	time_t = time.time()
 	print("time taken is update price is" + str(time_t - time_s))
-	db.session.commit()
 	return jsonify({'msg':"ok"}), 200
 
 

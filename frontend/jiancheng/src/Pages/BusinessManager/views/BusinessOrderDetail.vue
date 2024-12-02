@@ -438,6 +438,8 @@ export default {
                         orderShoeType.shoeTypeBatchData.unitPrice
                     this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] =
                         orderShoeType.shoeTypeBatchData.currencyType
+                    // bad fix TODO
+                    this.orderCurrencyUnit = orderShoeType.shoeTypeBatchData.currencyType
                     this.unitPriceAccessMapping[orderShoeType.orderShoeTypeId] =
                         orderShoeType.shoeTypeBatchData.unitPrice == 0
                     this.currencyTypeAccessMapping[orderShoeType.orderShoeTypeId] =
