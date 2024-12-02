@@ -516,6 +516,17 @@ def get_display_orders_manager():
         order, customer, order_status, order_status_reference = entity
         formatted_start_date = order.start_date.strftime("%Y-%m-%d")
         formatted_end_date = order.end_date.strftime("%Y-%m-%d")
+        order_status_message = "N/A"
+        if order_status_reference and order_status:
+            order_status_message = order_status_reference.order_status_name
+            if order_status.order_current_status == ORDER_CREATION_STATUS:
+                if order_status.order_status_value != None and order_status.order_status_value == 0:
+                    order_status_message += " \n未填写财务信息"
+                elif order_status.order_status_value != None and order_status.order_status_value == 1:
+                    order_status_message += " \n已填写 待下发"
+        if order.production_list_upload_status != PACKAGING_SPECS_UPLOADED:
+            order_status_message += "\n包装材料待上传"
+                
         result.append(
             {
                 "orderDbId":order.order_id,
@@ -525,54 +536,14 @@ def get_display_orders_manager():
                 "customerBrand":customer.customer_brand,
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,
-                "orderStatus": (
-                    order_status_reference.order_status_name
-                    if order_status_reference
-                    else "N/A"
-                ),
+                "orderStatus": order_status_message,
+                "orderStatusVal":order_status.order_current_status,
             }
         )
     return jsonify(result)
 
 
-#业务经理显示所有订单API
-#  TODO: 重构url名称 getbusinessdisplayorderbymanagerall或者
-@order_bp.route("/order/getbusinessdisplayorders", methods=["GET"])
-def get_display_orders():
-    entities = (
-        db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
-        .join(Customer, Order.customer_id == Customer.customer_id)
-        .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
-        .outerjoin(
-            OrderStatusReference,
-            OrderStatus.order_current_status == OrderStatusReference.order_status_id,
-        )
-        .order_by (Order.start_date.desc())
-        .all()
-    )
-    result = []
-    for entity in entities:
-        order, customer, order_status, order_status_reference = entity
-        formatted_start_date = order.start_date.strftime("%Y-%m-%d")
-        formatted_end_date = order.end_date.strftime("%Y-%m-%d")
-        result.append(
-            {
-                "orderDbId":order.order_id,
-                "orderRid": order.order_rid,
-                "orderCid": order.order_cid,
-                "customerName": customer.customer_name,
-                "customerBrand":customer.customer_brand,
-                "orderStartDate": formatted_start_date,
-                "orderEndDate": formatted_end_date,
-                "orderStatus": (
-                    order_status_reference.order_status_name
-                    if order_status_reference
-                    else "N/A"
-                ),
-            }
-        )
-    return jsonify(result)
-
+# TODO delete
 @order_bp.route("/order/getallorders", methods=["GET"])
 def get_all_orders():
     entities = (

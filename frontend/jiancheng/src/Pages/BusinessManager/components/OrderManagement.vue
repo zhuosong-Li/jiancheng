@@ -475,6 +475,16 @@
                     ></el-input>
                 </template>
             </el-table-column>
+
+            <el-table-column label="添加客户鞋型颜色名称">
+                <template #default="scope">
+                    <el-input
+                        size="default"
+                        v-model="scope.row.customerColorName"
+                    ></el-input>
+                </template>
+            </el-table-column>
+
         </el-table>
         <!-- <el-row :gutter="20">
             <el-table :data="customerDisplayBatchData" border stripe height="500">
@@ -738,6 +748,7 @@ export default {
                 orderShoeTypes: [],
                 batchInfoQuantity: [],
                 customerShoeName: {},
+                customerShoeColorName: {},
                 //新参数 应该为被下发经理用户的staff_id
                 supervisorId:'',
                 flag: false,
@@ -910,6 +921,7 @@ export default {
             }
         },
         openAddBatchInfoDialog(row) {
+            console.log(row)
             this.curShoeTypeId = row.shoeTypeId
             this.addBatchInfoDialogVis = true
             const idField = 'packagingInfoId'
@@ -1005,6 +1017,7 @@ export default {
                 item.quantityMapping = {}
                 item.amountMapping = {}
                 this.newOrderForm.customerShoeName[item.shoeRid] = ''
+                this.newOrderForm.customerShoeColorName[item.shoeRid] = ''
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
             // console.log(this.newOrderForm)
@@ -1602,7 +1615,7 @@ export default {
                                 }
                             )
                             if (response.status == 200) {
-                                ElMessage.sucess('创建订单成功')
+                                ElMessage.success('创建订单成功')
                                 loadingInstance.close()
                                 this.orderCreationSecondInfoVis = false
                                 this.newOrderForm = {
