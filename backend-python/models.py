@@ -665,7 +665,7 @@ class Shoe(db.Model):
     shoe_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     shoe_rid = db.Column(db.String(60), nullable=False)
     shoe_designer = db.Column(db.String(10), nullable=True)
-    shoe_department_id = db.Column(db.String(10), nullable=True)
+
     def __repr__(self):
         return f"<Shoe(shoe_id={self.shoe_id})>"
 
