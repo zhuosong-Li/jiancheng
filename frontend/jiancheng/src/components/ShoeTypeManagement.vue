@@ -130,7 +130,7 @@
         <el-upload :action="`${this.$apiBaseUrl}/shoemanage/uploadshoeimage`" :on-success="handleUploadSuccess"
             :on-error="handleUploadError" :on-exceed="handleUploadExceed" :headers="uploadHeaders"
             :list-type="'picture-card'" :auto-upload="false"
-            :data="{ shoeRId: currentShoeImageId, shoeColor: currentShoeColor }" :limit="1" :file-list="fileList"
+            :data="{ shoeRid: this.currentShoeImageId, shoeColorName: this.currentShoeColor, shoeColorId:this.currentShoeColorId }" :limit="1" :file-list="fileList"
             accept="image/*" ref="imageReUpload" :drag="true"></el-upload>
         <template #footer>
             <span>
@@ -151,7 +151,8 @@ export default {
         return {
             token: localStorage.getItem('token'),
             currentShoeImageId: '',
-            currentShoeColor: 0,
+            currentShoeColor: '',
+            currentShoeColorId: 0,
             fileList: [],
             orderForm: {
                 shoeId: '',
@@ -200,6 +201,7 @@ export default {
             // new api call
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`)
             this.shoeTableData = response.data
+            console.log(this.shoeTableData)
         },
         async getFilterShoes() {
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, {
@@ -222,8 +224,10 @@ export default {
         },
         openReUploadImageDialog(row) {
             this.reUploadImageDialogVis = true
-            this.currentShoeImageId = row.shoeRId
-            this.currentShoeColor = row.shoeColor
+            this.currentShoeImageId = row.shoeRid
+            this.currentShoeColor = row.colorName
+            this.currentShoeColorId = row.colorId
+            console.log(row)
         },
         handleUploadSuccess() {
             this.$message({

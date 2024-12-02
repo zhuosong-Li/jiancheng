@@ -14,6 +14,7 @@ from shared_apis.department import department_bp
 from usage_calculation.usage_calculation import usage_calculation_bp
 from business.order_import import order_import_bp
 from business.order_create import order_create_bp
+from business.order_export import order_export_bp
 from business.batch_info_type import batch_type_bp
 from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
@@ -74,3 +75,4 @@ def register_blueprints():
     app.register_blueprint(production_status_nodes_bp)
     app.register_blueprint(batch_type_bp)
     app.register_blueprint(head_manager_bp)
+    app.register_blueprint(order_export_bp)
