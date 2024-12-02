@@ -153,6 +153,9 @@
             <el-form-item label="客户订单号">
                 <el-input v-model="newOrderForm.orderCid"></el-input>
             </el-form-item>
+            <el-form-item label="客户方颜色">
+                <el-input v-model="newOrderForm.customerColorName"></el-input>
+            </el-form-item>
             <el-form-item
                 label="请选择客户"
                 prop="customerName"
@@ -278,6 +281,31 @@
                 ]"
             >
                 <el-input v-model="newOrderForm.salesman" disabled></el-input>
+            </el-form-item>
+            
+            <el-form-item
+                label="选择审批经理"
+                prop="supervisorId"
+                :rules="[
+                    {
+                        required: true,
+                        message: '内容不能为空',
+                        trigger: ['blur']
+                    }
+                ]"
+            >
+                <el-select
+                    v-model="newOrderForm.supervisorId"
+                    filterable
+                    placeholder="请选择下发经理"
+                >
+                    <el-option
+                        v-for="item in this.departmentNameList"
+                        :key="item.staffId"
+                        :label="item.staffName"
+                        :value="item.staffId"
+                    ></el-option>
+                </el-select>
             </el-form-item>
 
             <el-row :gutter="20">
@@ -638,6 +666,7 @@ export default {
             orderData: {},
             orderDocData: {},
             customerNameList: [],
+            departmentNameList: [],
             customerBrandList: [],
             customerBatchData: [],
             customerDisplayBatchData: [],
@@ -711,7 +740,8 @@ export default {
                 customerShoeName: {},
                 //新参数 应该为被下发经理用户的staff_id
                 supervisorId:'',
-                flag: false
+                flag: false,
+                customerColorName: ''
             },
             batchForm: {
                 customerId: '',
@@ -860,16 +890,7 @@ export default {
             this.newOrderForm.orderStartDate = this.formatDateToYYYYMMDD(new Date())
             this.newOrderForm.salesman = this.userName
             this.newOrderForm.salesmanId = this.staffId
-            // this.$refs.startdatepicker.change()
             this.orderCreationInfoVis = true
-            // const array = [];
-            // for (let index = 0; index < this.shoeTableData.length; index++) {
-            //     array[index] = this.shoeTableData[index];
-            //     for (let i = 0; i < array[index].shoeTypeData.length; i++) {
-            //         array[index].shoeTypeData[i].shoeRid = this.shoeTableData[index].shoeRid
-            //     }
-            // }
-            // this.shoeTableDisplayData = array
             this.shoeTableDisplayData = this.shoeTableData
             console.log(this.shoeTableDisplayData);
             
@@ -1122,7 +1143,10 @@ export default {
             return
         },
         async getAllOrders() {
-            const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
+            // const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
+            const response = await axios.get(`${this.$apiBaseUrl}/order/getbusinessdisplayorderbyuser`, {
+                currentStaffId: this.staffId
+            })
             this.unfilteredData = response.data
             this.displayData = this.unfilteredData
             this.totalItems = this.unfilteredData.length
@@ -1577,26 +1601,34 @@ export default {
                                     orderInfo: this.newOrderForm
                                 }
                             )
-                            loadingInstance.close()
-                            this.orderCreationSecondInfoVis = false
-                            this.newOrderForm = {
-                                orderRId: '',
-                                orderCid: '',
-                                customerName: '',
-                                customerBrand: '',
-                                customerId: null,
-                                batchInfoTypeName: '',
-                                batchInfoTypeId: '',
-                                orderStartDate: '',
-                                orderEndDate: '',
-                                status: '',
-                                salesman: '',
-                                orderShoeTypes: [],
-                                batchInfoQuantity: [],
-                                customerShoeName: {},
-                                flag: false
+                            if (response.status == 200) {
+                                ElMessage.sucess('创建订单成功')
+                                loadingInstance.close()
+                                this.orderCreationSecondInfoVis = false
+                                this.newOrderForm = {
+                                    orderRId: '',
+                                    orderCid: '',
+                                    customerName: '',
+                                    customerBrand: '',
+                                    customerId: null,
+                                    batchInfoTypeName: '',
+                                    batchInfoTypeId: '',
+                                    orderStartDate: '',
+                                    orderEndDate: '',
+                                    status: '',
+                                    salesman: '',
+                                    orderShoeTypes: [],
+                                    batchInfoQuantity: [],
+                                    customerShoeName: {},
+                                    flag: false,
+                                    salesmanId: '',
+                                    customerColorName: ''
+                                }
+                                this.getAllOrders()
+                            } else {
+                                ElMessage.error('创建订单失败，请稍后重试')
                             }
-                            this.getAllOrders()
+                            
                         })
                     }
                 }
@@ -1623,6 +1655,14 @@ export default {
                 this.orderNotInCurStatus = ''
             }
             this.filterDisplayOrder()
+        }
+    },
+    watch: {
+        async orderCreationInfoVis(newValue, oldValue){
+            if (newValue) {
+                const response = await axios.get(`${this.$apiBaseUrl}/general/getbusinessmanagers`)
+                this.departmentNameList = response.data
+            }
         }
     }
 }

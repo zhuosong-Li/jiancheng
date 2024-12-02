@@ -24,7 +24,7 @@ def get_all_departments():
 #业务经理查询接口
 @department_bp.route("/general/getbusinessmanagers", methods=["GET"])
 def get_business_managers():
-    business_managers = (db.session.query(Staff).filter_by(Staff.character_id == BUSINESS_MANAGER_CHARACTER).all())
+    business_managers = (db.session.query(Staff).filter_by(character_id = BUSINESS_MANAGER_CHARACTER).all())
     result = []
     for business_manager in business_managers:
         result.append(

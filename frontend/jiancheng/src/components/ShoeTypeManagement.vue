@@ -39,6 +39,7 @@
                 </el-table-column>
                 <el-table-column prop="shoeRid" label="鞋型编号" width="90px"></el-table-column>
                 <el-table-column prop="shoeDesigner" label="设计师"></el-table-column>
+                <el-table-column prop="shoeDepartmentId" label="设计部门"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" @click="openEditShoeDialog(scope.row)">编辑</el-button>
@@ -83,6 +84,9 @@
             <el-form-item label="设计师">
                 <el-input v-model="orderForm.shoeDesigner"></el-input>
             </el-form-item>
+            <el-form-item label="设计部门">
+                <el-input v-model="orderForm.shoeDepartmentId"></el-input>
+            </el-form-item>
         </el-form>
         <template #footer>
             <span>
@@ -117,6 +121,9 @@
             </el-form-item>
             <el-form-item label="设计师">
                 <el-input v-model="orderForm.shoeDesigner" :disabled="this.userRole == 21 ? true : false"></el-input>
+            </el-form-item>
+            <el-form-item label="设计部门">
+                <el-input v-model="orderForm.shoeDepartmentId" :disabled="this.userRole == 21 ? true : false"></el-input>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -159,7 +166,8 @@ export default {
                 shoeRid: '',
                 shoeDesigner: '',
                 shoeAdjuster: '',
-                colorId: ''
+                colorId: '',
+                shoeDepartmentId: ''
             },
             colorForm: {
                 colorName: '',
@@ -201,7 +209,6 @@ export default {
             // new api call
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoesnew`)
             this.shoeTableData = response.data
-            console.log(this.shoeTableData)
         },
         async getFilterShoes() {
             const response = await axios.get(`${this.$apiBaseUrl}/shoe/getallshoes`, {
@@ -215,7 +222,8 @@ export default {
                 shoeId: '',
                 shoeRid: '',
                 shoeDesigner: '',
-                shoeAdjuster: ''
+                shoeAdjuster: '',
+                shoeDepartmentId: ''
             }
         },
         openEditShoeDialog(row) {
@@ -227,7 +235,6 @@ export default {
             this.currentShoeImageId = row.shoeRid
             this.currentShoeColor = row.colorName
             this.currentShoeColorId = row.colorId
-            console.log(row)
         },
         handleUploadSuccess() {
             this.$message({
@@ -287,7 +294,8 @@ export default {
                         shoeId: '',
                         shoeRid: '',
                         shoeDesigner: '',
-                        shoeAdjuster: ''
+                        shoeAdjuster: '',
+                        shoeDepartmentId: ''
                     }
                     this.getAllShoes()
                 }
@@ -313,7 +321,8 @@ export default {
                         shoeId: '',
                         shoeRid: '',
                         shoeDesigner: '',
-                        shoeAdjuster: ''
+                        shoeAdjuster: '',
+                        shoeDepartmentId: ''
                     }
                     this.getAllShoes()
                 }
@@ -348,7 +357,8 @@ export default {
                                 shoeId: '',
                                 shoeRid: '',
                                 shoeDesigner: '',
-                                shoeAdjuster: ''
+                                shoeAdjuster: '',
+                                shoeDepartmentId: ''
                             }
                             this.colorModel = ''
                             this.idModel = ''
