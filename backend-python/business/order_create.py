@@ -46,10 +46,14 @@ def create_new_order():
 	order_start_date = order_info["orderStartDate"]
 	order_end_date = order_info["orderEndDate"]
 	# 订单对应下发业务经理, 应该为staff_id
-	supervisor_id = order_info['supervisorId']
+	# TODO
+	supervisor_id = 24 
+	# order_info['supervisorId']
 	# new order status should be fixed
 	order_status = NEW_ORDER_STATUS
-	order_salesman_id = order_info["salesmanId"]
+	# TODO
+	order_salesman_id = 21
+	# order_info["salesmanId"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
 
@@ -143,7 +147,9 @@ def create_new_order():
 		quantity_mapping = shoe_type["quantityMapping"]
 		batch_info = shoe_type["orderShoeTypeBatchInfo"]
 		#业务部改动 客户颜色
-		customer_color_name = shoe_type["customerColorName"]
+		#TODO
+		customer_color_name = '客户颜色' 
+		# shoe_type["customerColorName"]
 		existing_entity = OrderShoeType.query.filter_by(
 			order_shoe_id = order_shoe_id,
 			shoe_type_id = shoe_type_id).first()

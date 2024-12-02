@@ -82,3 +82,96 @@ def change_password():
     
     return {"error": "Old password is incorrect"}, 400
 
+
+@user_bp.route("/user/createuser", methods=["POST"])
+def create_user():
+    data = request.get_json()
+    user_name = data.get("userName")
+    user_password = data.get("userPassword")
+    staff_id = data.get("staffId")
+    iv = data.get("iv")
+    print(data)
+    secret_key = "6f8e6f9178b12c08dce94bcf57b8df22"
+    new_pw = decrypt_password(user_password, iv, secret_key)
+    db_pw = hashlib.md5(new_pw.encode()).hexdigest()
+    existing = (db.session.query(User).filter(User.user_name == user_name).first())
+    if existing:
+        return {"error" : "user name exists"}, 400
+    else:
+        new_entity = User(user_name = user_name, user_password = db_pw, staff_id = staff_id)
+        db.session.add(new_entity)
+        db.session.commit()
+    return{"success":"new user added"}, 200
+
+@user_bp.route("/user/createstaff", methods=["POST"])
+def create_staff():
+    data = request.get_json()
+    staff_name = data.get("staffName")
+    character_id = data.get("characterId")
+    department_id = data.get("departmentId")
+    existing = (db.session.query(Staff).filter(Staff.staff_name == staff_name).first())
+    if existing:
+        return {"errror":"staff name exists"}, 400
+    else:
+        new_entity = Staff(staff_name = staff_name, character_id = character_id, department_id = department_id)
+        db.session.add(new_entity)
+        db.session.commit()
+    return {"success":"new staff added"}, 200
+
+@user_bp.route("/user/createcharacter", methods=["POST"])
+def create_character():
+    data = request.get_json()
+    character_name = data.get("characterName")
+    existing = (db.session.query(Character).filter(Character.character_name == character_name).first())
+    if existing:
+        return {"errror":"character name exists"}, 400
+    else:
+        new_entity = Character(character_name = character_name)
+        db.session.add(new_entity)
+        db.session.commit()
+    return {"success":"new character added"}, 200
+
+
+@user_bp.route('/user/deleteuser', methods=["POST"])
+def delete_user():
+    data = request.get_json()
+    user_id = data.get("userId")
+    existing = (db.session.query(User).filter(User.user_id == user_id).first())
+    if not existing:
+        return {"error":"user doesnt exist"}, 400
+    else:
+        db.session.delete(existing)
+        db.session.commit()
+        return {"success":"user deleted"}, 200
+#账号更换用户， 改变staffid
+@user_bp.route('/user/modifyaccountstaff', methods=["POST"])
+def modify_user_staff():
+    data = request.get_json()
+    user_id = data.get("userId")
+    new_staff_id = data.get("staffId")
+    existing = (db.session.query(User).filter(User.user_id == user_id).first())
+    if not existing:
+        return {"error":"user doesnt exist"}, 400
+    else:
+        existing.staff_id = new_staff_id
+        db.session.commit()
+        return {"success":"account holder staff modified"}, 200
+
+#用户角色变更 更改character id
+@user_bp.route('/user/modifiystaffcharacter', methods=["POST"])
+def modify_staff_character():
+    data = request.get_json()
+    staff_id = data.get("staffId")
+    new_character_id = data.get("characterId")
+    new_department_id = data.get("departmentId")
+    existing = (db.session.query(Staff).filter(Staff.staff_id == staff_id).first())
+    if not existing:
+        return {"error":"staff doesnt exist"}, 400
+    else:
+        existing.character_id = new_character_id
+        existing.department_id = new_department_id
+        db.sesison.commit()
+    return{"success":"staff character modified"}, 200
+
+
+
