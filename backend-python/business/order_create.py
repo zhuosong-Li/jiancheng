@@ -14,9 +14,9 @@ from api_utility import format_date
 
 from app_config import app, db
 
-
-from event_processor import EventProcessor
 from flask import current_app
+from event_processor import EventProcessor
+
 
 order_create_bp = Blueprint("order_create_bp", __name__)
 

@@ -5,7 +5,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from api_utility import to_snake, to_camel
 from constants import IN_PRODUCTION_ORDER_NUMBER
-from login.login import current_user
+from login.login import current_user, current_user_info
 import math
 from sqlalchemy import or_, text
 
@@ -35,7 +35,8 @@ order_bp = Blueprint("order_bp", __name__)
 ORDER_CREATION_STATUS = 6
 ORDER_IN_PROD_STATUS = 9
 PACKAGING_SPECS_UPLOADED = "2"
-
+BUSINESS_MANAGER_ROLE = 4
+BUSINESS_CLERK_ROLE = 21
 
 @order_bp.route("/ordershoe/getordershoebyorder", methods=["GET"])
 def get_order_shoe_by_order():
@@ -477,56 +478,30 @@ def get_order_shoe_sizes_info():
         )
 
     return jsonify(result)
-@order_bp.route("/order/getbusinessdisplayorderbystaff", methods=["GET"])
-# 如果用户非业务经理,显示当前用户添加的订单
-# 此信息在localstorage.getItem('staffid')
-def get_display_orders_clerk():
-    current_user_id = request.json.get("currentStaffId")
-    print(current_user_id)
-    entities = (
-        db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
-        .filter(Order.salesman_id == current_user_id)
-        .join(Customer, Order.customer_id == Customer.customer_id)
-        .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
-        .outerjoin(
-            OrderStatusReference,
-            OrderStatus.order_current_status == OrderStatusReference.order_status_id,
-        )
-        .order_by (Order.start_date.desc())
-        .all()
-    )
-    result = []
-    for entity in entities:
-        order, customer, order_status, order_status_reference = entity
-        formatted_start_date = order.start_date.strftime("%Y-%m-%d")
-        formatted_end_date = order.end_date.strftime("%Y-%m-%d")
-        result.append(
-            {
-                "orderDbId":order.order_id,
-                "orderRid": order.order_rid,
-                "orderCid": order.order_cid,
-                "customerName": customer.customer_name,
-                "customerBrand":customer.customer_brand,
-                "orderStartDate": formatted_start_date,
-                "orderEndDate": formatted_end_date,
-                "orderStatus": (
-                    order_status_reference.order_status_name
-                    if order_status_reference
-                    else "N/A"
-                ),
-            }
-        )
-    return jsonify(result)
 
 #业务经理显示被下发到自己的所有状态的订单
-#  TODO: 重构url名称 getbusinessdisplayorderbymanager或者
-@order_bp.route("/order/getbusinessdisplayorderbymanager", methods=["GET"])
+#如果用户非业务经理,显示当前用户添加的订单
+@order_bp.route("/order/getbusinessdisplayorderbyuser", methods=["GET"])
 def get_display_orders_manager():
-    current_user_id = request.json.get("currentStaffId")
-    print(current_user_id)
-    entities = (
+    current_user_role, current_user_id = current_user_info()
+    current_user_id = current_user_id
+    if current_user_role == BUSINESS_MANAGER_ROLE:
+        entities = (
+            db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
+            .filter(Order.supervisor_id == current_user_id)
+            .join(Customer, Order.customer_id == Customer.customer_id)
+            .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
+            .outerjoin(
+                OrderStatusReference,
+                OrderStatus.order_current_status == OrderStatusReference.order_status_id,
+            )
+            .order_by (Order.start_date.desc())
+            .all()
+        )
+    elif current_user_role == BUSINESS_CLERK_ROLE:
+        entities = (
         db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
-        .filter(Order.supervisor_id == current_user_id)
+        .filter(Order.salesman_id == current_user_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
         .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
         .outerjoin(
