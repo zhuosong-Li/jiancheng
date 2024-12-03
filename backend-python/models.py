@@ -228,6 +228,7 @@ class MaterialStorage(db.Model):
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    department_id = db.Column(db.Integer)
 
     craft_name = db.Column(db.String(60), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
@@ -824,6 +825,9 @@ class SizeMaterialStorage(db.Model):
     material_outsource_date = db.Column(db.Date, nullable=True)
     material_id = db.Column(
         db.BigInteger,
+    )
+    department_id = db.Column(
+        db.Integer,
     )
     size_material_color = db.Column(db.String(40), default='', nullable=True)
     order_shoe_id = db.Column(db.BigInteger)
