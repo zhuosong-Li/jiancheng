@@ -222,7 +222,7 @@
                             >
                             </el-input>
                             <el-button
-                                v-if="isShowBtn(scope.row.shoeCid)"
+                                v-if="isShowBtn2(scope.row.shoeCid)"
                                 type="primary"
                                 @click="updateCustomInfo('customShoeId', scope.row)"
                                 style="margin-left: 15px"
@@ -243,7 +243,7 @@
                                 >添加备注
                             </el-button>
 
-                            <el-text v-if="scope.row.orderShoeRemarkExist">{{
+                            <el-text v-if="scope.row.orderShoeRemarkExist" style="display: inline-block;">{{
                                 scope.row.orderShoeRemarkRep
                             }}</el-text>
                             <el-button
@@ -251,7 +251,7 @@
                                 type="warning"
                                 size="default"
                                 @click="openEditRemarkDialog(scope.row)"
-                                style="margin-left: 20px; margin-top: -20px"
+                                style="margin-left: 20px"
                             >
                                 编辑备注
                             </el-button>
@@ -652,7 +652,18 @@ export default {
             if (value === '') {
                 return true
             } else {
-                if (this.role == 21) {
+                if (this.role == 21 && this.isEdit) {
+                    return false
+                } else {
+                    return true
+                }
+            }
+        },
+        isShowBtn2(value) {
+            if (value === '') {
+                return true
+            } else {
+                if (this.role == 21 && this.isCellEdit) {
                     return false
                 } else {
                     return true
@@ -672,11 +683,9 @@ export default {
                             })
                             if (response.status === 200) {
                                 ElMessage.success('更新成功，正在重新加载数据')
-                                this.isEdit = false
-                                this.isCellEdit = false 
-                                this.btnContent1 = '修改数据'
-                                this.btnContent2 = '修改数据'
-                                this.getOrderInfo()
+                                setTimeout(()=>{
+                                    location.reload(location.href)
+                                }, 500)
                             } else {
                                 ElMessage.error('更新失败')
                             }
@@ -688,11 +697,9 @@ export default {
                             })
                             if (response.status === 200) {
                                 ElMessage.success('更新成功，正在重新加载数据')
-                                this.isEdit = false
-                                this.isCellEdit = false 
-                                this.btnContent1 = '修改数据'
-                                this.btnContent2 = '修改数据'
-                                this.getOrderInfo()
+                                setTimeout(()=>{
+                                    location.reload(location.href)
+                                }, 500)
                             } else {
                                 ElMessage.error('更新失败')
                             }

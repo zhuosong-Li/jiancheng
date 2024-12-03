@@ -5,12 +5,12 @@
         >
     </el-row>
     <el-row :gutter="10" style="margin-top: 20px">
-        <el-col :span="2" :offset="0">
-            <el-button size="default" type="primary" @click="openCreateOrderDialog"
-                >创建订单</el-button
-            >
-        </el-col>
-
+        <el-button size="default" type="primary" @click="openCreateOrderDialog"
+            >创建订单</el-button
+        >
+        <el-button size="default" type="primary" @click="displayContent" v-if="this.userRole == 21 ? false : true"
+            >{{buttonText}}</el-button
+        >
         <el-col :span="2" :offset="0"
             ><el-input
                 v-model="orderRidFilter"
@@ -805,7 +805,9 @@ export default {
                     }
                 }
             ],
-            radio: 'all'
+            radio: 'all',
+            buttonText: '查看所有订单',
+            buttonFlag: true
         }
     },
     computed: {
@@ -964,6 +966,11 @@ export default {
                     const result = await axios.delete(`${this.$apiBaseUrl}/order/deleteorder`, {
                         params: { orderId: row.orderDbId }
                     })
+                    if (result.status === 200) {
+                        ElMessage.success('订单删除成功')
+                    } else {
+                        ElMessage.error('订单删除失败')
+                    }
                 })
                 .then(async () => {
                     this.getAllOrders()
@@ -1159,7 +1166,6 @@ export default {
             this.unfilteredData = response.data
             this.displayData = this.unfilteredData
             this.totalItems = this.unfilteredData.length
-            console.log(response)
         },
         // async getAllOrderStatus() {
         //     const response = await axios.get(`${this.$apiBaseUrl}/order/getallorderstatus`)
@@ -1247,12 +1253,6 @@ export default {
             this.indexToFilter.forEach((index) => this.filterOrderByFilterType(index + 1))
             this.filterOrderByStatus()
             this.totalItems = this.displayData.length
-            // this.orderCidFilter,
-            // this.orderRidFilter,
-            // this.orderCustomerNameFilter,
-            // this.orderCustomerBrandFilter,
-            // this.orderStartDateFilter,
-            // this.orderEndDateFilter,
             return
         },
         filterOrderByStatus() {
@@ -1663,6 +1663,26 @@ export default {
                 this.orderNotInCurStatus = ''
             }
             this.filterDisplayOrder()
+        },
+        async displayContent () {
+            if (this.buttonFlag) {
+                this.buttonText = '需我审批订单'
+                const response = await axios.get(`${this.$apiBaseUrl}/order/getallorders`)
+                this.unfilteredData = response.data
+                this.displayData = this.unfilteredData
+                this.totalItems = this.unfilteredData.length
+                this.radio = 'all'
+            } else {
+                this.buttonText = '查看所有订单'
+                const response = await axios.get(`${this.$apiBaseUrl}/order/getbusinessdisplayorderbyuser`, {
+                    currentStaffId: this.staffId
+                })
+                this.unfilteredData = response.data
+                this.displayData = this.unfilteredData
+                this.totalItems = this.unfilteredData.length
+                this.radio = 'all'
+            }
+            this.buttonFlag = !this.buttonFlag
         }
     },
     watch: {

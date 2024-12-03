@@ -5,6 +5,19 @@
         >
     </el-row>
     <el-row :gutter="20">
+        <el-col :span="4" :offset="0" style="white-space: nowrap">
+            客户名称：
+            <el-input v-model="searchName" placeholder="请输入要筛选的客户名称" clearable></el-input>
+        </el-col>
+        <el-col :span="4" :offset="2" style="white-space: nowrap">
+            客户商标：
+            <el-input v-model="searchBrand" placeholder="请输入要筛选的客户商标" clearable></el-input>
+        </el-col>
+        <el-col :span="2" :offset="1" style="white-space: nowrap">
+            <el-button type="primary" @click="getFilterData">筛选</el-button>
+        </el-col>
+    </el-row>
+    <el-row :gutter="20">
         <el-col :span="24" :offset="0">
             <el-table
                 :data="customerTableData"
@@ -272,6 +285,9 @@ export default {
             currentBatchType:{},
             userName:'',
             userRole:'',
+            searchName: '',
+            searchBrand: '',
+            filterArray: []
         }
     },
     computed:
@@ -299,6 +315,7 @@ export default {
         async getCustomerList() {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerdetails`)
             this.customerTableData = response.data
+            this.filterArray = response.data
         },
         async getCustomerBatchInfo(customerId) {
             const response = await axios.get(`${this.$apiBaseUrl}/customer/getcustomerbatchinfo`,{
@@ -488,7 +505,28 @@ export default {
                 const response = await axios.post(`${this.$apiBaseUrl}/customer/addcustomerbatchinfo`, this.batchForm)
             }).then( async () => {
                 this.getCustomerBatchInfo(this.batchDialogCurCustomerId)
-                this.resetBatchForm()})
+                this.resetBatchForm()
+                this.batchForm ={
+                    customerId:'',
+                    packagingInfoName: '',
+                    packagingInfoLocale: '',
+                    batchInfoTypeId:'',
+                    size34Ratio: 0,
+                    size35Ratio: 0,
+                    size36Ratio: 0,
+                    size37Ratio: 0,
+                    size38Ratio: 0,
+                    size39Ratio: 0,
+                    size40Ratio: 0,
+                    size41Ratio: 0,
+                    size42Ratio: 0,
+                    size43Ratio: 0,
+                    size44Ratio: 0,
+                    size45Ratio: 0,
+                    size46Ratio: 0,
+                    totalQuantityRatio:0
+                }
+            })
             this.addCustomerBatchDialogVisible = false
         },
         submitEditCustomerBatchForm(){
@@ -556,8 +594,26 @@ export default {
                     message: '已取消修改'
                 })
             })
+        },
+        getFilterData() {
+            if (this.searchName !== '' || this.searchBrand !== '') {
+                this.customerTableData = this.filterArray.filter((item) => {
+                    if (this.searchName !== '' && this.searchBrand !== '') {
+                        return item.customerName.indexOf(this.searchName) !== -1 && item.customerBrand.indexOf(this.searchBrand) !== -1
+                    } else {
+                        if (this.searchName !== '') {
+                            return item.customerName.indexOf(this.searchName) !== -1
+                        }
+                        if (this.searchBrand !== '') {
+                            return item.customerBrand.indexOf(this.searchBrand) !== -1
+                        }
+                    }
+                    
+                })
+            } else {
+                this.customerTableData = this.filterArray
+            }
         }
-
     },
 }
 </script>

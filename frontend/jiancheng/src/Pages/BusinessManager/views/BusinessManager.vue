@@ -25,6 +25,9 @@
                         <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>配码种类管理</span>
                         </el-menu-item>
+                        <el-menu-item index="6" @click="handleMenuClick(6)">
+                            <span>订单导出</span>
+                        </el-menu-item>
                         <el-menu-item index="8" @click="handleMenuClick(8)">
                             <span>个人信息</span>
                         </el-menu-item>
@@ -50,6 +53,7 @@ import PersonalInfo from '@/components/PersonalInfo.vue';
 import axios from 'axios'
 import ShoeTypeManagement from '@/components/ShoeTypeManagement.vue';
 import BatchInfoTypeManagement from '../components/BatchInfoTypeManagement.vue';
+import OrderExport from '../components/OrderExport.vue';
 export default {
     components: {
         AllHeader,
@@ -57,7 +61,8 @@ export default {
         CustomerManagement,
         ShoeTypeManagement,
         BatchInfoTypeManagement,
-        PersonalInfo
+        PersonalInfo,
+        OrderExport
     },
     data() {
         return {
@@ -91,6 +96,9 @@ export default {
                     break
                 case 5:
                     this.currentComponent = "BatchInfoTypeManagement"
+                    break
+                case 6:
+                    this.currentComponent = "OrderExport"
                     break
                 case 8:
                     this.currentComponent = 'PersonalInfo'

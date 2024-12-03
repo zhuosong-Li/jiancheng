@@ -37,7 +37,7 @@
                         <el-button type="primary" size="default" @click="addShoeModel(props.row)">添加鞋款</el-button>
                     </template>
                 </el-table-column>
-                <el-table-column prop="shoeRid" label="鞋型编号" width="90px"></el-table-column>
+                <el-table-column prop="shoeRid" label="鞋型编号" width="300px"></el-table-column>
                 <el-table-column prop="shoeDesigner" label="设计师"></el-table-column>
                 <el-table-column prop="shoeDepartmentId" label="设计部门"></el-table-column>
                 <el-table-column label="操作">
@@ -270,6 +270,13 @@ export default {
             }
             this.getAllColors()
             this.addShoeColorDialogVis = false
+            
+            this.colorForm = {
+                colorName: '',
+                colorNameEN: '',
+                colorNameIT: '',
+                colorNameSP: ''
+            }
             // to do handle on success/ fail
             return
         },
