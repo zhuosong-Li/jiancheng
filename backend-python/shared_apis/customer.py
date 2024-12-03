@@ -103,7 +103,7 @@ def add_customer_batch_info():
     size_44_ratio = request.json.get("size44Ratio")
     size_45_ratio = request.json.get("size45Ratio")
     size_46_ratio = request.json.get("size46Ratio")
-    total_quantity_ratio = sum([int(single_ratio) for single_ratio in [size_34_ratio,size_35_ratio
+    total_quantity_ratio = sum([int(single_ratio) if single_ratio != '' else 0 for single_ratio in [size_34_ratio,size_35_ratio
                 ,size_36_ratio,size_37_ratio,size_38_ratio,size_39_ratio,
                 size_40_ratio,size_41_ratio,size_42_ratio,size_43_ratio,
                 size_44_ratio,size_45_ratio,size_46_ratio]])

@@ -153,9 +153,6 @@
             <el-form-item label="客户订单号">
                 <el-input v-model="newOrderForm.orderCid"></el-input>
             </el-form-item>
-            <el-form-item label="客户方颜色">
-                <el-input v-model="newOrderForm.customerColorName"></el-input>
-            </el-form-item>
             <el-form-item
                 label="请选择客户"
                 prop="customerName"
@@ -471,7 +468,7 @@
                 <template #default="scope">
                     <el-input
                         size="default"
-                        v-model="this.newOrderForm.customerShoeName[scope.row.shoeRId]"
+                        v-model="this.newOrderForm.customerShoeName[scope.row.shoeRid]"
                     ></el-input>
                 </template>
             </el-table-column>
@@ -752,7 +749,6 @@ export default {
                 //新参数 应该为被下发经理用户的staff_id
                 supervisorId:'',
                 flag: false,
-                customerColorName: ''
             },
             batchForm: {
                 customerId: '',
@@ -1016,8 +1012,8 @@ export default {
                 item.orderShoeTypeBatchInfo = []
                 item.quantityMapping = {}
                 item.amountMapping = {}
+                item.customerColorName = ''
                 this.newOrderForm.customerShoeName[item.shoeRid] = ''
-                this.newOrderForm.customerShoeColorName[item.shoeRid] = ''
             })
             this.getCustomerBatchInfo(this.newOrderForm.customerId)
             // console.log(this.newOrderForm)
@@ -1635,7 +1631,6 @@ export default {
                                     customerShoeName: {},
                                     flag: false,
                                     salesmanId: '',
-                                    customerColorName: ''
                                 }
                                 this.getAllOrders()
                             } else {

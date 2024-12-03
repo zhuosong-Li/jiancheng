@@ -22,6 +22,7 @@ def upload_shoe_image():
         return jsonify({"error": "No selected file"}), 500
 
     folder_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", shoe_rid, shoe_color_name)
+    print(folder_path)
     if os.path.exists(folder_path) == False:
         os.makedirs(folder_path)
     file_path = os.path.join(folder_path, "shoe_image.jpg")
@@ -117,15 +118,40 @@ def add_shoe_type():
         return jsonify({"message": "shoe type added except " + existing_color_str}), 200
 
 
-# @shoe_manage_bp.route("/shoemanage/deleteshoetype", methods=["DELETE"])
-# def delete_shoe_type():
-#     shoe_type_id = request.args.get("shoeTypeId")
-#     existing_shoe_type = (db.session.query(ShoeType).filter(ShoeType.shoe_type_id).first())
-#     if existing_shoe_type:
-#         db.sesison.delete(existing_shoe_type)
-#         return jsonify({"message":"delete shoe type OK"}), 200
-#     else:
-#         return
+@shoe_manage_bp.route("/shoemanage/deleteshoetype", methods=["POST"])
+def delete_shoe_type():
+    print(request.json)
+    shoe_type_id = request.json.get("shoeTypeId")
+    shoe_id = request.json.get("shoeId")
+    existing_shoe = (db.session.query(Shoe).filter_by(shoe_id = shoe_id).first())
+    existing_shoe_type = (db.session.query(ShoeType).filter(ShoeType.shoe_type_id == shoe_type_id).first())
+    if not existing_shoe_type or not existing_shoe:
+        return jsonify({"error":"delete shoe type failed, shoetype or shoe not found"}), 400
+    else:
+        shoe_rid = existing_shoe.shoe_rid
+        shoe_color_name = existing_shoe_type
+        path_to_img = existing_shoe_type.shoe_image_url
+        img_path = os.path.join(IMAGE_UPLOAD_PATH, path_to_img)
+        path_to_delete = '/'.join(path_to_img.split('/')[:-1])
+        folder_path = os.path.join(IMAGE_UPLOAD_PATH, path_to_delete)
+        print(folder_path)
+        if os.path.exists(img_path):
+            os.remove(img_path)
+        if os.path.exists(folder_path):
+            os.rmdir(folder_path)
+        if not os.path.exists(img_path) and not os.path.exists(folder_path):
+            print("delete dir successfully")
+            db.session.delete(existing_shoe_type)
+            db.session.commit()
+            return jsonify({"success":"entity and local path removed"}), 200
+        else:
+            print("delete dir failed")
+            return jsonify({"error": "removing path failed"}), 400
+    # if existing_shoe_type:
+    #     db.sesison.delete(existing_shoe_type)
+    #     return jsonify({"message":"delete shoe type OK"}), 200
+    # else:
+    #     return
 
 
 @shoe_manage_bp.route("/shoemanage/addshoe", methods=["POST"])
