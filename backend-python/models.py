@@ -43,6 +43,7 @@ class BomItem(db.Model):
     size_46_total_usage = db.Column(db.Integer, nullable=True)
     size_type = db.Column(db.String(1), nullable=False, default="E")
     material_second_type = db.Column(db.String(10), nullable=True)
+    craft_name = db.Column(db.String(60), nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -216,6 +217,7 @@ class MaterialStorage(db.Model):
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    craft_name = db.Column(db.String(30), nullable=True)
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
@@ -808,6 +810,7 @@ class SizeMaterialStorage(db.Model):
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    craft_name = db.Column(db.String(30), nullable=True)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
@@ -1090,3 +1093,37 @@ class ProductionInstructionItem(db.Model):
 
     def __repr__(self):
         return f"<ProductionInstructionItem(production_instruction_item_id={self.production_instruction_item_id})>"
+
+class CraftSheet(db.Model):
+    __tablename__ = "craft_sheet"
+    craft_sheet_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    craft_sheet_rid = db.Column(db.String(40), nullable=False)
+    order_shoe_id = db.Column(db.BigInteger, nullable=False)
+    cut_die_staff = db.Column(db.String(20), nullable=True)
+    production_remark = db.Column(db.String(50), nullable=True)
+    cutting_special_process = db.Column(db.String(150), nullable=True)
+    sewing_special_process = db.Column(db.String(150), nullable=True)
+    molding_special_process = db.Column(db.String(150), nullable=True)
+    post_processing_comment = db.Column(db.String(300), nullable=True)
+    oily_glue = db.Column(db.String(300), nullable=True)
+    cut_die_img_path = db.Column(db.String(100), nullable=True)
+    pic_note_img_path = db.Column(db.String(100), nullable=True)
+    def __repr__(self):
+        return f"<CraftSheet(craft_sheet_id={self.craft_sheet_id})>"
+
+class CraftSheetItem(db.Model):
+    __tablename__ = "craft_sheet_item"
+    craft_sheet_item_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    craft_sheet_id = db.Column(db.BigInteger, nullable=False)
+    material_id = db.Column(db.BigInteger, nullable=False)
+    department_id = db.Column(db.Integer, nullable=False)
+    material_specification = db.Column(db.String(50), nullable=True)
+    material_model = db.Column(db.String(50), nullable=True)
+    color = db.Column(db.String(20), nullable=True)
+    material_type = db.Column(db.String(1), nullable=False)
+    material_second_type = db.Column(db.String(10), nullable=False)
+    order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
+    remark = db.Column(db.String(50), nullable=True)
+    craft_name = db.Column(db.String(30), nullable=True)
+    def __repr__(self):
+        return f"<CraftSheetItem(craft_sheet_item_id={self.craft_sheet_item_id})>"

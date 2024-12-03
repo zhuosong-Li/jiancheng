@@ -584,6 +584,11 @@ def submit_purchase_divide_orders():
     order_shoe_id = order_info.OrderShoe.order_shoe_id
     order_rid = order_info.Order.order_rid
     order_shoe_rid = order_info.Shoe.shoe_rid
+    is_craft_existed = (
+        db.session.query(CraftSheet)
+        .filter(CraftSheet.order_shoe_id == order_shoe_id)
+        .first()
+    )
     materials_data = []
     query = (
         db.session.query(
@@ -638,6 +643,10 @@ def submit_purchase_divide_orders():
         color = bom_item.bom_item_color
         remark = bom_item.remark
         size_type = bom_item.size_type
+        if is_craft_existed:
+            craft_name = bom_item.craft_name
+        else:
+            craft_name = ""
         if purchase_divide_order.purchase_divide_order_type == "N":
             material_storage = MaterialStorage(
                 order_shoe_id=order_shoe_id,
@@ -651,6 +660,7 @@ def submit_purchase_divide_orders():
                 material_specification=material_specification,
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
+                craft_name=craft_name,
             )
             db.session.add(material_storage)
         elif purchase_divide_order.purchase_divide_order_type == "S":
@@ -670,6 +680,7 @@ def submit_purchase_divide_orders():
                 size_material_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
                 size_storage_type="E",
+                craft_name=craft_name,
             )
             for size in SHOESIZERANGE:
                 setattr(

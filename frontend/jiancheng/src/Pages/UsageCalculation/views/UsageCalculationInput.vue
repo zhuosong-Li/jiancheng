@@ -156,6 +156,8 @@
                         <el-table :data="bomTestData" border>
                             <el-table-column prop="materialType" label="材料类型">
                             </el-table-column>
+                            <el-table-column prop="materialDetailType" label="材料二级类型"></el-table-column>
+                            <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column prop="materialName" label="材料名称">
                             </el-table-column>
                             <el-table-column prop="materialModel" label="材料型号" />
@@ -163,7 +165,6 @@
                             </el-table-column>
                             <el-table-column prop="color" label="颜色"> </el-table-column>
                             <el-table-column prop="unit" label="单位"> </el-table-column>
-                            <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
                             <el-table-column prop="unitUsage" label="单位用量">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
@@ -177,14 +178,6 @@
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
                                         v-model="scope.row.approvalUsage" :step="0.001" size="default" />
-                                </template>
-                            </el-table-column>
-                            <el-table-column prop="useDepart" label="使用工段">
-                                <template #default="scope">
-                                    <el-select v-model="scope.row.useDepart" size="default" disabled>
-                                        <el-option v-for="item in departmentOptions" :key="item.value"
-                                            :label="item.label" :value="item.value"></el-option>
-                                    </el-select>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="remark" label="备注" />
@@ -243,6 +236,7 @@
                         <el-col :span="24">
                             <el-table :data="bomPreviewData" border style="width: 100%">
                                 <el-table-column prop="materialType" label="材料类型" />
+                                <el-table-column prop="materialDetailType" label="材料二级类型" />
                                 <el-table-column prop="materialName" label="材料名称" />
                                 <el-table-column prop="materialModel" label="材料型号" />
                                 <el-table-column prop="materialSpecification" label="材料规格" />
@@ -256,14 +250,6 @@
                                     </template>
                                 </el-table-column>
                                 <el-table-column prop="approvalUsage" label="核定用量">
-                                </el-table-column>
-                                <el-table-column prop="useDepart" label="使用工段">
-                                    <template #default="scope">
-                                        <el-select v-model="scope.row.useDepart" size="default" disabled>
-                                            <el-option v-for="item in departmentOptions" :key="item.value"
-                                                :label="item.label" :value="item.value"></el-option>
-                                        </el-select>
-                                    </template>
                                 </el-table-column>
                                 <el-table-column prop="remark" label="备注" />
                             </el-table>

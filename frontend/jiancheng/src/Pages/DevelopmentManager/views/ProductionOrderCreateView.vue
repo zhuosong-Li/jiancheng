@@ -196,6 +196,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -231,34 +242,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -293,6 +279,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -328,34 +325,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -389,6 +361,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -424,34 +407,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -485,6 +443,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -520,34 +489,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -581,6 +525,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -616,34 +571,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -676,6 +606,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -711,34 +652,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -772,6 +688,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -807,34 +734,9 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
                                     <el-table-column label="操作">
@@ -1063,6 +965,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -1098,36 +1011,14 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
+
+
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1160,6 +1051,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -1195,36 +1097,12 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1256,6 +1134,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-autocomplete v-if="
@@ -1291,36 +1180,12 @@
                                             " v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete v-if="
-                                                scope !== undefined &&
-                                                scope.row.manualSymbol === 1
-                                            " v-model="scope.row.supplierName" size="default"
-                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                    "></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1352,6 +1217,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-input v-model="scope.row.materialName" size="default"></el-input>
@@ -1378,30 +1254,13 @@
                                             <el-input v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-input v-model="scope.row.supplierName" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1433,6 +1292,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-input v-model="scope.row.materialName" size="default"></el-input>
@@ -1459,30 +1329,14 @@
                                             <el-input v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-input v-model="scope.row.supplierName" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
+
+
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1513,6 +1367,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-input v-model="scope.row.materialName" size="default"></el-input>
@@ -1539,30 +1404,14 @@
                                             <el-input v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-input v-model="scope.row.supplierName" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
+
+
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"
@@ -1594,6 +1443,17 @@
                                             <el-input v-model="scope.row.materialDetailType"></el-input>
                                         </template>
                                     </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete v-if="
+                                                scope !== undefined &&
+                                                scope.row.manualSymbol === 1
+                                            " v-model="scope.row.supplierName" size="default"
+                                                :fetch-suggestions="querySupplierNames" placeholder="输入厂家名称" @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                    "></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
                                     <el-table-column prop="materialName" label="材料名称">
                                         <template #default="scope">
                                             <el-input v-model="scope.row.materialName" size="default"></el-input>
@@ -1620,30 +1480,12 @@
                                             <el-input v-model="scope.row.unit" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-input v-model="scope.row.supplierName" size="default"></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select v-model="scope.row.useDepart" size="default">
-                                                <el-option v-for="item in departmentOptions" :key="item.value"
-                                                    :label="item.label" :value="item.value"></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
                                     <el-table-column prop="comment" label="备注">
                                         <template #default="scope">
-                                            <el-input v-model="scope.row.comment" size="default"></el-input>
+                                            <el-input type="textarea" v-model="scope.row.comment" size="default"></el-input>
                                         </template>
                                     </el-table-column>
-                                    <el-table-column label="是否提前采购">
-                                        <template #default="scope">
-                                            <el-switch v-model="scope.row.isPurchase" active-color="#13ce66"
-                                                inactive-color="#ff4949"></el-switch>
-                                        </template>
-                                    </el-table-column>
+
                                     <el-table-column label="操作">
                                         <template #default="scope">
                                             <el-button type="danger" size="small"

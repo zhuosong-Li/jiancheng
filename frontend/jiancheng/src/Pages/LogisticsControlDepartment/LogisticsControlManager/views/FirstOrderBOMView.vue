@@ -146,14 +146,6 @@
                                         @click="openSizeDialog(scope.row, scope.$index)">尺码用量填写</el-button>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="useDepart" label="使用工段">
-                                <template #default="scope">
-                                    <el-select v-model="scope.row.useDepart" size="default" disabled>
-                                        <el-option v-for="item in departmentOptions" :key="item.value"
-                                            :label="item.label" :value="item.value"></el-option>
-                                    </el-select>
-                                </template>
-                            </el-table-column>
                             <el-table-column prop="remark" label="开发部备注">
                             </el-table-column>
                         </el-table>
@@ -398,6 +390,11 @@ export default {
         this.getAllShoeListInfo()
     },
     methods: {
+        filteredColumns(array) {
+            return this.shoeSizeColumns.filter(column =>
+                array.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
+            );
+        },
         async getAllDepartmentOptions() {
             const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data
