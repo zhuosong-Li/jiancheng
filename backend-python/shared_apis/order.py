@@ -4,11 +4,15 @@ from app_config import db
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from api_utility import to_snake, to_camel
-from constants import IN_PRODUCTION_ORDER_NUMBER
 from login.login import current_user, current_user_info
 import math
+import os
 from sqlalchemy import or_, text
+from sqlalchemy import or_, text
+from datetime import datetime
 
+from constants import IN_PRODUCTION_ORDER_NUMBER
+from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
 from models import (
     Order,
     OrderShoe,
@@ -28,8 +32,6 @@ from models import (
     PackagingInfo,
     BatchInfoType
 )
-from sqlalchemy import or_, text
-from datetime import datetime
 
 order_bp = Blueprint("order_bp", __name__)
 ORDER_CREATION_STATUS = 6
@@ -604,7 +606,19 @@ def delete_order():
     order_id = request.args.get("orderId")
     order_entity = db.session.query(Order).filter_by(order_id = order_id).first()
     if not order_entity:
-        return jsonify({"message":"delete failed"}), 401
+        return jsonify({"message":"delete failed"}), 404
+    order_local_path = os.path.join(FILE_STORAGE_PATH, order_entity.order_rid) 
+    print(order_local_path)
+    if os.path.exists(order_local_path):
+        for file_name in os.listdir(order_local_path):
+            file_path = os.path.join(order_local_path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            else:
+                os.rmdir(file_path)
+        os.rmdir(order_local_path)
+    else:
+        print("path doesnt exist in server")
     order_shoe_entities = db.session.query(OrderShoe).filter_by(order_id = order_id).all()
     order_shoe_ids = [entity.order_shoe_id for entity in order_shoe_entities]
     order_shoe_type_entities = db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).all()

@@ -68,7 +68,7 @@ def create_new_order():
     	salesman_id = order_salesman_id,
     	production_list_upload_status="0",
     	amount_list_upload_status="0",
-		supervisor_id = supervisor_id
+		supervisor_id = 24
     	)
 
 	db.session.add(new_order)
@@ -331,6 +331,19 @@ def order_cid_update():
 	db.session.commit()
 	return jsonify({"msg":"ok"}), 200
 
+@order_create_bp.route("/ordercreate/updateorderrid", methods=['POST'])
+def order_rid_update():
+	order_id = request.json.get('orderId')
+	order_new_rid = request.json.get('orderNewRid')
+	order_entity = (db.session.query(Order)
+	.filter(Order.order_id == order_id)
+	.first())
+	if order_entity:
+		order_entity.order_rid = order_new_id
+		db.session.commit()
+		return jsonify({'msg':"update OK"}), 200
+	else:
+		return jsonify({'error': "order not found"}), 404
 
 @order_create_bp.route("/ordercreate/updateordershoecustomername", methods=['POST'])
 def order_shoe_customer_name_update():
