@@ -41,7 +41,6 @@ def get_all_batch_types():
             else:
                 result[to_camel(db_attr)] = getattr(entity, db_attr,None)
         response_list.append(result)
-    print(response_list)
     return jsonify({"batchDataTypes": response_list}), 200
 
 
@@ -53,8 +52,6 @@ def get_order_batch_type():
 @batch_type_bp.route("/batchtype/addbatchtype", methods=["POST"])
 def add_batch_type():
     batch_info_type_name = request.args.get("batchInfoTypeName")
-    print(request.json)
-    print(batch_info_type_name)
     db_entity = BatchInfoType()
     for attr in TABLE_ATTRNAMES:
         print(attr, request.json.get(to_camel(attr)))

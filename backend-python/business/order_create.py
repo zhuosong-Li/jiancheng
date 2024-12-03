@@ -36,7 +36,6 @@ def allowed_file(filename):
 def create_new_order():
 	time_s = time.time()
 	order_info = request.json.get("orderInfo")
-	print(order_info)
 	if not order_info:
 		return jsonify({'error': 'invalid request'}),400
 	order_rid = order_info["orderRId"]
@@ -52,7 +51,6 @@ def create_new_order():
 	order_salesman_id = order_info["salesmanId"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
-	print(customer_shoe_names)
 	rid_exist_order = Order.query.filter_by(order_rid = order_rid).first()
 	if rid_exist_order:
 		print("order rid exists, must be unique")
@@ -200,8 +198,6 @@ def order_price_update():
 	currency_type_form = request.json.get('currencyTypeForm')
 	order_id = request.json.get('orderId')
 	staff_id = request.json.get('staffId')
-	print(currency_type_form)
-	print(unit_price_form)
 	# for order_shoe_type_id in unit_price_form.keys():
 	# 	unit_price = float(unit_price_form[order_shoe_type_id])
 	# 	entities = (db.session.query(OrderShoeBatchInfo)
