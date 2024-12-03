@@ -72,6 +72,9 @@ export default {
             if (row.taskName === '技术部调版分配') {
                 url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
             }
+            if (row.taskName === '二次BOM用量审批') {
+                url = `${window.location.origin}/technicalmanager/secondbomusagereview/orderid=${row.orderId}`;
+            }
             if (url) {
                 window.open(url, '_blank');
             }

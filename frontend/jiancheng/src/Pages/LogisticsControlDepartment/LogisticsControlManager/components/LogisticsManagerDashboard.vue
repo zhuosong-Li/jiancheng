@@ -65,19 +65,6 @@ onMounted(()=> {
           inProgressData.value.push(element)
       });
   })
-  params['ordershoestatus']  = secondBomStatus
-  axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params}).then(response => {
-      const secondBomPending = response.data.pendingOrders
-      const secondBomProgress = response.data.inProgressOrders
-      secondBomPending.forEach(element => {
-          element['taskName']  = "二次采购订单创建"
-          pendingData.value.push(element)
-      });
-      secondBomProgress.forEach(element => {
-          element['taskName'] = "二次采购订单创建"
-          inProgressData.value.push(element)
-      });
-  })
   console.log(inProgressData)
   console.log(pendingData)
   datafinished.value = false

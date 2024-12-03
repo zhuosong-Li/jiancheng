@@ -95,6 +95,7 @@
             <el-table-column label="操作" width="350">
                 <template #default="scope">
                     <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看调版分配及工艺单上传页面</el-button>
+                    <el-button type="primary" size="default" @click="handleRowClick2(scope.row)">查看二次BOM用量审批页面</el-button>
                 </template>
             </el-table-column>
             
@@ -175,6 +176,10 @@ export default {
             const url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
             window.open(url, '_blank');
         },
+        handleRowClick2(row) {
+            const url = `${window.location.origin}/technicalmanager/secondbomusagereview/orderid=${row.orderId}`;
+            window.open(url, '_blank');
+        }
     },
 }
 </script>

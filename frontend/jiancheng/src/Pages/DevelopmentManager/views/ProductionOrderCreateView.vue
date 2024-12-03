@@ -874,7 +874,7 @@
                             </el-row>
                             <el-row :gutter="20">
                                 <el-col :span="23" :offset="0">
-                                    <MaterialDataTable :tableData="getMaterialDataByType('outsoleMaterialData')" />
+                                    <MaterialDataTable :tableData="getMaterialDataByType('accessoryMaterialData')" />
                                 </el-col>
                             </el-row>
                             <el-row :gutter="20">

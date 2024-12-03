@@ -45,13 +45,15 @@ import { UserFilled } from '@element-plus/icons-vue'
 import Dashboard from '../components/TechnicalManagerDashboard.vue';
 import OrderSearch from '../components/OrderSearch.vue';
 import PersonalInfo from '@/components/PersonalInfo.vue';
+import AdjustList from '../components/AdjustList.vue';
 import axios from 'axios'
 export default {
     components: {
         AllHeader,
         Dashboard,
         OrderSearch,
-        PersonalInfo
+        PersonalInfo,
+        AdjustList
     },
     data() {
         return {
@@ -76,7 +78,7 @@ export default {
                     this.currentComponent = 'Dashboard'
                     break
                 case 2:
-                    this.currentComponent = 'FirstBOMCreate'
+                    this.currentComponent = 'AdjustList'
                     break
                 case 3:
                     this.currentComponent = 'OrderSearch'
