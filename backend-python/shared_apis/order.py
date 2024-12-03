@@ -347,8 +347,8 @@ def get_order_info_business():
                     "size45Amount":total_size_45,
                     "size46Amount":total_size_46,
                     "totalAmount":overall_total,
-                    "unitPrice":int(unit_price),
-                    "totalPrice":int(total_price),
+                    "unitPrice": round(float(unit_price), 2),
+                    "totalPrice": round(float(total_price), 2),
                     "currencyType":currency_type
                 }
 

@@ -52,7 +52,7 @@ def create_new_order():
 	order_salesman_id = order_info["salesmanId"]
 	order_shoe_type_list = order_info["orderShoeTypes"]
 	customer_shoe_names = order_info["customerShoeName"]
-
+	print(customer_shoe_names)
 	rid_exist_order = Order.query.filter_by(order_rid = order_rid).first()
 	if rid_exist_order:
 		print("order rid exists, must be unique")
