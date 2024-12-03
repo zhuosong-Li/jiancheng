@@ -136,7 +136,7 @@ def get_order_shoe_outsource_info():
 def get_outsource_batch_info():
     order_shoe_id = request.args.get("orderShoeId")
     outsource_info_id = request.args.get("outsourceInfoId")
-    entities = (
+    query = (
         db.session.query(OutsourceBatchInfo, OrderShoeType.order_shoe_type_id, Color)
         .join(
             OrderShoeType,
@@ -146,10 +146,12 @@ def get_outsource_batch_info():
         .join(Color, Color.color_id == ShoeType.color_id)
         .filter(
             OrderShoeType.order_shoe_id == order_shoe_id,
-            OutsourceBatchInfo.outsource_info_id == outsource_info_id,
         )
-        .all()
     )
+    if outsource_info_id and outsource_info_id != '':
+        query = query.filter(OutsourceBatchInfo.outsource_info_id == outsource_info_id)
+    
+    entities = query.all()
     # Dictionary to accumulate total amounts by color
     color_totals = {}
 
@@ -552,7 +554,10 @@ def get_outsource_cost_detail():
     for row in response:
         obj = {}
         for db_attr in attr_names:
-            obj[to_camel(db_attr)] = getattr(row, db_attr)
+            if db_attr == 'item_cost':
+                obj[to_camel(db_attr)] = float(getattr(row, db_attr))
+            else:
+                obj[to_camel(db_attr)] = getattr(row, db_attr)
         result.append(obj)
     return result
 
@@ -573,10 +578,11 @@ def store_outsource_cost_data():
     result = []
     total_cost = 0
     for row in data:
-        total_cost += Decimal(row["itemCost"])
+        total_cost += Decimal(row["itemTotalCost"])
         entity = OutsourceCostDetail(
             item_name=row["itemName"],
             item_cost=row["itemCost"],
+            item_total_cost=row["itemTotalCost"],
             remark=row["remark"],
             outsource_info_id=row["outsourceInfoId"],
         )

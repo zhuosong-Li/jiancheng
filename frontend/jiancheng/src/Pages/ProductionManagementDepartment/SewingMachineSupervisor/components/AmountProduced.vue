@@ -31,7 +31,11 @@
         <el-table-column prop="team" label="工段"></el-table-column>
         <el-table-column prop="productionStartDate" label="工段开始日期"></el-table-column>
         <el-table-column prop="productionEndDate" label="工段结束日期"></el-table-column>
-        <el-table-column prop="progress" label="生产进度"></el-table-column>
+        <el-table-column label="生产进度">
+            <template #default="scope">
+                {{ `${scope.row.producedAmount} / ${scope.row.totalAmount}` }}
+            </template>
+        </el-table-column>
         <el-table-column label="操作">
             <template #default="{ row }">
                 <el-button type="primary" @click="handleView(row)">查看</el-button>
@@ -88,10 +92,8 @@ const requestHelper = async (teams) => {
         "teams": teams.toString(),
     }
     let response = await axios.get(`${apiBaseUrl}/production/getquantityreporttasks`, { params })
-    if (response.status == 200) {
-        taskData.value = response.data.result
-        totalPages.value = response.data.totalLength
-    }
+    taskData.value = response.data.result
+    totalPages.value = response.data.totalLength
 }
 const handleView = (row) => {
     let url = ""

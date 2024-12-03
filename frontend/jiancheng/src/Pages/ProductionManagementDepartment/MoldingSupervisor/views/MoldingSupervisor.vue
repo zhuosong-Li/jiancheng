@@ -22,6 +22,7 @@ import Setting from '../components/Setting.vue'
 import ProcedureManagement from '../components/ProcedureManagement.vue'
 import Dashboard from '../components/Dashboard.vue'
 import BatchInfo from '../components/BatchInfo.vue'
+import OrderProgress from '../../ProductionSharedPages/OrderProgress.vue'
 import { ref } from 'vue'
 const components = {
     Dashboard,
@@ -29,9 +30,10 @@ const components = {
     Setting,
     AmountProduced,
     BatchInfo,
-    ProcedureManagement
+    ProcedureManagement,
+    OrderProgress
 }
-const currentTab = ref('LaborPriceReport')
+const currentTab = ref('OrderProgress')
 const optionFn = (option) => {
     currentTab.value = option
 }

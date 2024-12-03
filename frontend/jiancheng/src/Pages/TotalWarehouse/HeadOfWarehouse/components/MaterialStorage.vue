@@ -79,14 +79,16 @@
     </el-dialog>
     <el-dialog title="材料入库/出库记录" v-model="isRecordDialogVisible" width="60%">
         <el-table :data="recordData" border stripe>
-            <el-table-column prop="opType" label="操作类型"></el-table-column>
+            <el-table-column prop="operation" label="操作类型"></el-table-column>
+            <el-table-column prop="purpose" label="用途"></el-table-column>
             <el-table-column prop="date" label="操作时间"></el-table-column>
             <el-table-column prop="amount" label="操作数量"></el-table-column>
         </el-table>
     </el-dialog>
     <el-dialog title="分尺码材料入库/出库记录" v-model="isSizeRecordDialogVisible" width="60%">
         <el-table :data="sizeRecordData" border stripe>
-            <el-table-column prop="opType" label="操作类型"></el-table-column>
+            <el-table-column prop="operation" label="操作类型"></el-table-column>
+            <el-table-column prop="purpose" label="用途"></el-table-column>
             <el-table-column prop="date" label="操作时间"></el-table-column>
             <el-table-column v-for="column in columns" :key="column.prop" :prop="column.prop"
                 :label="column.label"></el-table-column>

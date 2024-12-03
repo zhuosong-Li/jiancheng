@@ -20,6 +20,9 @@
                             <span>材料出库</span>
                         </el-menu-item>
                         <el-menu-item index="3" @click="handleMenuClick(3)">
+                            <span>生产动态明细</span>
+                        </el-menu-item>
+                        <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>文件下载</span>
                         </el-menu-item>
                         <el-menu-item index="5" @click="handleMenuClick(5)">
@@ -46,9 +49,12 @@ import MaterialInbound from '../components/MaterialInbound.vue'
 import InboundOutboundHistory from '../components/InboundOutboundHistory.vue'
 import MaterialOutbound from '../components/MaterialOutbound.vue'
 import FileDownload from '../components/FileDownload.vue'
+import OrderProgress from '@/Pages/ProductionManagementDepartment/ProductionSharedPages/OrderProgress.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
+import InboundView from '../components/InboundView.vue'
+import OutboundView from '../components/OutboundView.vue'
 export default {
     components: {
         AllHeader,
@@ -56,12 +62,15 @@ export default {
         MaterialInbound,
         MaterialOutbound,
         InboundOutboundHistory,
-        FileDownload
+        FileDownload,
+        OrderProgress,
+        InboundView,
+        OutboundView
     },
     data() {
         return {
             UserFilled,
-            currentComponent:'MaterialInbound',
+            currentComponent:'InboundView',
             userName: '',
             logout
         }
@@ -78,12 +87,15 @@ export default {
         handleMenuClick(index){
             switch(index) {
                 case 1:
-                    this.currentComponent = 'MaterialInbound'
+                    this.currentComponent = 'InboundView'
                     break
                 case 2:
-                    this.currentComponent = 'MaterialOutbound' 
+                    this.currentComponent = 'OutboundView'
                     break
                 case 3:
+                    this.currentComponent = 'OrderProgress'
+                    break
+                case 4:
                     this.currentComponent = 'FileDownload' 
                     break
                 case 5:

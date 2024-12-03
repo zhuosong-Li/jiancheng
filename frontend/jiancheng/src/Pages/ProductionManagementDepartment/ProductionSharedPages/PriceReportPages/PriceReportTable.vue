@@ -1,5 +1,5 @@
 <template>
-    <el-table :data="props.tableData" border stripe>
+    <el-table :data="tableData" border stripe>
         <el-table-column prop="rowId" label="序号" />
         <el-table-column prop="procedure" label="工序">
             <template v-if="!readOnly" #default="scope">
@@ -10,7 +10,7 @@
         </el-table-column>
         <el-table-column prop="price" label="工价">
             <template v-if="!readOnly" #default="scope">
-                <el-input v-model="scope.row.price" placeholder="" clearable type="number"></el-input>
+                <el-input-number v-model="scope.row.price" clearable :min="0" :precision="2" :step="0.01"></el-input-number>
             </template>
         </el-table-column>
         <el-table-column prop="note" label="备注">
@@ -20,32 +20,31 @@
         </el-table-column>
         <el-table-column v-if="!readOnly" label="操作">
             <template #default="scope">
-                <el-button type="danger" @click="deleteRow(props.tableData, scope.$index)">删除</el-button>
+                <el-button type="danger" @click="deleteRow(scope.$index)">删除</el-button>
             </template>
         </el-table-column>
     </el-table>
-    <el-button v-if="!readOnly" type="primary" size="default" @click="addRow(props.tableData)">添加新一行</el-button>
+    <el-button v-if="!readOnly" type="primary" size="default" @click="addRow()">添加新一行</el-button>
 </template>
 <script setup>
-import { nextTick, onMounted, ref } from 'vue';
-const props = defineProps(['tableData', 'procedureInfo', 'readOnly'])
-const nameSuggestions = ref([])
+import { defineModel } from 'vue';
+const props = defineProps(['procedureInfo', 'readOnly'])
+const tableData = defineModel('tableData')
 
-const addRow = (arrRef) => {
-    const newRowId = arrRef.length + 1;
-    arrRef.push(
-        {
-            "rowId": newRowId,
-            "procedure": "",
-            "price": "",
-            "note": ""
-        }
-    )
+const addRow = () => {
+    const newRowId = tableData.value.length + 1;
+    const newItem = {
+        "rowId": newRowId,
+        "procedure": "",
+        "price": "",
+        "note": ""
+    }
+    tableData.value.push(newItem)
 }
 
-const deleteRow = (tableData, index) => {
-    tableData.splice(index, 1)
-    tableData.forEach((row, index) => {
+const deleteRow = (index) => {
+    tableData.value.splice(index, 1);
+    tableData.value.forEach((row, index) => {
         row.rowId = index + 1
     })
 }

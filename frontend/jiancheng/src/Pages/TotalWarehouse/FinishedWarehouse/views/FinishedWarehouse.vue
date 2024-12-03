@@ -17,9 +17,12 @@
                             <span>成品出/入库</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
+                            <span>生产动态明细</span>
+                        </el-menu-item>
+                        <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>出/入库历史</span>
                         </el-menu-item>
-                        <el-menu-item index="3" @click="logout">
+                        <el-menu-item index="4" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
@@ -40,11 +43,13 @@ import FinishedInOutHistory from '../components/FinishedInOutHistory.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
+import OrderProgress from '@/Pages/ProductionManagementDepartment/ProductionSharedPages/OrderProgress.vue'
 export default {
     components: {
         AllHeader,
         FinishedInboundOutbound,
-        FinishedInOutHistory
+        FinishedInOutHistory,
+        OrderProgress
     },
     data() {
         return {
@@ -69,6 +74,9 @@ export default {
                     this.currentComponent = 'FinishedInboundOutbound'
                     break
                 case 2:
+                    this.currentComponent = 'OrderProgress'
+                    break
+                case 3:
                     this.currentComponent = 'FinishedInOutHistory'
                     break
             }

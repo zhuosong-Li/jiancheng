@@ -70,8 +70,7 @@
             <el-col :span="24" :offset="0">
                 <el-table :data="shoeBatchAmountData" border stripe>
                     <el-table-column prop="colorName" label="颜色"></el-table-column>、
-                    <el-table-column prop="name" label="鞋码编号"></el-table-column>
-                    <el-table-column prop="amount" label="当日生产数量"></el-table-column>
+                    <el-table-column prop="reportAmount" label="当日生产数量"></el-table-column>
                     <el-table-column prop="producedAmount" label="累计生产数量"></el-table-column>
                     <el-table-column prop="totalAmount" label="目标数量"></el-table-column>
                 </el-table>
@@ -181,7 +180,7 @@ export default {
         },
         async openConfirmDialog() {
             try {
-                const data = { "reportId": this.currentRow.reportId, }
+                const data = { "reportId": this.currentRow.reportId, "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId}
                 console.log(data)
                 await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvequantityreport`, data)
                 ElMessage({
