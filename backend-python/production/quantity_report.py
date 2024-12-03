@@ -295,4 +295,5 @@ def get_quantity_report_detail():
                 "reportAmount": report_item.report_amount
             }
             result.append(obj)
+    print(result)
     return result

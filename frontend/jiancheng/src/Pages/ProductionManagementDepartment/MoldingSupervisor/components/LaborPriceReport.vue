@@ -78,7 +78,8 @@ const getOrderTableData = async () => {
 }
 const handleView = (row) => {
     let url = ""
-    const queryString = new URLSearchParams(row).toString();
+    let params = {"orderId": row.orderId, "orderShoeId": row.orderShoeId, 'teams': ['成型']}
+    const queryString = new URLSearchParams(params).toString();
     url = `${window.location.origin}/molding/pricereport?${queryString}`;
     window.open(url, '_blank');
 }

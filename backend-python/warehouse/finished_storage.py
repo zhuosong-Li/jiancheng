@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 from decimal import Decimal
 
 from api_utility import format_date
@@ -97,6 +97,47 @@ def get_finished_in_out_overview():
     return {"result": result, "total": count_result}
 
 
+def handle_order_shoe_status(order_id, order_shoe_id, storage):
+    # get order shoe amount
+    response = (
+        db.session.query(
+            SemifinishedShoeStorage.semifinished_estimated_amount,
+            SemifinishedShoeStorage.semifinished_amount,
+        )
+        .join(
+            OrderShoeType,
+            OrderShoeType.order_shoe_type_id
+            == SemifinishedShoeStorage.order_shoe_type_id,
+        )
+        .filter(OrderShoeType.order_shoe_id == order_shoe_id)
+        .all()
+    )
+    flag = True
+    for row in response:
+        order_shoe_type_amount, produced_amount = row
+        if produced_amount < order_shoe_type_amount:
+            flag = False
+    if flag:
+        next_operation_ids = [118, 119, 120, 121]
+        event_arr = []
+        try:
+            processor: EventProcessor = current_app.config["event_processor"]
+            for operation_id in next_operation_ids:
+                event = Event(
+                    staff_id=21,
+                    handle_time=datetime.now(),
+                    operation_id=operation_id,
+                    event_order_id=order_id,
+                    event_order_shoe_id=order_shoe_id,
+                )
+                processor.processEvent(event)
+                event_arr.append(event)
+        except Exception:
+            return jsonify({"message": "event processor error"}), 500
+        db.session.add_all(event_arr)
+    db.session.flush()
+
+
 @finished_storage_bp.route(
     "/warehouse/warehousemanager/inboundfinished", methods=["POST", "PATCH"]
 )
@@ -107,6 +148,9 @@ def inbound_finished():
         return jsonify({"message": "failed"}), 400
 
     storage.finished_amount += int(data["amount"])
+    if storage.finished_amount >= storage.finished_estimated_amount:
+        storage.finished_status = 1
+        handle_order_shoe_status(data["orderId"], data["orderShoeId"], storage)
     storage.finished_inbound_datetime = data["inboundDate"]
 
     record = ShoeInboundRecord(
@@ -118,7 +162,7 @@ def inbound_finished():
     db.session.flush()
     rid = (
         "FIR"
-        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        + datetime.now().strftime("%Y%m%d%H%M%S")
         + str(record.shoe_inbound_record_id)
     )
     record.shoe_inbound_rid = rid
@@ -167,7 +211,7 @@ def _outbound_helper(storage, data):
     db.session.flush()
     rid = (
         "FOR"
-        + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        + datetime.now().strftime("%Y%m%d%H%M%S")
         + str(record.shoe_outbound_record_id)
     )
     record.shoe_outbound_rid = rid

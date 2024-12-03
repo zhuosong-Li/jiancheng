@@ -5,9 +5,14 @@
                 <el-input v-model="scope.row.itemName" placeholder="" clearable></el-input>
             </template>
         </el-table-column>
-        <el-table-column prop="itemCost" label="金额">
+        <el-table-column prop="itemCost" label="单价">
             <template #default="scope">
-                <el-input v-model="scope.row.itemCost" placeholder="" clearable type="number"></el-input>
+                <el-input-number v-model="scope.row.itemCost" :min="0" :precision="2" :step="0.01" clearable type="number" @input="handleInputChange(scope.row)"></el-input-number>
+            </template>
+        </el-table-column>
+        <el-table-column prop="itemTotalCost" label="总价">
+            <template #default="scope">
+                <span>{{ scope.row.itemTotalCost }}</span>
             </template>
         </el-table-column>
         <el-table-column prop="remark" label="备注">
@@ -25,7 +30,7 @@
 </template>
 <script>
 export default {
-    props: ["tableData", "outsourceInfoId"],
+    props: ["tableData", "outsourceInfoId", 'totalShoes'],
     methods: {
         addRow() {
             this.tableData.push(
@@ -39,7 +44,10 @@ export default {
         },
         deleteRow(index) {
             this.tableData.splice(index, 1)
-        }
+        },
+        handleInputChange(row) {
+            row.itemTotalCost = Math.round(row.itemCost * this.$props.totalShoes * 100) / 100
+        },
     }
 }
 </script>

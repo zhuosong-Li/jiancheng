@@ -80,7 +80,8 @@ const getOrderTableData = async () => {
 }
 const handleView = (row) => {
     let url = ""
-    const queryString = new URLSearchParams(row).toString();
+    let params = {"orderId": row.orderId, "orderShoeId": row.orderShoeId, 'teams': ['针车预备', '针车']}
+    const queryString = new URLSearchParams(params).toString();
     url = `${window.location.origin}/sewingmachine/pricereport?${queryString}`;
     window.open(url, '_blank');
 }

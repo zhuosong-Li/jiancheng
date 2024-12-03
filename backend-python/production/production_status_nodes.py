@@ -147,6 +147,8 @@ def edit_order_shoe_status():
             .filter_by(order_shoe_id=order_shoe_id)
             .scalar()
         )
+    # if not storage_status:
+    #     return jsonify({"message": "仓库不存在"}), 404
     if storage_status and storage_status != 1:
         return jsonify({"message": "成品尚未入库"}), 400
 

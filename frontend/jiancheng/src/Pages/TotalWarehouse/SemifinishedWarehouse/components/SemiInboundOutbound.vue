@@ -4,14 +4,24 @@
     </el-row>
     <el-row :gutter="20">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            订单号筛选：
             <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()"
                 @clear="getTableData" />
         </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            鞋型号筛选：
+        <el-col :span="4" :offset="0" style="white-space: nowrap;">
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
                 @clear="getTableData" />
+        </el-col>
+        <el-col :span="4" :offset="0" style="white-space: nowrap;">
+            <el-select v-model="semifinishedSearch" placeholder="半成品类型" @change="getTableData" clearable>
+                <el-option v-for="item in ['裁片', '鞋包']" :key="item" :label="item" :value="item">
+                </el-option>
+            </el-select>
+        </el-col>
+        <el-col :span="4" :offset="0" style="white-space: nowrap;">
+            <el-select v-model="statusSearch" placeholder="状态" @change="getTableData" clearable>
+                <el-option v-for="item in ['未完成入库', '已完成入库', '已完成出库']" :key="item" :label="item" :value="item">
+                </el-option>
+            </el-select>
         </el-col>
     </el-row>
     <el-row :gutter="20">
@@ -52,15 +62,16 @@
     <el-dialog title="半成品入库" v-model="semiInboundDialogVisible" width="35%">
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
-                <el-form label-position="right" label-width="100px">
-                    <el-form-item label="入库时间">
+                <el-form :model="inboundForm" label-position="right" :rules="rules" ref="inboundForm"
+                    label-width="100px">
+                    <el-form-item prop="inboundDate" label="入库时间">
                         <el-date-picker v-model="inboundForm.inboundDate" type="datetime" placeholder="选择日期时间"
                             value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
                     </el-form-item>
-                    <el-form-item label="入库数量">
-                        <el-input v-model="inboundForm.actualInboundAmount"></el-input>
+                    <el-form-item prop="actualInboundAmount" label="入库数量">
+                        <el-input-number v-model="inboundForm.actualInboundAmount" :min="0"></el-input-number>
                     </el-form-item>
-                    <el-form-item label="入库类型">
+                    <el-form-item prop="inboundType" label="入库类型">
                         <el-radio-group v-model="inboundForm.inboundType">
                             <el-radio :value="0">自产</el-radio>
                             <el-radio :value="1">外包</el-radio>
@@ -97,29 +108,30 @@
     <el-dialog title="半成品出库" v-model="semiOutboundDialogVisible" width="35%">
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
-                <el-form label-position="right" label-width="100px">
-                    <el-form-item label="出库时间">
+                <el-form :model="outboundForm" ref="outboundForm" :rules="outboundRules" label-position="right"
+                    label-width="100px">
+                    <el-form-item prop="outboundDate" label="出库时间">
                         <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
                             style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
-                    <el-form-item label="出库类型">
+                    <el-form-item prop="outboundType" label="出库类型">
                         <el-radio-group v-model="outboundForm.outboundType">
                             <el-radio :value="0">自产出库</el-radio>
                             <el-radio :value="1">外包出库</el-radio>
                         </el-radio-group>
                     </el-form-item>
-                    <el-form-item v-if="outboundForm.outboundType == 0" label="出库至">
-                        <div v-if="currentRow.object === '裁断后材料'">
+                    <!-- <el-form-item v-if="outboundForm.outboundType == 0" label="出库至">
+                        <div v-if="currentRow.object === '裁片'">
                             针车
                         </div>
                         <div v-else-if="currentRow.object === '鞋包'">
                             成型
                         </div>
+                    </el-form-item> -->
+                    <el-form-item prop="outboundAmount" label="出库数量">
+                        <el-input-number v-model="outboundForm.outboundAmount" :min="0"></el-input-number>
                     </el-form-item>
-                    <el-form-item label="出库数量">
-                        <el-input v-model="outboundForm.outboundAmount"></el-input>
-                    </el-form-item>
-                    <el-form-item v-if="outboundForm.outboundType == 0" label="领料人">
+                    <el-form-item v-if="outboundForm.outboundType == 0" prop="receiver" label="领料人">
                         <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"
                             :disabled="outboundForm.outboundType == 1"></el-input>
                     </el-form-item>
@@ -164,19 +176,19 @@ export default {
         return {
             inboundForm: {
                 selectedOutsource: null,
-                inboundDate: '',
+                inboundDate: null,
                 inboundType: 0,
-                actualInboundAmount: '',
+                actualInboundAmount: 0,
                 outsourceInfo: []
             },
             currentPage: 1,
             pageSize: 10,
             outboundForm: {
-                outboundDate: '',
-                receiver: '',
+                outboundDate: null,
+                receiver: null,
                 deadlineDate: '',
-                address: '',
-                outboundAmount: '',
+                address: null,
+                outboundAmount: 0,
                 outboundType: 0,
                 outsourceInfo: [],
                 selectedOutsource: null
@@ -187,7 +199,63 @@ export default {
             totalRows: 0,
             orderNumberSearch: '',
             shoeNumberSearch: '',
-            currentRow: {}
+            currentRow: {},
+            semifinishedSearch: '',
+            statusSearch: '',
+            rules: {
+                inboundDate: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                actualInboundAmount: [
+                    {
+                        required: true,
+                        validator: (rule, value, callback) => {
+                            if (value === 0 || !value) {
+                                callback(new Error('入库数量不能为0'));
+                            } else {
+                                callback();
+                            }
+                        },
+                        trigger: 'change'
+                    }
+                ],
+                inboundType: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+            },
+            outboundRules: {
+                outboundDate: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                outboundAmount: [
+                    {
+                        required: true,
+                        validator: (rule, value, callback) => {
+                            if (value === 0 || !value) {
+                                callback(new Error('出库数量不能为0'));
+                            } else {
+                                callback();
+                            }
+                        },
+                        trigger: 'change'
+                    }
+                ],
+                outboundType: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                receiver: [
+                    {
+                        validator: (rule, value, callback) => {
+                            if (this.outboundForm.outboundType == 0 && !value) {
+                                callback(new Error('领料人名字为必填项'));
+                            } else {
+                                callback();
+                            }
+                        },
+                        trigger: 'change'
+                    }
+                ]
+            },
         }
     },
     mounted() {
@@ -200,31 +268,40 @@ export default {
                 "pageSize": this.pageSize,
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch,
-                "opType": 1
+                "opType": 1,
+                "semifinishedType": this.semifinishedSearch,
+                "status": this.statusSearch
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsemifinishedinoutoverview`, { params })
             this.tableData = response.data.result
             this.totalRows = response.data.total
         },
         async submitInboundForm() {
-            let data = {
-                "orderId": this.currentRow.orderId,
-                "orderShoeId": this.currentRow.orderShoeId,
-                "storageId": this.currentRow.storageId,
-                "outsourceInfoId": this.inboundForm.selectedOutsource,
-                "inboundDate": this.inboundForm.inboundDate,
-                "inboundType": this.inboundForm.inboundType,
-                "amount": this.inboundForm.actualInboundAmount
-            }
-            try {
-                await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
-                ElMessage.success("入库成功")
-            }
-            catch (error) {
-                console.log(error)
-                ElMessage.error("入库失败")
-            }
-            this.getTableData()
+            this.$refs.inboundForm.validate(async (valid) => {
+                if (valid) {
+                    let data = {
+                        "orderId": this.currentRow.orderId,
+                        "orderShoeId": this.currentRow.orderShoeId,
+                        "storageId": this.currentRow.storageId,
+                        "outsourceInfoId": this.inboundForm.selectedOutsource,
+                        "inboundDate": this.inboundForm.inboundDate,
+                        "inboundType": this.inboundForm.inboundType,
+                        "amount": this.inboundForm.actualInboundAmount
+                    }
+                    try {
+                        await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
+                        ElMessage.success("入库成功")
+                    }
+                    catch (error) {
+                        console.log(error)
+                        ElMessage.error("入库失败")
+                    }
+                    this.semiInboundDialogVisible = false
+                    this.getTableData()
+                } else {
+                    console.log("Form has validation errors.");
+                }
+            })
         },
         async finishOutsourceInbound(row) {
             try {
@@ -239,26 +316,32 @@ export default {
             }
         },
         async submitOutboundForm() {
-            let data = {
-                "orderId": this.currentRow.orderId,
-                "orderShoeId": this.currentRow.orderShoeId,
-                "storageId": this.currentRow.storageId,
-                "outboundDate": this.outboundForm.outboundDate,
-                "outboundAmount": this.outboundForm.outboundAmount,
-                "picker": this.outboundForm.receiver,
-                "outboundType": this.outboundForm.outboundType,
-                "outsourceInfoId": this.outboundForm.selectedOutsource,
-                "outboundAddress": this.outboundForm.address
-            }
-            const response = await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)
-            if (response.status == 200) {
-                ElMessage.success("出库成功")
-            }
-            else {
-                ElMessage.error("出库失败")
-            }
-            this.semiOutboundDialogVisible = false
-            this.getTableData()
+            this.$refs.outboundForm.validate(async (valid) => {
+                if (valid) {
+                    let data = {
+                        "orderId": this.currentRow.orderId,
+                        "orderShoeId": this.currentRow.orderShoeId,
+                        "storageId": this.currentRow.storageId,
+                        "outboundDate": this.outboundForm.outboundDate,
+                        "outboundAmount": this.outboundForm.outboundAmount,
+                        "picker": this.outboundForm.receiver,
+                        "outboundType": this.outboundForm.outboundType,
+                        "outsourceInfoId": this.outboundForm.selectedOutsource,
+                        "outboundAddress": this.outboundForm.address
+                    }
+                    try {
+                        await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)
+                        ElMessage.success("出库成功")
+                    }
+                    catch (error) {
+                        ElMessage.error("出库失败")
+                    }
+                    this.semiOutboundDialogVisible = false
+                    this.getTableData()
+                } else {
+                    console.log("Form has validation errors.");
+                }
+            })
         },
         async finishOutsourceOutbound(row) {
             try {
@@ -287,7 +370,7 @@ export default {
             response.data.forEach(element => {
                 let length = element.outsourceType.length
                 if (element.outsourceStatus == 5 || element.outsourceStatus == 6) {
-                    if ((this.currentRow.object === '裁断后材料' && element.outsourceType[length - 1] === '裁断') || (this.currentRow.object === '鞋包' && element.outsourceType[length - 1] === '针车')) {
+                    if ((this.currentRow.object === '裁片' && element.outsourceType[length - 1] === '裁断') || (this.currentRow.object === '鞋包' && element.outsourceType[length - 1] === '针车')) {
                         this.inboundForm.outsourceInfo.push(element)
                     }
                 }
@@ -303,7 +386,7 @@ export default {
             console.log(response.data)
             response.data.forEach(element => {
                 if (element.outsourceStatus == 2 || element.outsourceStatus == 4) {
-                    if ((this.currentRow.object === '裁断后材料' && element.outsourceType[0] === '针车') ||
+                    if ((this.currentRow.object === '裁片' && element.outsourceType[0] === '针车') ||
                         (this.currentRow.object === '鞋包' && element.outsourceType[0] === '成型') && element.semifinishedRequired) {
                         this.outboundForm.outsourceInfo.push(element)
                     }
@@ -324,7 +407,7 @@ export default {
             this.semiOutboundDialogVisible = true
         },
         finishInbound(row) {
-            ElMessageBox.alert('该操作完成对此鞋型半成品入库，是否继续？', '警告', {
+            ElMessageBox.alert('提前完成半成品入库，是否继续？', '警告', {
                 confirmButtonText: '确认',
                 showCancelButton: true,
                 cancelButtonText: '取消'
@@ -342,7 +425,7 @@ export default {
             })
         },
         finishOutbound(row) {
-            ElMessageBox.alert('该操作完成对此鞋型半成品出库，是否继续？', '警告', {
+            ElMessageBox.alert('提前完成半成品出库，是否继续？', '警告', {
                 confirmButtonText: '确认',
                 showCancelButton: true,
                 cancelButtonText: '取消'

@@ -1,35 +1,27 @@
-import AmountReportList from '../views/AmountReportList.vue'
-import PriceReport from '../views/PriceReportView.vue'
+import QuantityReportList from '../../ProductionSharedPages/QuantityReportPages/QuantityReportList.vue'
+import PriceReportView from '../../ProductionSharedPages/PriceReportPages/PriceReportView.vue'
 
 export default [
     {
         path: '/molding/amountreportlist',
         name: 'molding-amountreportlist',
-        component: AmountReportList,
+        component: QuantityReportList,
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate
+                team: route.query.team
             })
     },
     {
         path: '/molding/pricereport',
         name: 'molding-priceReport',
-        component: PriceReport,
+        component: PriceReportView,
         props: route => (
             {
                 orderId: route.query.orderId,
-                orderRId: route.query.orderRId,
                 orderShoeId: route.query.orderShoeId,
-                shoeRId: route.query.shoeRId,
-                customerName: route.query.customerName,
-                productionStartDate: route.query.productionStartDate,
-                productionEndDate: route.query.productionEndDate
+                teams: route.query.teams
             })
     }
 ]

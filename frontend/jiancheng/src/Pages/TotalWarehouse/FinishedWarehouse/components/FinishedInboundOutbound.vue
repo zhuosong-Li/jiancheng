@@ -49,15 +49,16 @@
     <el-dialog title="成品入库" v-model="inboundDialogVisible" width="35%">
         <el-row :gutter="20">
             <el-col :span="24" :offset="0">
-                <el-form label-position="right" label-width="100px">
-                    <el-form-item label="入库时间">
-                        <el-date-picker v-model="inboundForm.inboundDate" type="datetime" placeholder="选择日期时间" style="width: 100%"
-                            value-format="YYYY-MM-DD HH:mm:ss" />
+                <el-form :model="inboundForm" label-position="right" :rules="rules" ref="inboundForm"
+                    label-width="100px">
+                    <el-form-item prop="inboundDate" label="入库时间">
+                        <el-date-picker v-model="inboundForm.inboundDate" type="datetime" placeholder="选择日期时间"
+                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
                     </el-form-item>
-                    <el-form-item label="入库数量">
-                        <el-input v-model="inboundForm.actualInboundAmount"></el-input>
+                    <el-form-item prop="actualInboundAmount" label="入库数量">
+                        <el-input-number v-model="inboundForm.actualInboundAmount" :min="0"></el-input-number>
                     </el-form-item>
-                    <el-form-item label="入库类型">
+                    <el-form-item prop="inboundType" label="入库类型">
                         <el-radio-group v-model="inboundForm.inboundType">
                             <el-radio :value="0">自产</el-radio>
                             <el-radio :value="1">外包</el-radio>
@@ -128,7 +129,7 @@ export default {
         return {
             inboundForm: {
                 inboundDate: '',
-                actualInboundAmount: '',
+                actualInboundAmount: 0,
                 outsourceInfo: [],
                 selectedOutsource: null,
                 inboundType: 0
@@ -151,6 +152,27 @@ export default {
             currentRow: {},
             orderNumberSearch: '',
             shoeNumberSearch: '',
+            rules: {
+                inboundDate: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+                actualInboundAmount: [
+                    {
+                        required: true,
+                        validator: (rule, value, callback) => {
+                            if (value === 0 || !value) {
+                                callback(new Error('入库数量不能为0'));
+                            } else {
+                                callback();
+                            }
+                        },
+                        trigger: 'change'
+                    }
+                ],
+                inboundType: [
+                    { required: true, message: '此项为必填项', trigger: 'change' },
+                ],
+            },
         }
     },
     mounted() {
@@ -170,23 +192,31 @@ export default {
             this.totalRows = response.data.total
         },
         async submitInboundForm() {
-            let data = {
-                "orderId": this.currentRow.orderId,
-                "orderShoeId": this.currentRow.orderShoeId,
-                "storageId": this.currentRow.storageId,
-                "inboundDate": this.inboundForm.inboundDate,
-                "amount": this.inboundForm.actualInboundAmount
-            }
-            await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
-            try {
-                ElMessage.success("入库成功")
-            }
-            catch (error) {
-                console.log(error)
-                ElMessage.error("入库失败")
-            }
-            this.inboundDialogVisible = false
-            this.getTableData()
+            this.$refs.inboundForm.validate(async (valid) => {
+                if (valid) {
+                    let data = {
+                        "orderId": this.currentRow.orderId,
+                        "orderShoeId": this.currentRow.orderShoeId,
+                        "storageId": this.currentRow.storageId,
+                        "inboundDate": this.inboundForm.inboundDate,
+                        "amount": this.inboundForm.actualInboundAmount
+                    }
+                    await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundfinished`, data)
+                    try {
+                        ElMessage.success("入库成功")
+                    }
+                    catch (error) {
+                        console.log(error)
+                        ElMessage.error("入库失败")
+                    }
+                    this.inboundDialogVisible = false
+                    this.getTableData()
+                }
+                else {
+                    console.log("Form has validation errors.");
+                }
+            })
+
         },
         async submitOutboundForm() {
             let data = {

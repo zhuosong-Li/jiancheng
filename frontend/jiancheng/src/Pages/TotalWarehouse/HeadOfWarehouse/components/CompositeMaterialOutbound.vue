@@ -30,23 +30,11 @@
     <el-row :gutter="20">
         <el-table :data="materialTableData" border stripe height="600" @sort-change="sortData"
             @selection-change="handleSelectionChange">
-            <el-table-column v-if="isMultipleSelection" type="selection" width="55" />
-            <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom">
-            </el-table-column>
-            <el-table-column label="采购订单号" width="100">
-                <template #default="scope">
-                    <el-tooltip effect="dark" :content="scope.row.purchaseDivideOrderRId" placement="bottom">
-                        <span class="truncate-text">
-                            {{ scope.row.purchaseDivideOrderRId }}
-                        </span>
-                    </el-tooltip>
-                </template>
-            </el-table-column>
+            <el-table-column v-if="isMultipleSelection" type="selection" width="55" :selectable="isSelectable" />
             <el-table-column prop="materialType" label="材料类型"></el-table-column>
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
-            <el-table-column prop="craftName" label="复合工艺"></el-table-column>
             <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
@@ -104,7 +92,6 @@
                     <el-radio :value="0">生产使用</el-radio>
                     <el-radio :value="1">废料处理</el-radio>
                     <el-radio :value="2">外包发货</el-radio>
-                    <el-radio :value="3">外发复合</el-radio>
                 </el-radio-group>
             </el-form-item>
             <el-form-item prop="section" v-if="outboundForm.outboundType == 0" label="出库工段">
@@ -129,12 +116,6 @@
                 </el-table>
             </el-form-item>
 
-            <el-form-item prop="selectedCompositeSupplier" v-if="outboundForm.outboundType == 3" label="供应商">
-                <el-select v-model="outboundForm.selectedCompositeSupplier" clearable filterable>
-                    <el-option v-for="item in compositeSuppliersOptions" :value="item.supplierId" :label="item.supplierName" />
-                </el-select>
-            </el-form-item>
-
             <el-form-item prop="address" v-if="[2, 3].includes(outboundForm.outboundType)" label="发货地址">
                 <el-input v-model="outboundForm.address" placeholder="请输入发货地址"></el-input>
             </el-form-item>
@@ -150,29 +131,6 @@
                                 :step="0.00001"></el-input-number>
                         </template>
                     </el-table-column>
-                </el-table>
-            </el-form-item>
-            <el-form-item prop="compositeMaterials" label="无码材料" v-if="outboundForm.outboundType == 3">
-                <el-table :data="outboundForm.compositeMaterials" style="width: 100%" border stripe default-expand-all>
-                    <el-table-column type="expand">
-                        <template #default="props">
-                            <el-table :data="props.row.craftNameList" border stripe
-                                @selection-change="handleCompositeSelectionChange">
-                                <el-table-column prop="craftName" label="复合工艺" />
-                                <el-table-column prop="outboundAmount" label="出库数量">
-                                    <template #default="scope">
-                                        <el-input-number size="small" v-model="scope.row.outboundAmount" :min="0"
-                                            :max="props.row.currentAmount" :precision="5" :step="0.00001"
-                                            @change="(newVal, oldVal) => handleCompositeAmountChange(newVal, oldVal, props.row)"></el-input-number>
-                                    </template>
-                                </el-table-column>
-                            </el-table>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="materialName" label="材料名称" />
-                    <el-table-column prop="colorName" label="颜色" />
-                    <el-table-column prop="currentAmount" label="库存" />
-                    <el-table-column prop="materialUnit" label="单位" />
                 </el-table>
             </el-form-item>
 
@@ -263,10 +221,7 @@ export default {
                 outsourceInfo: [],
                 selectedOutsource: null,
                 materials: [],
-                sizeMaterials: [],
-                compositeMaterials: [],
-                compositeSizeMaterials: [],
-                selectedCompositeSupplier: null
+                sizeMaterials: []
             },
             currentPage: 1,
             pageSize: 10,
@@ -337,47 +292,8 @@ export default {
                 selectedOutsource: [
                     { required: true, message: '此项为必填项', trigger: 'change' },
                 ],
-                materials: [
-                    {
-                        validator: (rule, value, callback) => {
-                            const invalidRows = value.filter((row) => !row.outboundAmount);
-                            if (invalidRows.length > 0) {
-                                callback(new Error("出库数量不能为空"));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: "blur",
-                    },
-                    {
-                        validator: (rule, value, callback) => {
-                            const invalidRows = value.filter((row) => row.outboundAmount <= 0);
-                            if (invalidRows.length > 0) {
-                                callback(new Error("出库数量需为正数"));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: "blur",
-                    },
-                ],
-                sizeMaterials: [
-                    {
-                        validator: (rule, value, callback) => {
-                            console.log(value)
-                            const invalidRows = value.filter((row) => row.metaData.enteredAmount == 0);
-                            if (invalidRows.length > 0) {
-                                callback(new Error("出库数量不能为空"));
-                            } else {
-                                callback();
-                            }
-                        },
-                        trigger: "change",
-                    },
-                ]
             },
             selectedCompositeRows: [],
-            compositeSuppliersOptions: []
         }
     },
     computed: {
@@ -390,7 +306,6 @@ export default {
     mounted() {
         this.getAllMaterialTypes()
         this.getAllSuppliers()
-        this.getAllCompositeSuppliers()
         this.getMaterialTableData()
     },
     methods: {
@@ -402,7 +317,7 @@ export default {
             this.selectedCompositeRows = selection
         },
         isSelectable(row) {
-            // return row.status !== '已完成入库'
+            return row.status === '已完成入库'
         },
         calculateSum() {
             this.selectedSizeMaterialData.metaData["enteredAmount"] = this.selectedSizeMaterialData.quantityList.reduce((sum, row) => sum + (row.outboundAmount || 0), 0);
@@ -425,6 +340,7 @@ export default {
             const sanitizedObject = JSON.parse(JSON.stringify(this.outboundFormTemplate));
             this.outboundForm = structuredClone(sanitizedObject)
             let arr = this.outboundForm.sizeMaterials
+            console.log(this.selectedRows)
             this.selectedRows.forEach(async (row) => {
                 if (row.materialCategory == 1) {
                     this.selectedSizeMaterialData = []
@@ -436,17 +352,8 @@ export default {
                 } else {
                     row["outboundAmount"] = 0
                     this.outboundForm.materials.push(row)
-                    let craftNameList = row.craftName.split("@")
-                    let newObj = JSON.parse(JSON.stringify(row));
-                    this.outboundForm.compositeMaterials.push(newObj)
-                    newObj["craftNameList"] = []
-                    craftNameList.forEach(craftName => {
-                        newObj["craftNameList"].push({ craftName: craftName, outboundAmount: 0 })
-                    })
-
                 }
             })
-            console.log(this.outboundForm.compositeMaterials[0].craftNameList)
             this.isMultiMaterialDialogOpen = true
         },
         toggleSelectionMode() {
@@ -463,15 +370,11 @@ export default {
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallsuppliernames`)
             this.materialSupplierOptions = response.data
         },
-        async getAllCompositeSuppliers() {
-            const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallcompositesuppliers`)
-            this.compositeSuppliersOptions = response.data
-        },
         async getMaterialTableData(sortColumn, sortOrder) {
             const params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
-                "opType": 2,
+                "opType": 4,
                 "materialType": this.materialTypeSearch,
                 "materialName": this.materialNameSearch,
                 "materialSpec": this.materialSpecificationSearch,
@@ -491,22 +394,9 @@ export default {
                 if (valid) {
                     console.log("Form is valid. Proceeding with submission.");
                     let materialOutboundList = []
-                    if (this.outboundForm.outboundType != 3) {
-                        this.outboundForm.materials.forEach(row => {
-                            materialOutboundList.push({ "storageId": row.materialStorageId, "amount": row.outboundAmount })
-                        })
-                    }
-                    else {
-                        let amount = 0
-                        this.outboundForm.compositeMaterials.forEach(row => {
-                            let obj = { "storageId": row.materialStorageId, "craftNameList": row["craftNameList"], "amount": 0 }
-                            row["craftNameList"].forEach(subRow => {
-                                amount += subRow["outboundAmount"]
-                            })
-                            obj["amount"] = amount
-                            materialOutboundList.push(obj)
-                        })
-                    }
+                    this.outboundForm.materials.forEach(row => {
+                        materialOutboundList.push({ "storageId": row.materialStorageId, "amount": row.outboundAmount })
+                    })
                     let sizeMaterialOutboundList = []
                     this.outboundForm.sizeMaterials.forEach(row => {
                         let obj = { "storageId": row.metaData.materialStorageId, outboundAmounts: [] }
@@ -515,7 +405,6 @@ export default {
                         })
                         sizeMaterialOutboundList.push(obj)
                     })
-                    console.log(this.outboundForm.selectedCompositeSupplier)
                     let data = {
                         "materialOutboundList": materialOutboundList,
                         "sizeMaterialOutboundList": sizeMaterialOutboundList,
@@ -525,7 +414,7 @@ export default {
                         "outboundAddress": this.outboundForm.address,
                         "picker": this.outboundForm.receiver,
                         "outsourceInfoId": null,
-                        "compositeSupplierId": this.outboundForm.selectedCompositeSupplier
+                        "compositeSupplierId": null
                     }
                     if (this.outboundForm.selectedOutsource) {
                         data["outsourceInfoId"] = this.outboundForm.selectedOutsource.outsourceInfoId
