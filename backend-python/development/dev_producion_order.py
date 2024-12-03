@@ -1957,47 +1957,22 @@ def issue_production_order():
             db.session.add(first_bom)
             db.session.flush()
             first_bom_id = first_bom.bom_id
-            second_bom = Bom(
-                order_shoe_type_id=order_shoe_type_id,
-                bom_rid=second_bom_rid,
-                bom_type=1,
-                bom_status=0,
-            )
-            db.session.add(second_bom)
-            db.session.flush()
-            second_bom_id = second_bom.bom_id
             for item in production_instruction_items:
                 if item.order_shoe_type_id == order_shoe_type.order_shoe_type_id:
-                    if item.is_pre_purchase:
-                        first_bom_item = BomItem(
-                            bom_id=first_bom_id,
-                            material_id=item.material_id,
-                            material_model=item.material_model,
-                            material_specification=item.material_specification,
-                            bom_item_color=item.color,
-                            remark=item.remark,
-                            department_id=item.department_id,
-                            size_type="E",
-                            bom_item_add_type="0",
-                            total_usage=0,
-                            material_second_type=item.material_second_type,
-                        )
-                        db.session.add(first_bom_item)
-                    else:
-                        second_bom_item = BomItem(
-                            bom_id=second_bom_id,
-                            material_id=item.material_id,
-                            material_model=item.material_model,
-                            material_specification=item.material_specification,
-                            bom_item_color=item.color,
-                            remark=item.remark,
-                            department_id=item.department_id,
-                            size_type="E",
-                            bom_item_add_type="1",
-                            total_usage=0,
-                            material_second_type=item.material_second_type,
-                        )
-                        db.session.add(second_bom_item)
+                    first_bom_item = BomItem(
+                        bom_id=first_bom_id,
+                        material_id=item.material_id,
+                        material_model=item.material_model,
+                        material_specification=item.material_specification,
+                        bom_item_color=item.color,
+                        remark=item.remark,
+                        department_id=item.department_id,
+                        size_type="E",
+                        bom_item_add_type="0",
+                        total_usage=0,
+                        material_second_type=item.material_second_type,
+                    )
+                    db.session.add(first_bom_item)
         db.session.flush()
         # create excel file
         insert_data = []

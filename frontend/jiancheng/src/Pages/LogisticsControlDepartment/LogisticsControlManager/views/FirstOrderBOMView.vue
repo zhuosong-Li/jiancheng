@@ -146,14 +146,6 @@
                                         @click="openSizeDialog(scope.row, scope.$index)">尺码用量填写</el-button>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="useDepart" label="使用工段">
-                                <template #default="scope">
-                                    <el-select v-model="scope.row.useDepart" size="default" disabled>
-                                        <el-option v-for="item in departmentOptions" :key="item.value"
-                                            :label="item.label" :value="item.value"></el-option>
-                                    </el-select>
-                                </template>
-                            </el-table-column>
                             <el-table-column prop="remark" label="开发部备注">
                             </el-table-column>
                         </el-table>

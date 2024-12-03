@@ -248,6 +248,7 @@ def get_shoe_bom_items():
         result.append(
             {
                 "bomItemId": bom_item.bom_item_id,
+                "materialDetailType": bom_item.material_second_type,
                 "materialType": material_type.material_type_name,
                 "materialName": material.material_name,
                 "materialModel": bom_item.material_model,
