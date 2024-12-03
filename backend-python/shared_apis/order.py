@@ -4,11 +4,15 @@ from app_config import db
 from flask import Blueprint, jsonify, request
 from sqlalchemy import func
 from api_utility import to_snake, to_camel
-from constants import IN_PRODUCTION_ORDER_NUMBER
 from login.login import current_user, current_user_info
 import math
+import os
 from sqlalchemy import or_, text
+from sqlalchemy import or_, text
+from datetime import datetime
 
+from constants import IN_PRODUCTION_ORDER_NUMBER
+from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH
 from models import (
     Order,
     OrderShoe,
@@ -28,8 +32,6 @@ from models import (
     PackagingInfo,
     BatchInfoType
 )
-from sqlalchemy import or_, text
-from datetime import datetime
 
 order_bp = Blueprint("order_bp", __name__)
 ORDER_CREATION_STATUS = 6
@@ -202,10 +204,8 @@ def get_order_info_business():
         "orderCid":entity.Order.order_cid,
         "batchInfoTypeName":entity.BatchInfoType.batch_info_type_name,
         "batchInfoType":batch_info_type_response,
-        "startDate":formatted_start_date,
-        "endDate":formatted_end_date,
-        "customerName":entity.Customer.customer_name,
-        "customerBrand":entity.Customer.customer_brand,
+        "dateInfo":formatted_start_date + " —— " + formatted_end_date,
+        "customerInfo":"客人编号:" + entity.Customer.customer_name + " 客人商标: " + entity.Customer.customer_brand,
         "orderStatus":(
             entity.OrderStatus.order_current_status if entity.OrderStatus else "N/A"
         ),
@@ -213,7 +213,6 @@ def get_order_info_business():
             entity.OrderStatus.order_status_value if entity.OrderStatus else "N/A"
         ),
         "orderShoeAllData":[],
-        # 备注
     }
     if entity.Order.production_list_upload_status == '2':
         result["wrapRequirementUploadStatus"] = "已上传包装文件"
@@ -272,6 +271,7 @@ def get_order_info_business():
                 response_order_shoe = {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
                         "shoeTypeColorName":entity.Color.color_name,
                        "shoeTypeColorId":entity.Color.color_id,
+                       "customerColorName":entity.OrderShoeType.customer_color_name,
                        "shoeTypeImgUrl":entity.ShoeType.shoe_image_url,
                        "shoeTypeBatchInfoList":[]
                     }
@@ -604,7 +604,19 @@ def delete_order():
     order_id = request.args.get("orderId")
     order_entity = db.session.query(Order).filter_by(order_id = order_id).first()
     if not order_entity:
-        return jsonify({"message":"delete failed"}), 401
+        return jsonify({"message":"delete failed"}), 404
+    order_local_path = os.path.join(FILE_STORAGE_PATH, order_entity.order_rid) 
+    print(order_local_path)
+    if os.path.exists(order_local_path):
+        for file_name in os.listdir(order_local_path):
+            file_path = os.path.join(order_local_path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+            else:
+                os.rmdir(file_path)
+        os.rmdir(order_local_path)
+    else:
+        print("path doesnt exist in server")
     order_shoe_entities = db.session.query(OrderShoe).filter_by(order_id = order_id).all()
     order_shoe_ids = [entity.order_shoe_id for entity in order_shoe_entities]
     order_shoe_type_entities = db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).all()

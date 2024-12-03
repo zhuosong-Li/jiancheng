@@ -109,10 +109,10 @@ export default {
             }
         },
         async logout() {
+            this.$router.push('/login')
             await this.$axios.post(`${this.$apiBaseUrl}/logout`)
             localStorage.removeItem('token')
             localStorage.removeItem('role')
-            this.$router.push('/login')
         }
     }
 }

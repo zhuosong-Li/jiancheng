@@ -331,6 +331,19 @@ def order_cid_update():
 	db.session.commit()
 	return jsonify({"msg":"ok"}), 200
 
+@order_create_bp.route("/ordercreate/updateorderrid", methods=['POST'])
+def order_rid_update():
+	order_id = request.json.get('orderId')
+	order_new_rid = request.json.get('orderNewRid')
+	order_entity = (db.session.query(Order)
+	.filter(Order.order_id == order_id)
+	.first())
+	if order_entity:
+		order_entity.order_rid = order_new_id
+		db.session.commit()
+		return jsonify({'msg':"update OK"}), 200
+	else:
+		return jsonify({'error': "order not found"}), 404
 
 @order_create_bp.route("/ordercreate/updateordershoecustomername", methods=['POST'])
 def order_shoe_customer_name_update():
@@ -342,6 +355,20 @@ def order_shoe_customer_name_update():
 	if order_shoe_entity:
 		order_shoe_entity.customer_product_name = order_shoe_customer_name
 	else:
-		return jsonify({"errror":"order shoe not found"}), 500
+		return jsonify({"error":"order shoe not found"}), 500
 	db.session.commit()
 	return jsonify({"msg":"OK"}), 200
+
+
+@order_create_bp.route("/ordercreate/updatecustomercolorname", methods=['POST'])
+def order_shoe_type_customer_color_update():
+	type_id_to_cus_color = request.json.get('orderShoeTypeCustomerColorForm')
+	order_shoe_type_ids = type_id_to_cus_color.keys()
+	for order_shoe_type_id in order_shoe_type_ids:
+		entity = (db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id).first())
+		if entity:
+			entity.customer_color_name = type_id_to_cus_color[order_shoe_type_id]
+		else:
+			return jsonify({"error":"order_shoe_type_id not found"}), 404
+	db.session.commit()
+	return jsonify({"msg":"customer color updated"}), 200

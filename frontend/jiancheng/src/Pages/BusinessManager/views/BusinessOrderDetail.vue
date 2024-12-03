@@ -15,7 +15,7 @@
                                 <el-input
                                     style="width: 100px"
                                     v-model="orderData.orderCid"
-                                    :disabled="isEdit"
+                                    :disabled="customerOrderEditDisabled"
                                 >
                                 </el-input>
                                 <el-button
@@ -23,24 +23,21 @@
                                     type="primary"
                                     @click="updateCustomInfo('customOrderId', orderData.orderCid)"
                                     style="margin-left: 15px"
-                                    >{{btnContent1}}</el-button
+                                    >{{customerOrderBtn}}</el-button
                                 >
                             </el-descriptions-item>
-                            <el-descriptions-item label="客户名称" align="center">{{
-                                orderData.customerName
+                            <el-descriptions-item label="客户信息" align="center">{{
+                                orderData.customerInfo
                             }}</el-descriptions-item>
-                            <el-descriptions-item label="客户商标" align="center">{{
-                                orderData.customerBrand
-                            }}</el-descriptions-item>
-                            <el-descriptions-item label="订单创建时间" align="center">{{
-                                orderData.startDate
+                            <el-descriptions-item label="订单周期" align="center">{{
+                                orderData.dateInfo
                             }}</el-descriptions-item>
                             <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
                                 <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
                                 <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
-                            <el-descriptions-item label="订单预计截止日期" align="center">{{
+                            <!-- <el-descriptions-item label="订单预计截止日期" align="center">{{
                                 orderData.endDate
-                            }}</el-descriptions-item>
+                            }}</el-descriptions-item> -->
                         </el-descriptions>
                     </el-col>
                 </el-row>
@@ -66,6 +63,17 @@
                                 >
                             </el-descriptions-item>
                             <el-descriptions-item label="财务信息操作" align="center">
+
+                                <el-button
+                                    v-if="customerColorBtnVis"
+                                    @click="submitCustomerColorForm"
+                                    type="primary"
+                                    >保存客户颜色</el-button
+                                >
+                                <el-button
+                                    v-if="this.role == 4" @click="changeCustomerColorMgt">
+                                    修改客户颜色
+                                </el-button>
                                 <el-button
                                     v-if="priceUpdateButtonVis"
                                     @click="submitPriceForm"
@@ -118,7 +126,7 @@
                                             <el-table-column
                                                 prop="packagingInfoName"
                                                 label="配码名称"
-                                                width="150"
+                                                width="200"
                                             />
                                             <el-table-column
                                                 v-for="col in Object.keys(
@@ -144,7 +152,7 @@
                                             <el-table-column
                                                 prop="totalQuantityRatio"
                                                 label="对/件"
-                                                width="240"
+                                                width="120"
                                             />
                                             <el-table-column prop="unitPerRatio" label="件数" />
                                         </el-table>
@@ -153,9 +161,22 @@
                                 <el-table-column
                                     prop="shoeTypeColorName"
                                     label="颜色名称"
-                                    width="150"
-                                    sortable
+                                    width="100"
                                 />
+                                <el-table-column
+                                    label="客户颜色"
+                                    width="100">
+                                <template #default="scope">
+                                    <el-input
+                                        size="small"
+                                        controls-position="right"
+                                        v-model="this.orderShoeTypeCustomerColorForm[scope.row.orderShoeTypeId]"
+                                        :disabled="!this.customerColorAccessMapping[scope.row.orderShoeTypeId]"
+                                    >
+                                    </el-input>
+                                </template>
+                                </el-table-column>
+                                
                                 <!-- <el-table-column v-for="col in Object.keys(attrMappingToAmount).filter(key=>batchInfoType[key] != null)"
                                         :prop="props.row.orderShoeTypes.shoeTypeBatchData[]"
                                         :label="batchInfoType[col]">
@@ -173,7 +194,7 @@
                                     label="总数量"
                                     width="120"
                                 />
-                                <el-table-column label="金额" width="120">
+                                <el-table-column label="金额" width="100">
                                     <template #default="scope">
                                         <el-input
                                             size="small"
@@ -218,7 +239,7 @@
                             <el-input
                                 style="width: 100px"
                                 v-model="scope.row.shoeCid"
-                                :disabled="isCellEdit"
+                                :disabled="customerShoeIdEditDisabled"
                             >
                             </el-input>
                             <el-button
@@ -226,7 +247,7 @@
                                 type="primary"
                                 @click="updateCustomInfo('customShoeId', scope.row)"
                                 style="margin-left: 15px"
-                                >{{btnContent2}}</el-button
+                                >{{customerShoeBtn}}</el-button
                             >
                         </template>
                     </el-table-column>
@@ -349,6 +370,11 @@ export default {
                 Object.values(this.unitPriceAccessMapping).includes(true) ||
                 Object.values(this.currencyTypeAccessMapping).includes(true)
             )
+        },
+        customerColorBtnVis() {
+            return (
+                Object.values(this.customerColorAccessMapping).includes(true)
+            )
         }
     },
     data() {
@@ -366,6 +392,7 @@ export default {
             expandedRowKeys: [],
             orderShoeTypeIdToUnitPrice: {},
             orderShoeTypeIdToCurrencyType: {},
+            orderShoeTypeCustomerColorForm:{},
             isSubmitDocVis: false,
             remarkDialogVis: false,
             priceChangeNotAllowed: false,
@@ -377,6 +404,7 @@ export default {
             },
             unitPriceAccessMapping: {},
             currencyTypeAccessMapping: {},
+            customerColorAccessMapping: {},
             batchInfoType: {},
             attrMappingToRatio: {
                 size34Name: 'size34Ratio',
@@ -408,10 +436,11 @@ export default {
                 size45Name: 'size45Amount',
                 size46Name: 'size46Amount'
             },
-            btnContent1: '修改数据',
-            btnContent2: '修改数据',
-            isEdit: true,
-            isCellEdit: true,
+            customerOrderBtn: '修改数据',
+            customerShoeBtn: '修改数据',
+            customerOrderEditDisabled: true,
+            customerShoeIdEditDisabled: true,
+            customerColorEditDisabled: true
         }
     },
     mounted() {
@@ -438,12 +467,16 @@ export default {
                         orderShoeType.shoeTypeBatchData.unitPrice
                     this.orderShoeTypeIdToCurrencyType[orderShoeType.orderShoeTypeId] =
                         orderShoeType.shoeTypeBatchData.currencyType
+                    this.orderShoeTypeCustomerColorForm[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.customerColorName
                     // bad fix TODO
                     this.orderCurrencyUnit = orderShoeType.shoeTypeBatchData.currencyType
                     this.unitPriceAccessMapping[orderShoeType.orderShoeTypeId] =
                         orderShoeType.shoeTypeBatchData.unitPrice == 0
                     this.currencyTypeAccessMapping[orderShoeType.orderShoeTypeId] =
                         orderShoeType.shoeTypeBatchData.currencyType == ''
+                    this.customerColorAccessMapping[orderShoeType.orderShoeTypeId] =
+                        orderShoeType.customerColorName == ''
                 })
             )
             console.log(this.unitPriceAccessMapping)
@@ -459,6 +492,12 @@ export default {
             Object.keys(this.currencyTypeAccessMapping).forEach(
                 (key) =>
                     (this.currencyTypeAccessMapping[key] = !this.currencyTypeAccessMapping[key])
+            )
+        },
+        changeCustomerColorMgt(){
+            console.log(this.customerColorAccessMapping)
+            Object.keys(this.customerColorAccessMapping).forEach(
+                (key) => (this.customerColorAccessMapping[key] = true)
             )
         },
         setfinInfoAccess() {},
@@ -541,6 +580,20 @@ export default {
                         orderShoeType.shoeTypeBatchData.currencyType = this.orderCurrencyUnit
                 }))
         },
+        async submitCustomerColorForm()
+        {
+            console.log(this.orderShoeTypeCustomerColorForm)
+            const response = await axios.post(`${this.$apiBaseUrl}/ordercreate/updatecustomercolorname`, {
+                orderShoeTypeCustomerColorForm : this.orderShoeTypeCustomerColorForm
+            })
+            if (response.status === 200) {
+                ElMessage.success('客户颜色添加成功')
+                this.getOrderInfo()
+            } else {
+                ElMessage.error('客户颜色添加失败')
+            }
+            console.log(this.orderShoeTypeCustomerColorForm)
+        },
         async submitPriceForm() {
             console.log(this.orderShoeTypeIdToCurrencyType)
             const response = await axios.post(`${this.$apiBaseUrl}/ordercreate/updateprice`, {
@@ -556,7 +609,6 @@ export default {
                 ElMessage.error('备注变更失败')
             }
             console.log(this.orderShoeTypeIdToUnitPrice)
-
             return
         },
         async submitRemarkForm() {
@@ -623,18 +675,18 @@ export default {
         },
         updateCustomInfo(key, value) {
             if (key === 'customOrderId') {
-                this.isEdit = false
-                if (this.btnContent1 === '提交数据') {
+                this.customerOrderEditDisabled = false
+                if (this.customerOrderBtn === '提交数据') {
                     this.showMessage(key, value)
                 }
-                this.btnContent1 = '提交数据'
+                this.customerOrderBtn = '提交数据'
             }
             if (key === 'customShoeId') {
-                this.isCellEdit = false 
-                if (this.btnContent2 === '提交数据') {
+                this.customerShoeIdEditDisabled = false 
+                if (this.customerShoeBtn === '提交数据') {
                     this.showMessage(key, value)
                 }
-                this.btnContent2 = '提交数据'
+                this.customerShoeBtn = '提交数据'
             }
         },
         isEmpty(value) {
@@ -652,7 +704,7 @@ export default {
             if (value === '') {
                 return true
             } else {
-                if (this.role == 21 && this.isEdit) {
+                if (this.role == 21 && this.customerOrderEditDisabled) {
                     return false
                 } else {
                     return true
@@ -663,7 +715,7 @@ export default {
             if (value === '') {
                 return true
             } else {
-                if (this.role == 21 && this.isCellEdit) {
+                if (this.role == 21 && this.customerShoeIdEditDisabled) {
                     return false
                 } else {
                     return true
