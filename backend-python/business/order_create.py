@@ -68,7 +68,7 @@ def create_new_order():
     	salesman_id = order_salesman_id,
     	production_list_upload_status="0",
     	amount_list_upload_status="0",
-		supervisor_id = 24
+		supervisor_id = supervisor_id
     	)
 
 	db.session.add(new_order)
@@ -355,6 +355,20 @@ def order_shoe_customer_name_update():
 	if order_shoe_entity:
 		order_shoe_entity.customer_product_name = order_shoe_customer_name
 	else:
-		return jsonify({"errror":"order shoe not found"}), 500
+		return jsonify({"error":"order shoe not found"}), 500
 	db.session.commit()
 	return jsonify({"msg":"OK"}), 200
+
+
+@order_create_bp.route("/ordercreate/updatecustomercolorname", methods=['POST'])
+def order_shoe_type_customer_color_update():
+	type_id_to_cus_color = request.json.get('orderShoeTypeCustomerColorForm')
+	order_shoe_type_ids = type_id_to_cus_color.keys()
+	for order_shoe_type_id in order_shoe_type_ids:
+		entity = (db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id).first())
+		if entity:
+			entity.customer_color_name = type_id_to_cus_color[order_shoe_type_id]
+		else:
+			return jsonify({"error":"order_shoe_type_id not found"}), 404
+	db.session.commit()
+	return jsonify({"msg":"customer color updated"}), 200

@@ -204,10 +204,8 @@ def get_order_info_business():
         "orderCid":entity.Order.order_cid,
         "batchInfoTypeName":entity.BatchInfoType.batch_info_type_name,
         "batchInfoType":batch_info_type_response,
-        "startDate":formatted_start_date,
-        "endDate":formatted_end_date,
-        "customerName":entity.Customer.customer_name,
-        "customerBrand":entity.Customer.customer_brand,
+        "dateInfo":formatted_start_date + " —— " + formatted_end_date,
+        "customerInfo":"客人编号:" + entity.Customer.customer_name + " 客人商标: " + entity.Customer.customer_brand,
         "orderStatus":(
             entity.OrderStatus.order_current_status if entity.OrderStatus else "N/A"
         ),
@@ -215,7 +213,6 @@ def get_order_info_business():
             entity.OrderStatus.order_status_value if entity.OrderStatus else "N/A"
         ),
         "orderShoeAllData":[],
-        # 备注
     }
     if entity.Order.production_list_upload_status == '2':
         result["wrapRequirementUploadStatus"] = "已上传包装文件"
@@ -274,6 +271,7 @@ def get_order_info_business():
                 response_order_shoe = {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
                         "shoeTypeColorName":entity.Color.color_name,
                        "shoeTypeColorId":entity.Color.color_id,
+                       "customerColorName":entity.OrderShoeType.customer_color_name,
                        "shoeTypeImgUrl":entity.ShoeType.shoe_image_url,
                        "shoeTypeBatchInfoList":[]
                     }
