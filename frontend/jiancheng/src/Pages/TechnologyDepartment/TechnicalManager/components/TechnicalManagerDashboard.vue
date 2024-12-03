@@ -62,6 +62,22 @@ onMounted(()=> {
             inProgressData.value.push(element)
         });
     })
+    const bomPreviewStatus = 13
+    const params2 = {
+        ordershoestatus : bomPreviewStatus
+    };
+    axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params: params2}).then(response => {
+        const firstBomPending = response.data.pendingOrders
+        const firstBomProgress = response.data.inProgressOrders
+        firstBomPending.forEach(element => {
+            element['taskName'] = "二次BOM用量审批"
+            pendingData.value.push(element)
+        });
+        firstBomProgress.forEach(element => {
+            element['taskName'] = "二次BOM用量审批"
+            inProgressData.value.push(element)
+        });
+    })
     console.log(inProgressData)
     console.log(pendingData)
 })

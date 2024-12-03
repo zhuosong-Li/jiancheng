@@ -1,0 +1,724 @@
+<template>
+    <el-container direction="vertical">
+        <el-header height="">
+            <AllHeader></AllHeader>
+        </el-header>
+        <el-main style="overflow-x: hidden">
+            <el-row :gutter="20" style="text-align: center">
+                <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
+                    >二次BOM用量审批</el-col
+                >
+            </el-row>
+            <el-row :gutter="20">
+                <el-col :span="24" :offset="0">
+                    <span style="font-weight: bold; font-size: larger">订单信息：</span>
+                    <el-row :gutter="20">
+                        <el-col :span="24" :offset="0">
+                            <Arrow :status="orderData.status" :key="updateArrowKey"></Arrow>
+                        </el-col>
+                    </el-row>
+                    <el-row :gutter="20">
+                        <el-col :span="24" :offset="0">
+                            <el-descriptions title="" :column="2" border>
+                                <el-descriptions-item label="订单编号" align="center">{{
+                                    orderData.orderId
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="订单创建时间" align="center">{{
+                                    orderData.createTime
+                                }}</el-descriptions-item>
+                                <el-descriptions-item label="客户名称" align="center">{{
+                                    orderData.customerName
+                                }}</el-descriptions-item>
+                                <!-- <el-descriptions-item label="前序流程下发时间">{{ testOrderData.prevTime }}</el-descriptions-item>
+                                <el-descriptions-item label="前序处理部门">{{ testOrderData.prevDepart }}</el-descriptions-item>
+                                <el-descriptions-item label="前序处理人">{{ testOrderData.prevUser }}</el-descriptions-item> -->
+                                <el-descriptions-item label="订单预计截止日期" align="center">{{
+                                    orderData.deadlineTime
+                                }}</el-descriptions-item>
+                            </el-descriptions>
+                        </el-col>
+                    </el-row>
+                    <el-row :gutter="20" style="margin-top: 10px">
+                        <el-col :span="4" :offset="0">
+                            <div style="display: flex; align-items: center; white-space: nowrap">
+                                工厂型号搜索：<el-input
+                                    v-model="inheritIdSearch"
+                                    placeholder=""
+                                    size="default"
+                                    :suffix-icon="SearchIcon"
+                                    clearable
+                                    @input="tableWholeFilter"
+                                ></el-input>
+                            </div>
+                        </el-col>
+                    </el-row>
+
+                    <el-row :gutter="20" style="margin-top: 20px">
+                        <el-col :span="24" :offset="0">
+                            <el-table :data="testTableFilterData" border style="height: 400px">
+                                <el-table-column type="expand">
+                                    <template #default="scope">
+                                        <el-table :data="scope.row.typeInfos" border>
+                                            <el-table-column
+                                                prop="color"
+                                                label="颜色"
+                                            ></el-table-column>
+                                            <el-table-column label="鞋图" align="center">
+                                                <template #default="scope">
+                                                    <el-image
+                                                        style="width: 150px; height: 100px"
+                                                        :src="scope.row.image"
+                                                        fit="contain"
+                                                    />
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                prop="firstBomId"
+                                                label="一次BOM表"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="firstPurchaseOrderId"
+                                                label="一次采购订单"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="secondBomId"
+                                                label="二次BOM表"
+                                            ></el-table-column>
+                                            <el-table-column
+                                                prop="secondPurchaseOrderId"
+                                                label="二次采购订单"
+                                            ></el-table-column>
+                                        </el-table>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                    prop="inheritId"
+                                    label="工厂型号"
+                                    align="center"
+                                    width="100"
+                                ></el-table-column>
+                                <el-table-column
+                                    prop="customerId"
+                                    label="客户型号"
+                                    align="center"
+                                ></el-table-column>
+                                <el-table-column
+                                    prop="designer"
+                                    label="设计员"
+                                    align="center"
+                                ></el-table-column>
+                                <el-table-column
+                                    prop="status"
+                                    label="状态"
+                                    align="center"
+                                ></el-table-column>
+                                <el-table-column label="操作" align="center">
+                                    <template #default="scope">
+                                        <el-button
+                                            v-if="scope.row.status === '未上传'"
+                                            type="primary"
+                                            @click="openUploadDialog(scope.row)"
+                                            >创建工艺单（生产指令单）</el-button
+                                        >
+                                        <div v-else-if="scope.row.status === '已下发'">
+                                            <el-button
+                                                type="primary"
+                                                @click="openPreviewDialog(scope.row)"
+                                                >查看</el-button
+                                            >
+                                            <!-- <el-button
+                                        type="success"
+                                        @click="downloadProductionInstruction(scope.row)"
+                                        >下载工艺单（生产指令单）EXCEL</el-button
+                                    >
+                                    <el-button
+                                        type="warning"
+                                        @click="downloadProductionInstructionImage(scope.row)"
+                                        >下载备注图片</el-button
+                                    > -->
+                                        </div>
+                                        <div v-else-if="scope.row.status === '已审核'">
+                                            <el-button
+                                                type="primary"
+                                                @click="openPreviewDialog(scope.row)"
+                                                >查看</el-button
+                                            >
+                                            <!-- <el-button
+                                        type="success"
+                                        @click="downloadProductionInstruction(scope.row)"
+                                        >下载工艺单（生产指令单）EXCEL</el-button
+                                    >
+                                    <el-button
+                                        type="warning"
+                                        @click="downloadProductionInstructionImage(scope.row)"
+                                        >下载备注图片</el-button
+                                    > -->
+                                        </div>
+
+                                        <div v-else-if="scope.row.status === '已上传'">
+                                            <el-button
+                                                type="primary"
+                                                @click="openEditDialog(scope.row)"
+                                                >编辑工艺单（生产指令单）</el-button
+                                            >
+                                            <el-button
+                                                type="success"
+                                                @click="openPreviewDialog(scope.row)"
+                                                >预览工艺单（生产指令单）</el-button
+                                            >
+                                        </div>
+                                    </template></el-table-column
+                                >
+                            </el-table></el-col
+                        >
+                    </el-row>
+                    <el-row :gutter="22" style="margin-top: 10px">
+                        <el-col :span="6" :offset="20"
+                            ><el-button type="primary" size="default" @click="openIssueDialog"
+                                >下发工艺单（生产指令单）</el-button
+                            >
+                        </el-col>
+                    </el-row>
+                    <el-dialog title="正式投产指令单下发页面" v-model="isFinalBOM" width="90%">
+                        <el-descriptions title="订单信息" :column="2" border>
+                            <el-descriptions-item label="订单编号" align="center">{{
+                                orderData.orderId
+                            }}</el-descriptions-item>
+                            <el-descriptions-item label="订单创建时间" align="center">{{
+                                orderData.createTime
+                            }}</el-descriptions-item>
+                            <el-descriptions-item label="客户名称" align="center">{{
+                                orderData.customerName
+                            }}</el-descriptions-item>
+                            <el-descriptions-item label="订单预计截止日期" align="center">{{
+                                orderData.deadlineTime
+                            }}</el-descriptions-item>
+                        </el-descriptions>
+                        <div style="height: 400px; overflow-y: scroll; overflow-x: hidden">
+                            <el-row :gutter="20" style="margin-bottom: 20px">
+                                <el-col :span="24">
+                                    <el-table
+                                        :data="unIssueBOMData"
+                                        border
+                                        style="height: 400px"
+                                        @selection-change="handleShoeSelectionChange"
+                                    >
+                                        <el-table-column
+                                            type="selection"
+                                            width="55"
+                                        ></el-table-column>
+                                        <el-table-column
+                                            prop="inheritId"
+                                            label="工厂型号"
+                                            align="center"
+                                            width="100"
+                                        ></el-table-column>
+                                        <el-table-column
+                                            prop="customerId"
+                                            label="客户型号"
+                                            align="center"
+                                        ></el-table-column>
+                                        <el-table-column
+                                            prop="designer"
+                                            label="设计员"
+                                            align="center"
+                                        ></el-table-column>
+                                        <el-table-column
+                                            prop="editter"
+                                            label="调版员"
+                                            align="center"
+                                        ></el-table-column>
+                                        <el-table-column label="操作" align="center">
+                                            <template #default="scope">
+                                                <el-button
+                                                    type="primary"
+                                                    size="default"
+                                                    @click="openPreviewDialog(scope.row)"
+                                                    >查看工艺单（生产指令单）</el-button
+                                                >
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                </el-col>
+                            </el-row>
+                        </div>
+                        <template #footer>
+                            <span>
+                                <el-button @click="isFinalBOM = false">取消</el-button>
+                                <el-button type="primary" @click="confirmBOMIssue(selectedShoe)"
+                                    >下发选定工艺单（生产指令单）</el-button
+                                >
+                            </span>
+                        </template>
+                    </el-dialog>
+                    <el-dialog
+                        :title="`工艺单预览 ${newcraftSheetId}`"
+                        v-model="isPreviewDialogVisible"
+                        width="90%"
+                    >
+                        <div style="height: 650px; overflow-y: scroll">
+                            <el-row :gutter="20">
+                                <el-col :span="23" :offset="0">
+                                    <el-descriptions
+                                        title="鞋型基本信息"
+                                        border
+                                        direction="vertical"
+                                        column="4"
+                                        style="margin-top: 20px"
+                                    >
+                                        <el-descriptions-item
+                                            label="鞋图"
+                                            :rowspan="3"
+                                            align="center"
+                                            :width="200"
+                                        >
+                                            <el-image
+                                                style="width: 200px; height: 100px"
+                                                :src="currentShoeImageUrl"
+                                            />
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="型号" align="center">{{
+                                            currentShoeId
+                                        }}</el-descriptions-item>
+                                        <el-descriptions-item label="客户号" align="center">{{
+                                            orderShoeData.customerProductName
+                                        }}</el-descriptions-item>
+                                        <el-descriptions-item label="色号" align="center">{{
+                                            orderShoeData.color
+                                        }}</el-descriptions-item>
+                                        <el-descriptions-item label="设计师" align="center">{{
+                                            orderShoeData.shoeDesigner
+                                        }}</el-descriptions-item>
+                                        <el-descriptions-item label="调版员" align="center">{{
+                                            orderShoeData.shoeAdjuster
+                                        }}</el-descriptions-item>
+                                        <el-descriptions-item label="商标" align="center">{{
+                                            orderShoeData.brandName
+                                        }}</el-descriptions-item>
+                                    </el-descriptions>
+                                </el-col>
+                            </el-row>
+                            <el-row :gutter="20">
+                                <el-col :span="23" :offset="0">
+                                    <el-descriptions
+                                        title="工艺单公用信息"
+                                        border
+                                        :column="3"
+                                        direction="vertical"
+                                    >
+                                        <el-descriptions-item
+                                            label="备注图片"
+                                            :rowspan="2"
+                                            width="200"
+                                        >
+                                            <el-image
+                                                :src="craftSheetDetail.picNoteImgPath"
+                                                fit="fill"
+                                                :lazy="true"
+                                            ></el-image>
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="调版员" width="500">
+                                            {{ craftSheetDetail.adjuster }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="刀模">
+                                            {{ craftSheetDetail.cutDie }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="生产额外数量要求">
+                                            {{ craftSheetDetail.productionRemark }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="审核人">
+                                            {{ craftSheetDetail.reviewer }}
+                                        </el-descriptions-item>
+                                    </el-descriptions>
+                                    <el-descriptions title="工艺单特殊工艺信息" border :column="1">
+                                        <el-descriptions-item label="裁断特殊工艺">
+                                            {{ craftSheetDetail.cuttingSpecialCraft }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="针车特殊工艺">
+                                            {{ craftSheetDetail.sewingSpecialCraft }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="成型特殊工艺">
+                                            {{ craftSheetDetail.moldingSpecialCraft }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="后处理备注">
+                                            {{ craftSheetDetail.postProcessing }}
+                                        </el-descriptions-item>
+                                        <el-descriptions-item label="科盛油性胶">
+                                            {{ craftSheetDetail.oilyGlue }}
+                                        </el-descriptions-item>
+                                    </el-descriptions>
+                                </el-col>
+                            </el-row>
+
+                            <el-tabs v-model="activeTab">
+                                <!-- Generate tabs from backend-provided tabcolor array -->
+                                <el-tab-pane
+                                    v-for="color in tabcolor"
+                                    :label="color"
+                                    :key="color"
+                                    :name="color"
+                                    style="overflow-y: scroll"
+                                >
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 面料： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('surfaceMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 里料： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('insideMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 辅料： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('accessoryMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 大底： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('outsoleMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 中底： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('midsoleMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 楦头： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('lastMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="2" :offset="0"> 烫底： </el-col>
+                                    </el-row>
+                                    <el-row :gutter="20">
+                                        <el-col :span="23" :offset="0">
+                                            <MaterialDataTable
+                                                :tableData="
+                                                    getMaterialDataByType('hotsoleMaterialData')
+                                                "
+                                            />
+                                        </el-col>
+                                    </el-row>
+                                </el-tab-pane>
+                            </el-tabs>
+                            <el-row :gutter="20">
+                                <el-col :span="23" :offset="0"> 刀模图： </el-col>
+                            </el-row>
+                            <el-row :gutter="20">
+                                <el-col :span="23" :offset="0">
+                                    <el-image
+                                        :src="craftSheetDetail.cutDieImgPath"
+                                        style="width: 800px"
+                                    ></el-image>
+                                </el-col>
+                            </el-row>
+                        </div>
+
+                        <template #footer>
+                            <span>
+                                <el-button type="primary" @click="isPreviewDialogVisible = false"
+                                    >确认</el-button
+                                >
+                            </span>
+                        </template>
+                    </el-dialog>
+                </el-col>
+            </el-row>
+        </el-main>
+    </el-container>
+</template>
+
+<script>
+import AllHeader from '@/components/AllHeader.vue'
+import Arrow from '@/components/OrderArrowView.vue'
+import MaterialDataTable from '../components/MaterialDataTableWithUsage.vue'
+import axios from 'axios'
+import { ElMessage } from 'element-plus'
+export default {
+    components: {
+        AllHeader,
+        Arrow,
+        MaterialDataTable
+    },
+    props: ['orderId'],
+    data() {
+        return {
+            orderShoeData: {},
+            departmentOptions: [],
+            activeTab: '',
+            tabcolor: [],
+            materialWholeData: [],
+            universalMaterialWholeData: [],
+            surfaceMaterialData: [],
+            insideMaterialData: [],
+            accessoryMaterialData: [],
+            outsoleMaterialData: [],
+            midsoleMaterialData: [],
+            lastMaterialData: [],
+            typeSymbol: 0,
+            materialTypeSearch: '',
+            materialSearch: '',
+            factorySearch: '',
+            isUniversalMaterialCraftVisDialog: false,
+            isEditDialogVisible: false,
+            isProductionOrderCreateDialogVisible: false,
+            isUploadImageNoteDialogVisible: false,
+            isMaterialCraftVisDialog: false,
+            isPreviewDialogVisible: false,
+            token: localStorage.getItem('token'),
+            currentShoeId: '',
+            currentColor: '',
+            currentShoeImageUrl: '',
+            fileList: [],
+            fileListPicNote: [],
+            isUploadImageDialogVisible: false,
+            createEditSymbol: 0,
+            sizeData: [],
+            currentSizeData: [],
+            currentSizeIndex: 0,
+            isSizeDialogVisible: false,
+            selectedShoe: '',
+            unIssueBOMData: [],
+            updateKey: 0,
+            editVis: false,
+            editBomId: '',
+            previewBomId: '',
+            newBomId: '',
+            currentBomShoeId: '',
+            materialSelectRow: null,
+            materialAddfinished: false,
+            assetFilterTable: [],
+            colorOptions: [],
+            newMaterialVis: false,
+            updateArrowKey: 0,
+            orderData: {},
+            testTableData: [],
+            testTableFilterData: [],
+            bomTestData: [],
+            editBomData: [],
+            originalBomTestData: [],
+            selectedFile: null,
+            inheritIdSearch: '',
+            isFinalBOM: false,
+            orderProduceInfo: [],
+            newcraftSheetId: '',
+            cutDieImgData: {
+                orderId: '',
+                orderShoeId: '',
+                craftSheetId: ''
+            },
+            picNoteImgData: {
+                orderId: '',
+                orderShoeId: '',
+                craftSheetId: ''
+            },
+            defaultManuallyAddedMaterial: {
+                materialType: '',
+                materialDetailType: '',
+                materialName: '',
+                materialModel: '',
+                materialSpecification: '',
+                color: '',
+                unit: '',
+                supplierName: '',
+                comment: '',
+                isPurchase: false,
+                materialSource: 'C',
+                manualSymbol: 1
+            },
+            craftSheetDetail: {
+                adjuster: '',
+                cutDie: '',
+                reviewer: '',
+                productionRemark: '',
+                cuttingSpecialCraft: '',
+                sewingSpecialCraft: '',
+                moldingSpecialCraft: '',
+                postProcessing: '',
+                oilyGlue: '',
+                cutDieImgPath: '',
+                picNoteImgPath: ''
+            },
+            isCraftDialogVisible: false,
+            syncMaterialButtonText: '同步该材料表格至所有颜色',
+            inputCrafts: [], // 手动输入的工艺列表
+            currentRow: null // 当前编辑的行,
+        }
+    },
+    created() {
+        this.$setAxiosToken()
+        this.getOrderInfo()
+        this.getAllShoeListInfo()
+        this.getAllDepartmentOptions()
+    },
+    methods: {
+        async getAllDepartmentOptions() {
+            const response = await axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
+            this.departmentOptions = response.data
+            console.log(this.departmentOptions)
+        },
+        async getAllMaterialList() {
+            const response = await axios.get(`${this.$apiBaseUrl}/logistics/getmaterialtypeandname`)
+            this.assetTable = response.data
+            this.assetFilterTable = this.assetTable
+        },
+        async getOrderInfo() {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/order/getorderInfo?orderid=${this.orderId}`
+            )
+            this.orderData = response.data
+            console.log(this.orderData)
+            this.updateArrowKey += 1
+        },
+        async getAllShoeListInfo() {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/craftsheet/getordershoelist?orderid=${this.orderId}`
+            )
+            this.testTableData = response.data
+            this.tableWholeFilter()
+        },
+        async getOrderShoeInfo(orderShoeId) {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/devproductionorder/getordershoeinfo?orderid=${this.orderId}&ordershoeid=${orderShoeId}`
+            )
+            this.orderShoeData = response.data
+        },
+        tableWholeFilter() {
+            if (!this.inheritIdSearch) {
+                this.testTableFilterData = this.testTableData
+                return
+            }
+
+            this.testTableFilterData = this.testTableData.filter((task) => {
+                const inheritMatch = task.inheritId.includes(this.inheritIdSearch)
+                return inheritMatch
+            })
+        },
+        async openPreviewDialog(row) {
+            this.newcraftSheetId = ''
+            this.materialWholeData = []
+            this.currentShoeId = row.inheritId
+            this.currentShoeImageUrl = row.typeInfos[0].image
+            await this.getOrderShoeInfo(row.inheritId)
+            this.getCraftSheetData(row)
+            this.tabcolor = row.typeInfos.map((info) => info.color)
+            this.activeTab = this.tabcolor[0]
+            this.isPreviewDialogVisible = true
+        },
+        async getCraftSheetData(row) {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/craftsheetreview/getcraftsheetinfo?orderid=${this.orderData.orderId}&ordershoeid=${row.inheritId}`
+            )
+            this.craftSheetDetail = response.data.craftSheetDetail
+            this.materialWholeData = response.data.uploadData
+            this.newcraftSheetId = response.data.craftSheetId
+            console.log(this.newcraftSheetId)
+        },
+        getMaterialDataByType(type) {
+            const activeData = this.materialWholeData.find((item) => item.color === this.activeTab)
+            if (activeData) {
+                return activeData[type]
+            }
+            return []
+        },
+        openIssueDialog() {
+            this.isFinalBOM = true
+            this.unIssueBOMData = this.testTableData.filter((row) => row.status === '已下发')
+            console.log(this.unIssueBOMData)
+        },
+        handleShoeSelectionChange(selection) {
+            this.selectedShoe = selection
+            console.log(this.selectedShoe)
+        },
+        async issueBOMs(selectedShoe) {
+            if (selectedShoe.length == 0) {
+                ElMessage.error('未选择鞋型')
+                return
+            }
+            const loadingInstance = this.$loading({
+                lock: true,
+                text: '等待中，请稍后...',
+                background: 'rgba(0, 0, 0, 0.7)'
+            })
+            const response = await axios.post(`${this.$apiBaseUrl}/craftsheetreview/issue`, {
+                orderId: this.orderData.orderId,
+                orderShoeIds: selectedShoe.map((shoe) => shoe.inheritId)
+            })
+            loadingInstance.close()
+            if (response.status !== 200) {
+                this.$message({
+                    type: 'error',
+                    message: '下发失败'
+                })
+                return
+            }
+            this.$message({
+                type: 'success',
+                message: '下发成功'
+            })
+            this.isFinalBOM = false
+            this.getAllShoeListInfo()
+        },
+        confirmBOMIssue() {
+            this.$confirm('确定下发选定投产指令单吗？', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning'
+            })
+                .then(() => {
+                    this.issueBOMs(this.selectedShoe)
+                })
+                .catch(() => {
+                    this.$message({
+                        type: 'info',
+                        message: '已取消下发'
+                    })
+                })
+        },
+    }
+}
+</script>

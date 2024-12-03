@@ -124,9 +124,6 @@
                     <el-descriptions-item label="订单预计截止日期" align="center">{{
                         orderData.deadlineTime
                         }}</el-descriptions-item>
-                    <el-descriptions-item label="工艺单"><el-button type="primary" size="default"
-                            @click="downloadProductionOrderList">查看投产指令单</el-button>
-                    </el-descriptions-item>
                     <!-- <el-descriptions-item label="生产订单"><el-button type="primary" size="default"
                             @click="downloadProductionOrder">查看生产订单</el-button>
                     </el-descriptions-item> -->
@@ -147,24 +144,14 @@
                             <el-table-column prop="materialName" label="材料名称">
                             </el-table-column>
                             <el-table-column prop="materialModel" label="材料类型">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.materialModel" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="materialSpecification" label="材料规格">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.materialSpecification" size="default" />
-                                </template>
                             </el-table-column>
+                            <el-table-column prop="craftName" label="工艺名称"></el-table-column>
                             <el-table-column prop="color" label="颜色">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.color" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="unit" label="单位" width="120" />
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
-                            <el-table-column prop="materialCategory" label="材料数量类型"
-                                :formatter="categroryFormatter"></el-table-column>
                             <el-table-column prop="pairs" label="双数" width="175">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0" v-model="scope.row.pairs"
@@ -180,6 +167,7 @@
                                         @click="openSizeDialog(scope.row, scope.$index)">尺码用量填写</el-button>
                                 </template>
                             </el-table-column>
+                            <el-table-column prop="firstBomUsage" label="采购单位用量"></el-table-column>
                             <el-table-column prop="approvalUsage" label="核定用量" width="175">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
@@ -188,26 +176,17 @@
                             </el-table-column>
                             <el-table-column prop="useDepart" label="使用工段">
                                 <template #default="scope">
-                                    <el-select v-model="scope.row.useDepart" size="default">
+                                    <el-select v-model="scope.row.useDepart" size="default" disabled>
                                         <el-option v-for="item in departmentOptions" :key="item.value"
                                             :label="item.label" :value="item.value"></el-option>
                                     </el-select>
                                 </template>
                             </el-table-column>
                             <el-table-column label="备注">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.comment" size="default" />
-                                </template>
                             </el-table-column>
-                            <el-table-column label="操作" width="100">
-                                <template #default="scope">
-                                    <el-button type="danger"
-                                        @click="deleteCurrentRow(scope.$index, bomTestData)">删除</el-button>
-                                </template></el-table-column>
                         </el-table>
                     </el-row>
                 </div>
-                <el-button type="primary" size="default" @click="openNewMaterialDialog">添加新部件</el-button>
 
                 <template #footer>
                     <span>
@@ -250,6 +229,8 @@
                                 <el-table-column prop="materialName" label="材料名称" />
                                 <el-table-column prop="materialModel" label="材料类型"></el-table-column>
                                 <el-table-column prop="materialSpecification" label="材料规格" />
+                                <el-table-column prop="craftName" label="工艺名称"></el-table-column>
+
                                 <el-table-column prop="color" label="颜色" />
                                 <el-table-column prop="unit" label="单位" />
                                 <el-table-column prop="supplierName" label="厂家名称" />
@@ -259,6 +240,7 @@
                                             @click="openSizeDialog(scope.row, scope.$index)">尺码用量查看</el-button>
                                     </template>
                                 </el-table-column>
+                                <el-table-column prop="firstBomUsage" label="采购单位用量" />
                                 <el-table-column prop="approvalUsage" label="核定用量">
                                 </el-table-column>
                                 <el-table-column prop="useDepart" label="使用工段">
@@ -446,28 +428,14 @@
                             <el-table-column prop="materialName" label="材料名称">
                             </el-table-column>
                             <el-table-column prop="materialModel" label="材料类型">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.materialModel" size="default" />
-                                </template>
                             </el-table-column>
                             <el-table-column prop="materialSpecification" label="材料规格">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.materialSpecification" size="default" />
-                                </template>
                             </el-table-column>
+                            <el-table-column prop="craftName" label="工艺名称"></el-table-column>
                             <el-table-column prop="color" label="颜色">
-                                <template #default="scope">
-                                    <el-select v-model="scope.row.color" size="default">
-                                        <el-option v-for="item in colorOptions" :key="item.value" :label="item.label"
-                                            :value="item.value"></el-option>
-                                    </el-select>
-                                </template>
                             </el-table-column>
-                            <el-table-column prop="unit" label="单位" width="100">
-                            </el-table-column>
+                            <el-table-column prop="unit" label="单位" width="120" />
                             <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
-                            <el-table-column prop="materialCategory" label="材料数量类型"
-                                :formatter="categroryFormatter"></el-table-column>
                             <el-table-column prop="pairs" label="双数" width="175">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0" v-model="scope.row.pairs"
@@ -483,31 +451,23 @@
                                         @click="openSizeDialog(scope.row, scope.$index)">尺码用量填写</el-button>
                                 </template>
                             </el-table-column>
+                            <el-table-column prop="firstBomUsage" label="采购单位用量"></el-table-column>
                             <el-table-column prop="approvalUsage" label="核定用量" width="175">
                                 <template #default="scope">
                                     <el-input-number v-if="scope.row.materialCategory == 0"
-                                        v-model="scope.row.approvalUsage" step="0.001" size="default"
-                                        @change="approvalUsageChange(scope.row)" />
+                                        v-model="scope.row.approvalUsage" step="0.001" size="default" />
                                 </template>
                             </el-table-column>
                             <el-table-column prop="useDepart" label="使用工段">
                                 <template #default="scope">
-                                    <el-select v-model="scope.row.useDepart" size="default">
+                                    <el-select v-model="scope.row.useDepart" size="default" disabled>
                                         <el-option v-for="item in departmentOptions" :key="item.value"
                                             :label="item.label" :value="item.value"></el-option>
                                     </el-select>
                                 </template>
                             </el-table-column>
                             <el-table-column label="备注">
-                                <template #default="scope">
-                                    <el-input v-model="scope.row.comment" size="default" />
-                                </template>
                             </el-table-column>
-                            <el-table-column label="操作">
-                                <template #default="scope">
-                                    <el-button type="danger" @click="deleteCurrentRow(scope.row, editBomData)">删除
-                                    </el-button>
-                                </template></el-table-column>
                         </el-table>
                     </el-row>
                 </div>
@@ -713,6 +673,7 @@ export default {
             this.sizeData = row.sizeInfo
             console.log(this.sizeData)
             this.isSizeDialogVisible = true
+            console.log(index)
             this.currentSizeIndex = index
         },
         confirmSizeAmount() {

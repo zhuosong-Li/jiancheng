@@ -55,6 +55,10 @@ export default {
                 console.log(row)
                 url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
             }
+            if (row.taskName === '二次BOM用量审批') {
+                console.log(row)
+                url = `${window.location.origin}/technicalmanager/secondbomusagereview/orderid=${row.orderId}`;
+            }
             if (url) {
                 window.open(url, '_blank');
             }

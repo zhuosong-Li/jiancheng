@@ -44,6 +44,7 @@ class BomItem(db.Model):
     size_type = db.Column(db.String(1), nullable=False, default="E")
     material_second_type = db.Column(db.String(10), nullable=True)
     craft_name = db.Column(db.String(60), nullable=True)
+    pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -227,6 +228,7 @@ class MaterialStorage(db.Model):
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
+    department_id = db.Column(db.Integer)
 
     craft_name = db.Column(db.String(60), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
@@ -824,6 +826,9 @@ class SizeMaterialStorage(db.Model):
     material_id = db.Column(
         db.BigInteger,
     )
+    department_id = db.Column(
+        db.Integer,
+    )
     size_material_color = db.Column(db.String(40), default='', nullable=True)
     order_shoe_id = db.Column(db.BigInteger)
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
@@ -1128,6 +1133,8 @@ class CraftSheet(db.Model):
     oily_glue = db.Column(db.String(300), nullable=True)
     cut_die_img_path = db.Column(db.String(100), nullable=True)
     pic_note_img_path = db.Column(db.String(100), nullable=True)
+    craft_sheet_status = db.Column(db.String(1), nullable=False)
+    reviewer = db.Column(db.String(20), nullable=True)
     def __repr__(self):
         return f"<CraftSheet(craft_sheet_id={self.craft_sheet_id})>"
 
@@ -1144,6 +1151,9 @@ class CraftSheetItem(db.Model):
     material_second_type = db.Column(db.String(10), nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
-    craft_name = db.Column(db.String(30), nullable=True)
+    craft_name = db.Column(db.String(60), nullable=True)
+    material_source = db.Column(db.String(1), nullable=True)
+    pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
+    unit_usage = db.Column(db.DECIMAL(10, 3), nullable=True)
     def __repr__(self):
         return f"<CraftSheetItem(craft_sheet_item_id={self.craft_sheet_item_id})>"

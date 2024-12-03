@@ -251,6 +251,21 @@ def get_current_bom_item():
     for row in bom_items:
         bom_item, material, material_type, department, supplier = row
         sizeInfo = []
+        first_bom_item_record = (
+            db.session.query(BomItem, Bom)
+            .join(Bom, BomItem.bom_id == Bom.bom_id)
+            .filter(
+                Bom.order_shoe_type_id == order_shoe_type_id,
+                Bom.bom_type == 0,
+                BomItem.material_id == material.material_id,
+                BomItem.material_model == bom_item.material_model,
+                BomItem.material_specification == bom_item.material_specification,
+            ).first()
+        )
+        if first_bom_item_record:
+            first_bom_usage = first_bom_item_record.BomItem.unit_usage
+        else:
+            first_bom_usage = 0
         for i in range(len(shoe_size_names)):
             index = i + 34
             obj = {
@@ -270,8 +285,10 @@ def get_current_bom_item():
                 "materialModel": bom_item.material_model,
                 "materialSpecification": bom_item.material_specification,
                 "supplierName": supplier.supplier_name,
+                "firstBomUsage": first_bom_usage,
                 "useDepart": department.department_id if department else None,
-                "pairs": 0.00,
+                "pairs": bom_item.pairs if bom_item.pairs else 0.00,
+                "craftName": bom_item.craft_name,
                 "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material.material_category == 0 else None,
                 "approvalUsage": bom_item.total_usage if bom_item.total_usage else 0.00,
                 "unit": material.material_unit,
@@ -316,6 +333,7 @@ def save_bom_usage():
                 material_specification=bom_item["materialSpecification"] if bom_item["materialSpecification"] else "",
                 bom_item_add_type=1,
                 bom_item_color=bom_item["color"] if bom_item["color"] else None,
+                pairs = bom_item["pairs"] if bom_item["pairs"] else 0.00
             )
             for i in range(len(bom_item["sizeInfo"])):
                 setattr(bom_item_entity, f"size_{i}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
@@ -366,6 +384,21 @@ def get_bom_details():
     for bom_item in bom_items:
         item, material, material_type, department, supplier = bom_item
         sizeInfo = []
+        first_bom_item_record = (
+            db.session.query(BomItem, Bom)
+            .join(Bom, BomItem.bom_id == Bom.bom_id)
+            .filter(
+                Bom.order_shoe_type_id == order_shoe_type_id,
+                Bom.bom_type == 0,
+                BomItem.material_id == material.material_id,
+                BomItem.material_model == bom_item.material_model,
+                BomItem.material_specification == bom_item.material_specification,
+            ).first()
+        )
+        if first_bom_item_record:
+            first_bom_usage = first_bom_item_record.BomItem.unit_usage
+        else:
+            first_bom_usage = 0
         for i in range(len(shoe_size_names)):
             index = i + 34
             obj = {
@@ -384,6 +417,8 @@ def get_bom_details():
                 "materialSpecification": item.material_specification,
                 "supplierName": supplier.supplier_name,
                 "useDepart": department.department_id,
+                "craftName": item.craft_name,
+                "firstBomUsage": first_bom_usage,
                 "unitUsage": item.unit_usage if item.unit_usage else 0.00 if material.material_category == 0 else None,
                 "approvalUsage": item.total_usage if item.total_usage else 0.00,
                 "unit": material.material_unit,
@@ -423,10 +458,11 @@ def edit_bom():
             total_usage=item["approvalUsage"],
             department_id=item["useDepart"],
             remark=item["comment"],
-            material_specification=item["materialSpecification"] if item["materialSpecification"] else "",
-            material_model = item["materialModel"] if item["materialModel"] else "",
+            material_specification=item["materialSpecification"] if item["materialSpecification"] else None,
+            material_model = item["materialModel"] if item["materialModel"] else None,
             bom_item_add_type=1,
             bom_item_color=item["color"],
+            pairs = item["pairs"] if item["pairs"] else 0.00
         )
         for i, size in enumerate(SHOESIZERANGE):
             setattr(bom_item, f"size_{size}_total_usage", item["sizeInfo"][i]["approvalAmount"])
@@ -506,7 +542,7 @@ def issue_boms():
             )
             bom.bom_status = "3"
             bom.total_bom_id = total_bom.total_bom_id
-            db.session.commit()
+            db.session.flush()
             bom_id = bom.bom_id
             bom_items = (
                 db.session.query(BomItem, Material, MaterialType, Supplier, Department)
@@ -523,6 +559,19 @@ def issue_boms():
                 .all()
             )
             for bom_item in bom_items:
+                craft_sheet_item = (
+                    db.session.query(CraftSheetItem)
+                    .filter(
+                        CraftSheetItem.material_id == bom_item.Material.material_id,
+                        CraftSheetItem.material_model == bom_item.BomItem.material_model,
+                        CraftSheetItem.material_specification == bom_item.BomItem.material_specification,
+                    )
+                    .first()
+                )
+                if craft_sheet_item:
+                    craft_sheet_item.pairs = bom_item.BomItem.pairs
+                    craft_sheet_item.unit_usage = bom_item.BomItem.unit_usage
+                db.session.flush()
                 # Create a unique key based on the attributes
                 key = (
                     bom_item.MaterialType.material_type_name,
@@ -625,7 +674,6 @@ def issue_boms():
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
         db.session.commit()
-        processor = EventProcessor()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
@@ -638,7 +686,6 @@ def issue_boms():
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
         db.session.commit()
-        processor = EventProcessor()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
@@ -651,7 +698,6 @@ def issue_boms():
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
         db.session.commit()
-        processor = EventProcessor()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
