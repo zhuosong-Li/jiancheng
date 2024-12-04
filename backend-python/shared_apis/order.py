@@ -30,7 +30,7 @@ from models import (
     Bom,
     TotalBom,
     PackagingInfo,
-    BatchInfoType
+    BatchInfoType,
 )
 
 order_bp = Blueprint("order_bp", __name__)
@@ -39,6 +39,13 @@ ORDER_IN_PROD_STATUS = 9
 PACKAGING_SPECS_UPLOADED = "2"
 BUSINESS_MANAGER_ROLE = 4
 BUSINESS_CLERK_ROLE = 21
+
+DEV_ORDER_SHOE_STATUS = 0
+FIRST_DEV_DEPARTMENT_MANAGER = 7
+SECOND_DEV_DEPARTMENT_MANAGER = 22
+THIRD_DEV_DEPARTMENT_MANAGER = 23
+DEV_DEPARTMENT_MANAGER_MAPPING = {7: "设计一部", 22: "设计二部", 23: "设计三部"}
+
 
 @order_bp.route("/ordershoe/getordershoebyorder", methods=["GET"])
 def get_order_shoe_by_order():
@@ -50,6 +57,76 @@ def get_order_shoe_by_order():
         .all()
     )
     return
+
+
+@order_bp.route("/order/getdevordershoebystatus", methods=["GET"])
+def get_dev_orders():
+    print("NEW DEV ORDER API CALL")
+    # TODO hard code deparment name, should be department id
+    current_user_role, current_user_id, current_department_name = current_user_info()
+    # if current_user_role not in (DEV_DEPARTMENT_MANAGER_MAPPING.keys()):
+    #     return jsonify({"error": "not a manager"}), 401
+
+    shoe_department = current_department_name
+    status_val = DEV_ORDER_SHOE_STATUS
+    t_s = time.time()
+    print("ORDERSHOESTATUS GET REQUEST WITH STATUS OF")
+    status_val = request.args.get("ordershoestatus")
+    order_shoe_by_department_table = (
+        db.session.query(
+            OrderShoe.shoe_id,
+            OrderShoe.order_shoe_id,
+            OrderShoe.order_id,
+            Shoe,
+        )
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .filter(Shoe.shoe_department_id == shoe_department)
+        .subquery()
+    )
+    entities = (
+        db.session.query(
+            Order,
+            Customer,
+            func.count(order_shoe_by_department_table.c.order_shoe_id),
+            OrderShoeStatus.current_status_value,
+        )
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .join(order_shoe_by_department_table, order_shoe_by_department_table.c.order_id == Order.order_id)
+        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == order_shoe_by_department_table.c.order_shoe_id)
+        .join(Customer, Order.customer_id == Customer.customer_id)
+        .filter(OrderStatus.order_current_status == ORDER_IN_PROD_STATUS)
+        .filter(OrderShoeStatus.current_status == status_val)
+        .group_by(Order.order_id, OrderShoeStatus.current_status_value)
+        .order_by(Order.start_date.desc())
+        .all()
+    )
+    
+    pending_orders, in_progress_orders = [], []
+    for entity in entities:
+        order, customer, count, status_value = entity
+        formatted_start_date = order.start_date.strftime("%Y-%m-%d")
+        formatted_deadline_date = order.end_date.strftime("%Y-%m-%d")
+        response_obj = {
+            "orderId": order.order_id,
+            "orderRid": order.order_rid,
+            "customerName": customer.customer_name,
+            "orderShoeCount": count,
+            "statusValue": status_value,
+            "createTime": formatted_start_date,
+            "deadlineTime": formatted_deadline_date,
+        }
+        print("current entity has status value of")
+        print(status_value)
+        if status_value == 0:
+            pending_orders.append(response_obj)
+        elif status_value == 1:
+            in_progress_orders.append(response_obj)
+
+    result = {"pendingOrders": pending_orders, "inProgressOrders": in_progress_orders}
+    t_e = time.time()
+    print("Time Taken is ")
+    print(t_e - t_s)
+    return result
 
 
 @order_bp.route("/order/getprodordershoebystatus", methods=["GET"])
@@ -71,7 +148,7 @@ def get_orders_by_status():
         .filter(OrderStatus.order_current_status == ORDER_IN_PROD_STATUS)
         .filter(OrderShoeStatus.current_status == status_val)
         .group_by(Order.order_id, OrderShoeStatus.current_status_value)
-        .order_by (Order.start_date.desc())
+        .order_by(Order.start_date.desc())
         .all()
     )
     pending_orders, in_progress_orders = [], []
@@ -139,9 +216,11 @@ def get_orders_in_production():
     result = {"newOrders": new_orders, "progressOrders": progress_orders}
     return result
 
+
 @order_bp.route("/order/onmount", methods=["GET"])
 def get_on_mount():
     return current_user()
+
 
 @order_bp.route("/order/getorderInfo", methods=["GET"])
 def get_order_info():
@@ -173,44 +252,54 @@ def get_order_info_business():
     result = {}
     order_id = request.args.get("orderid")
     entity = (
-        db.session.query(Order, Customer, OrderStatus,BatchInfoType,)
+        db.session.query(
+            Order,
+            Customer,
+            OrderStatus,
+            BatchInfoType,
+        )
         .filter(Order.order_id == order_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
-        .join(BatchInfoType, Order.batch_info_type_id == BatchInfoType.batch_info_type_id)
+        .join(
+            BatchInfoType, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
+        )
         .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
         .first()
-        )
+    )
     formatted_start_date = entity.Order.start_date.strftime("%Y-%m-%d")
     formatted_end_date = entity.Order.end_date.strftime("%Y-%m-%d")
 
     order_shoe_entities = (
-        db.session.query(Order, OrderShoe,Shoe)
+        db.session.query(Order, OrderShoe, Shoe)
         .filter(Order.order_id == order_id)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         # .join(Color, Color.shoe_id )
         .all()
-        )
+    )
     batch_info_type_response = {}
     for attr in entity.BatchInfoType.__table__.columns.keys():
         batch_info_type_response[to_camel(attr)] = getattr(entity.BatchInfoType, attr)
     result = {
-        "orderId":entity.Order.order_id,
-        "orderRid":entity.Order.order_rid,
-        "orderCid":entity.Order.order_cid,
-        "batchInfoTypeName":entity.BatchInfoType.batch_info_type_name,
-        "batchInfoType":batch_info_type_response,
-        "dateInfo":formatted_start_date + " —— " + formatted_end_date,
-        "customerInfo":"客人编号:" + entity.Customer.customer_name + " 客人商标: " + entity.Customer.customer_brand,
-        "orderStatus":(
+        "orderId": entity.Order.order_id,
+        "orderRid": entity.Order.order_rid,
+        "orderCid": entity.Order.order_cid,
+        "batchInfoTypeName": entity.BatchInfoType.batch_info_type_name,
+        "batchInfoType": batch_info_type_response,
+        "dateInfo": formatted_start_date + " —— " + formatted_end_date,
+        "customerInfo": "客人编号:"
+        + entity.Customer.customer_name
+        + " 客人商标: "
+        + entity.Customer.customer_brand,
+        "orderStatus": (
             entity.OrderStatus.order_current_status if entity.OrderStatus else "N/A"
         ),
-        "orderStatusVal":(
+        "orderStatusVal": (
             entity.OrderStatus.order_status_value if entity.OrderStatus else "N/A"
         ),
-        "orderShoeAllData":[],
+        "orderShoeAllData": [],
     }
-    if entity.Order.production_list_upload_status == '2':
+    if entity.Order.production_list_upload_status == "2":
         result["wrapRequirementUploadStatus"] = "已上传包装文件"
     else:
         result["wrapRequirementUploadStatus"] = "未上传包装文件"
@@ -222,17 +311,30 @@ def get_order_info_business():
         response["shoeRid"] = order_shoe.Shoe.shoe_rid
         response["shoeCid"] = order_shoe.OrderShoe.customer_product_name
         response["orderShoeStatusList"] = []
-        response["orderShoeRemarkRep"] = "工艺备注:" + order_shoe.OrderShoe.business_technical_remark + " \n" + "材料备注:" + order_shoe.OrderShoe.business_material_remark
-        response["orderShoeTechnicalRemark"] = order_shoe.OrderShoe.business_technical_remark
-        response["orderShoeMaterialRemark"] = order_shoe.OrderShoe.business_material_remark
-        response["orderShoeRemarkExist"] = not (order_shoe.OrderShoe.business_technical_remark == "" and order_shoe.OrderShoe.business_material_remark == "")
+        response["orderShoeRemarkRep"] = (
+            "工艺备注:"
+            + order_shoe.OrderShoe.business_technical_remark
+            + " \n"
+            + "材料备注:"
+            + order_shoe.OrderShoe.business_material_remark
+        )
+        response["orderShoeTechnicalRemark"] = (
+            order_shoe.OrderShoe.business_technical_remark
+        )
+        response["orderShoeMaterialRemark"] = (
+            order_shoe.OrderShoe.business_material_remark
+        )
+        response["orderShoeRemarkExist"] = not (
+            order_shoe.OrderShoe.business_technical_remark == ""
+            and order_shoe.OrderShoe.business_material_remark == ""
+        )
         # response["orderShoeStatus"] = order_shoe.OrderShoeStatus.current_status
         # response["orderShoeStatusVal"] = order_shoe.OrderShoeStatus.current_status_value
         result["orderShoeAllData"].append(response)
         order_shoe_id = order_shoe.OrderShoe.order_shoe_id
         if order_shoe_id not in order_shoe_ids:
             order_shoe_ids.append(order_shoe_id)
-        
+
         # order_shoe_status_entities = (db.session.query(OrderShoe, OrderShoeStatus, OrderShoeStatusReference)
         # .filter(OrderShoe.order_shoe_id == order_shoe_id)
         # .join(OrderShoeStatus, OrderShoe.order_shoe_id == OrderShoeStatus.order_shoe_id)
@@ -241,134 +343,175 @@ def get_order_info_business():
         # print(order_shoe_status_entities)
         # print(order_shoe_id)
 
-    order_shoe_id_to_status = {order_shoe_id:"" for order_shoe_id in order_shoe_ids}
-    order_shoe_id_to_order_shoe_types = {order_shoe_id:[] for order_shoe_id in order_shoe_ids}
+    order_shoe_id_to_status = {order_shoe_id: "" for order_shoe_id in order_shoe_ids}
+    order_shoe_id_to_order_shoe_types = {
+        order_shoe_id: [] for order_shoe_id in order_shoe_ids
+    }
     for order_shoe_id in order_shoe_ids:
-        order_shoe_status_entities = (db.session.query(OrderShoeStatus, OrderShoeStatusReference)
+        order_shoe_status_entities = (
+            db.session.query(OrderShoeStatus, OrderShoeStatusReference)
             .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
-            .join(OrderShoeStatusReference, OrderShoeStatus.current_status == OrderShoeStatusReference.status_id)
+            .join(
+                OrderShoeStatusReference,
+                OrderShoeStatus.current_status == OrderShoeStatusReference.status_id,
+            )
             .all()
         )
         for entity in order_shoe_status_entities:
-            status_message = (entity.OrderShoeStatusReference.status_name)
+            status_message = entity.OrderShoeStatusReference.status_name
             order_shoe_id_to_status[order_shoe_id] += status_message
 
-
-        order_shoe_type_entities = (db.session.query(OrderShoeType, Color, ShoeType)
+        order_shoe_type_entities = (
+            db.session.query(OrderShoeType, Color, ShoeType)
             .filter(OrderShoeType.order_shoe_id == order_shoe_id)
             .join(ShoeType, OrderShoeType.shoe_type_id == ShoeType.shoe_type_id)
             .join(Color, Color.color_id == ShoeType.color_id)
-            ).all()
+        ).all()
 
-
-        order_shoe_type_ids = [entity.OrderShoeType.order_shoe_type_id for entity in order_shoe_type_entities]
+        order_shoe_type_ids = [
+            entity.OrderShoeType.order_shoe_type_id
+            for entity in order_shoe_type_entities
+        ]
 
         for entity in order_shoe_type_entities:
-                response_order_shoe = {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
-                        "shoeTypeColorName":entity.Color.color_name,
-                       "shoeTypeColorId":entity.Color.color_id,
-                       "customerColorName":entity.OrderShoeType.customer_color_name,
-                       "shoeTypeImgUrl":entity.ShoeType.shoe_image_url,
-                       "shoeTypeBatchInfoList":[]
-                    }
-                order_shoe_type_unit_price = entity.OrderShoeType.unit_price
-                order_shoe_type_currency_type = entity.OrderShoeType.currency_type
-                shoe_type_batch_infos = (db.session.query(OrderShoeBatchInfo, PackagingInfo)
-                    .filter(OrderShoeBatchInfo.order_shoe_type_id == entity.OrderShoeType.order_shoe_type_id)
-                    .join(PackagingInfo, OrderShoeBatchInfo.packaging_info_id == PackagingInfo.packaging_info_id)
-                    ).all()
-                total_size_34 = 0
-                total_size_35 = 0
-                total_size_36 = 0
-                total_size_37 = 0
-                total_size_38 = 0
-                total_size_39 = 0
-                total_size_40 = 0
-                total_size_41 = 0
-                total_size_42 = 0
-                total_size_43 = 0
-                total_size_44 = 0
-                total_size_45 = 0
-                total_size_46 = 0
-                overall_total = 0
-                unit_price = 0
-                total_price = 0
-                currency_type = ''
-                database_attr_list = ["packaging_info_name", "packaging_info_locale", "size_34_ratio",
-                "size_35_ratio","size_36_ratio","size_37_ratio","size_38_ratio","size_39_ratio","size_40_ratio",
-                "size_41_ratio","size_42_ratio","size_43_ratio","size_44_ratio","size_45_ratio","size_46_ratio",
-                "total_quantity_ratio"]
-                db_attr_to_froend_key = {}
-                for entity in shoe_type_batch_infos:
-                    total_size_34 += entity.OrderShoeBatchInfo.size_34_amount
-                    total_size_35 += entity.OrderShoeBatchInfo.size_35_amount
-                    total_size_36 += entity.OrderShoeBatchInfo.size_36_amount
-                    total_size_37 += entity.OrderShoeBatchInfo.size_37_amount
-                    total_size_38 += entity.OrderShoeBatchInfo.size_38_amount
-                    total_size_39 += entity.OrderShoeBatchInfo.size_39_amount
-                    total_size_40 += entity.OrderShoeBatchInfo.size_40_amount
-                    total_size_41 += entity.OrderShoeBatchInfo.size_41_amount
-                    total_size_42 += entity.OrderShoeBatchInfo.size_42_amount
-                    total_size_43 += entity.OrderShoeBatchInfo.size_43_amount
-                    total_size_44 += entity.OrderShoeBatchInfo.size_44_amount
-                    total_size_45 += entity.OrderShoeBatchInfo.size_45_amount
-                    total_size_46 += entity.OrderShoeBatchInfo.size_46_amount
-                    overall_total += entity.OrderShoeBatchInfo.total_amount
-                    total_price += entity.OrderShoeBatchInfo.total_amount * order_shoe_type_unit_price
-                    unit_price = order_shoe_type_unit_price
-                    currency_type = order_shoe_type_currency_type
-                    # batchInfoEntity = {}
-                    # for db_attr in database_attr_list:
-                    #     print("getting this db_attr " + db_attr)
-                    #     parsed_key = "".join(db_attr.rsplit(db_attr))
-                    #     print(parsed_key)
-                    #     batchInfoEntity[parsed_key] = getattr(entity.PackagingInfo, db_attr)
-                    # response_order_shoe['shoeTypeBatchInfoList'].append(batchInfoEntity)
-                    temp_obj = { to_camel(db_attr) : getattr(entity.PackagingInfo, db_attr) for db_attr in database_attr_list}
-                    temp_obj["unitPerRatio"] = entity.OrderShoeBatchInfo.packaging_info_quantity
-                    response_order_shoe['shoeTypeBatchInfoList'].append(temp_obj)
-                        
-                shoeTypeBatchData = {
-                    "size34Amount":total_size_34,
-                    "size35Amount":total_size_35,
-                    "size36Amount":total_size_36,
-                    "size37Amount":total_size_37,
-                    "size38Amount":total_size_38,
-                    "size39Amount":total_size_39,
-                    "size40Amount":total_size_40,
-                    "size41Amount":total_size_41,
-                    "size42Amount":total_size_42,
-                    "size43Amount":total_size_43,
-                    "size44Amount":total_size_44,
-                    "size45Amount":total_size_45,
-                    "size46Amount":total_size_46,
-                    "totalAmount":overall_total,
-                    "unitPrice": round(float(unit_price), 2),
-                    "totalPrice": round(float(total_price), 2),
-                    "currencyType":currency_type
+            response_order_shoe = {
+                "orderShoeTypeId": entity.OrderShoeType.order_shoe_type_id,
+                "shoeTypeColorName": entity.Color.color_name,
+                "shoeTypeColorId": entity.Color.color_id,
+                "customerColorName": entity.OrderShoeType.customer_color_name,
+                "shoeTypeImgUrl": entity.ShoeType.shoe_image_url,
+                "shoeTypeBatchInfoList": [],
+            }
+            order_shoe_type_unit_price = entity.OrderShoeType.unit_price
+            order_shoe_type_currency_type = entity.OrderShoeType.currency_type
+            shoe_type_batch_infos = (
+                db.session.query(OrderShoeBatchInfo, PackagingInfo)
+                .filter(
+                    OrderShoeBatchInfo.order_shoe_type_id
+                    == entity.OrderShoeType.order_shoe_type_id
+                )
+                .join(
+                    PackagingInfo,
+                    OrderShoeBatchInfo.packaging_info_id
+                    == PackagingInfo.packaging_info_id,
+                )
+            ).all()
+            total_size_34 = 0
+            total_size_35 = 0
+            total_size_36 = 0
+            total_size_37 = 0
+            total_size_38 = 0
+            total_size_39 = 0
+            total_size_40 = 0
+            total_size_41 = 0
+            total_size_42 = 0
+            total_size_43 = 0
+            total_size_44 = 0
+            total_size_45 = 0
+            total_size_46 = 0
+            overall_total = 0
+            unit_price = 0
+            total_price = 0
+            currency_type = ""
+            database_attr_list = [
+                "packaging_info_name",
+                "packaging_info_locale",
+                "size_34_ratio",
+                "size_35_ratio",
+                "size_36_ratio",
+                "size_37_ratio",
+                "size_38_ratio",
+                "size_39_ratio",
+                "size_40_ratio",
+                "size_41_ratio",
+                "size_42_ratio",
+                "size_43_ratio",
+                "size_44_ratio",
+                "size_45_ratio",
+                "size_46_ratio",
+                "total_quantity_ratio",
+            ]
+            db_attr_to_froend_key = {}
+            for entity in shoe_type_batch_infos:
+                total_size_34 += entity.OrderShoeBatchInfo.size_34_amount
+                total_size_35 += entity.OrderShoeBatchInfo.size_35_amount
+                total_size_36 += entity.OrderShoeBatchInfo.size_36_amount
+                total_size_37 += entity.OrderShoeBatchInfo.size_37_amount
+                total_size_38 += entity.OrderShoeBatchInfo.size_38_amount
+                total_size_39 += entity.OrderShoeBatchInfo.size_39_amount
+                total_size_40 += entity.OrderShoeBatchInfo.size_40_amount
+                total_size_41 += entity.OrderShoeBatchInfo.size_41_amount
+                total_size_42 += entity.OrderShoeBatchInfo.size_42_amount
+                total_size_43 += entity.OrderShoeBatchInfo.size_43_amount
+                total_size_44 += entity.OrderShoeBatchInfo.size_44_amount
+                total_size_45 += entity.OrderShoeBatchInfo.size_45_amount
+                total_size_46 += entity.OrderShoeBatchInfo.size_46_amount
+                overall_total += entity.OrderShoeBatchInfo.total_amount
+                total_price += (
+                    entity.OrderShoeBatchInfo.total_amount * order_shoe_type_unit_price
+                )
+                unit_price = order_shoe_type_unit_price
+                currency_type = order_shoe_type_currency_type
+                # batchInfoEntity = {}
+                # for db_attr in database_attr_list:
+                #     print("getting this db_attr " + db_attr)
+                #     parsed_key = "".join(db_attr.rsplit(db_attr))
+                #     print(parsed_key)
+                #     batchInfoEntity[parsed_key] = getattr(entity.PackagingInfo, db_attr)
+                # response_order_shoe['shoeTypeBatchInfoList'].append(batchInfoEntity)
+                temp_obj = {
+                    to_camel(db_attr): getattr(entity.PackagingInfo, db_attr)
+                    for db_attr in database_attr_list
                 }
+                temp_obj["unitPerRatio"] = (
+                    entity.OrderShoeBatchInfo.packaging_info_quantity
+                )
+                response_order_shoe["shoeTypeBatchInfoList"].append(temp_obj)
 
-                response_order_shoe["shoeTypeBatchData"] = shoeTypeBatchData
-                order_shoe_id_to_order_shoe_types[order_shoe_id].append(response_order_shoe)
-            # for entity in order_shoe_type_entities:
-            #     order_shoe_id_to_order_shoe_types[order_shoe_id].append(
-            #         {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
-            #             "shoeTypeColorName":entity.Color.color_name,
-            #            "shoeTypeColorId":entity.Color.color_id,
-            #            "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url,
-            #            "shoeTypeBatchData":shoeTypeBatchData
-            #         })
+            shoeTypeBatchData = {
+                "size34Amount": total_size_34,
+                "size35Amount": total_size_35,
+                "size36Amount": total_size_36,
+                "size37Amount": total_size_37,
+                "size38Amount": total_size_38,
+                "size39Amount": total_size_39,
+                "size40Amount": total_size_40,
+                "size41Amount": total_size_41,
+                "size42Amount": total_size_42,
+                "size43Amount": total_size_43,
+                "size44Amount": total_size_44,
+                "size45Amount": total_size_45,
+                "size46Amount": total_size_46,
+                "totalAmount": overall_total,
+                "unitPrice": round(float(unit_price), 2),
+                "totalPrice": round(float(total_price), 2),
+                "currencyType": currency_type,
+            }
 
-    for order_shoe in result['orderShoeAllData']:
-        
+            response_order_shoe["shoeTypeBatchData"] = shoeTypeBatchData
+            order_shoe_id_to_order_shoe_types[order_shoe_id].append(response_order_shoe)
+        # for entity in order_shoe_type_entities:
+        #     order_shoe_id_to_order_shoe_types[order_shoe_id].append(
+        #         {   "orderShoeTypeId":entity.OrderShoeType.order_shoe_type_id,
+        #             "shoeTypeColorName":entity.Color.color_name,
+        #            "shoeTypeColorId":entity.Color.color_id,
+        #            "ShoeTypeImgUrl":entity.ShoeType.shoe_image_url,
+        #            "shoeTypeBatchData":shoeTypeBatchData
+        #         })
+
+    for order_shoe in result["orderShoeAllData"]:
+
         order_shoe["currentStatus"] = order_shoe_id_to_status[order_shoe["orderShoeId"]]
-        order_shoe["orderShoeTypes"] = order_shoe_id_to_order_shoe_types[order_shoe["orderShoeId"]]
+        order_shoe["orderShoeTypes"] = order_shoe_id_to_order_shoe_types[
+            order_shoe["orderShoeId"]
+        ]
 
     return jsonify(result)
 
+
 @order_bp.route("/order/getordershoesizetotal", methods=["GET"])
 def get_order_shoe_size_total():
-    
+
     order_id = request.args.get("orderid")
     order_shoe_rid = request.args.get("ordershoeid")
     color = request.args.get("color")
@@ -474,11 +617,12 @@ def get_order_shoe_sizes_info():
 
     return jsonify(result)
 
-#业务经理显示被下发到自己的所有状态的订单
-#如果用户非业务经理,显示当前用户添加的订单
+
+# 业务经理显示被下发到自己的所有状态的订单
+# 如果用户非业务经理,显示当前用户添加的订单
 @order_bp.route("/order/getbusinessdisplayorderbyuser", methods=["GET"])
 def get_display_orders_manager():
-    current_user_role, current_user_id = current_user_info()
+    current_user_role, current_user_id, current_department = current_user_info()
     current_user_id = current_user_id
     if current_user_role == BUSINESS_MANAGER_ROLE:
         entities = (
@@ -488,24 +632,26 @@ def get_display_orders_manager():
             .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
             .outerjoin(
                 OrderStatusReference,
-                OrderStatus.order_current_status == OrderStatusReference.order_status_id,
+                OrderStatus.order_current_status
+                == OrderStatusReference.order_status_id,
             )
-            .order_by (Order.start_date.desc())
+            .order_by(Order.start_date.desc())
             .all()
         )
     elif current_user_role == BUSINESS_CLERK_ROLE:
         entities = (
-        db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
-        .filter(Order.salesman_id == current_user_id)
-        .join(Customer, Order.customer_id == Customer.customer_id)
-        .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
-        .outerjoin(
-            OrderStatusReference,
-            OrderStatus.order_current_status == OrderStatusReference.order_status_id,
+            db.session.query(Order, Customer, OrderStatus, OrderStatusReference)
+            .filter(Order.salesman_id == current_user_id)
+            .join(Customer, Order.customer_id == Customer.customer_id)
+            .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
+            .outerjoin(
+                OrderStatusReference,
+                OrderStatus.order_current_status
+                == OrderStatusReference.order_status_id,
+            )
+            .order_by(Order.start_date.desc())
+            .all()
         )
-        .order_by (Order.start_date.desc())
-        .all()
-    )
     result = []
     for entity in entities:
         order, customer, order_status, order_status_reference = entity
@@ -515,24 +661,30 @@ def get_display_orders_manager():
         if order_status_reference and order_status:
             order_status_message = order_status_reference.order_status_name
             if order_status.order_current_status == ORDER_CREATION_STATUS:
-                if order_status.order_status_value != None and order_status.order_status_value == 0:
+                if (
+                    order_status.order_status_value != None
+                    and order_status.order_status_value == 0
+                ):
                     order_status_message += " \n未填写财务信息"
-                elif order_status.order_status_value != None and order_status.order_status_value == 1:
+                elif (
+                    order_status.order_status_value != None
+                    and order_status.order_status_value == 1
+                ):
                     order_status_message += " \n已填写 待下发"
         if order.production_list_upload_status != PACKAGING_SPECS_UPLOADED:
             order_status_message += "\n包装材料待上传"
-                
+
         result.append(
             {
-                "orderDbId":order.order_id,
+                "orderDbId": order.order_id,
                 "orderRid": order.order_rid,
                 "orderCid": order.order_cid,
                 "customerName": customer.customer_name,
-                "customerBrand":customer.customer_brand,
+                "customerBrand": customer.customer_brand,
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,
                 "orderStatus": order_status_message,
-                "orderStatusVal":order_status.order_current_status,
+                "orderStatusVal": order_status.order_current_status,
             }
         )
     return jsonify(result)
@@ -549,7 +701,7 @@ def get_all_orders():
             OrderStatusReference,
             OrderStatus.order_current_status == OrderStatusReference.order_status_id,
         )
-        .order_by (Order.start_date.desc())
+        .order_by(Order.start_date.desc())
         .all()
     )
     result = []
@@ -561,24 +713,30 @@ def get_all_orders():
         if order_status_reference and order_status:
             order_status_message = order_status_reference.order_status_name
             if order_status.order_current_status == ORDER_CREATION_STATUS:
-                if order_status.order_status_value != None and order_status.order_status_value == 0:
+                if (
+                    order_status.order_status_value != None
+                    and order_status.order_status_value == 0
+                ):
                     order_status_message += " \n未填写财务信息"
-                elif order_status.order_status_value != None and order_status.order_status_value == 1:
+                elif (
+                    order_status.order_status_value != None
+                    and order_status.order_status_value == 1
+                ):
                     order_status_message += " \n已填写 待下发"
         if order.production_list_upload_status != PACKAGING_SPECS_UPLOADED:
             order_status_message += "\n包装材料待上传"
-                
+
         result.append(
             {
-                "orderDbId":order.order_id,
+                "orderDbId": order.order_id,
                 "orderRid": order.order_rid,
                 "orderCid": order.order_cid,
                 "customerName": customer.customer_name,
-                "customerBrand":customer.customer_brand,
+                "customerBrand": customer.customer_brand,
                 "orderStartDate": formatted_start_date,
                 "orderEndDate": formatted_end_date,
                 "orderStatus": order_status_message,
-                "orderStatusVal":order_status.order_current_status,
+                "orderStatusVal": order_status.order_current_status,
             }
         )
     return jsonify(result)
@@ -594,13 +752,14 @@ def get_all_order_status():
         )
     return jsonify(result)
 
+
 @order_bp.route("/order/deleteorder", methods=["DELETE"])
 def delete_order():
     order_id = request.args.get("orderId")
-    order_entity = db.session.query(Order).filter_by(order_id = order_id).first()
+    order_entity = db.session.query(Order).filter_by(order_id=order_id).first()
     if not order_entity:
-        return jsonify({"message":"delete failed"}), 404
-    order_local_path = os.path.join(FILE_STORAGE_PATH, order_entity.order_rid) 
+        return jsonify({"message": "delete failed"}), 404
+    order_local_path = os.path.join(FILE_STORAGE_PATH, order_entity.order_rid)
     if os.path.exists(order_local_path):
         for file_name in os.listdir(order_local_path):
             file_path = os.path.join(order_local_path, file_name)
@@ -611,18 +770,33 @@ def delete_order():
         os.rmdir(order_local_path)
     else:
         print("path doesnt exist in server")
-    order_shoe_entities = db.session.query(OrderShoe).filter_by(order_id = order_id).all()
+    order_shoe_entities = db.session.query(OrderShoe).filter_by(order_id=order_id).all()
     order_shoe_ids = [entity.order_shoe_id for entity in order_shoe_entities]
-    order_shoe_type_entities = db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).all()
-    order_shoe_type_ids = [entity.order_shoe_type_id for entity in order_shoe_type_entities]
-    order_shoe_batch_entities = db.session.query(OrderShoeBatchInfo).filter(OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids)).all()
+    order_shoe_type_entities = (
+        db.session.query(OrderShoeType)
+        .filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids))
+        .all()
+    )
+    order_shoe_type_ids = [
+        entity.order_shoe_type_id for entity in order_shoe_type_entities
+    ]
+    order_shoe_batch_entities = (
+        db.session.query(OrderShoeBatchInfo)
+        .filter(OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids))
+        .all()
+    )
 
-    db.session.query(OrderShoeBatchInfo).filter(OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids)).delete()
-    db.session.query(OrderShoeType).filter(OrderShoeType.order_shoe_id.in_(order_shoe_ids)).delete()
-    db.session.query(OrderShoe).filter_by(order_id = order_id).delete()
+    db.session.query(OrderShoeBatchInfo).filter(
+        OrderShoeBatchInfo.order_shoe_type_id.in_(order_shoe_type_ids)
+    ).delete()
+    db.session.query(OrderShoeType).filter(
+        OrderShoeType.order_shoe_id.in_(order_shoe_ids)
+    ).delete()
+    db.session.query(OrderShoe).filter_by(order_id=order_id).delete()
     db.session.delete(order_entity)
     db.session.commit()
-    return jsonify({"message":"Delete OK"}), 200
+    return jsonify({"message": "Delete OK"}), 200
+
 
 @order_bp.route("/order/getordershoeinfo", methods=["GET"])
 def get_order_shoe_info():
@@ -764,8 +938,8 @@ def get_order_full_info():
         .outerjoin(Bom, Bom.total_bom_id == TotalBom.total_bom_id)
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(
-                Order.order_rid.like(f"%{order_search}%"),
-                Customer.customer_name.like(f"%{customer_search}%"),
+            Order.order_rid.like(f"%{order_search}%"),
+            Customer.customer_name.like(f"%{customer_search}%"),
         )
         .order_by(Order.order_id.desc())
         .all()
@@ -876,6 +1050,7 @@ def get_order_full_info():
 
     return jsonify(result)
 
+
 @order_bp.route("/order/getorderpageinfo", methods=["GET"])
 def get_order_page_info():
     order_search = request.args.get("orderSearch", "", type=str)
@@ -885,10 +1060,10 @@ def get_order_page_info():
         db.session.query(Order, Customer)
         .join(Customer, Order.customer_id == Customer.customer_id)
         .filter(
-                Order.order_rid.like(f"%{order_search}%"),
-                Customer.customer_name.like(f"%{customer_search}%"),
-            )
-        ).count()
+            Order.order_rid.like(f"%{order_search}%"),
+            Customer.customer_name.like(f"%{customer_search}%"),
+        )
+    ).count()
 
     # Calculate the total number of pages
     total_pages = math.ceil(total_orders / 10)
