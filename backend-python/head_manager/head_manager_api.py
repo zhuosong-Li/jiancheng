@@ -3,6 +3,8 @@ from models import *
 from sqlalchemy import func
 from datetime import datetime
 from event_processor import EventProcessor
+import time
+
 
 head_manager_bp = Blueprint("head_manager_bp", __name__)
 
@@ -10,6 +12,7 @@ head_manager_bp = Blueprint("head_manager_bp", __name__)
 @head_manager_bp.route("/headmanager/getcostinfo", methods=["GET"])
 def get_cost_info():
     """Get the cost information of the shoes."""
+    time_s = time.time() 
     order_rid = request.args.get("orderRid", None)
     if not order_rid:
         order = Order.query.all()
@@ -252,12 +255,15 @@ def get_cost_info():
             "orderTotalProfitPerShoe": round(order_total_profit_per_shoe, 3),
         }
         cost_info.append(order_info)
+    time_t = time.time()
+    print("time taken for get cost info is " + str(time_t - time_s ))
     return jsonify(cost_info)
 
 
 @head_manager_bp.route("/headmanager/getorderstatusinfo", methods=["GET"])
 def get_order_status_info():
     """Get the status information of the orders."""
+    time_s = time.time()
     order_rid = request.args.get("orderRid", None)
     order_type = request.args.get("orderType", None)
     if not order_rid:
@@ -351,6 +357,9 @@ def get_order_status_info():
                 "orderShoes": order_shoe_list,
             }
             order_status_info.append(order_info)
+        time_t = time.time()
+        time_taken = time_t - time_s
+        print("time taken for get order status info is " + str(time_taken))
         return jsonify(order_status_info)
     else:
         order_status_info = []
@@ -380,6 +389,9 @@ def get_order_status_info():
                 actual_start_date = start_date
                 estimated_end_date = db.session.query(Order).filter(Order.order_id == o.order_id).first().end_date
                 actual_end_date = None
+        time_t = time.time()
+        time_taken = time_t - time_s
+        print("time taken for get order status info is " + str(time_taken))
         return jsonify({"msg": "Invalid order type."}), 400
 
 
@@ -389,6 +401,8 @@ def get_order_status_info():
 
 @head_manager_bp.route("/headmanager/getordershoetimeline", methods=["GET"])
 def get_order_shoe_timeline():
+    time_s = time.time()
+    
     order_id = request.args.get("orderId", None)
     order_shoe_id = request.args.get("orderShoeId", None)
     if not order_id and not order_shoe_id:
@@ -478,6 +492,9 @@ def get_order_shoe_timeline():
         )
 
         event_list = []
+        time_t = time.time()
+        time_taken = time_t - time_s
+        print("time taken for order shoe time line is " + str(time_taken))
         if event:
             for e in event:
                 event_list.append(
@@ -497,6 +514,7 @@ def get_order_shoe_timeline():
 @head_manager_bp.route("/headmanager/getmaterialpriceinfo", methods=["GET"])
 def get_material_price_info():
     """Get the price information of the materials."""
+    time_s = time.time()
     # Get query parameters
     material_name = request.args.get("materialName", None)
     material_model = request.args.get("materialModel", None)
@@ -643,7 +661,9 @@ def get_material_price_info():
                     "purchaseCost": round(sms.SizeMaterialStorage.total_actual_inbound_amount * sms.SizeMaterialStorage.unit_price, 3),
                 }
             )
-
+    time_t = time.time()
+    time_taken = time_t - time_s
+    print("time taken for get_material price info is " + str(time_taken))
     return jsonify(material_price_info)
 
 
@@ -699,6 +719,7 @@ def get_material_inbound_curve():
 
 @head_manager_bp.route("/headmanager/financialstatus", methods=["GET"])
 def get_financial_status():
+    time_s = time.time()
     order_rid = request.args.get("orderRid", None)
     if not order_rid:
         order = Order.query.all()
@@ -786,6 +807,8 @@ def get_financial_status():
             "orderShoes": order_shoe_list,
         }
         financial_list.append(order_info)
+    time_t = time.time()
+    print("financial status time taken is " + str(time_t - time_s))
     return jsonify(financial_list)
 
 @head_manager_bp.route("/headmanager/saveProductionOrderPrice", methods=["POST"])

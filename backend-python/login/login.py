@@ -109,7 +109,9 @@ def current_user_info():
     username = get_jwt_identity()
     user = User.query.filter_by(user_name=username).first()
     staff = Staff.query.filter_by(staff_id=user.staff_id).first()
+    department = Department.query.filter_by(department_id = staff.department_id).first()
     staff_name = staff.staff_name
     staff_id = staff.staff_id
     role = staff.character_id
-    return role, staff_id
+    department_name = department.department_name
+    return role, staff_id, department_name
