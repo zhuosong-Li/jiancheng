@@ -49,7 +49,6 @@ def get_order_shoe_by_order():
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .all()
     )
-    print(entities)
     return
 
 
@@ -58,7 +57,6 @@ def get_orders_by_status():
     t_s = time.time()
     print("ORDERSHOESTATUS GET REQUEST WITH STATUS OF")
     status_val = request.args.get("ordershoestatus")
-    print(status_val)
     entities = (
         db.session.query(
             Order,
@@ -76,7 +74,6 @@ def get_orders_by_status():
         .order_by (Order.start_date.desc())
         .all()
     )
-    print(entities)
     pending_orders, in_progress_orders = [], []
     for entity in entities:
         order, customer, count, status_value = entity
@@ -148,7 +145,6 @@ def get_on_mount():
 
 @order_bp.route("/order/getorderInfo", methods=["GET"])
 def get_order_info():
-    print("get order info called")
     order_id = request.args.get("orderid")
     entities = (
         db.session.query(Order, Customer, OrderStatus)
@@ -376,7 +372,6 @@ def get_order_shoe_size_total():
     order_id = request.args.get("orderid")
     order_shoe_rid = request.args.get("ordershoeid")
     color = request.args.get("color")
-    print(order_id)
     # Fetch the order_shoe_type_id based on filters
     order_shoe_type_id = (
         db.session.query(Order, OrderShoe, OrderShoeType, Shoe, ShoeType, Color)
@@ -606,7 +601,6 @@ def delete_order():
     if not order_entity:
         return jsonify({"message":"delete failed"}), 404
     order_local_path = os.path.join(FILE_STORAGE_PATH, order_entity.order_rid) 
-    print(order_local_path)
     if os.path.exists(order_local_path):
         for file_name in os.listdir(order_local_path):
             file_path = os.path.join(order_local_path, file_name)
@@ -886,8 +880,6 @@ def get_order_full_info():
 def get_order_page_info():
     order_search = request.args.get("orderSearch", "", type=str)
     customer_search = request.args.get("customerSearch", "", type=str)
-    print(order_search)
-
     # Query to get the total number of orders
     total_orders = (
         db.session.query(Order, Customer)
@@ -897,7 +889,6 @@ def get_order_page_info():
                 Customer.customer_name.like(f"%{customer_search}%"),
             )
         ).count()
-    print(total_orders)
 
     # Calculate the total number of pages
     total_pages = math.ceil(total_orders / 10)
