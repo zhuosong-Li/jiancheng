@@ -169,11 +169,11 @@
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane v-for="color in tabcolor" :label="color" :key="color" :name="color">
-                        <el-row>
+                        <!-- <el-row>
                             <el-col :span="2" :offset="20">
-                                <el-button>同步所有材料至所有颜色</el-button>
+                                <el-button @click="syncAllMaterials">同步所有材料至所有颜色</el-button>
                             </el-col>
-                        </el-row>
+                        </el-row> -->
                         <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 面料： </el-col>
                             <el-col :span="4" :offset="0">
@@ -938,11 +938,11 @@
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane v-for="color in tabcolor" :label="color" :key="color" :name="color">
-                        <el-row>
+                        <!-- <el-row>
                             <el-col :span="2" :offset="20">
                                 <el-button>同步所有材料至所有颜色</el-button>
                             </el-col>
-                        </el-row>
+                        </el-row> -->
                         <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 面料： </el-col>
                             <el-col :span="4" :offset="0">

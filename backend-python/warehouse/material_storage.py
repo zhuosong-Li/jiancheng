@@ -389,21 +389,20 @@ def get_size_material_info_by_id():
     shoe_size_names = get_order_batch_type_helper(order_id)
     for i, shoe_size in enumerate(shoe_size_names):
         shoe_size_db_name = i + 34
-        if getattr(response, f"size_{shoe_size_db_name}_estimated_inbound_amount") > 0:
-            obj = {
-                "typeName": shoe_size_names[i]["type"],
-                "shoeSizeName": shoe_size_names[i]["label"],
-                "predictQuantity": getattr(
-                    response, f"size_{shoe_size_db_name}_estimated_inbound_amount"
-                ),
-                "actualQuantity": getattr(
-                    response, f"size_{shoe_size_db_name}_actual_inbound_amount"
-                ),
-                "currentQuantity": getattr(
-                    response, f"size_{shoe_size_db_name}_current_amount"
-                ),
-            }
-            result.append(obj)
+        obj = {
+            "typeName": shoe_size_names[i]["type"],
+            "shoeSizeName": shoe_size_names[i]["label"],
+            "predictQuantity": getattr(
+                response, f"size_{shoe_size_db_name}_estimated_inbound_amount"
+            ),
+            "actualQuantity": getattr(
+                response, f"size_{shoe_size_db_name}_actual_inbound_amount"
+            ),
+            "currentQuantity": getattr(
+                response, f"size_{shoe_size_db_name}_current_amount"
+            ),
+        }
+        result.append(obj)
     return result
 
 
@@ -482,18 +481,18 @@ def inbound_size_material():
     if data["inboundType"] == 2:
         storage.composite_unit_cost = data["compositeUnitCost"]
 
-    for shoe_size in SHOESIZERANGE:
+    for i, shoe_size in enumerate(SHOESIZERANGE):
         # actual inbound amount
         column_name = f"size_{shoe_size}_actual_inbound_amount"
         current_value = getattr(storage, column_name)
-        new_value = current_value + int(data[f"size{shoe_size}Amount"])
+        new_value = current_value + int(data[f"size{i}Amount"])
         setattr(storage, column_name, new_value)
         storage.total_actual_inbound_amount += new_value
 
         # current_amount
         column_name = f"size_{shoe_size}_current_amount"
         current_value = getattr(storage, column_name)
-        new_value = current_value + int(data[f"size{shoe_size}Amount"])
+        new_value = current_value + int(data[f"size{i}Amount"])
         setattr(storage, column_name, new_value)
         storage.total_current_amount += new_value
     
@@ -511,7 +510,7 @@ def inbound_size_material():
     )
     for shoe_size in SHOESIZERANGE:
         column_name = f"size_{shoe_size}_inbound_amount"
-        setattr(record, column_name, int(data[f"size{shoe_size}Amount"]))
+        setattr(record, column_name, int(data[f"size{i}Amount"]))
     db.session.add(record)
     db.session.flush()
     rid = "IR" + datetime.now().strftime("%Y%m%d%H%M%S") + str(record.inbound_record_id)

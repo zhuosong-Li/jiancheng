@@ -101,7 +101,7 @@
                 <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
                     value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
             </el-form-item>
-            <el-form-item prop="unitPrice" label="材料单价">
+            <el-form-item prop="unitPrice" label="材料单价" v-if="inboundForm.inboundType != 1">
                 <el-input-number :min="0" :precision="2" :step="0.01" v-model="inboundForm.unitPrice"></el-input-number>
             </el-form-item>
             <el-form-item prop="quantity" label="入库数量">
@@ -128,6 +128,9 @@
                 <el-date-picker v-model="inboundForm.date" type="datetime" placeholder="选择日期时间" style="width: 100%"
                     value-format="YYYY-MM-DD HH:mm:ss"></el-date-picker>
             </el-form-item>
+            <el-form-item prop="unitPrice" label="材料单价" v-if="inboundForm.inboundType != 1">
+                <el-input-number :min="0" :precision="2" :step="0.01" v-model="inboundForm.unitPrice"></el-input-number>
+            </el-form-item>
             <el-form-item prop="inboundType" label="入库类型">
                 <el-radio-group v-model="inboundForm.inboundType">
                     <el-radio :value="0">采购入库</el-radio>
@@ -135,7 +138,7 @@
                 </el-radio-group>
             </el-form-item>
             <el-form-item prop="sizeMaterialInboundTable" label="入库数量">
-                <el-table :data="inboundForm.sizeMaterialInboundTable" border stripe>
+                <el-table :data="filteredData" border stripe>
                     <el-table-column prop="shoeSizeName" label="鞋码" width="100"></el-table-column>
                     <el-table-column prop="predictQuantity" label="预计数量"></el-table-column>
                     <el-table-column prop="actualQuantity" label="实际数量"></el-table-column>
@@ -248,6 +251,15 @@ export default {
         this.getAllSuppliers()
         this.getMaterialTableData()
     },
+    computed: {
+        filteredData() {
+            return this.inboundForm.sizeMaterialInboundTable.filter((row) => {
+                return (
+                    row.predictQuantity > 0
+                );
+            });
+        },
+    },
     methods: {
         isSelectable(row) {
             return row.status === "未完成入库"
@@ -324,21 +336,20 @@ export default {
                         let data = {
                             "sizeMaterialStorageId": this.currentRow.materialStorageId,
                             "date": this.inboundForm.date,
-                            "inboundType": this.inboundForm.inboundType
+                            "inboundType": this.inboundForm.inboundType,
+                            "unitPrice": this.inboundForm.unitPrice
                         }
-                        console.log(this.inboundForm)
-                        this.inboundForm.sizeMaterialInboundTable.forEach(row => {
-                            data["size" + row.shoeSizeName + "Amount"] = row.inboundQuantity
+                        this.inboundForm.sizeMaterialInboundTable.forEach((row, index) => {
+                            data["size" + index + "Amount"] = row.inboundQuantity
                         })
-                        console.log(data)
-                        // await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
-                        // ElMessage.success("入库成功")
+                        await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsizematerial`, data)
+                        ElMessage.success("入库成功")
                     }
                     catch (error) {
                         ElMessage.error("入库失败")
                     }
                     this.getMaterialTableData()
-                    // this.isMultiInboundDialogVisible = false
+                    this.isMultiInboundDialogVisible = false
                 }
                 else {
                     console.log("Form validation error")

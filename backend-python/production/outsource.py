@@ -524,6 +524,11 @@ def approve_outsource():
     outsource_info_id = request.get_json()["outsourceInfoId"]
     entity = db.session.query(OutsourceInfo).get(outsource_info_id)
     entity.outsource_status = 2
+    production_info = db.session.query(OrderShoeProductionInfo).filter_by(order_shoe_id=entity.order_shoe_id).first()
+    if entity.outsource_type == '0,1':
+        production_info.is_cutting_outsourced = True
+    elif entity.outsource_type == '1':
+        production_info.is_sewing_outsourced = True
     db.session.commit()
     return {"message": "success"}
 

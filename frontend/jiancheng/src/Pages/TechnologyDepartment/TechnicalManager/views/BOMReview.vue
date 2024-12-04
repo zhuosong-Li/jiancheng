@@ -179,7 +179,7 @@
                             >
                         </el-col>
                     </el-row>
-                    <el-dialog title="正式投产指令单下发页面" v-model="isFinalBOM" width="90%">
+                    <el-dialog title="正式BOM下发页面" v-model="isFinalBOM" width="90%">
                         <el-descriptions title="订单信息" :column="2" border>
                             <el-descriptions-item label="订单编号" align="center">{{
                                 orderData.orderId
