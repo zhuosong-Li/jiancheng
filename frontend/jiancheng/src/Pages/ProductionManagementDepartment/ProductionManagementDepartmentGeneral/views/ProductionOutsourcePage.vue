@@ -75,18 +75,20 @@
 	<el-dialog title="外包编辑页面" v-model="showOutsourceEditPage" width="80%">
 		<el-form :model="outsourceForm" :rules="rules" ref="outsourceForm" class="custom-form">
 			<el-form-item label="外包类型" prop="outsourceType">
-				<el-select v-model="outsourceForm.outsourceType" :disabled="readOnly" placeholder="" filterable
-					clearable>
+				<el-select v-model="outsourceForm.outsourceType"  filterable
+					clearable v-if="!this.readOnly">
 					<el-option v-for="item in ['裁断+针车', '针车']" :key="item" :label="item" :value="item">
 					</el-option>
 				</el-select>
+				<span v-if="this.readOnly">{{ outsourceForm.outsourceType.join(", ") }}</span>
 			</el-form-item>
 			<el-form-item label="外包厂家" prop="outsourceFactory">
 				<template #default="scope">
 					<div style="display: flex; align-items: center; gap: 10px;">
 						<el-autocomplete v-model="outsourceForm.outsourceFactory" :fetch-suggestions="querySearch"
-							placeholder="" clearable>
+							placeholder="" clearable  v-if="!this.readOnly">
 						</el-autocomplete>
+						<el-input v-model="outsourceForm.outsourceFactory" readonly v-if="this.readOnly"></el-input>
 						<el-button @click="addOutsourceFactory(outsourceForm.outsourceFactory)">添加厂家</el-button>
 					</div>
 				</template>
@@ -356,6 +358,7 @@ export default {
 			if (rowData === null) {
 				this.outsourceForm = { ...this.template }
 				this.outsourceForm.outsourceShoeBatchInfo = JSON.parse(JSON.stringify(this.shoeInfo));
+				this.readOnly = false
 				// this.outsourceForm.outsourceShoeBatchInfo.forEach(row => {
 				// 	for (let i = 34; i < 47; i++) {
 				// 		row[`size${i}Amount`] = 0

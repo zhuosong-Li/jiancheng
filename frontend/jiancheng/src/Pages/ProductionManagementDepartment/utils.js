@@ -12,8 +12,8 @@ export const productionLines = {
 }
 
 export const outsourceOutboundStatus = ["材料出库", "外包生产中", "成品入库", "外包结束"]
-export const outsourceReadOnlyStatus = ["已提交", "材料出库", "外包生产中", "成品入库", "外包结束"]
-export const outsourceEditStatus = ["未提交", "被驳回", "已审批"]
+export const outsourceReadOnlyStatus = ["已提交", "已审批", "材料出库", "外包生产中", "成品入库", "外包结束"]
+export const outsourceEditStatus = ["未提交", "被驳回"]
 
 export const getShoeSizesName = async (orderId) => {
     let params = { "orderId": orderId }

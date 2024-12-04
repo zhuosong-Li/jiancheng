@@ -87,7 +87,7 @@
 
         <template #footer>
             <span>
-                <el-button @click="">Cancel</el-button>
+                <el-button @click="isMaterialDialogVisible = false">退出</el-button>
                 <el-button type="primary" @click="">筛选</el-button>
             </span>
         </template>
@@ -115,15 +115,15 @@
             <el-form-item prop="receiver" v-if="outboundForm.outboundType == 0" label="领料人">
                 <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"></el-input>
             </el-form-item>
-            <el-form-item prop="selectedOutsource" label="外包工厂" v-if="outboundForm.outboundType == 2">
-                <el-table border stripe v-if="outboundForm.outboundType == 2" :data="outboundForm.outsourceInfo"
+            <el-form-item prop="selectedOutsource" label="现有外包" v-if="outboundForm.outboundType == 2">
+                <el-table border stripe :data="outboundForm.outsourceInfo"
                     style="width: 100%">
                     <el-table-column width="55">
                         <template #default="scope">
                             <el-radio v-model="outboundForm.selectedOutsource" :value="scope.row.outsourceInfoId" />
                         </template>
                     </el-table-column>
-                    <el-table-column prop="outsourceFactory.value" label="工厂名称" />
+                    <el-table-column prop="outsourceFactory" label="工厂名称" />
                     <el-table-column prop="outsourceAmount" label="外包数量" />
                     <el-table-column prop="outsourceType" label="外包类型" />
                 </el-table>
@@ -162,7 +162,7 @@
                                 <el-table-column prop="outboundAmount" label="出库数量">
                                     <template #default="scope">
                                         <el-input-number size="small" v-model="scope.row.outboundAmount" :min="0"
-                                            :max="props.row.currentAmount" :precision="5" :step="0.00001"
+                                            :max="Number(props.row.currentAmount)" :precision="5" :step="0.00001"
                                             @change="(newVal, oldVal) => handleCompositeAmountChange(newVal, oldVal, props.row)"></el-input-number>
                                     </template>
                                 </el-table-column>
@@ -179,7 +179,8 @@
             <el-form-item prop="sizeMaterials" label="多码材料">
                 <el-table :data="outboundForm.sizeMaterials" style="width: 100%" border stripe>
                     <el-table-column prop="metaData.materialName" label="材料名称" />
-                    <el-table-column prop="colorName" label="颜色" />
+                    <el-table-column prop="metaData.colorName" label="颜色" />
+                    <el-table-column prop="metaData.currentAmount" label="颜色" />
                     <el-table-column prop="metaData.materialUnit" label="单位" />
                     <el-table-column label="出库数量">
                         <template #default="scope">
@@ -206,8 +207,8 @@
                     <el-table-column prop="currentQuantity" label="库存"></el-table-column>
                     <el-table-column label="出库数量">
                         <template #default="scope">
-                            <el-input v-model.number="scope.row.outboundAmount" type="number"
-                                @input="calculateSum()"></el-input>
+                            <el-input-number v-model.number="scope.row.outboundAmount" type="number" :min="0" :max="Number(scope.row.currentQuantity)"
+                                @input="calculateSum()"></el-input-number>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -424,6 +425,7 @@ export default {
             }
             const sanitizedObject = JSON.parse(JSON.stringify(this.outboundFormTemplate));
             this.outboundForm = structuredClone(sanitizedObject)
+            await this.getOutsourceInfo()
             let arr = this.outboundForm.sizeMaterials
             this.selectedRows.forEach(async (row) => {
                 if (row.materialCategory == 1) {
@@ -431,8 +433,10 @@ export default {
                     row["enteredAmount"] = 0
                     let params = { "sizeMaterialStorageId": row.materialStorageId, "orderId": row.orderId }
                     let response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsizematerialbyid`, { params })
-                    arr.push({ "metaData": row, "quantityList": response.data })
-
+                    let tempObj = { "metaData": row, "quantityList": response.data }
+                    tempObj.quantityList.forEach(element => element["outboundAmount"] = 0)
+                    arr.push(tempObj)
+                    
                 } else {
                     row["outboundAmount"] = 0
                     this.outboundForm.materials.push(row)
@@ -446,7 +450,7 @@ export default {
 
                 }
             })
-            console.log(this.outboundForm.compositeMaterials[0].craftNameList)
+            console.log(this.outboundForm)
             this.isMultiMaterialDialogOpen = true
         },
         toggleSelectionMode() {
@@ -566,15 +570,16 @@ export default {
             return Number(cellValue).toFixed(2)
         },
         async getOutsourceInfo() {
-            let params = { "orderShoeId": this.currentRow.orderShoeId }
+            let params = { "orderShoeId": this.selectedRows[0].orderShoeId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoeoutsourceinfo`, { params })
             this.outboundForm.outsourceInfo = []
             console.log(response.data)
             response.data.forEach(element => {
-                if ((element.outsourceStatus == 2 || element.outsourceStatus == 4) && element.materialRequired) {
+                if ((element.outsourceStatus == '已审批' || element.outsourceStatus == '材料出库') && element.materialRequired) {
                     this.outboundForm.outsourceInfo.push(element)
                 }
             });
+            console.log(this.outboundForm.outsourceInfo)
         },
         async finishOutsourceOutbound(row) {
             try {
