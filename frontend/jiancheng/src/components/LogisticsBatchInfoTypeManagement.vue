@@ -1,7 +1,7 @@
 <template>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
-            >码段管理</el-col
+            >采购码段管理</el-col
         >
     </el-row>
     <!-- <el-button type="primary" @click="testData">123</el-button> -->
@@ -15,7 +15,7 @@
             >
                 <el-table-column
                     prop="batchInfoTypeName"
-                    label="码段种类"
+                    label="配码种类"
                 ></el-table-column>
                 <el-table-column
                     prop="size34Name"
@@ -85,7 +85,7 @@
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
-            <el-button v-if="allowModifyBatchInfoType" type="primary" @click="openAddBatchTypeDialog">添加新码段</el-button>
+            <el-button v-if="allowModifyBatchInfoType" type="primary" @click="openAddBatchTypeDialog">添加新采购码段</el-button>
         </el-col>
     </el-row>
 
@@ -186,7 +186,7 @@ export default {
     computed: {
         allowModifyBatchInfoType()
         {
-            return this.userRole == 4
+            return this.userRole == 9
         }
     },
     mounted() {
@@ -205,9 +205,6 @@ export default {
         openEditBatchTypeDialog(){
 
         },
-        // async testData(){
-		// 	const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getorderbatchtype`, {params:{"orderId": 19} })
-        // },
         async userInfo()
         {
            const response = await axios.get(`${this.$apiBaseUrl}/order/onmount`)
@@ -216,7 +213,7 @@ export default {
            console.log(this.userRole)
         },
         async getBatchTypes(){
-            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypesbusiness`)
+            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypeslogistics`)
             this.displayBatchInfoTypes = response.data.batchDataTypes
             console.log(response)
         },
@@ -259,7 +256,7 @@ export default {
         },
         async deleteBatchType(row)
         {
-            await this.generalAPICall("删除", "/batchtype/deletebatchtypebusiness",{"batchTypeId":row.batchInfoTypeId})
+            await this.generalAPICall("删除", "/batchtype/deletebatchtypelogistics",{"batchTypeId":row.batchInfoTypeId})
             await this.getBatchTypes()
         }
         ,  
@@ -273,7 +270,7 @@ export default {
                     type:'warning'
                 }).then(async ()=>
             {
-                const response = await axios.post(`${this.$apiBaseUrl}/batchtype/addbatchtypebusiness`, this.batchInfoTypeForm)
+                const response = await axios.post(`${this.$apiBaseUrl}/batchtype/addbatchtypelogistics`, this.batchInfoTypeForm)
                 if (response.status == 200){
                     this.$message({
                         type:"success",

@@ -15,7 +15,7 @@ from usage_calculation.usage_calculation import usage_calculation_bp
 from business.order_import import order_import_bp
 from business.order_create import order_create_bp
 #from business.order_export import order_export_bp
-from business.batch_info_type import batch_type_bp
+from shared_apis.batch_info_type import batch_type_bp
 from shared_apis.customer import customer_bp
 from shared_apis.shoe import shoe_bp
 from technical.second_bom import second_bom_bp
@@ -35,7 +35,6 @@ from shared_apis.outsource_factory import outsource_factory_bp
 from production.scheduling import production_scheduling_bp
 from production.outsource import outsource_bp
 from production.production_status_nodes import production_status_nodes_bp
-from business.batch_info_type import batch_type_bp
 from head_manager.head_manager_api import head_manager_bp
 from technical.process_sheet_review import process_sheet_review
 

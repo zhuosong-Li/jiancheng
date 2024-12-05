@@ -1056,7 +1056,7 @@ export default {
             this.customerNameList = [...new Set(response.data.map((item) => item.customerName))]
         },
         async getAllBatchTypes() {
-            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
+            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypesbusiness`)
             this.batchTypes = response.data.batchDataTypes
             this.batchTypeNameList = [
                 ...new Set(this.batchTypes.map((item) => item.batchInfoTypeName))

@@ -17,13 +17,13 @@
                             <span>订单管理</span>
                         </el-menu-item>
                         <el-menu-item index="3" @click="handleMenuClick(3)">
-                            <span>客户管理</span>
+                            <span>客户/配码管理</span>
                         </el-menu-item>
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>鞋型管理</span>
                         </el-menu-item>
                         <el-menu-item index="5" @click="handleMenuClick(5)">
-                            <span>配码种类管理</span>
+                            <span>码段管理</span>
                         </el-menu-item>
                         <el-menu-item index="6" @click="handleMenuClick(6)">
                             <span>订单导出</span>

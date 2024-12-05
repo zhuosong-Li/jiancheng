@@ -86,23 +86,23 @@ def generate_excel_file(template_path, new_file_path, order_data):
     
     print(f"Workbook saved as {new_file_path}")
 
-def test_case_1():
-    template_path = "D:/catSupermarket/jiancheng/backend-python/general_document/标准采购订单.xlsx"
-    new_file_path = "D:/catSupermarket/jiancheng/backend-python/general_document/pur_test.xlsx"
-    order_data = {
-        "订单信息": "订单编号12345",
-        "供应商": "供应商A",
-        "日期": "2024-11-19",
-        "seriesData": [
-            {"物品名称": "商品1", "单位": "个", "数量": 10, "单价": 5.5, "用途说明": "用途1", "备注": "备注1"},
-            {"物品名称": "商品2", "单位": "箱", "数量": 20, "单价": 15.0, "用途说明": "用途2", "备注": "备注2"},
-        ],
-        "合计": 350,
-        "备注": "总备注",
-        "环保要求": "符合环保标准",
-        "发货地址": "测试地址",
-        "交货期限": "2024-12-01",
-    }
-    generate_excel_file(template_path, new_file_path, order_data)
-    print("Test Case 1: Basic functionality passed.")
+# def test_case_1():
+#     template_path = "D:/catSupermarket/jiancheng/backend-python/general_document/标准采购订单.xlsx"
+#     new_file_path = "D:/catSupermarket/jiancheng/backend-python/general_document/pur_test.xlsx"
+#     order_data = {
+#         "订单信息": "订单编号12345",
+#         "供应商": "供应商A",
+#         "日期": "2024-11-19",
+#         "seriesData": [
+#             {"物品名称": "商品1", "单位": "个", "数量": 10, "单价": 5.5, "用途说明": "用途1", "备注": "备注1"},
+#             {"物品名称": "商品2", "单位": "箱", "数量": 20, "单价": 15.0, "用途说明": "用途2", "备注": "备注2"},
+#         ],
+#         "合计": 350,
+#         "备注": "总备注",
+#         "环保要求": "符合环保标准",
+#         "发货地址": "测试地址",
+#         "交货期限": "2024-12-01",
+#     }
+#     generate_excel_file(template_path, new_file_path, order_data)
+#     print("Test Case 1: Basic functionality passed.")
 

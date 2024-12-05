@@ -83,7 +83,7 @@ def get_all_shoes_new():
 
 @shoe_bp.route("/shoe/getshoebatchinfotype", methods=["GET"])
 def get_shoe_batch():
-    batch_info_types = db.session.query(BatchInfoType).all()
+    batch_info_types = db.session.query(BatchInfoType).filter_by(batch_info_type_usage = 0).all()
     result = []
     for batch_info_type in batch_info_types:
         result.append(

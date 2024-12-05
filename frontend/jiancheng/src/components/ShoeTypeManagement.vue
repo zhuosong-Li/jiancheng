@@ -34,7 +34,6 @@
                                 </template>
                             </el-table-column>
                         </el-table>
-                        <el-button type="primary" size="default" @click="addShoeModel(props.row)">添加鞋款</el-button>
                     </template>
                 </el-table-column>
                 <el-table-column prop="shoeRid" label="鞋型编号" width="300px"></el-table-column>
@@ -43,6 +42,8 @@
                 <el-table-column label="操作">
                     <template #default="scope">
                         <el-button type="primary" @click="openEditShoeDialog(scope.row)">编辑</el-button>
+                        <el-button type="primary" size="default" @click="addShoeModel(scope.row)">添加鞋款</el-button>
+
                     </template>
                 </el-table-column>
             </el-table>

@@ -182,7 +182,7 @@
             <el-form-item label="配码地区">
                 <el-input v-model="batchForm.packagingInfoLocale" :disabled="true"></el-input>
             </el-form-item>
-            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != null)"
+            <el-form-item v-for ="col in Object.keys(this.attrMapping).filter(key => this.currentBatchType[key] != '')"
                                 :label="this.currentBatchType[col]">
                                 <el-input v-model=batchForm[attrMapping[col]]></el-input>
             </el-form-item>
@@ -303,6 +303,7 @@ export default {
         this.getCustomerList()
         this.userInfo()
         this.getAllBatchTypes()
+        console.log(this.currentBatchType)
     },
     methods: {
         async userInfo()
@@ -330,7 +331,7 @@ export default {
             this.activeTab = this.currentBatchType.batchInfoTypeId
         },
         async getAllBatchTypes(){
-            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypes`)
+            const response = await axios.get(`${this.$apiBaseUrl}/batchtype/getallbatchtypesbusiness`)
             console.log(response.data["batchDataTypes"])
             this.batchTypeTabs = response.data["batchDataTypes"]
             console.log(this.batchTypeTabs[0].batchInfoTypeName)
@@ -341,10 +342,13 @@ export default {
             this.currentBatchType = this.batchTypeTabs.find((batchtype) => batchtype.batchInfoTypeId == this.activeTab)
         },
         editBatchInfo(row){
+            console.log("editing batch info")
+            this.resetBatchForm()
             this.editBatchDialogVisible = true
             this.batchForm = row
         },
         resetBatchForm(){
+            console.log("resetting")
             this.batchForm = {
                         customerId:'',
                         packagingInfoName: '',
@@ -369,13 +373,15 @@ export default {
 
         openAddCustomerBatchDialog() {
             // console.log(this.)
-            // this.resetBatchForm()
+            console.log("adding batch info")
+            this.resetBatchForm()
             this.batchForm.customerId = this.batchDialogCurCustomerId
             this.batchForm.batchInfoTypeId = this.activeTab
             this.batchForm.packagingInfoLocale = this.currentBatchType.batchInfoTypeName
             this.addCustomerBatchDialogVisible = true
         },
         openEditCustomerBatchDialog(row) {
+            this.resetBatchForm()
             this.batchDialogCurCustomerName = row.customerName
             this.batchDialogCurCustomerBrand = row.customerBrand
             this.batchDialogCurCustomerId = row.customerId

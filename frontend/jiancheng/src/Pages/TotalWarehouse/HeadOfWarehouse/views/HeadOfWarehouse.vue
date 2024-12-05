@@ -31,6 +31,9 @@
                         <el-menu-item index="6" @click="handleMenuClick(6)">
                             <span>独立采购</span>
                         </el-menu-item>
+                        <el-menu-item index="6" @click="handleMenuClick(7)">
+                            <span>码段管理</span>
+                        </el-menu-item>
                         <el-menu-item index="8" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -59,6 +62,8 @@ import { logout } from '@/Pages/utils/logOut'
 import InboundView from '../components/InboundView.vue'
 import OutboundView from '../components/OutboundView.vue'
 import FixedAssetsConsumablesView from '@/Pages/LogisticsControlDepartment/LogisticsControlManager/components/FixedAssetsConsumablesView.vue'
+import LogisticsBatchTypeManagement from '@/components/LogisticsBatchInfoTypeManagement.vue'
+
 export default {
     components: {
         AllHeader,
@@ -70,7 +75,8 @@ export default {
         OrderProgress,
         InboundView,
         OutboundView,
-        FixedAssetsConsumablesView
+        FixedAssetsConsumablesView,
+        LogisticsBatchTypeManagement
     },
     data() {
         return {
@@ -108,6 +114,8 @@ export default {
                     break
                 case 6:
                     this.currentComponent = 'FixedAssetsConsumablesView'
+                case 7:
+                    this.currentComponent = 'LogisticsBatchTypeManagement'
                     break
             }
         }

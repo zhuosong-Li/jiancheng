@@ -278,7 +278,9 @@ def get_order_info_business():
         .all()
     )
     batch_info_type_response = {}
-    for attr in entity.BatchInfoType.__table__.columns.keys():
+    batch_info_type_attrs = entity.BatchInfoType.__table__.columns.keys
+    batch_info_type_attrs.remove("batch_info_type_usage")
+    for attr in batch_info_type_attrs:
         batch_info_type_response[to_camel(attr)] = getattr(entity.BatchInfoType, attr)
     result = {
         "orderId": entity.Order.order_id,

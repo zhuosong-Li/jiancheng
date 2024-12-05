@@ -942,6 +942,7 @@ class BatchInfoType(db.Model):
     __tablename__ = "batch_info_type"
     batch_info_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     batch_info_type_name = db.Column(db.String(10), nullable=False)
+    batch_info_type_usage = db.Column(db.Integer, nullable=False)
     size_34_name = db.Column(db.String(5), nullable=True)
     size_35_name = db.Column(db.String(5), nullable=True)
     size_36_name = db.Column(db.String(5), nullable=True)
