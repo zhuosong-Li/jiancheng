@@ -285,6 +285,7 @@ def get_shoe_bom_items():
             for name_obj in size_name_info
         }
 
+
         # If key already exists, accumulate the data; otherwise, initialize
         if key not in combined_items:
             combined_items[key] = {
@@ -309,6 +310,8 @@ def get_shoe_bom_items():
                     size_info_template
                 ),  # Deep copy to ensure independence
             }
+        else:
+            combined_items[key]["approvalUsage"] += bom_item.total_usage if bom_item.total_usage else 0.00
 
         # Accumulate data for each size in sizeInfo
         for i in range(len(size_name_info)):

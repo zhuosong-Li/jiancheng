@@ -51,7 +51,7 @@ onMounted(()=> {
     const apiBaseUrl = proxy.appContext.config.globalProperties.$apiBaseUrl
     
     
-    axios.get(`${apiBaseUrl}/order/getdevordershoebystatus`, {params}).then(response => {
+    axios.get(`${apiBaseUrl}/order/getprodordershoebystatus`, {params}).then(response => {
         const firstBomPending = response.data.pendingOrders
         const firstBomProgress = response.data.inProgressOrders
         firstBomPending.forEach(element => {
