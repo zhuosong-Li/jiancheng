@@ -1094,6 +1094,8 @@ class ProductionInstruction(db.Model):
     size_range = db.Column(db.String(10), nullable=True)
     size_difference = db.Column(db.String(15), nullable=True)
     last_type = db.Column(db.String(20), nullable=True)
+    burn_sole_craft = db.Column(db.String(100), nullable=True)
+    craft_remark = db.Column(db.String(150), nullable=True)
 
     def __repr__(self):
         return f"<ProductionInstruction(production_instruction_id={self.production_instruction_id})>"
