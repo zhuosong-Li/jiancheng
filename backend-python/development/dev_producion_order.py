@@ -786,7 +786,6 @@ def save_production_instruction():
                 db.session.add(production_instruction_item)
 
     print(order_id, order_shoe_rid, production_instruction_id, upload_data)
-    db.session.commit()
     order_shoe = (
         db.session.query(OrderShoe)
         .filter(OrderShoe.order_shoe_id == order_shoe_id)
@@ -936,7 +935,7 @@ def edit_production_instruction():
     order_shoe_id = order_shoe.OrderShoe.order_shoe_id
     order_shoe.Shoe.shoe_designer = production_instruction_details.get("designer")
     print(request.json)
-    db.session.commit()
+    db.session.flush()
     production_instruction = (
         db.session.query(ProductionInstruction)
         .filter(
@@ -960,7 +959,7 @@ def edit_production_instruction():
     production_instruction.craft_remark = production_instruction_details.get(
         "craftRemark"
     )
-    db.session.commit()
+    db.session.flush()
     production_instruction_items = (
         db.session.query(ProductionInstructionItem)
         .filter(
