@@ -1916,9 +1916,6 @@ export default {
                 background: 'rgba(0, 0, 0, 0.7)'
             })
             try {
-                // save images
-                this.uploadCutDieImg()
-                this.uploadPicNote()
                 await axios.post(
                     `${this.$apiBaseUrl}/craftsheet/savecraftsheet`,
                     {
@@ -1930,6 +1927,9 @@ export default {
 
                     }
                 )
+                // save images
+                this.uploadCutDieImg()
+                this.uploadPicNote()
                 ElMessage.success('保存成功')
             }
             catch (error) {

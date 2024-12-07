@@ -1069,3 +1069,47 @@ def get_order_page_info():
     total_pages = math.ceil(total_orders / 10)
 
     return jsonify({"totalOrders": total_orders, "totalPages": total_pages})
+
+
+@order_bp.route("/order/getactiveorders", methods=["GET"])
+def get_active_orders():
+    response = (
+        db.session.query(Order, OrderStatus)
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .filter(OrderStatus.order_current_status <= IN_PRODUCTION_ORDER_NUMBER)
+        .all()
+    )
+    res = []
+    for row in response:
+        order, order_status = row
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "orderStatus": order_status.order_current_status,
+        }
+        res.append(obj)
+    return res
+
+
+@order_bp.route("/order/getactiveordershoes", methods=["GET"])
+def get_active_order_shoes():
+    response = (
+        db.session.query(Order, OrderStatus, OrderShoe, Shoe)
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .filter(OrderStatus.order_current_status <= IN_PRODUCTION_ORDER_NUMBER)
+        .all()
+    )
+    res = []
+    for row in response:
+        order, order_status, order_shoe, shoe = row
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "orderStatus": order_status.order_current_status,
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid
+        }
+        res.append(obj)
+    return res
