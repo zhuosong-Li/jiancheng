@@ -66,7 +66,7 @@ export default {
         handleRowClick(row) {
             let url;
             if (row.taskName === '工艺单创建') {
-                url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
+                url = `${window.location.origin}/processsheet/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

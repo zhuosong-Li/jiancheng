@@ -53,7 +53,7 @@ export default {
             let url;
             if (row.taskName === '技术部调版分配') {
                 console.log(row)
-                url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
+                url = `${window.location.origin}/processsheet/orderid=${row.orderId}`;
             }
             if (row.taskName === '二次BOM用量审批') {
                 console.log(row)

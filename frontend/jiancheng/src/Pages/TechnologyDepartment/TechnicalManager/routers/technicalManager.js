@@ -2,13 +2,13 @@ import AdjustUpload from "../views/AdjustUpload.vue";
 import BOMReview from "../views/BOMReview.vue";
 export default [
     {
-        path: '/technicalmanager/uploadprocesssheet/orderid=:orderId',
+        path: '/processsheet/orderid=:orderId',
         name: 'technicalmanager-uploadprocesssheet',
         component: AdjustUpload,
         props: true,
         meta: {
           requiresAuth: true,
-          role: 5
+          roles: [3, 5, 6, 8]
         }
     },
     {
