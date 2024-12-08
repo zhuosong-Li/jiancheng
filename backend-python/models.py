@@ -153,7 +153,7 @@ class Material(db.Model):
     __tablename__ = "material"
     material_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     material_name = db.Column(db.String(60), nullable=False)
-    material_type_id = db.Column(db.BigInteger, nullable=False)
+    material_type_id = db.Column(db.Integer, nullable=False)
     material_unit = db.Column(db.String(4), nullable=True)
     material_supplier = db.Column(db.Integer, nullable=False)
     material_creation_date = db.Column(db.Date, nullable=True)
@@ -172,7 +172,7 @@ class Material(db.Model):
 
 class MaterialType(db.Model):
     __tablename__ = "material_type"
-    material_type_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
+    material_type_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     material_type_name = db.Column(db.String(50), nullable=False)
     warehouse_id = db.Column(
         db.Integer,
@@ -209,6 +209,7 @@ class MaterialStorage(db.Model):
         db.BigInteger, primary_key=True, autoincrement=True, nullable=False
     )
     material_model = db.Column(db.String(50), default='', nullable=True)
+    order_id = db.Column(db.BigInteger)
     order_shoe_id = db.Column(db.BigInteger)
     material_id = db.Column(db.BigInteger, nullable=False)
     estimated_inbound_amount = db.Column(
@@ -615,7 +616,7 @@ class AssetsPurchaseOrderItem(db.Model):
     purchase_amount = db.Column(db.Numeric(10, 5), nullable=True)
     material_specification = db.Column(db.String(50), nullable=True)
     material_model = db.Column(db.String(50), nullable=True)
-    color = db.Column(db.Integer, nullable=True)
+    color = db.Column(db.String(40), nullable=True)
     size_34_purchase_amount = db.Column(db.Integer, nullable=True)
     size_35_purchase_amount = db.Column(db.Integer, nullable=True)
     size_36_purchase_amount = db.Column(db.Integer, nullable=True)
@@ -664,6 +665,7 @@ class PurchaseOrder(db.Model):
     purchase_order_type = db.Column(db.String(1), nullable=False)
     purchase_order_issue_date = db.Column(db.Date, nullable=False)
     order_id = db.Column(db.BigInteger)
+    order_shoe_id = db.Column(db.BigInteger)
     purchase_order_status = db.Column(db.String(1), nullable=True)
 
     def __repr__(self):
@@ -830,6 +832,7 @@ class SizeMaterialStorage(db.Model):
         db.Integer,
     )
     size_material_color = db.Column(db.String(40), default='', nullable=True)
+    order_id = db.Column(db.BigInteger)
     order_shoe_id = db.Column(db.BigInteger)
     unit_price = db.Column(db.Numeric(10, 2), nullable=True)
     purchase_divide_order_id = db.Column(db.BigInteger)
