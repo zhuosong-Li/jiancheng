@@ -81,5 +81,29 @@ def get_all_shoes_new():
     return jsonify(result_data), 200
 
 
-# @shoe_bp.route("/shoe/addnewshoe", methods=["GET"])
-# def add_new_shoe():
+@shoe_bp.route("/shoe/getshoebatchinfotype", methods=["GET"])
+def get_shoe_batch():
+    batch_info_types = db.session.query(BatchInfoType).all()
+    result = []
+    for batch_info_type in batch_info_types:
+        result.append(
+            {
+                "batchInfoTypeId": batch_info_type.batch_info_type_id,
+                "batchInfoTypeName": batch_info_type.batch_info_type_name,
+                "size34Slot": batch_info_type.size_34_name,
+                "size35Slot": batch_info_type.size_35_name,
+                "size36Slot": batch_info_type.size_36_name,
+                "size37Slot": batch_info_type.size_37_name,
+                "size38Slot": batch_info_type.size_38_name,
+                "size39Slot": batch_info_type.size_39_name,
+                "size40Slot": batch_info_type.size_40_name,
+                "size41Slot": batch_info_type.size_41_name,
+                "size42Slot": batch_info_type.size_42_name,
+                "size43Slot": batch_info_type.size_43_name,
+                "size44Slot": batch_info_type.size_44_name,
+                "size45Slot": batch_info_type.size_45_name,
+                "size46Slot": batch_info_type.size_46_name 
+            }
+        )
+    
+    return jsonify(result)

@@ -451,7 +451,13 @@ export default {
             selectedFile: null,
             inheritIdSearch: '',
             isFinalBOM: false,
-            orderProduceInfo: []
+            orderProduceInfo: [],
+            defaultUnitOptions: [
+                { value: '米', label: '米' },
+                { value: '个', label: '个' },
+                { value: '双', label: '双' },
+                { value: '条', label: '条' }
+            ]
         }
     },
     async mounted() {

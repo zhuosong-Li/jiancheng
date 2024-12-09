@@ -24,6 +24,7 @@ def get_assets_material_purchase_order():
         .outerjoin(OrderShoe, PurchaseOrder.order_shoe_id == OrderShoe.order_shoe_id)
         .outerjoin(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
         .filter(PurchaseOrder.purchase_order_status == purchase_order_status)
+        .filter(PurchaseOrder.purchase_order_type.in_(["I", "O", "X"]))
     )
     response = query.all()
     result = []
@@ -66,7 +67,6 @@ def get_material_type_and_name():
     material_type = request.args.get("materialtype")
     material_name = request.args.get("materialname")
     supplier_name = request.args.get("suppliername")
-    material_category = request.args.get("materialcategory")
     print(material_type, material_name, supplier_name)
     query = (
         db.session.query(Material, MaterialType, MaterialWarehouse, Supplier)
@@ -83,8 +83,6 @@ def get_material_type_and_name():
         query = query.filter(Material.material_name.like(f"%{material_name}%"))
     if supplier_name:
         query = query.filter(Supplier.supplier_name.like(f"%{supplier_name}%"))
-    if material_category:
-        query = query.filter(Material.material_category == material_category)
     result = []
     for row in query:
         result.append(
@@ -108,13 +106,14 @@ def new_purchase_order_save():
         material_list = request.json.get("data")
         print(material_list)
         purchase_order_type = request.json.get("purchaseOrderType")
-        purchase_divide_order_type = request.json.get("purchaseDivideOrderType")
+        shoe_batch_type = request.json.get("batchInfoType")
         order_id = request.json.get("orderId")
         order_shoe_id = request.json.get("orderShoeId")
         purchase_order_rid = sub_purchase_order_id + purchase_order_type
         purchase_order_issue_date = datetime.datetime.now().strftime("%Y%m%d")
         purchase_order_status = "0"
         material_list_sorted = sorted(material_list, key=itemgetter("supplierName"))
+        print(shoe_batch_type)
 
         # Group the list by 'supplierName'
         grouped_materials = {}
@@ -132,10 +131,11 @@ def new_purchase_order_save():
         )
         # if it is order-related purchase
         if purchase_order_type == "O":
-            setattr(purchase_order, order_id, order_id)
+            purchase_order.order_id = order_id
         # if it is order shoe related purchase
         elif purchase_order_type == "X":
-            setattr(purchase_order, order_shoe_id, order_shoe_id)
+            purchase_order.order_id = order_id
+            purchase_order.order_shoe_id = order_shoe_id
 
         db.session.add(purchase_order)
         db.session.flush()
@@ -158,7 +158,12 @@ def new_purchase_order_save():
             purchase_divide_order = PurchaseDivideOrder(
                 purchase_divide_order_rid=purchase_divide_order_rid,
                 purchase_order_id=purchase_order_id,
-                purchase_divide_order_type=purchase_divide_order_type,
+                purchase_divide_order_type=(
+                "N" if items[0]["materialCategory"] == 0 else "S"
+            ),
+                shipment_address="温州市瓯海区梧田工业基地镇南路8号（健诚集团）",
+                shipment_deadline="请在7-10日内交货",
+
             )
             db.session.add(purchase_divide_order)
             db.session.flush()
@@ -191,7 +196,7 @@ def new_purchase_order_save():
                 material_model = item["materialModel"]
                 color = item["color"]
                 remark = item["comment"]
-                if purchase_divide_order_type == "N":
+                if items[0]["materialCategory"] == 0:
                     assets_item = AssetsPurchaseOrderItem(
                         purchase_divide_order_id=purchase_divide_order_id,
                         material_id=material_id,
@@ -200,32 +205,27 @@ def new_purchase_order_save():
                         material_model=material_model,
                         color=color,
                         remark=remark,
-                        size_type="N",
+                        size_type=shoe_batch_type,
                     )
                     db.session.add(assets_item)
-                elif purchase_divide_order_type == "S":
-                    material_quantity_list = [0 for _ in range(SHOESIZERANGE)]
-                    for i in range(len(SHOESIZERANGE)):
-                        material_quantity_list[i] = item["sizeInfo"][i][
-                            "purchaseAmount"
-                        ]
-                    material_total_quantity = sum(material_quantity_list)
+                elif items[0]["materialCategory"] == 1:
                     assets_item = AssetsPurchaseOrderItem(
                         purchase_divide_order_id=purchase_divide_order_id,
                         material_id=material_id,
-                        purchase_amount=material_total_quantity,
+                        purchase_amount=material_quantity,
                         material_specification=material_specification,
                         material_model=material_model,
                         color=color,
                         remark=remark,
-                        size_type="E",
+                        size_type=shoe_batch_type,
                     )
                     for i in SHOESIZERANGE:
-                        setattr(
-                            AssetsPurchaseOrderItem,
-                            f"size_{i}_purchase_amount",
-                            material_quantity_list[i],
-                        )
+                        if i -34 < len(item["sizeInfo"]):
+                            setattr(
+                                assets_item,
+                                f"size_{i}_purchase_amount",
+                                item["sizeInfo"][i - 34]["purchaseAmount"],
+                            )
                     db.session.add(assets_item)
                 else:
                     return (
@@ -489,8 +489,12 @@ def get_purchase_divide_orders():
             "remark": assets_item.remark,
             "sizeType": assets_item.size_type,
         }
-        for shoe_size in SHOESIZERANGE:
-            obj[f"size{shoe_size}"] = getattr(assets_item, f"size_{shoe_size}_purchase_amount")
+        batch_info_type = db.session.query(BatchInfoType).filter(BatchInfoType.batch_info_type_name == assets_item.size_type).first()
+        if batch_info_type:
+            for shoe_size in SHOESIZERANGE:
+                if getattr(batch_info_type, f"size_{shoe_size}_name") is not None:
+                    obj[getattr(batch_info_type, f"size_{shoe_size}_name")] = getattr(assets_item, f"size_{shoe_size}_purchase_amount")
+            print(obj)
         grouped_results[divide_order_rid]["assetsItems"].append(obj)
 
     # Convert the grouped results to a list

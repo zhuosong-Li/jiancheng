@@ -1578,6 +1578,12 @@ def issue_production_order():
                 bom_type=0,
                 bom_status=3,
             )
+            default_bom = DefaultBom(
+                order_shoe_type_id=order_shoe_type_id,
+                bom_rid=second_bom_rid,
+                bom_type=1,
+                bom_status=3,
+            )
             db.session.add(first_bom)
             db.session.flush()
             first_bom_id = first_bom.bom_id
@@ -1802,6 +1808,45 @@ def get_auto_finished_supplier_name():
         return jsonify(supplier_list), 200
     else:
         return jsonify([]), 200
+
+@dev_producion_order_bp.route(
+    "/devproductionorder/getpastshoeinfo", methods=["GET"]
+)
+def get_past_shoe_info():
+    order_shoe_rid = request.args.get("ordershoeid")
+    if order_shoe_rid.find("-") != -1:
+        order_shoe_rid = order_shoe_rid.split("-")[0]
+    similar_shoes = (
+        db.session.query(Shoe, ShoeType, Color, OrderShoe)
+        .join(ShoeType, Shoe.shoe_id == ShoeType.shoe_id)
+        .join(Color, ShoeType.color_id == Color.color_id)
+        .join(OrderShoe, Shoe.shoe_id == OrderShoe.shoe_id)
+        .filter(Shoe.shoe_rid.like(f"%{order_shoe_rid}%"))
+        .all()
+    )
+    result_list = []
+    shoe_list = []
+    for shoe in similar_shoes:
+        if shoe.Shoe.shoe_rid not in shoe_list:
+            shoe_list.append(shoe.Shoe.shoe_rid)
+            print(shoe_list)
+            result_list.append(
+                {
+                    "inheritId": shoe.Shoe.shoe_rid,
+                    "designer": shoe.Shoe.shoe_designer,
+                    "shoeColors": [{"color": shoe.Color.color_name}],
+                }   
+            )
+        else:
+            for item in result_list:
+                if item["inheritId"] == shoe.Shoe.shoe_rid:
+                    if {"color": shoe.Color.color_name} not in item["shoeColors"]:
+                        item["shoeColors"].append({"color": shoe.Color.color_name})
+                    break
+                    
+    return jsonify(result_list), 200
+
+
 
 
 @dev_producion_order_bp.route(

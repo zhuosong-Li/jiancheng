@@ -58,10 +58,10 @@ def login():
         jti = decoded_token["jti"]  # Extract the `jti` from the token payload
 
         # Store the new `jti` in Redis keyed by the username, valid for 1 day
-        redis_client.setex(username, timedelta(days=1), jti)
+        redis_client.setex(username, timedelta(days=7), jti)
 
         # Also store the `jti` keyed by the token's `jti` to handle logout/revocation
-        redis_client.setex(jti, timedelta(days=1), "valid")
+        redis_client.setex(jti, timedelta(days=7), "valid")
 
         return jsonify(access_token=access_token, role=user.Character.character_id, staffid=user.User.staff_id), 200
     else:
