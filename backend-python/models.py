@@ -1162,5 +1162,6 @@ class CraftSheetItem(db.Model):
     pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
     unit_usage = db.Column(db.DECIMAL(10, 5), nullable=True)
     total_usage = db.Column(db.DECIMAL(10, 5), nullable=True)
+    after_usage_symbol = db.Column(db.String(1), nullable=True)
     def __repr__(self):
         return f"<CraftSheetItem(craft_sheet_item_id={self.craft_sheet_item_id})>"

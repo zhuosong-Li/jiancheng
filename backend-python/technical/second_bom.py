@@ -311,6 +311,7 @@ def save_bom_usage():
     db.session.flush()
     print(bom_items)
     for bom_item in bom_items:
+        print(bom_item)
         if not bom_item["bomItemId"]:
             material_id = (
                 db.session.query(Material, Supplier)
@@ -351,6 +352,14 @@ def save_bom_usage():
             entity.total_usage = bom_item["approvalUsage"]
             entity.unit_usage = bom_item["unitUsage"]
             entity.remark = bom_item["comment"] if bom_item["comment"] else ""
+            entity.department_id = bom_item["useDepart"]
+            entity.material_model = bom_item["materialModel"] if bom_item["materialModel"] else None
+            entity.material_specification = bom_item["materialSpecification"] if bom_item["materialSpecification"] else None
+            entity.bom_item_color = bom_item["color"] if bom_item["color"] else None
+            entity.bom_item_add_type = 1
+            entity.pairs = bom_item["pairs"] if bom_item["pairs"] else 0.00
+            db.session.flush()
+
     db.session.commit()
     return jsonify({"status": "success"})
 
@@ -419,6 +428,7 @@ def get_bom_details():
                 "useDepart": department.department_id,
                 "craftName": item.craft_name,
                 "firstBomUsage": first_bom_usage,
+                "pairs": item.pairs if item.pairs else 0.00,
                 "unitUsage": item.unit_usage if item.unit_usage else 0.00 if material.material_category == 0 else None,
                 "approvalUsage": item.total_usage if item.total_usage else 0.00,
                 "unit": material.material_unit,
@@ -509,6 +519,14 @@ def issue_boms():
             .first()
             .OrderShoe.order_shoe_id
         )
+        craft_sheet_id = (
+            db.session.query(CraftSheet)
+            .join(OrderShoe, CraftSheet.order_shoe_id == OrderShoe.order_shoe_id)
+            .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
+            .filter(OrderShoe.order_shoe_id == order_shoe_id)
+            .first()
+            .craft_sheet_id
+        )
 
         current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
         random_string = randomIdGenerater(6)
@@ -542,6 +560,7 @@ def issue_boms():
             )
             bom.bom_status = "3"
             bom.total_bom_id = total_bom.total_bom_id
+
             db.session.flush()
             bom_id = bom.bom_id
             bom_items = (
@@ -559,19 +578,47 @@ def issue_boms():
                 .all()
             )
             for bom_item in bom_items:
+                print(bom_item.Material.material_name, bom_item.BomItem.material_model, bom_item.BomItem.material_specification, craft_sheet_id)
                 craft_sheet_item = (
                     db.session.query(CraftSheetItem)
                     .filter(
+                        CraftSheetItem.craft_sheet_id == craft_sheet_id,
+                        CraftSheetItem.order_shoe_type_id == order_shoe_type_id,
                         CraftSheetItem.material_id == bom_item.Material.material_id,
                         CraftSheetItem.material_model == bom_item.BomItem.material_model,
                         CraftSheetItem.material_specification == bom_item.BomItem.material_specification,
+                        CraftSheetItem.after_usage_symbol == 0,
                     )
                     .first()
                 )
-                if craft_sheet_item:
-                    craft_sheet_item.pairs = bom_item.BomItem.pairs
-                    craft_sheet_item.unit_usage = bom_item.BomItem.unit_usage
-                    craft_sheet_item.total_usage = bom_item.BomItem.total_usage
+                material_id = craft_sheet_item.material_id
+                material_model = craft_sheet_item.material_model
+                material_specification = craft_sheet_item.material_specification
+                material_color = craft_sheet_item.color
+                remark = craft_sheet_item.remark
+                department_id = craft_sheet_item.department_id
+                material_type = craft_sheet_item.material_type
+                order_shoe_type_id = craft_sheet_item.order_shoe_type_id
+                material_second_type = craft_sheet_item.material_second_type
+                craft_name = bom_item.BomItem.craft_name
+                new_craft_sheet_item = CraftSheetItem(
+                    craft_sheet_id=craft_sheet_id,
+                    material_id=material_id,
+                    material_model=material_model,
+                    material_specification=material_specification,
+                    color=material_color,
+                    remark=remark,
+                    department_id=department_id,
+                    material_type=material_type,
+                    order_shoe_type_id=order_shoe_type_id,
+                    material_second_type=material_second_type,
+                    craft_name=craft_name,
+                    pairs=bom_item.BomItem.pairs,
+                    unit_usage=bom_item.BomItem.unit_usage,
+                    total_usage=bom_item.BomItem.total_usage,
+                    after_usage_symbol=1,
+                )
+                db.session.add(new_craft_sheet_item)
                 db.session.flush()
                 # Create a unique key based on the attributes
                 key = (
@@ -601,6 +648,16 @@ def issue_boms():
                 
                 # Update the total usage (核定用量)
                 material_dict[key]["核定用量"] += bom_item.BomItem.total_usage
+        before_usage_craft_sheet_items = (
+            db.session.query(CraftSheetItem)
+            .filter(
+                CraftSheetItem.craft_sheet_id == craft_sheet_id,
+                CraftSheetItem.after_usage_symbol == 0,
+            )
+            .all()
+        )
+        for item in before_usage_craft_sheet_items:
+            db.session.delete(item)
         index = 1
         for material_info in material_dict.values():
             material_info["序号"] = index
