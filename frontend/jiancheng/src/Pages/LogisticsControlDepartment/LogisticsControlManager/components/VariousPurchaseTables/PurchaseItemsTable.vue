@@ -1,14 +1,32 @@
 <template>
+    <el-select v-model="currentBatchInfoType" @change="changeBatchInfoType">
+        <el-option
+            v-for="item in batchInfoTypeList"
+            :key="item.batchInfoTypeId"
+            :label="item.batchInfoTypeName"
+            :value="item.batchInfoTypeId"
+        >
+        </el-option>
+    </el-select>
     <el-table :data="localTableData" border height="450">
         <el-table-column prop="materialType" label="材料类型">
             <template #default="scope">
                 <el-popover trigger="hover" placement="top">
-                    <p>{{ scope.row.materialType ? scope.row.materialType.materialTypeName : '' }}</p>
+                    <p>
+                        {{ scope.row.materialType ? scope.row.materialType.materialTypeName : '' }}
+                    </p>
                     <template #reference>
-                        <el-select v-model="scope.row.materialType" @change="changeWarehouseName(scope.row)"
-                            value-key="materialTypeId">
-                            <el-option v-for="item in materialTypeOptions" :key="item.materialTypeId" :value="item"
-                                :label="item.materialTypeName">
+                        <el-select
+                            v-model="scope.row.materialType"
+                            @change="changeWarehouseName(scope.row)"
+                            value-key="materialTypeId"
+                        >
+                            <el-option
+                                v-for="item in materialTypeOptions"
+                                :key="item.materialTypeId"
+                                :value="item"
+                                :label="item.materialTypeName"
+                            >
                             </el-option>
                         </el-select>
                     </template>
@@ -18,80 +36,130 @@
         <el-table-column prop="warehouseName" label="所属仓库" />
         <el-table-column prop="supplierName" label="厂家名称">
             <template #default="scope">
-                <el-autocomplete v-model="scope.row.supplierName" :fetch-suggestions="querySupplierNames"
-                    placeholder="搜索厂家" @select="handleSupplierNameSelect(scope.row, $event)">
+                <el-autocomplete
+                    v-model="scope.row.supplierName"
+                    :fetch-suggestions="querySupplierNames"
+                    placeholder="搜索厂家"
+                    @select="handleSupplierNameSelect(scope.row, $event)"
+                >
                 </el-autocomplete>
             </template>
         </el-table-column>
         <el-table-column prop="materialName" label="材料名称">
             <template #default="scope">
-                <el-input v-model="scope.row.materialName">
-
-                </el-input>
+                <el-input v-model="scope.row.materialName"> </el-input>
             </template>
         </el-table-column>
         <el-table-column prop="materialModel" label="材料型号">
             <template #default="scope">
-                <el-input v-model="scope.row.materialModel" clearable>
-
-                </el-input>
+                <el-input v-model="scope.row.materialModel" clearable> </el-input>
             </template>
         </el-table-column>
         <el-table-column label="材料规格">
             <template #default="scope">
-                <el-input v-model="scope.row.materialSpecification" placeholder="" clearable></el-input>
+                <el-input
+                    v-model="scope.row.materialSpecification"
+                    placeholder=""
+                    clearable
+                ></el-input>
             </template>
         </el-table-column>
         <el-table-column label="颜色">
             <template #default="scope">
-                <el-input v-model="scope.row.color" placeholder="" clearable>
-                </el-input>
+                <el-input v-model="scope.row.color" placeholder="" clearable> </el-input>
             </template>
         </el-table-column>
         <el-table-column prop="unit" label="单位">
             <template #default="scope">
-                <el-input v-model="scope.row.unit" placeholder="">
-                </el-input>
+                <el-input v-model="scope.row.unit" placeholder=""> </el-input>
             </template>
         </el-table-column>
-        <el-table-column label="采购数量" width="150">
+        <el-table-column prop="purchaseAmount" label="采购数量">
+            
             <template #default="scope">
-                <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" :step="0.001" />
+                {{ scope.row.purchaseAmount }}
+                <el-input-number
+                    v-if="scope.row.materialCategory == 0"
+                    v-model="scope.row.purchaseAmount"
+                    :min="0"
+                    size="small"
+                />
+                <el-button
+                    v-if="scope.row.materialCategory == 1"
+                    type="primary"
+                    size="default"
+                    @click="openSizeDialog(scope.row, scope.$index)"
+                    >尺码用量填写</el-button
+                >
             </template>
         </el-table-column>
         <el-table-column label="备注">
             <template #default="scope">
-                <el-input v-model="scope.row.comment" placeholder="" size="default" clearable></el-input>
+                <el-input
+                    v-model="scope.row.comment"
+                    placeholder=""
+                    size="default"
+                    clearable
+                ></el-input>
             </template>
         </el-table-column>
         <el-table-column label="操作">
             <template #default="scope">
-                <el-button size="small" type="danger" @click="deleteCurrentRow(scope.$index)">删除</el-button>
+                <el-button size="small" type="danger" @click="deleteCurrentRow(scope.$index)"
+                    >删除</el-button
+                >
             </template>
         </el-table-column>
     </el-table>
     <el-button type="primary" @click="openNewMaterialDialog">添加新材料</el-button>
     <el-button type="primary" @click="manualAddMaterial">手动添加材料</el-button>
 
-
-    <el-dialog title="添加新采购材料" v-model="newMaterialVis" width="60%" :close-on-click-modal="false">
+    <el-dialog
+        title="添加新采购材料"
+        v-model="newMaterialVis"
+        width="60%"
+        :close-on-click-modal="false"
+    >
         <el-row :gutter="20">
             <el-col :span="6" :offset="0">
-                <el-input v-model="addMaterialDialogField.materialTypeSearch" placeholder="输入材料类型" size="default"
-                    :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                <el-input
+                    v-model="addMaterialDialogField.materialTypeSearch"
+                    placeholder="输入材料类型"
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @change="getMaterialFilterData(currentCreateViewId)"
+                ></el-input>
             </el-col>
             <el-col :span="6" :offset="0">
-                <el-input v-model="addMaterialDialogField.materialSearch" placeholder="输入材料名称" size="default"
-                    :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                <el-input
+                    v-model="addMaterialDialogField.materialSearch"
+                    placeholder="输入材料名称"
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @change="getMaterialFilterData(currentCreateViewId)"
+                ></el-input>
             </el-col>
             <el-col :span="6" :offset="0">
-                <el-input v-model="addMaterialDialogField.factorySearch" placeholder="输入厂家名称" size="default"
-                    :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                <el-input
+                    v-model="addMaterialDialogField.factorySearch"
+                    placeholder="输入厂家名称"
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @change="getMaterialFilterData(currentCreateViewId)"
+                ></el-input>
             </el-col>
         </el-row>
         <el-row :gutter="20">
-            <el-table :data="assetFilterTable" border ref="materialSelectTable"
-                @selection-change="handleMaterialSelectionChange" style="height: 400px">
+            <el-table
+                :data="assetFilterTable"
+                border
+                ref="materialSelectTable"
+                @selection-change="handleMaterialSelectionChange"
+                style="height: 400px"
+            >
                 <el-table-column type="selection" width="55"></el-table-column>
                 <el-table-column prop="materialType" label="材料类型" />
                 <el-table-column prop="materialName" label="材料名称" />
@@ -107,16 +175,39 @@
             </span>
         </template>
     </el-dialog>
+    <el-dialog
+        title="尺码数量填写"
+        v-model="isSizeDialogVisible"
+        width="60%"
+        :close-on-click-modal="false"
+    >
+        <span>{{ `尺码名称: ${currentShoeSizeType}` }}</span>
+        <el-table :data="sizeData" border stripe>
+            <el-table-column prop="size" label="尺码"></el-table-column>
+            <el-table-column prop="purchaseAmount" label="采购数量">
+                <template #default="scope">
+                    <el-input-number v-model="scope.row.purchaseAmount" :min="0" size="small" />
+                </template>
+            </el-table-column>
+        </el-table>
+
+        <template #footer>
+            <span>
+                <el-button type="primary" @click="confirmSizeAmount()">确认</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </template>
 <script>
 import axios from 'axios'
-import { markRaw } from 'vue';
+import { markRaw } from 'vue'
 import { Search } from '@element-plus/icons-vue'
 export default {
-    props: ["materialTypeOptions", "purchaseData"],
+    props: ['materialTypeOptions', 'purchaseData'],
     data() {
         return {
             Search: markRaw(Search),
+            isSizeDialogVisible: false,
             isChooseOrderDialogOpen: false,
             isChooseOrderShoeDialogOpen: false,
             currentMaterialRow: {},
@@ -132,29 +223,81 @@ export default {
                 unit: '',
                 purchaseAmount: 0,
                 comment: '',
+                sizeInfo: []
             },
+            currentSizeIndex: 0,
+            sizeData: [],
+            currentShoeSizeType: '',
             // search material dialog variables
             addMaterialDialogField: {},
             addMaterialTemplate: {
                 materialTypeSearch: '',
                 materialSearch: '',
-                factorySearch: '',
+                factorySearch: ''
             },
             assetTable: [],
             assetFilterTable: [],
             newMaterialVis: false,
-            materialSelectRow: {}
+            materialSelectRow: {},
+            batchInfoTypeList: [],
+            currentBatchInfoType: null
         }
     },
     watch: {
         purchaseData(newItems) {
-            this.localTableData = [...newItems];
-        },
+            this.localTableData = [...newItems]
+        }
     },
-    emits: ['update-items'],
+    emits: ['update-items', 'update-current-batch-info-type'],
+    mounted() {
+        this.getBatchTypeList()
+    },
     methods: {
         emitUpdate() {
-            this.$emit('update-items', [...this.localTableData]);
+            this.$emit('update-items', [...this.localTableData])
+        },
+        changeBatchInfoType() {
+            // Clear the current size info
+            this.newItemTemplate.sizeInfo = []
+
+            // Find the selected batch info type
+            const selectedBatchInfoType = this.batchInfoTypeList.find(
+                (item) => item.batchInfoTypeId === this.currentBatchInfoType
+            )
+
+            // Update the current shoe size type
+            this.currentShoeSizeType = selectedBatchInfoType.batchInfoTypeName
+            this.$emit('update-current-batch-info-type', this.currentShoeSizeType);
+
+            // Map the size slots into the desired format
+            const sizeSlots = [
+                { size: '34', slotName: 'size34Slot' },
+                { size: '35', slotName: 'size35Slot' },
+                { size: '36', slotName: 'size36Slot' },
+                { size: '37', slotName: 'size37Slot' },
+                { size: '38', slotName: 'size38Slot' },
+                { size: '39', slotName: 'size39Slot' },
+                { size: '40', slotName: 'size40Slot' },
+                { size: '41', slotName: 'size41Slot' },
+                { size: '42', slotName: 'size42Slot' },
+                { size: '43', slotName: 'size43Slot' },
+                { size: '44', slotName: 'size44Slot' },
+                { size: '45', slotName: 'size45Slot' },
+                { size: '46', slotName: 'size46Slot' }
+            ]
+
+            this.newItemTemplate.sizeInfo = sizeSlots
+                .filter((slot) => selectedBatchInfoType[slot.slotName]) // Only include defined slots
+                .map((slot) => ({
+                    size: selectedBatchInfoType[slot.slotName], // Get the size name from the slot
+                    purchaseAmount: 0 // Initialize purchase amount
+                }))
+
+            console.log(this.newItemTemplate.sizeInfo)
+        },
+        async getBatchTypeList() {
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getshoebatchinfotype`, {})
+            this.batchInfoTypeList = response.data
         },
         async querySupplierNames(queryString, callback) {
             if (queryString.trim()) {
@@ -195,11 +338,11 @@ export default {
         manualAddMaterial() {
             let newItem = JSON.parse(JSON.stringify(this.newItemTemplate))
             this.localTableData = [...this.localTableData, newItem]
-            this.emitUpdate();
+            this.emitUpdate()
         },
         deleteCurrentRow(index) {
             this.localTableData.splice(index, 1)
-            this.emitUpdate();
+            this.emitUpdate()
         },
         handleSupplierNameSelect(row, selectedItem) {
             row.supplierName = selectedItem.value
@@ -237,12 +380,28 @@ export default {
             newItem.materialType = this.materialSelectRow.materialType
             newItem.warehouseName = this.materialSelectRow.warehouseName
             newItem.supplierName = this.materialSelectRow.supplierName
+            newItem.materialCategory = this.materialSelectRow.materialCategory
             newItem.unit = this.materialSelectRow.unit
             this.localTableData = [...this.localTableData, newItem]
             this.newMaterialVis = false
             this.addMaterialDialogField = JSON.parse(JSON.stringify(this.addMaterialTemplate))
-            this.emitUpdate();
+            this.emitUpdate()
         },
+        confirmSizeAmount() {
+            this.localTableData[this.currentSizeIndex].sizeInfo = this.sizeData
+            const totalApprovalAmount = this.sizeData.reduce(
+                (total, item) => total + item.purchaseAmount,
+                0
+            )
+            this.localTableData[this.currentSizeIndex].purchaseAmount = totalApprovalAmount
+            this.isSizeDialogVisible = false
+        },
+        openSizeDialog(row, index) {
+            this.sizeData = row.sizeInfo
+            console.log(this.sizeData)
+            this.isSizeDialogVisible = true
+            this.currentSizeIndex = index
+        }
     }
 }
 </script>

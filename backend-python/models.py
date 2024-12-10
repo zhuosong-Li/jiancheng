@@ -630,7 +630,7 @@ class AssetsPurchaseOrderItem(db.Model):
     size_44_purchase_amount = db.Column(db.Integer, nullable=True)
     size_45_purchase_amount = db.Column(db.Integer, nullable=True)
     size_46_purchase_amount = db.Column(db.Integer, nullable=True)
-    size_type = db.Column(db.String(1), nullable=False, default="E")
+    size_type = db.Column(db.String(10), nullable=False, default="E")
 
     def __repr__(self):
         return f"<AssetsPurchaseOrderItem(assets_purchase_order_item_id={self.assets_purchase_order_item_id})>"
@@ -1027,6 +1027,7 @@ class DefaultBom(db.Model):
     bom_type = db.Column(db.Integer, nullable=False)
     shoe_id = db.Column(db.Integer, nullable=False)
     bom_status = db.Column(db.String(1), nullable=True)
+    bom_id = db.Column(db.BigInteger, nullable=False)
 
     def __repr__(self):
         return f"<DefaultBom(default_bom_id={self.default_bom_id})>"

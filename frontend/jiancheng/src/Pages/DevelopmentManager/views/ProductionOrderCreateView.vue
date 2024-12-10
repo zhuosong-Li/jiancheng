@@ -252,7 +252,7 @@
                 v-model="isProductionOrderCreateDialogVisible"
                 width="90%"
                 style="height: 700px; overflow-y: scroll"
-            >
+            >   
                 <el-descriptions title="投产指令单公用信息" border :column="2">
                     <el-descriptions-item label="本码">
                         <el-input
@@ -305,6 +305,9 @@
                         ></el-input>
                     </el-descriptions-item>
                 </el-descriptions>
+                <el-row :gutter="20">
+                    <el-col :span="12" :offset="0"><el-button type="primary" size="default" @click="openLoadMaterialDialog">加载过往订单</el-button></el-col>
+                </el-row>
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane
@@ -1023,6 +1026,51 @@
                     </span>
                 </template>
             </el-dialog>
+            <el-dialog
+                title="加载过往鞋型材料"
+                v-model="isLoadMaterialDialogVisible"
+                width="50%">
+                <el-table :data="pastShoeInfoTable" border>
+                    <el-table-column type="expand">
+                        <template #default="scope">
+                            <el-table :data="scope.row.shoeColors" border>
+                                <el-table-column prop="color" label="颜色"></el-table-column>
+                                <el-table-column label="操作">
+                                    <template #default="scope">
+                                        <el-button
+                                            type="primary"
+                                            size="default"
+                                            >查看材料</el-button
+                                        >
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </template>
+                    </el-table-column>
+                    <el-table-column prop="inheritId" label="工厂型号"></el-table-column>
+                    <el-table-column prop="designer" label="设计员"></el-table-column>
+                </el-table>
+                <template #footer>
+                <span>
+                    <el-button @click="">取消</el-button>
+                    <el-button type="primary" @click="">确认加载</el-button>
+                </span>
+                </template>
+            </el-dialog>
+            <el-dialog
+                :title="`过往订单材料一览 {{ pastShoeId }}`"
+                v-model="isPastShoeMaterialDialogVisible"
+                width="50%">
+                <span></span>
+                <template #footer>
+                <span>
+                    <el-button @click="isPastShoeMaterialDialogVisible = false">Cancel</el-button>
+                    <el-button type="primary" @click="">OK</el-button>
+                </span>
+                </template>
+            </el-dialog>
+            
+            
             <el-dialog title="添加新材料" v-model="newMaterialVis" width="50%">
                 <el-row :gutter="20">
                     <el-col :span="6" :offset="0">
@@ -2252,7 +2300,9 @@ export default {
             factorySearch: '',
             isEditDialogVisible: false,
             isProductionOrderCreateDialogVisible: false,
+            isPastShoeMaterialDialogVisible: false,
             isPreviewDialogVisible: false,
+            isLoadMaterialDialogVisible: false,
             token: localStorage.getItem('token'),
             currentShoeId: '',
             currentColor: '',
@@ -2288,6 +2338,7 @@ export default {
             inheritIdSearch: '',
             isFinalBOM: false,
             orderProduceInfo: [],
+            pastShoeInfoTable: [],
             newProductionInstructionId: '',
             defaultManuallyAddedMaterial: {
                 materialType: '',
@@ -2309,7 +2360,8 @@ export default {
                 sizeDifference: '',
                 craftRemark: '',
                 burnSoleCraft: '',
-                designer: ''
+                designer: '',
+                defaultBOMStatus: ''
             },
             syncMaterialButtonText: '同步该材料表格至所有颜色',
             defaultUnitOptions: [
@@ -2704,6 +2756,17 @@ export default {
             this.productionInstructionDetail.designer = row.designer
             this.activeTab = this.tabcolor[0]
             this.isEditDialogVisible = true
+        },
+        async openLoadMaterialDialog() {
+            this.getPastOrderShoeData()
+            this.isLoadMaterialDialogVisible = true
+        },
+        async getPastOrderShoeData() {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/devproductionorder/getpastshoeinfo?ordershoeid=${this.currentShoeId}`
+            )
+            this.pastShoeInfoTable = response.data
+            console.log(this.pastShoeInfoTable)
         },
         getMaterialDataByType(type) {
             const activeData = this.materialWholeData.find((item) => item.color === this.activeTab)

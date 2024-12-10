@@ -1,37 +1,65 @@
 <template>
     <el-row :gutter="20">
-        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center">固定资产/耗材采购订单生成</el-col>
+        <el-col :span="24" :offset="0" style="font-size: xx-large; text-align: center"
+            >固定资产/耗材采购订单生成</el-col
+        >
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="12" :offset="0"><el-button-group>
-                <el-button type="primary" size="default" @click="openCreatePage(null, 0)">新建耗材/固定资产采购订单</el-button>
-                <el-button type="primary" size="default" @click="openCreateSizeDialog">创建尺码型号采购订单</el-button>
+        <el-col :span="12" :offset="0"
+            ><el-button-group>
+                <el-button type="primary" size="default" @click="openCreatePage(null, 0)"
+                    >新建耗材/固定资产采购订单</el-button
+                >
             </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="8"><el-button type="warning" size="large"
-                @click="openUnsubmitDialog">待提交订单</el-button>
+        <el-col :span="4" :offset="8"
+            ><el-button type="warning" size="large" @click="openUnsubmitDialog"
+                >待提交订单</el-button
+            >
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="6" :offset="0">
             <div style="display: flex; align-items: center; white-space: nowrap">
-                订单编号查询：<el-input v-model="orderSearch" placeholder="" size="default" :suffix-icon="Search" clearable
-                    @input="tableWholeFilter"></el-input>
+                订单编号查询：<el-input
+                    v-model="orderSearch"
+                    placeholder=""
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @input="tableWholeFilter"
+                ></el-input>
             </div>
         </el-col>
         <el-col :span="6" :offset="0">
             <div style="display: flex; align-items: center; white-space: nowrap">
-                耗材类型查询：<el-input v-model="assetsTypeSearch" placeholder="" size="default" :suffix-icon="Search"
-                    clearable @input="tableWholeFilter"></el-input>
+                耗材类型查询：<el-input
+                    v-model="assetsTypeSearch"
+                    placeholder=""
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @input="tableWholeFilter"
+                ></el-input>
             </div>
         </el-col>
         <el-col :span="6" :offset="0">
             <div style="display: flex; align-items: center; white-space: nowrap">
                 采购类型查询：
-                <el-select v-model="isPurchaseOrderFilter" value-key="" placeholder="" clearable filterable
-                    @change="tableWholeFilter">
-                    <el-option v-for="item in isPurchaseOrderOptions" :key="item.value" :label="item.label"
-                        :value="item.value">
+                <el-select
+                    v-model="isPurchaseOrderFilter"
+                    value-key=""
+                    placeholder=""
+                    clearable
+                    filterable
+                    @change="tableWholeFilter"
+                >
+                    <el-option
+                        v-for="item in isPurchaseOrderOptions"
+                        :key="item.value"
+                        :label="item.label"
+                        :value="item.value"
+                    >
                     </el-option>
                 </el-select>
             </div>
@@ -40,8 +68,14 @@
 
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="24" :offset="0">
-            <el-table v-loading="datafinished" :data="materialPurchaseFilterData" border style="height: 450px"
-                ref="singleSelectTable" @selection-change="handleSelectionChange">
+            <el-table
+                v-loading="datafinished"
+                :data="materialPurchaseFilterData"
+                border
+                style="height: 450px"
+                ref="singleSelectTable"
+                @selection-change="handleSelectionChange"
+            >
                 <el-table-column type="selection" width="55"></el-table-column>
                 <el-table-column prop="purchaseOrderRId" label="采购订单编号"></el-table-column>
                 <el-table-column prop="createDate" label="采购下发日期"></el-table-column>
@@ -50,7 +84,9 @@
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
                 <el-table-column label="操作">
                     <template #default="scope">
-                        <el-button type="primary" @click="openPreviewDialog(scope.row)">查看</el-button>
+                        <el-button type="primary" @click="openPreviewDialog(scope.row)"
+                            >查看</el-button
+                        >
                     </template>
                 </el-table-column>
             </el-table>
@@ -64,7 +100,12 @@
         </el-col>
     </el-row> -->
     <!--未提交订单对话框-->
-    <el-dialog title="未提交订单一览" v-model="unsubmitVis" width="90%" :close-on-click-modal="false">
+    <el-dialog
+        title="未提交订单一览"
+        v-model="unsubmitVis"
+        width="90%"
+        :close-on-click-modal="false"
+    >
         <el-row :gutter="20" style="margin-top: 20px">
             <el-col :span="24" :offset="0">
                 <el-table :data="unsubmitPurchaseOrder" border style="height: 600px">
@@ -75,10 +116,17 @@
                     <el-table-column label="操作">
                         <template #default="scope">
                             <!-- <el-button type="primary" @click="openPreviewDialog(scope.row)">查看</el-button> -->
-                            <el-button type="primary" @click="openCreatePage(scope.row, 1)">编辑</el-button>
-                            <el-button type="success" @click="openSubmitDialog(scope.row)">提交</el-button>
-                            <el-button type="danger" @click="deleteUnsubmitPurchaseOrder(scope.row)">删除</el-button>
-                        </template></el-table-column>
+                            <el-button type="primary" @click="openCreatePage(scope.row, 1)"
+                                >编辑</el-button
+                            >
+                            <el-button type="success" @click="openSubmitDialog(scope.row)"
+                                >提交</el-button
+                            >
+                            <el-button type="danger" @click="deleteUnsubmitPurchaseOrder(scope.row)"
+                                >删除</el-button
+                            >
+                        </template></el-table-column
+                    >
                 </el-table>
             </el-col>
         </el-row>
@@ -90,29 +138,58 @@
     </el-dialog>
 
     <!--采购材料对话框-->
-    <el-dialog title="添加新采购材料" v-model="newMaterialVis" width="60%" :close-on-click-modal="false">
+    <el-dialog
+        title="添加新采购材料"
+        v-model="newMaterialVis"
+        width="60%"
+        :close-on-click-modal="false"
+    >
         <el-row :gutter="20">
             <el-col :span="6" :offset="0">
                 <div style="display: flex; align-items: center; white-space: nowrap">
-                    材料类型查询：<el-input v-model="addMaterialDialogField.materialTypeSearch" placeholder="" size="default"
-                        :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                    材料类型查询：<el-input
+                        v-model="addMaterialDialogField.materialTypeSearch"
+                        placeholder=""
+                        size="default"
+                        :suffix-icon="Search"
+                        clearable
+                        @change="getMaterialFilterData(currentCreateViewId)"
+                    ></el-input>
                 </div>
             </el-col>
             <el-col :span="6" :offset="0">
                 <div style="display: flex; align-items: center; white-space: nowrap">
-                    材料名称查询：<el-input v-model="addMaterialDialogField.materialSearch" placeholder="" size="default"
-                        :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                    材料名称查询：<el-input
+                        v-model="addMaterialDialogField.materialSearch"
+                        placeholder=""
+                        size="default"
+                        :suffix-icon="Search"
+                        clearable
+                        @change="getMaterialFilterData(currentCreateViewId)"
+                    ></el-input>
                 </div>
             </el-col>
             <el-col :span="6" :offset="0">
                 <div style="display: flex; align-items: center; white-space: nowrap">
-                    工厂名查询：<el-input v-model="addMaterialDialogField.factorySearch" placeholder="" size="default"
-                        :suffix-icon="Search" clearable @change="getMaterialFilterData(currentCreateViewId)"></el-input>
+                    工厂名查询：<el-input
+                        v-model="addMaterialDialogField.factorySearch"
+                        placeholder=""
+                        size="default"
+                        :suffix-icon="Search"
+                        clearable
+                        @change="getMaterialFilterData(currentCreateViewId)"
+                    ></el-input>
                 </div>
             </el-col>
         </el-row>
-        <el-table :data="assetFilterTable" border ref="materialSelectTable"
-            @selection-change="handleMaterialSelectionChange" style="height: 400px" v-loading="materialAddfinished">
+        <el-table
+            :data="assetFilterTable"
+            border
+            ref="materialSelectTable"
+            @selection-change="handleMaterialSelectionChange"
+            style="height: 400px"
+            v-loading="materialAddfinished"
+        >
             <el-table-column type="selection" width="55"></el-table-column>
             <el-table-column prop="materialType" label="材料类型" />
             <el-table-column prop="materialName" label="材料名称" />
@@ -124,117 +201,120 @@
         <template #footer>
             <span>
                 <el-button @click="newMaterialVis = false">取消</el-button>
-                <el-button v-if="currentCreateViewId == 0" type="primary" @click="confirmNewMaterialAdd">确认</el-button>
-                <el-button v-else-if="currentCreateViewId == 1" type="primary"
-                    @click="confirmNewSizeMaterialAdd">确认</el-button>
-                <el-button v-else-if="currentCreateViewId == 2" type="primary"
-                    @click="confirmEditNewMaterialAdd">确认</el-button>
-                <el-button v-else-if="currentCreateViewId == 3" type="primary"
-                    @click="confirmEditSizeNewMaterialAdd">确认</el-button>
+                <el-button
+                    v-if="currentCreateViewId == 0"
+                    type="primary"
+                    @click="confirmNewMaterialAdd"
+                    >确认</el-button
+                >
+                <el-button
+                    v-else-if="currentCreateViewId == 1"
+                    type="primary"
+                    @click="confirmNewSizeMaterialAdd"
+                    >确认</el-button
+                >
+                <el-button
+                    v-else-if="currentCreateViewId == 2"
+                    type="primary"
+                    @click="confirmEditNewMaterialAdd"
+                    >确认</el-button
+                >
+                <el-button
+                    v-else-if="currentCreateViewId == 3"
+                    type="primary"
+                    @click="confirmEditSizeNewMaterialAdd"
+                    >确认</el-button
+                >
             </span>
         </template>
     </el-dialog>
     <!--采购订单预览-->
-    <el-dialog :title="`耗材/固定资产采购订单 ${currentViewPurchaseOrderId} 预览`" v-model="purchaseOrderVis" width="90%"
-        :close-on-click-modal="false" :key="currentViewPurchaseOrderId">
+    <el-dialog
+        :title="`耗材/固定资产采购订单 ${currentViewPurchaseOrderId} 预览`"
+        v-model="purchaseOrderVis"
+        width="90%"
+        :close-on-click-modal="false"
+        :key="currentViewPurchaseOrderId"
+    >
         <div style="height: 500px; overflow-y: scroll; overflow-x: hidden">
-            <el-row v-for="purchaseDivideOrder in purchaseTestData" :key="purchaseDivideOrder" :gutter="20"
-                style="margin-bottom: 20px">
+            <el-row
+                v-for="purchaseDivideOrder in purchaseTestData"
+                :key="purchaseDivideOrder"
+                :gutter="20"
+                style="margin-bottom: 20px"
+            >
                 <el-col :span="23">
                     <h3>分采购订单编号 {{ purchaseDivideOrder.purchaseDivideOrderId }}</h3>
                     <h3>工厂名称: {{ purchaseDivideOrder.supplierName }}</h3>
                     <el-row :gutter="20">
-                        <el-col :span="12" :offset="0"><span>订单备注：
+                        <el-col :span="12" :offset="0"
+                            ><span
+                                >订单备注：
                                 {{ purchaseDivideOrder.remark }}
-                            </span></el-col>
+                            </span></el-col
+                        >
                         <el-col :span="12" :offset="0">
-                            <span>环境要求：
+                            <span
+                                >环境要求：
                                 {{ purchaseDivideOrder.evironmentalRequest }}
                             </span>
                         </el-col>
                     </el-row>
                     <el-row :gutter="20">
-                        <el-col :span="12" :offset="0"><span>发货地址: {{ purchaseDivideOrder.shipmentAddress }}
-                            </span></el-col>
+                        <el-col :span="12" :offset="0"
+                            ><span
+                                >发货地址: {{ purchaseDivideOrder.shipmentAddress }}
+                            </span></el-col
+                        >
                         <el-col :span="12" :offset="0">
                             <span>交货周期: {{ purchaseDivideOrder.shipmentDeadline }} </span>
                         </el-col>
                     </el-row>
                     <div v-if="factoryFieldJudge(purchaseDivideOrder.purchaseDivideOrderType)">
-                        <el-table :data="purchaseDivideOrder.assetsItems" border style="width: 100%">
+                        <el-table
+                            :data="purchaseDivideOrder.assetsItems"
+                            border
+                            style="width: 100%"
+                        >
                             <el-table-column type="index" label="编号" />
                             <el-table-column prop="materialType" label="材料类型"></el-table-column>
                             <el-table-column prop="materialName" label="材料名称" />
-                            <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+                            <el-table-column
+                                prop="materialSpecification"
+                                label="材料规格"
+                            ></el-table-column>
                             <el-table-column prop="unit" label="单位" />
 
                             <el-table-column prop="purchaseAmount" label="采购数量" />
-                            <el-table-column label="分码数量（中国/美标内码/美标外显）">
-                                <el-table-column label="35" width="50">
-                                    <el-table-column label="7" width="50">
-                                        <el-table-column prop="size35" label="7" width="50"></el-table-column>
+                            <el-table-column prop="sizeType" label="分码类型"></el-table-column>
+                            <el-table-column label="分码数量">
+                                    <el-table-column
+                                        v-for="size in dynamicSizes"
+                                        :key="size"
+                                        :label="size"
+                                        width="60"
+                                    >
+                                        <template #default="scope">
+                                            {{ scope.row[size] || 0 }}
+                                        </template>
                                     </el-table-column>
                                 </el-table-column>
-                                <el-table-column label="36" width="50">
-                                    <el-table-column label="7" width="50">
-                                        <el-table-column prop="size36" label="7.5" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="37" width="50">
-                                    <el-table-column label="8" width="50">
-                                        <el-table-column prop="size37" label="8" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="38" width="50">
-                                    <el-table-column label="8" width="50">
-                                        <el-table-column prop="size38" label="8.5" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="39" width="50">
-                                    <el-table-column label="9" width="50">
-                                        <el-table-column prop="size39" label="9" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="40" width="50">
-                                    <el-table-column label="9" width="50">
-                                        <el-table-column prop="size40" label="9.5" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="41" width="50">
-                                    <el-table-column label="10" width="50">
-                                        <el-table-column prop="size41" label="10" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="42" width="50">
-                                    <el-table-column label="10" width="50">
-                                        <el-table-column prop="size42" label="10.5" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="43" width="50">
-                                    <el-table-column label="11" width="50">
-                                        <el-table-column prop="size43" label="11" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="44" width="50">
-                                    <el-table-column label="12" width="50">
-                                        <el-table-column prop="size44" label="12" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                                <el-table-column label="45" width="50">
-                                    <el-table-column label="13" width="50">
-                                        <el-table-column prop="size45" label="13" width="50"></el-table-column>
-                                    </el-table-column>
-                                </el-table-column>
-                            </el-table-column>
                             <el-table-column prop="comment" label="备注" />
                         </el-table>
                     </div>
                     <div v-else>
-                        <el-table :data="purchaseDivideOrder.assetsItems" border style="width: 100%">
+                        <el-table
+                            :data="purchaseDivideOrder.assetsItems"
+                            border
+                            style="width: 100%"
+                        >
                             <el-table-column type="index" label="编号" />
                             <el-table-column prop="materialType" label="材料类型"></el-table-column>
                             <el-table-column prop="materialName" label="材料名称" />
-                            <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+                            <el-table-column
+                                prop="materialSpecification"
+                                label="材料规格"
+                            ></el-table-column>
                             <el-table-column prop="color" label="颜色" />
                             <el-table-column prop="unit" label="单位" />
                             <el-table-column prop="purchaseAmount" label="采购数量" />
@@ -250,21 +330,28 @@
             </span>
         </template>
     </el-dialog>
-    <el-dialog :title="`创建尺码型号采购订单 ${newSizePurchaseOrderId}`" v-model="isLastPurchaseOrderDialogVisible"
-        :close-on-click-modal="false" width="80%">
+    <el-dialog
+        :title="`创建尺码型号采购订单 ${newSizePurchaseOrderId}`"
+        v-model="isLastPurchaseOrderDialogVisible"
+        :close-on-click-modal="false"
+        width="80%"
+    >
         <el-table :data="lastData" border stripe>
             <el-table-column prop="materialType" label="材料类型" />
             <el-table-column prop="materialName" label="材料名称" />
             <el-table-column prop="materialSpecification" label="材料规格">
                 <template #default="scope">
-                    <el-input v-model="scope.row.materialSpecification" placeholder="" size="default"
-                        clearable></el-input>
+                    <el-input
+                        v-model="scope.row.materialSpecification"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
                 </template>
             </el-table-column>
             <el-table-column label="颜色">
                 <template #default="scope">
-                    <el-input v-model="scope.row.color" placeholder="">
-                    </el-input>
+                    <el-input v-model="scope.row.color" placeholder=""> </el-input>
                 </template>
             </el-table-column>
             <el-table-column prop="warehouseName" label="所属仓库" />
@@ -273,22 +360,35 @@
             <el-table-column label="型号填写">
                 <template #default="scope">
                     {{ scope.row.sizeStatus }}
-                    <el-button type="primary" size="default"
-                        @click="openSizeDialog(scope.row, scope.$index, 0)">尺码信息</el-button>
+                    <el-button
+                        type="primary"
+                        size="default"
+                        @click="openSizeDialog(scope.row, scope.$index, 0)"
+                        >尺码信息</el-button
+                    >
                 </template>
             </el-table-column>
             <el-table-column label="备注">
                 <template #default="scope">
-                    <el-input v-model="scope.row.comment" placeholder="" size="default" clearable></el-input>
+                    <el-input
+                        v-model="scope.row.comment"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="danger" @click="deleteCurrentRow(scope.$index, lastData)">删除</el-button>
+                    <el-button type="danger" @click="deleteCurrentRow(scope.$index, lastData)"
+                        >删除</el-button
+                    >
                 </template>
             </el-table-column>
         </el-table>
-        <el-button type="primary" size="default" @click="openNewMaterialDialog(1)">添加新材料</el-button>
+        <el-button type="primary" size="default" @click="openNewMaterialDialog(1)"
+            >添加新材料</el-button
+        >
         <template #footer>
             <span>
                 <el-button @click="isLastPurchaseOrderDialogVisible = false">取消</el-button>
@@ -296,7 +396,12 @@
             </span>
         </template>
     </el-dialog>
-    <el-dialog title="尺码数量填写" v-model="isSizeDialogVisible" width="60%" :close-on-click-modal="false">
+    <el-dialog
+        title="尺码数量填写"
+        v-model="isSizeDialogVisible"
+        width="60%"
+        :close-on-click-modal="false"
+    >
         <el-table :data="sizeData" border stripe>
             <el-table-column prop="size" label="尺码"></el-table-column>
             <el-table-column prop="innerSize" label="内码"></el-table-column>
@@ -310,106 +415,108 @@
 
         <template #footer>
             <span>
-                <el-button type="primary" @click="confirmSizeAmount(currentSizeData)">确认</el-button>
+                <el-button type="primary" @click="confirmSizeAmount(currentSizeData)"
+                    >确认</el-button
+                >
             </span>
         </template>
     </el-dialog>
-    <el-dialog title="采购订单创建页面" v-model="isPurchaseOrderVis" width="80%">
+    <el-dialog title="采购订单创建页面" v-model="isPurchaseOrderVis" width="90%">
         <el-tabs v-model="activeTab" type="card" tab-position="top">
-            <el-tab-pane v-for="item in tabPlaneData" :key="item.purchaseDivideOrderId"
-                :label="item.purchaseDivideOrderId + '    ' + item.supplierName" :name="item.purchaseDivideOrderId"
-                style="min-height: 500px">
+            <el-tab-pane
+                v-for="item in tabPlaneData"
+                :key="item.purchaseDivideOrderId"
+                :label="item.purchaseDivideOrderId + '    ' + item.supplierName"
+                :name="item.purchaseDivideOrderId"
+                style="min-height: 500px"
+            >
                 <el-row :gutter="20">
-                    <el-col :span="12" :offset="0"><span>订单备注：
-                            <el-input v-model="item.remark" placeholder="" type="textarea" resize="none" size="normal"
-                                clearable></el-input> </span></el-col>
+                    <el-col :span="12" :offset="0"
+                        ><span
+                            >订单备注：
+                            <el-input
+                                v-model="item.remark"
+                                placeholder=""
+                                type="textarea"
+                                resize="none"
+                                size="normal"
+                                clearable
+                            ></el-input> </span
+                    ></el-col>
                     <el-col :span="12" :offset="0">
-                        <span>环境要求：
-                            <el-input v-model="item.evironmentalRequest" placeholder="" type="textarea" resize="none"
-                                size="normal" clearable></el-input>
+                        <span
+                            >环境要求：
+                            <el-input
+                                v-model="item.evironmentalRequest"
+                                placeholder=""
+                                type="textarea"
+                                resize="none"
+                                size="normal"
+                                clearable
+                            ></el-input>
                         </span>
                     </el-col>
                 </el-row>
                 <el-row :gutter="20">
                     <el-col :span="12" :offset="0">
-                        <span>发货地址：
-                            <el-input v-model="item.shipmentAddress" placeholder="" type="textarea" resize="none"
-                                size="normal" clearable></el-input>
+                        <span
+                            >发货地址：
+                            <el-input
+                                v-model="item.shipmentAddress"
+                                placeholder=""
+                                type="textarea"
+                                resize="none"
+                                size="normal"
+                                clearable
+                            ></el-input>
                         </span>
                     </el-col>
                     <el-col :span="12" :offset="0">
-                        <span>交货周期：
-                            <el-input v-model="item.shipmentDeadline" placeholder="" type="textarea" resize="none"
-                                size="normal" clearable></el-input>
+                        <span
+                            >交货周期：
+                            <el-input
+                                v-model="item.shipmentDeadline"
+                                placeholder=""
+                                type="textarea"
+                                resize="none"
+                                size="normal"
+                                clearable
+                            ></el-input>
                         </span>
                     </el-col>
                 </el-row>
                 <el-row :gutter="20" style="margin-top: 20px">
                     <el-col :span="24" :offset="0">
                         <div v-if="factoryFieldJudge(item.purchaseDivideOrderType)">
-                            <el-table :data="item.assetsItems" border style="width: 100%" height="500">
+                            <el-table
+                                :data="item.assetsItems"
+                                border
+                                height="500"
+                            >
                                 <el-table-column type="index" label="编号" />
-                                <el-table-column prop="materialType" label="材料类型"></el-table-column>
+                                <el-table-column
+                                    prop="materialType"
+                                    label="材料类型"
+                                ></el-table-column>
                                 <el-table-column prop="materialName" label="材料名称" />
-                                <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+                                <el-table-column
+                                    prop="materialSpecification"
+                                    label="材料规格"
+                                ></el-table-column>
                                 <el-table-column prop="unit" label="单位" />
 
-                                <el-table-column prop="amount" label="采购数量" />
-                                <el-table-column label="分码数量（中国/美标内码/美标外显）">
-                                    <el-table-column label="35" width="50">
-                                        <el-table-column label="7" width="50">
-                                            <el-table-column prop="size35" label="7" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="36" width="50">
-                                        <el-table-column label="7" width="50">
-                                            <el-table-column prop="size36" label="7.5" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="37" width="50">
-                                        <el-table-column label="8" width="50">
-                                            <el-table-column prop="size37" label="8" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="38" width="50">
-                                        <el-table-column label="8" width="50">
-                                            <el-table-column prop="size38" label="8.5" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="39" width="50">
-                                        <el-table-column label="9" width="50">
-                                            <el-table-column prop="size39" label="9" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="40" width="50">
-                                        <el-table-column label="9" width="50">
-                                            <el-table-column prop="size40" label="9.5" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="41" width="50">
-                                        <el-table-column label="10" width="50">
-                                            <el-table-column prop="size41" label="10" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="42" width="50">
-                                        <el-table-column label="10" width="50">
-                                            <el-table-column prop="size42" label="10.5" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="43" width="50">
-                                        <el-table-column label="11" width="50">
-                                            <el-table-column prop="size43" label="11" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="44" width="50">
-                                        <el-table-column label="12" width="50">
-                                            <el-table-column prop="size44" label="12" width="50"></el-table-column>
-                                        </el-table-column>
-                                    </el-table-column>
-                                    <el-table-column label="45" width="50">
-                                        <el-table-column label="13" width="50">
-                                            <el-table-column prop="size45" label="13" width="50"></el-table-column>
-                                        </el-table-column>
+                                <el-table-column prop="purchaseAmount" label="采购数量" />
+                                <el-table-column prop="sizeType" label="分码类型"></el-table-column>
+                                <el-table-column label="分码数量">
+                                    <el-table-column
+                                        v-for="size in dynamicSizes"
+                                        :key="size"
+                                        :label="size"
+                                        width="60"
+                                    >
+                                        <template #default="scope">
+                                            {{ scope.row[size] || 0 }}
+                                        </template>
                                     </el-table-column>
                                 </el-table-column>
                                 <el-table-column prop="comment" label="备注" />
@@ -418,10 +525,19 @@
                         <div v-else>
                             <el-table :data="item.assetsItems" border stripe height="500">
                                 <el-table-column type="index"></el-table-column>
-                                <el-table-column prop="materialType" label="材料类型"></el-table-column>
+                                <el-table-column
+                                    prop="materialType"
+                                    label="材料类型"
+                                ></el-table-column>
                                 <el-table-column prop="materialName" label="材料名称" />
-                                <el-table-column prop="materialModel" label="材料型号"></el-table-column>
-                                <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+                                <el-table-column
+                                    prop="materialModel"
+                                    label="材料型号"
+                                ></el-table-column>
+                                <el-table-column
+                                    prop="materialSpecification"
+                                    label="材料规格"
+                                ></el-table-column>
                                 <el-table-column prop="color" label="颜色" />
                                 <el-table-column prop="unit" label="单位" />
                                 <el-table-column prop="purchaseAmount" label="数量" />
@@ -441,21 +557,28 @@
             </span>
         </template>
     </el-dialog>
-    <el-dialog :title="`编辑尺码型号采购订单 ${editPurchaseOrderId}`" v-model="editLastPurchaseOrderDialogVisible"
-        :close-on-click-modal="false" width="80%">
+    <el-dialog
+        :title="`编辑尺码型号采购订单 ${editPurchaseOrderId}`"
+        v-model="editLastPurchaseOrderDialogVisible"
+        :close-on-click-modal="false"
+        width="80%"
+    >
         <el-table :data="editLastData" border stripe>
             <el-table-column prop="materialType" label="材料类型" />
             <el-table-column prop="materialName" label="材料名称" />
             <el-table-column prop="materialSpecification" label="材料规格">
                 <template #default="scope">
-                    <el-input v-model="scope.row.materialSpecification" placeholder="" size="default"
-                        clearable></el-input>
+                    <el-input
+                        v-model="scope.row.materialSpecification"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
                 </template>
             </el-table-column>
             <el-table-column label="颜色">
                 <template #default="scope">
-                    <el-input v-model="scope.row.color" placeholder="">
-                    </el-input>
+                    <el-input v-model="scope.row.color" placeholder=""> </el-input>
                 </template>
             </el-table-column>
             <el-table-column prop="warehouseName" label="所属仓库" />
@@ -464,22 +587,35 @@
             <el-table-column label="型号填写">
                 <template #default="scope">
                     {{ scope.row.sizeStatus }}
-                    <el-button type="primary" size="default"
-                        @click="openSizeDialog(scope.row, scope.$index, 1)">尺码信息</el-button>
+                    <el-button
+                        type="primary"
+                        size="default"
+                        @click="openSizeDialog(scope.row, scope.$index, 1)"
+                        >尺码信息</el-button
+                    >
                 </template>
             </el-table-column>
             <el-table-column label="备注">
                 <template #default="scope">
-                    <el-input v-model="scope.row.comment" placeholder="" size="default" clearable></el-input>
+                    <el-input
+                        v-model="scope.row.comment"
+                        placeholder=""
+                        size="default"
+                        clearable
+                    ></el-input>
                 </template>
             </el-table-column>
             <el-table-column label="操作">
                 <template #default="scope">
-                    <el-button type="danger" @click="deleteCurrentRow(scope.$index, editLastData)">删除</el-button>
+                    <el-button type="danger" @click="deleteCurrentRow(scope.$index, editLastData)"
+                        >删除</el-button
+                    >
                 </template>
             </el-table-column>
         </el-table>
-        <el-button type="primary" size="default" @click="openNewMaterialDialog(3)">添加新材料</el-button>
+        <el-button type="primary" size="default" @click="openNewMaterialDialog(3)"
+            >添加新材料</el-button
+        >
         <template #footer>
             <span>
                 <el-button @click="editLastPurchaseOrderDialogVisible = false">取消</el-button>
@@ -496,7 +632,7 @@ import axios from 'axios'
 import PurchaseForOrderTable from './VariousPurchaseTables/PurchaseItemsTable.vue'
 export default {
     components: {
-        PurchaseForOrderTable,
+        PurchaseForOrderTable
     },
     data() {
         return {
@@ -533,7 +669,7 @@ export default {
             isPurchaseOrderOptions: [
                 { value: 'O', label: '随订单采购' },
                 { value: 'S', label: '随鞋型采购' },
-                { value: 'G', label: '独立采购' },
+                { value: 'G', label: '独立采购' }
             ],
             assetTable: [],
             assetFilterTable: [],
@@ -552,10 +688,11 @@ export default {
             addMaterialTemplate: {
                 materialTypeSearch: '',
                 materialSearch: '',
-                factorySearch: '',
+                factorySearch: ''
             },
             materialTypeOptions: [],
-            selectedOrderIdRef: null
+            selectedOrderIdRef: null,
+            dynamicSizes: []
         }
     },
     mounted() {
@@ -705,15 +842,15 @@ export default {
         },
         openCreatePage(row, operation) {
             // if create new order
-            let url;
+            let url
             if (operation == 0) {
-                url = `${window.location.origin}/logistics/createassetpurchase/purchaseorderid=null`;
+                url = `${window.location.origin}/logistics/createassetpurchase/purchaseorderid=null`
             }
             // if edit order
             else if (operation == 1) {
-                url = `${window.location.origin}/logistics/createassetpurchase/purchaseorderid=${row.purchaseOrderId}`;
+                url = `${window.location.origin}/logistics/createassetpurchase/purchaseorderid=${row.purchaseOrderId}`
             }
-            window.open(url, '_blank');
+            window.open(url, '_blank')
         },
         manualAddMaterial() {
             const newItem = {
@@ -747,7 +884,7 @@ export default {
             this.materialAddfinished = false
         },
         async openPreviewDialog(row) {
-            this.currentViewPurchaseOrderId = row.purchaseOrderId
+            this.currentViewPurchaseOrderId = row.purchaseOrderRId
             try {
                 const response = await axios.get(
                     `${this.$apiBaseUrl}/logistics/getassetspurchasedivideorders`,
@@ -758,6 +895,24 @@ export default {
                     }
                 )
                 this.purchaseTestData = response.data
+                const uniqueSizes = new Set()
+                response.data.forEach((divideOrder) => {
+                    divideOrder.assetsItems.forEach((item) => {
+                        Object.keys(item).forEach((key) => {
+                            // Match size keys that start with "size" or are purely numeric (integer or decimal)
+                            if (/^[0-9]+(\.[0-9]+)?$/.test(key)) {
+                                uniqueSizes.add(key)
+                            }
+                        })
+                    })
+                })
+
+                // Convert to array and sort numerically
+                this.dynamicSizes = Array.from(uniqueSizes).sort((a, b) => {
+                    const sizeA = parseFloat(a.replace(/^size/, '')) // Remove "size" prefix if present
+                    const sizeB = parseFloat(b.replace(/^size/, ''))
+                    return sizeA - sizeB // Sort numerically
+                })
                 console.log(this.purchaseTestData)
             } catch (error) {
                 console.log(error)
@@ -774,6 +929,26 @@ export default {
                     }
                 }
             )
+            const uniqueSizes = new Set()
+            response.data.forEach((divideOrder) => {
+                divideOrder.assetsItems.forEach((item) => {
+                    Object.keys(item).forEach((key) => {
+                        // Match size keys that start with "size" or are purely numeric (integer or decimal)
+                        if (/^[0-9]+(\.[0-9]+)?$/.test(key)) {
+                            uniqueSizes.add(key)
+                        }
+                    })
+                })
+            })
+
+            // Convert to array and sort numerically
+            this.dynamicSizes = Array.from(uniqueSizes).sort((a, b) => {
+                const sizeA = parseFloat(a.replace(/^size/, '')) // Remove "size" prefix if present
+                const sizeB = parseFloat(b.replace(/^size/, ''))
+                return sizeA - sizeB // Sort numerically
+            })
+
+            // Store the extracted sizes and table data
             this.currentSubmitPurchaseOrderId = row.purchaseOrderId
             this.tabPlaneData = response.data
             this.activeTab = this.tabPlaneData[0].purchaseDivideOrderId
@@ -789,7 +964,7 @@ export default {
                     }
                 }
             )
-            if (response.data.purchaseDivideOrderType === "N") {
+            if (response.data.purchaseDivideOrderType === 'N') {
                 console.log(response.data)
                 this.editAssetPurchaseData = response.data.data
                 this.editVis = true
@@ -799,7 +974,6 @@ export default {
                 this.editLastPurchaseOrderDialogVisible = true
                 this.currentCreateViewId = 3
             }
-
         },
         confirmNewSizeMaterialAdd() {
             if (this.materialSelectRow === null) {
@@ -901,15 +1075,11 @@ export default {
         },
         async saveUnsubmitPurchaseOrder() {
             try {
-                await axios.post(
-                    `${this.$apiBaseUrl}/logistics/unsubmitpurchaseordersave`,
-                    {
-                        data: this.tabPlaneData
-                    }
-                )
-                ElMessage.success("保存成功")
-            }
-            catch (error) {
+                await axios.post(`${this.$apiBaseUrl}/logistics/unsubmitpurchaseordersave`, {
+                    data: this.tabPlaneData
+                })
+                ElMessage.success('保存成功')
+            } catch (error) {
                 this.$message({
                     type: 'error',
                     message: '保存失败'
@@ -924,20 +1094,16 @@ export default {
             })
                 .then(async () => {
                     try {
-                        await axios.post(
-                            `${this.$apiBaseUrl}/logistics/submitpurchaseorder`,
-                            {
-                                purchaseOrderId: this.currentSubmitPurchaseOrderId,
-                            }
-                        )
+                        await axios.post(`${this.$apiBaseUrl}/logistics/submitpurchaseorder`, {
+                            purchaseOrderId: this.currentSubmitPurchaseOrderId
+                        })
                         this.isPurchaseOrderVis = false
                         this.getUnsubmitPurchaseOrder()
                         this.getMaterialPurchaseData()
-                        ElMessage.success("提交成功")
-                    }
-                    catch (error) {
+                        ElMessage.success('提交成功')
+                    } catch (error) {
                         console.log(error)
-                        ElMessage.error("提交失败")
+                        ElMessage.error('提交失败')
                     }
                 })
                 .catch(() => {
@@ -1219,7 +1385,7 @@ export default {
                         message: '已取消删除'
                     })
                 })
-        },
+        }
     }
 }
 </script>
