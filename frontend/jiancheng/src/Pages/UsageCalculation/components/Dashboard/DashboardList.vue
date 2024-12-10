@@ -71,8 +71,8 @@ export default {
             let url;
             if (row.taskName === '面料用量计算') {
                 url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次BOM填写') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
+            } else if (row.taskName === '生产BOM用量填写') {
+                url = `${window.location.origin}/usagecalculation/secondBOM/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

@@ -75,11 +75,11 @@ onMounted(() => {
             const secondBomPending = response.data.pendingOrders
             const secondBomProgress = response.data.inProgressOrders
             secondBomPending.forEach((element) => {
-                element['taskName'] = '二次BOM填写'
+                element['taskName'] = '生产BOM用量填写'
                 pendingData.value.push(element)
             })
             secondBomProgress.forEach((element) => {
-                element['taskName'] = '二次BOM填写'
+                element['taskName'] = '生产BOM用量填写'
                 inProgressData.value.push(element)
             })
         })

@@ -50,10 +50,8 @@ export default {
         },
         handleRowClick(row) {
             let url;
-            if (row.taskName === '二次BOM填写') {
+            if (row.taskName === '生产BOM用量填写') {
                 url = `${window.location.origin}/usagecalculation/secondBOM/orderid=${row.orderId}`;
-            } else if (row.taskName === '二次采购订单创建') {
-                url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
             }
             if (url) {
                 window.open(url, '_blank');

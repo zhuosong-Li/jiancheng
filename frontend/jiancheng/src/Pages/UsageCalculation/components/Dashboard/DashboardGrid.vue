@@ -87,7 +87,7 @@ export default {
                 case "面料用量计算":
                     url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${orderId}`;
                     break
-                case "二次BOM填写":
+                case "生产BOM用量填写":
                     url = `${window.location.origin}/usagecalculation/secondBOM/orderid=${orderId}`;
             }
             
