@@ -447,9 +447,7 @@ def edit_bom():
     bom_rid = request.json.get("bomId")
     bom_data = request.json.get("bomData")
     bom_id = Bom.query.filter(Bom.bom_rid == bom_rid,Bom.bom_type == 1).first().bom_id
-    db.session.query(BomItem).filter(BomItem.bom_id == bom_id).delete()
-    db.session.flush()
-
+    print(bom_data)
     for item in bom_data:
         material_id = (
             db.session.query(Material, Supplier)
@@ -461,22 +459,14 @@ def edit_bom():
             .first()
             .Material.material_id
         )
-        bom_item = BomItem(
-            bom_id=bom_id,
-            material_id=material_id,
-            unit_usage=item["unitUsage"],
-            total_usage=item["approvalUsage"],
-            department_id=item["useDepart"],
-            remark=item["comment"],
-            material_specification=item["materialSpecification"] if item["materialSpecification"] else None,
-            material_model = item["materialModel"] if item["materialModel"] else None,
-            bom_item_add_type=1,
-            bom_item_color=item["color"],
-            pairs = item["pairs"] if item["pairs"] else 0.00
-        )
+        bom_item = db.session.query(BomItem).filter(BomItem.bom_item_id == item["bomItemId"]).first()
+        bom_item.material_id = material_id
+        bom_item.unit_usage = item["unitUsage"]
+        bom_item.total_usage = item["approvalUsage"]
+        bom_item.pairs = item["pairs"]
         for i, size in enumerate(SHOESIZERANGE):
             setattr(bom_item, f"size_{size}_total_usage", item["sizeInfo"][i]["approvalAmount"])
-        db.session.add(bom_item)
+        db.session.flush()
     db.session.commit()
     return jsonify({"status": "success"})
 
