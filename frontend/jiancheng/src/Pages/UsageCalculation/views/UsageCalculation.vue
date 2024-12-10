@@ -19,6 +19,9 @@
                         <el-menu-item index="2" @click="handleMenuClick(2)">
                             <span>用量计算</span>
                         </el-menu-item>
+                        <el-menu-item index="4" @click="handleMenuClick(4)">
+                            <span>生产BOM用量填写</span>
+                        </el-menu-item>
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>订单查询</span>
                         </el-menu-item>
@@ -45,6 +48,7 @@ import Dashboard from '../components/UsageCalculationDashboard.vue';
 import UsageCaculationView from '../components/UsageCalculationView.vue'
 import OrderSearch from '../components/OrderSearch.vue';
 import PersonalInfo from '@/components/PersonalInfo.vue';
+import SecondBOMListView from '../components/SecondBOMListView.vue';
 import axios from 'axios'
 
 
@@ -54,7 +58,8 @@ export default {
         Dashboard,
         UsageCaculationView,
         OrderSearch,
-        PersonalInfo
+        PersonalInfo,
+        SecondBOMListView
     },
     data() {
         return {
@@ -82,6 +87,9 @@ export default {
                     break
                 case 3:
                     this.currentComponent = 'OrderSearch'
+                    break
+                case 4:
+                    this.currentComponent = 'SecondBOMListView'
                     break
                 case 8:
                     this.currentComponent = 'PersonalInfo'

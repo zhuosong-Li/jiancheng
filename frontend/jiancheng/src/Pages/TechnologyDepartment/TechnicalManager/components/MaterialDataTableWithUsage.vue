@@ -19,6 +19,7 @@
         </el-table-column>
         <el-table-column prop="pairs" label="双数"></el-table-column>
         <el-table-column prop="unitUsage" label="单位用量" />
+        <el-table-column prop="totalUsage" label="总用量" />
         <el-table-column prop="comment" label="备注">
         </el-table-column>
     </el-table>

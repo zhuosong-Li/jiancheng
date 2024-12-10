@@ -571,6 +571,7 @@ def issue_boms():
                 if craft_sheet_item:
                     craft_sheet_item.pairs = bom_item.BomItem.pairs
                     craft_sheet_item.unit_usage = bom_item.BomItem.unit_usage
+                    craft_sheet_item.total_usage = bom_item.BomItem.total_usage
                 db.session.flush()
                 # Create a unique key based on the attributes
                 key = (
