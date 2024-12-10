@@ -43,7 +43,7 @@ class BomItem(db.Model):
     size_46_total_usage = db.Column(db.Integer, nullable=True)
     size_type = db.Column(db.String(1), nullable=False, default="E")
     material_second_type = db.Column(db.String(10), nullable=True)
-    craft_name = db.Column(db.String(60), nullable=True)
+    craft_name = db.Column(db.String(200), nullable=True)
     pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
 
     def __repr__(self):
@@ -231,7 +231,7 @@ class MaterialStorage(db.Model):
     material_storage_status = db.Column(db.SmallInteger, default=0)
     department_id = db.Column(db.Integer)
 
-    craft_name = db.Column(db.String(60), nullable=True)
+    craft_name = db.Column(db.String(200), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
 
     def __repr__(self):
@@ -838,7 +838,7 @@ class SizeMaterialStorage(db.Model):
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
-    craft_name = db.Column(db.String(60), nullable=True)
+    craft_name = db.Column(db.String(200), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
 
     def __repr__(self):
@@ -1157,7 +1157,7 @@ class CraftSheetItem(db.Model):
     material_second_type = db.Column(db.String(10), nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
-    craft_name = db.Column(db.String(60), nullable=True)
+    craft_name = db.Column(db.String(200), nullable=True)
     material_source = db.Column(db.String(1), nullable=True)
     pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
     unit_usage = db.Column(db.DECIMAL(10, 5), nullable=True)

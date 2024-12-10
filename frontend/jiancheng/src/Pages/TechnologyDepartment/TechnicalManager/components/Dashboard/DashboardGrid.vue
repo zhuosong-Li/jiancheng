@@ -85,7 +85,7 @@ export default {
             const orderId = task.orderId.toString().replace(' ','-')
             switch(task.taskName) {
                 case "技术部调版分配":
-                    url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${orderId}`;
+                    url = `${window.location.origin}/processsheet/orderid=${orderId}`;
                     break
                 case "二次BOM用量审批":
                     url = `${window.location.origin}/technicalmanager/secondbomusagereview/orderid=${orderId}`;

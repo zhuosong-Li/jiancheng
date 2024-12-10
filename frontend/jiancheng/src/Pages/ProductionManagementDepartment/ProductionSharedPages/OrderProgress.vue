@@ -78,7 +78,7 @@
                     </el-table-column>
                     <el-table-column label="周期" width="200" header-align="center">
                         <template #default="scope">
-                            {{ scope.row.productionStartDate + " 至 " + scope.row.productionEndDate }}
+                            {{ scope.row.productionPeriod }}
                         </template>
                     </el-table-column>
                 </el-table-column>
@@ -92,13 +92,13 @@
                 </el-table-column>
                 <el-table-column label="工艺单">
                     <template #default="scope">
-                        <el-button :disabled="scope.row.processSheetUploadStatus != 2"
-                            v-if="scope.row.processSheetUploadStatus != 2" type="primary" size="small">
+                        <el-button v-if="scope.row.processSheetUploadStatus != 4" type="warning" size="small"
+                            @click="openCraftSheet(scope.row)">
                             未下发
                         </el-button>
-                        <el-button v-if="scope.row.processSheetUploadStatus == 2" type="primary" size="small"
-                            @click="downloadProcessSheet(scope.row)">
-                            下载
+                        <el-button v-if="scope.row.processSheetUploadStatus == 4" type="success" size="small"
+                            @click="openCraftSheet(scope.row)">
+                            已下发
                         </el-button>
                     </template>
                 </el-table-column>
@@ -299,14 +299,13 @@
                         <el-table :data="tab.productionAmountTable" border stripe :max-height="500">
                             <el-table-column prop="colorName" label="颜色"></el-table-column>
                             <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
-                            <el-table-column prop="" label="已设置外包数量"></el-table-column>
+                            <!-- <el-table-column prop="" label="已设置外包数量"></el-table-column> -->
                             <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
                                 :label="column.label">
                                 <template v-slot="scope">
                                     <el-input v-model="scope.row[column.prop]" :readonly="!(role == 6)" />
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="pairAmount" label="双数"></el-table-column>
                         </el-table>
                     </el-col>
                 </el-row>
@@ -318,10 +317,8 @@
                 <el-table :data="shoeBatchInfo" :span-method="spanMethod" border stripe :max-height="500">
                     <el-table-column prop="colorName" label="颜色"></el-table-column>
                     <el-table-column prop="totalAmount" label="颜色总数"></el-table-column>
-                    <el-table-column prop="batchName" label="配码编号"></el-table-column>
                     <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
                         :label="column.label"></el-table-column>
-                    <el-table-column prop="pairAmount" label="双数"></el-table-column>
                 </el-table>
             </el-col>
         </el-row>
@@ -342,20 +339,20 @@
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
                 <el-button v-if="role == 6" type="primary" @click="modifyProductionSchedule">保存排期</el-button>
-                <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已保存排期') && role == 6"
+                <!-- <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已保存排期') && role == 6"
                     type="success" @click="startProduction">
                     下发排期
-                </el-button>
-                <!-- <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已排期') && role == 6"
-                    type="success" @click="startProduction" :disabled="currentRow.processSheetUploadStatus != 2">
-                    <el-tooltip v-if="currentRow.processSheetUploadStatus != 2" effect="dark" content="工艺单未下发"
+                </el-button> -->
+                <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已排期') && role == 6"
+                    type="success" @click="startProduction" :disabled="currentRow.processSheetUploadStatus != 4">
+                    <el-tooltip v-if="currentRow.processSheetUploadStatus != 4" effect="dark" content="工艺单未下发"
                         placement="bottom">
                         下发排期
                     </el-tooltip>
-                    <span v-if="currentRow.processSheetUploadStatus == 2">
+                    <span v-if="currentRow.processSheetUploadStatus == 4">
                         下发排期
                     </span>
-                </el-button> -->
+                </el-button>
             </span>
         </template>
     </el-dialog>
@@ -625,7 +622,7 @@ export default {
             })
             this.getOrderShoeScheduleInfo()
             await this.getOrderShoeBatchInfo()
-            // await this.getOutsourceAmount()
+            await this.getOutsourceAmount()
             await this.getOrderShoeProductionAmount()
         },
         async getOrderShoeScheduleInfo() {
@@ -640,11 +637,12 @@ export default {
         async getOutsourceAmount() {
             let params = { "orderShoeId": this.currentRow.orderShoeId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getoutsourcebatchinfo`, { params })
+            console.log(response.data)
         },
         async getOrderShoeBatchInfo() {
             this.shoeBatchInfo = []
             const params = { "orderShoeId": this.currentRow.orderShoeId }
-            const response = await axios.get(`${this.$apiBaseUrl}/production/getordershoebatchinfo`, { params })
+            const response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getordershoetypeamount`, { params })
             this.shoeBatchInfo = response.data
             console.log(this.shoeBatchInfo)
             this.spanMethod = shoeBatchInfoTableSpanMethod(this.shoeBatchInfo);
@@ -752,7 +750,7 @@ export default {
             this.isScheduleDialogOpen = false
         },
         async startProduction() {
-            ElMessageBox.alert('点击确认后，你仍可修改排期，但推进流程操作不可撤回', '警告', {
+            ElMessageBox.alert('请确认生产数量和外包数量', '警告', {
                 confirmButtonText: '确认',
                 showCancelButton: true,
                 cancelButtonText: '取消'
@@ -825,6 +823,8 @@ export default {
             this.orderTableData = response.data.result
             this.orderTotalRows = response.data.totalLength
             this.orderTableData.forEach(row => {
+                row["productionStartDate"] = null
+                row["productionEndDate"] = null
                 if (row.status === '裁断中' || row.status === '裁断结束') {
                     row.currentTeam = '裁断'
                     row.currentProgressNumber = row.cuttingTotalAmount
@@ -849,12 +849,13 @@ export default {
                     row.productionStartDate = row.moldingStartDate
                     row.productionEndDate = row.moldingEndDate
                 }
+                row.productionPeriod = row.productionEndDate ? `${row.productionStartDate} 至 ${row.productionEndDate}` : '尚无日期'
             })
         },
-        async downloadProcessSheet(row) {
-            window.open(
-                `${this.$apiBaseUrl}/processsheet/download?orderid=${row.orderRId}&ordershoerid=${row.shoeRId}`
-            )
+        openCraftSheet(row) {
+            let url = ''
+            url = `${window.location.origin}/processsheet/orderid=${row.orderId}`
+            window.open(url, '_blank')
         },
         async openLogisticsDialog(rowData) {
             this.logisticsCurrentPage = 1

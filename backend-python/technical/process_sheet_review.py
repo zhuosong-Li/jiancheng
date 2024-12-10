@@ -153,14 +153,13 @@ def issue_craft_sheet():
         order_id = order_shoe.Order.order_id
         order_shoe_id = order_shoe.OrderShoe.order_shoe_id
         print(order_shoe.OrderShoe.process_sheet_upload_status)
-        if order_shoe.OrderShoe.process_sheet_upload_status != "2":
-            return jsonify({"error": "Production order not uploaded yet"}), 500
-        order_shoe.OrderShoe.process_sheet_upload_status = "3"
+        if order_shoe.OrderShoe.process_sheet_upload_status != "3":
+            return jsonify({"error": "Unit usage not uploaded yet"}), 500
+        order_shoe.OrderShoe.process_sheet_upload_status = "4"
         craft_sheet = db.session.query(CraftSheet).filter(
             CraftSheet.order_shoe_id == order_shoe_id
         ).first()
         craft_sheet.craft_sheet_status = "3"
-        db.session.flush()
         event_arr = []
         processor: EventProcessor = current_app.config["event_processor"]
         try:
@@ -177,6 +176,5 @@ def issue_craft_sheet():
         except Exception:
             return jsonify({"error": "Failed to issue production order"}), 500
         db.session.add_all(event_arr)
-        db.session.flush()
     db.session.commit()
     return jsonify({"message": "Production order issued successfully"})

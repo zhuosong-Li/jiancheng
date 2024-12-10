@@ -173,7 +173,7 @@ export default {
             this.getOrderData()
         },
         handleRowClick(row) {
-            const url = `${window.location.origin}/technicalmanager/uploadprocesssheet/orderid=${row.orderId}`;
+            const url = `${window.location.origin}/processsheet/orderid=${row.orderId}`;
             window.open(url, '_blank');
         },
         handleRowClick2(row) {

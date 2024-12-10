@@ -97,14 +97,11 @@ def get_order_shoe_outsource_info():
     result = []
     for row in response:
         outsource_info = row
-        temp = []
-        for number in outsource_info.outsource_type.split(","):
-            if number == "0":
-                temp.append("裁断")
-            elif number == "1":
-                temp.append("针车")
-            elif number == "2":
-                temp.append("成型")
+        temp = ''
+        if outsource_info.outsource_type == '0,1':
+            temp = '裁断+针车'
+        elif outsource_info.outsource_type == '1':
+            temp = '针车'
         obj = {
             "outsourceInfoId": outsource_info.outsource_info_id,
             "outsourceType": temp,
