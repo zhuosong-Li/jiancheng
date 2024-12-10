@@ -1578,12 +1578,6 @@ def issue_production_order():
                 bom_type=0,
                 bom_status=3,
             )
-            default_bom = DefaultBom(
-                order_shoe_type_id=order_shoe_type_id,
-                bom_rid=second_bom_rid,
-                bom_type=1,
-                bom_status=3,
-            )
             db.session.add(first_bom)
             db.session.flush()
             first_bom_id = first_bom.bom_id

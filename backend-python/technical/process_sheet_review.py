@@ -95,6 +95,7 @@ def getCraftSheetInfo():
             "materialCraftNameList": material_craft_list,
             "materialDetailType": item.CraftSheetItem.material_second_type,
             "materialSource": item.CraftSheetItem.material_source,
+            "totalUsage": item.CraftSheetItem.total_usage,
         }
 
         if item.CraftSheetItem.material_type == "S":

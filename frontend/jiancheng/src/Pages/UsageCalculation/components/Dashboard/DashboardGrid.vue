@@ -42,9 +42,9 @@
                 </template>
                 <div>订单号：{{ getinProgressItem(colIndex).orderRid }}</div>
                 <div>订单创建时间：{{ getinProgressItem(colIndex).createTime }}</div>
-                <div>订单截止时间：{{ getPendingItem(colIndex).createTime }}</div>
-                <div>客户：{{ getPendingItem(colIndex).customerName }}</div>
-                <div>鞋型数量：{{ getPendingItem(colIndex).orderShoeCount }}</div>
+                <div>订单截止时间：{{ getinProgressItem(colIndex).createTime }}</div>
+                <div>客户：{{ getinProgressItem(colIndex).customerName }}</div>
+                <div>鞋型数量：{{ getinProgressItem(colIndex).orderShoeCount }}</div>
             </el-card>
 
         </el-col>
@@ -87,6 +87,8 @@ export default {
                 case "面料用量计算":
                     url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${orderId}`;
                     break
+                case "二次BOM填写":
+                    url = `${window.location.origin}/usagecalculation/secondBOM/orderid=${orderId}`;
             }
             
             window.open(url, '_blank');

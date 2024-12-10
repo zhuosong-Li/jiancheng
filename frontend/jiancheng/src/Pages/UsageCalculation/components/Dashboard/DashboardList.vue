@@ -69,8 +69,8 @@ export default {
         handleRowClick(row) {
             console.log("123123123")
             let url;
-            if (row.taskName === '一次BOM填写') {
-                url = `${window.location.origin}/logistics/firstpurchase/orderid=${row.orderId}`;
+            if (row.taskName === '面料用量计算') {
+                url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
             } else if (row.taskName === '二次BOM填写') {
                 url = `${window.location.origin}/logistics/secondpurchase/orderid=${row.orderId}`;
             }
