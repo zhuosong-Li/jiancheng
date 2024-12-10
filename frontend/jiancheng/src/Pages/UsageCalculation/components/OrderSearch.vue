@@ -95,6 +95,7 @@
             <el-table-column label="操作" width="350">
                 <template #default="scope">
                     <el-button type="primary" size="default" @click="handleRowClick(scope.row)">查看用量填写页面</el-button>
+                    <el-button type="primary" size="default" @click="handleRowClickForSecondBOM(scope.row)">查看生产BOM</el-button>
                 </template>
             </el-table-column>
             
@@ -173,6 +174,10 @@ export default {
         },
         handleRowClick(row) {
             const url = `${window.location.origin}/usagecalculation/usagecalculationinput/orderid=${row.orderId}`;
+            window.open(url, '_blank');
+        },
+        handleRowClickForSecondBOM(row) {
+            const url = `${window.location.origin}/usagecalculation/secondBOM/orderid=${row.orderId}`;
             window.open(url, '_blank');
         },
     },

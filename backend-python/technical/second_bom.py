@@ -512,13 +512,13 @@ def issue_boms():
     for order_shoe_rid in order_shoes:
         index = order_shoes.index(order_shoe_rid)
         color = colors[index]
-        order_shoe_id = (
+        entities = (
             db.session.query(OrderShoe, Shoe)
             .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
             .filter(OrderShoe.order_id == order_id, Shoe.shoe_rid == order_shoe_rid)
             .first()
-            .OrderShoe.order_shoe_id
         )
+        order_shoe_id = entities.OrderShoe.order_shoe_id
         craft_sheet_id = (
             db.session.query(CraftSheet)
             .join(OrderShoe, CraftSheet.order_shoe_id == OrderShoe.order_shoe_id)
@@ -527,7 +527,7 @@ def issue_boms():
             .first()
             .craft_sheet_id
         )
-
+        entities.OrderShoe.process_sheet_upload_status = '3'
         current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
         random_string = randomIdGenerater(6)
         total_bom_rid = current_time_stamp + random_string + "TS"
@@ -731,7 +731,6 @@ def issue_boms():
         if not result:
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
-        db.session.commit()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
@@ -743,7 +742,6 @@ def issue_boms():
         if not result:
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
-        db.session.commit()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
@@ -755,7 +753,6 @@ def issue_boms():
         if not result:
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
-        db.session.commit()
         event = Event(
             staff_id=1,
             handle_time=datetime.datetime.now(),
@@ -767,7 +764,7 @@ def issue_boms():
         if not result:
             return jsonify({"message": "failed"}), 400
         db.session.add(event)
-        db.session.commit()
+    db.session.commit()
     return jsonify({"status": "success"})
 
 @second_bom_bp.route("/secondbom/download", methods=["GET"])
