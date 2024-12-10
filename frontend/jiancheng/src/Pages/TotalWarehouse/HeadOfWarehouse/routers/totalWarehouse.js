@@ -20,5 +20,5 @@ export default [
       requiresAuth: true,
       role: 8
     }
-  },
+  }
 ]

@@ -65,9 +65,11 @@ def get_order_list():
         elif order_shoe.process_sheet_upload_status == "1":
             status_string = "已上传"
         elif order_shoe.process_sheet_upload_status == "2":
-            status_string = "已下发"
+            status_string = "等待用量填写"
         elif order_shoe.process_sheet_upload_status == "3":
-            status_string = "已审核"
+            status_string = "完成用量填写"
+        elif order_shoe.process_sheet_upload_status == "4":
+            status_string = "已审核并下发"
 
         # Grouping by shoe_rid (inheritId) to avoid duplicate shoes
         # Initialize the result dictionary for the shoe if not already present
@@ -1250,6 +1252,8 @@ def get_craft_sheet_info():
             "supplierName": material.Supplier.supplier_name,
             "comment": item.CraftSheetItem.remark,
             "useDepart": item.CraftSheetItem.department_id,
+            "pairs": item.CraftSheetItem.pairs,
+            "unitUsage": item.CraftSheetItem.unit_usage,
             "materialCraftName": material_craft_name,
             "materialCraftNameList": material_craft_list,
             "materialDetailType": item.CraftSheetItem.material_second_type,

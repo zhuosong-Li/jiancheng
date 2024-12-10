@@ -11,18 +11,26 @@
         </el-table-column>
         <el-table-column prop="materialSpecification" label="材料规格">
         </el-table-column>
-        <el-table-column prop="materialCraftName" label="工艺名称"
-        ></el-table-column>
+        <el-table-column prop="materialCraftName" label="工艺名称"></el-table-column>
         <el-table-column prop="color" label="颜色">
         </el-table-column>
         <el-table-column prop="unit" label="单位">
         </el-table-column>
+        <el-table-column v-if="presentUsage" prop="pairs" label="双数" />
+        <el-table-column v-if="presentUsage" prop="unitUsage" label="单位用量" />
+        <el-table-column v-if="presentUsage" prop="totalUsage" label="总用量" />
         <el-table-column prop="comment" label="备注">
         </el-table-column>
     </el-table>
 </template>
 <script>
 export default {
-    props: ["tableData"]
+    props: {
+        tableData: {type: Array, required: true},
+        presentUsage: {
+            type: Boolean,
+            default: true,
+        },
+    },
 }
 </script>
