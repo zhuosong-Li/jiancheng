@@ -751,6 +751,7 @@ export default {
         },
         approvalUsageChange(row) {
             row.unitUsage = (1 / row.pairs).toFixed(5)
+            row.approvalUsage = (row.unitUsage * this.orderProduceInfo[0].total).toFixed(3)
         },
         unitUsageChange(row) {
             row.approvalUsage = (row.unitUsage * this.orderProduceInfo[0].total).toFixed(3)
