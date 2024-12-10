@@ -24,6 +24,8 @@ def get_order_batch_type_helper(order_id):
         if locale:
             obj = {"prop": f"size{i}Amount", "label": locale, "type": type_name}
             result.append(obj)
+        if locale == None:
+            break
     return result
 
 

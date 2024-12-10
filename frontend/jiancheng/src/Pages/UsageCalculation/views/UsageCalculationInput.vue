@@ -405,6 +405,11 @@ export default {
     computed: {
         searchIcon() {
             return Search
+        },
+        filteredColumns() {
+            return this.shoeSizeColumns.filter(column =>
+                this.orderProduceInfo.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
+            );
         }
     },
     data() {
@@ -467,14 +472,12 @@ export default {
         this.getAllColorOptions()
         this.getAllDepartmentOptions()
     },
-    computed: {
-        filteredColumns() {
-            return this.shoeSizeColumns.filter(column =>
-                this.orderProduceInfo.some(row => row[column.prop] !== undefined && row[column.prop] !== null && row[column.prop] !== 0)
-            );
-        }
-    },
+
     methods: {
+        async getBatchTypeList() {
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getshoebatchinfotype`, {})
+            this.batchInfoTypeList = response.data
+        },
         async getAllDepartmentOptions() {
             const response = await this.$axios.get(`${this.$apiBaseUrl}/general/getalldepartments`)
             this.departmentOptions = response.data
@@ -547,14 +550,49 @@ export default {
         async handleGenerate(row) {
             this.newBomId = row.firstBomId
             this.createVis = true
-            this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
-            this.getBOMDetails(row)
+            await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
+            await this.getBOMDetails(row)
+            if (this.orderProduceInfo[0]) {
+                
+                this.bomTestData.forEach((item) => {
+                    if (item.materialCategory === 1) {
+                        let totalApprovalAmount = 0
+                        let sizeName = 34
+                        item.sizeInfo.forEach((sizeRow) => {
+                            
+                            let sizeKey = `size${sizeName}Amount`
+                            console.log(sizeKey)
+                            if (this.orderProduceInfo[0][sizeKey] !== undefined) {
+                                sizeRow.approvalAmount = this.orderProduceInfo[0][sizeKey]
+                                totalApprovalAmount += this.orderProduceInfo[0][sizeKey]
+                                console.log(sizeRow.approvalAmount)
+                            }
+                            sizeName = sizeName + 1
+                        })
+
+                        // Update the approvalUsage with the total approval amount
+                        item.approvalUsage = totalApprovalAmount
+                    }
+                })
+            }
             this.currentBomShoeId = row.orderShoeRid
             this.createEditSymbol = 0
             this.currentColor = row.color
         },
         handleGenerateClose() {
             this.createVis = false
+        },
+        autoFilledSizeAmount() {
+            this.sizeData.forEach((row) => {
+                // Generate the key string based on row size
+                let rowSizeString = 'size' + row.size + 'Amount'
+
+                // Check if this key exists in the `orderProduceInfo[0]` object
+                if (this.orderProduceInfo[0].hasOwnProperty(rowSizeString)) {
+                    // Assign the corresponding total to `row.approvalAmount`
+                    row.approvalAmount = this.orderProduceInfo[0][rowSizeString]
+                }
+            })
         },
         getFilteredFactoryOptions(materialName) {
             const filteredOptions = this.factoryOptions.filter(
@@ -571,6 +609,26 @@ export default {
             await this.getBOMDetails(row)
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             loadingInstance.close()
+            if (this.orderProduceInfo[0]) {
+                this.bomTestData.forEach((item) => {
+                    if (item.materialCategory === 1) {
+                        let totalApprovalAmount = 0
+                        let sizeName = 34
+                        item.sizeInfo.forEach((sizeRow) => {
+                            
+                            let sizeKey = `size${sizeName}Amount`
+                            if (this.orderProduceInfo[0][sizeKey] !== undefined) {
+                                sizeRow.approvalAmount = this.orderProduceInfo[0][sizeKey]
+                                totalApprovalAmount += this.orderProduceInfo[0][sizeKey]
+                            }
+                            sizeName += 1
+                        })
+
+                        // Update the approvalUsage with the total approval amount
+                        item.approvalUsage = totalApprovalAmount
+                    }
+                })
+            }
             this.newBomId = row.firstBomId
             this.createVis = true
             this.currentBomShoeId = row.orderShoeRid
@@ -601,6 +659,7 @@ export default {
             })
         },
         openSizeDialog(row, index) {
+            this.autoFilledSizeAmount()
             this.sizeData = row.sizeInfo
             console.log(this.sizeData)
             this.isSizeDialogVisible = true

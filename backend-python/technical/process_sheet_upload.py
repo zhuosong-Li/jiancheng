@@ -370,6 +370,11 @@ def save_production_instruction():
                 )
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
+                ),
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
                 )
                 remark = (
                     material_data.get("comment")
@@ -410,6 +415,7 @@ def save_production_instruction():
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
+                    material_source=material_source,
                     craft_name=craft_name,
                     after_usage_symbol = 0
                 )
@@ -484,6 +490,11 @@ def save_production_instruction():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -516,6 +527,7 @@ def save_production_instruction():
                     remark=remark,
                     department_id=department_id,
                     material_type=material_type,
+                    material_source=material_source,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
                     craft_name=craft_name,
@@ -587,6 +599,11 @@ def save_production_instruction():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -619,6 +636,7 @@ def save_production_instruction():
                     remark=remark,
                     department_id=department_id,
                     material_type=material_type,
+                    material_source=material_source,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
                     craft_name=craft_name,
@@ -696,6 +714,11 @@ def save_production_instruction():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -721,6 +744,7 @@ def save_production_instruction():
                     color=material_color,
                     remark=remark,
                     department_id=department_id,
+                    material_source=material_source,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
@@ -793,6 +817,11 @@ def save_production_instruction():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -823,6 +852,7 @@ def save_production_instruction():
                     color=material_color,
                     remark=remark,
                     department_id=department_id,
+                    material_source=material_source,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
@@ -895,6 +925,11 @@ def save_production_instruction():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -925,6 +960,7 @@ def save_production_instruction():
                     color=material_color,
                     remark=remark,
                     department_id=department_id,
+                    material_source=material_source,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
@@ -997,6 +1033,11 @@ def save_production_instruction():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -1026,6 +1067,7 @@ def save_production_instruction():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
@@ -1432,6 +1474,11 @@ def edit_craft_sheet():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -1468,6 +1515,7 @@ def edit_craft_sheet():
                     color=material_color,
                     remark=remark,
                     department_id=department_id,
+                    material_source=material_source,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
@@ -1545,6 +1593,11 @@ def edit_craft_sheet():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -1576,6 +1629,7 @@ def edit_craft_sheet():
                     color=material_color,
                     remark=remark,
                     department_id=department_id,
+                    material_source=material_source,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
                     material_second_type=material_second_type,
@@ -1653,6 +1707,11 @@ def edit_craft_sheet():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -1678,6 +1737,7 @@ def edit_craft_sheet():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
@@ -1757,6 +1817,11 @@ def edit_craft_sheet():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -1781,6 +1846,7 @@ def edit_craft_sheet():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
@@ -1859,6 +1925,11 @@ def edit_craft_sheet():
                     if material_data.get("comment")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 department_id = (
                     material_data.get("useDepart")
                     if material_data.get("useDepart")
@@ -1883,6 +1954,7 @@ def edit_craft_sheet():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
@@ -1956,6 +2028,11 @@ def edit_craft_sheet():
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 remark = (
                     material_data.get("comment")
                     if material_data.get("comment")
@@ -1985,6 +2062,7 @@ def edit_craft_sheet():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
@@ -2055,6 +2133,11 @@ def edit_craft_sheet():
                     if material_data.get("materialSpecification")
                     else None
                 )
+                material_source = (
+                    material_data.get("materialSource")
+                    if material_data.get("materialSource") and material_data.get("materialSource") != None
+                    else 'C'
+                )
                 material_color = (
                     material_data.get("color") if material_data.get("color") else None
                 )
@@ -2087,6 +2170,7 @@ def edit_craft_sheet():
                     material_specification=material_spec,
                     color=material_color,
                     remark=remark,
+                    material_source=material_source,
                     department_id=department_id,
                     material_type=material_type,
                     order_shoe_type_id=order_shoe_type_id,
