@@ -234,6 +234,7 @@
                                 <el-table-column prop="color" label="颜色" />
                                 <el-table-column prop="unit" label="单位" />
                                 <el-table-column prop="supplierName" label="厂家名称" />
+                                <el-table-column prop="pairs" label="双数" />
                                 <el-table-column prop="unitUsage" label="单位用量">
                                     <template #default="scope">
                                         <el-button v-if="scope.row.materialCategory == 1" type="primary" size="default"
