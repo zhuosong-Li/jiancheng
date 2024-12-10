@@ -1238,8 +1238,12 @@ def get_craft_sheet_info():
             .filter(Material.material_id == item.CraftSheetItem.material_id)
             .first()
         )
-        material_craft_list = item.CraftSheetItem.craft_name.split("@")
-        material_craft_name = ",".join(material_craft_list)
+        if item.CraftSheetItem.craft_name != None:
+            material_craft_list = item.CraftSheetItem.craft_name.split("@")
+            material_craft_name = ",".join(material_craft_list)
+        else:
+            material_craft_list = []
+            material_craft_name = ""
         # Map material type to the appropriate array in the dictionary
         material_data = {
             "materialId": item.CraftSheetItem.material_id,
