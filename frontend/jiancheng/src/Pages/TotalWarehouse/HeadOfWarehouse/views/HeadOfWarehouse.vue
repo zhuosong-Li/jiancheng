@@ -14,10 +14,13 @@
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
                         <el-menu-item index="1" @click="handleMenuClick(1)">
-                            <span>材料入库</span>
+                            <span>材料待入库</span>
                         </el-menu-item>
                         <el-menu-item index="2" @click="handleMenuClick(2)">
-                            <span>材料出库</span>
+                            <span>材料待出库</span>
+                        </el-menu-item>
+                        <el-menu-item index="5" @click="handleMenuClick(5)">
+                            <span>库存</span>
                         </el-menu-item>
                         <el-menu-item index="3" @click="handleMenuClick(3)">
                             <span>生产动态明细</span>
@@ -25,13 +28,10 @@
                         <el-menu-item index="4" @click="handleMenuClick(4)">
                             <span>文件下载</span>
                         </el-menu-item>
-                        <el-menu-item index="5" @click="handleMenuClick(5)">
-                            <span>出/入库历史</span>
-                        </el-menu-item>
                         <el-menu-item index="6" @click="handleMenuClick(6)">
                             <span>独立采购</span>
                         </el-menu-item>
-                        <el-menu-item index="6" @click="handleMenuClick(7)">
+                        <el-menu-item index="7" @click="handleMenuClick(7)">
                             <span>码段管理</span>
                         </el-menu-item>
                         <el-menu-item index="8" @click="logout">
@@ -114,6 +114,7 @@ export default {
                     break
                 case 6:
                     this.currentComponent = 'FixedAssetsConsumablesView'
+                    break
                 case 7:
                     this.currentComponent = 'LogisticsBatchTypeManagement'
                     break

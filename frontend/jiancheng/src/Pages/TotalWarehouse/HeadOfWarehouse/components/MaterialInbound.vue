@@ -2,19 +2,12 @@
     <el-row :gutter="20">
         <el-col :span="6" :offset="0">
             <el-button-group>
-                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">材料筛选</el-button>
+                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">搜索条件设置</el-button>
             </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getMaterialTableData()"
-                @clear="getMaterialTableData()" />
-        </el-col>
+        <MaterialSearchDialog :visible="isMaterialDialogVisible" :materialSupplierOptions="materialSupplierOptions"
+            :materialTypeOptions="materialTypeOptions" :searchForm="searchForm" @update-visible="updateDialogVisible"
+            @confirm="handleSearch" />
     </el-row>
     <el-row :gutter="20">
         <el-button v-if="isMultipleSelection" @click="openFinishOutboundDialog">
@@ -43,7 +36,15 @@
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
-            <el-table-column prop="craftName" label="复合工艺"></el-table-column>
+            <el-table-column prop="craftName" label="复合工艺" width="120">
+                <template #default="scope">
+                    <el-tooltip effect="dark" :content="scope.row.craftName" placement="bottom">
+                        <span class="truncate-text">
+                            {{ scope.row.craftName }}
+                        </span>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
             <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
@@ -71,29 +72,6 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
-
-    <el-dialog title="材料搜索" v-model="isMaterialDialogVisible" width="30%" :draggable="true">
-        请选择材料类型：
-        <el-select v-model="materialTypeSearch" placeholder="" clearable filterable @change="getMaterialTableData()">
-            <el-option v-for="item in materialTypeOptions" :value="item" />
-        </el-select>
-        请选择材料名称：
-        <el-input v-model="materialNameSearch" clearable @keypress.enter="getMaterialTableData()"
-            @clear="getMaterialTableData()" />
-        请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" clearable @keypress.enter="getMaterialTableData()"
-            @clear="getMaterialTableData()" />
-        请选择材料供应商：
-        <el-select v-model="materialSupplierSearch" placeholder="" clearable filterable
-            @change="getMaterialTableData()">
-            <el-option v-for="item in materialSupplierOptions" :value="item" />
-        </el-select>
-        <template #footer>
-            <span>
-                <el-button type="primary" @click="isMaterialDialogVisible = false">返回</el-button>
-            </span>
-        </template>
-    </el-dialog>
 
     <el-dialog title="入库对话框" v-model="isInboundDialogVisible" width="30%">
         <el-form :model="inboundForm" :rules="rules" ref="inboundForm">
@@ -179,17 +157,24 @@
 <script>
 import axios from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
+import MaterialSearchDialog from './MaterialSearchDialog.vue';
 export default {
+    components: {
+        MaterialSearchDialog
+    },
     data() {
         return {
             isMultiInboundDialogVisible: false,
             isInboundDialogVisible: false,
-            orderNumberSearch: '',
-            shoeNumberSearch: '',
-            materialTypeSearch: '',
-            materialNameSearch: '',
-            materialSpecificationSearch: '',
-            materialSupplierSearch: '',
+            searchForm: {
+                orderNumberSearch: '',
+                shoeNumberSearch: '',
+                materialTypeSearch: '',
+                materialNameSearch: '',
+                materialSpecificationSearch: '',
+                materialSupplierSearch: '',
+                purchaseDivideOrderRIdSearch: "",
+            },
             materialTypeOptions: [],
             materialSupplierOptions: [],
             isMaterialDialogVisible: false,
@@ -261,6 +246,14 @@ export default {
         },
     },
     methods: {
+        updateDialogVisible(newVal) {
+            this.isMaterialDialogVisible = newVal
+
+        },
+        handleSearch(values) {
+            this.searchForm = {...values}
+            this.getMaterialTableData()
+        },
         isSelectable(row) {
             return row.status === "未完成入库"
         },
@@ -290,12 +283,13 @@ export default {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
                 "opType": 1,
-                "materialType": this.materialTypeSearch,
-                "materialName": this.materialNameSearch,
-                "materialSpec": this.materialSpecificationSearch,
-                "supplier": this.materialSupplierSearch,
-                "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch,
+                "materialType": this.searchForm.materialTypeSearch,
+                "materialName": this.searchForm.materialNameSearch,
+                "materialSpec": this.searchForm.materialSpecificationSearch,
+                "supplier": this.searchForm.materialSupplierSearch,
+                "orderRId": this.searchForm.orderNumberSearch,
+                "shoeRId": this.searchForm.shoeNumberSearch,
+                "purchaseDivideOrderRId": this.searchForm.purchaseDivideOrderRIdSearch,
                 "sortColumn": sortColumn,
                 "sortOrder": sortOrder
             }

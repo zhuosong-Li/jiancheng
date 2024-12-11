@@ -2,19 +2,12 @@
     <el-row :gutter="20">
         <el-col :span="6" :offset="0">
             <el-button-group>
-                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">材料入库筛选</el-button>
+                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">搜索条件设置</el-button>
             </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable @keypress.enter="getTableData()"
-                @clear="getTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
-                @clear="getTableData()" />
-        </el-col>
+        <MaterialSearchDialog :visible="isMaterialDialogVisible" :materialSupplierOptions="materialSupplierOptions"
+            :materialTypeOptions="materialTypeOptions" :searchForm="searchForm" @update-visible="updateDialogVisible"
+            @confirm="handleSearch" />
     </el-row>
     <el-table :data="tableData" border stripe height="600" @sort-change="sortData">
         <el-table-column prop="purchaseOrderIssueDate" label="采购订单日期" width="120" sortable="custom"></el-table-column>
@@ -41,9 +34,14 @@
         <el-table-column prop="orderRId" label="材料订单号"></el-table-column>
         <el-table-column prop="shoeRId" label="材料鞋型号"></el-table-column>
         <el-table-column prop="status" label="状态"></el-table-column>
-        <el-table-column fixed="right" label="操作" width="120">
+        <el-table-column fixed="right" label="操作">
             <template #default="scope">
-                <el-button type="primary" size="small" @click="viewRecords(scope.row)">入/出库记录</el-button>
+                <el-button-group>
+                    <!-- <el-button type="primary" size="small" @click="openInboundDialog">入库</el-button>
+                    <el-button type="primary" size="small" @click="openOutboundDialog">出库</el-button> -->
+                    <el-button v-if="scope.row.materialCategory == 1" type="primary" size="small" @click="">查看多鞋码库存</el-button>
+                    <el-button type="primary" size="small" @click="viewRecords(scope.row)">入/出库记录</el-button>
+                </el-button-group>
             </template>
         </el-table-column>
     </el-table>
@@ -54,29 +52,7 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
-    <el-dialog title="材料搜索" v-model="isMaterialDialogVisible" width="30%">
-        请选择材料类型：
-        <el-select v-model="materialTypeSearch" value-key="" placeholder="" clearable filterable
-            @change="getTableData()">
-            <el-option v-for="item in materialTypeOptions" :value="item" />
-        </el-select>
-        请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getTableData()"
-            @clear="getTableData" />
-        请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" placeholder="" clearable @keypress.enter="getTableData()"
-            @clear="getTableData" />
-        请选择材料供应商：
-        <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
-            @change="getTableData()">
-            <el-option v-for="item in materialSupplierOptions" :value="item" />
-        </el-select>
-        <template #footer>
-            <span>
-                <el-button type="primary" @click="isMaterialDialogVisible = false">返回</el-button>
-            </span>
-        </template>
-    </el-dialog>
+
     <el-dialog title="材料入库/出库记录" v-model="isRecordDialogVisible" width="60%">
         <el-table :data="recordData" border stripe>
             <el-table-column prop="operation" label="操作类型"></el-table-column>
@@ -98,19 +74,25 @@
 <script>
 import axios from 'axios'
 import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
-
+import MaterialSearchDialog from './MaterialSearchDialog.vue';
 export default {
+    components: {
+        MaterialSearchDialog
+    },
     data() {
         return {
             isRecordDialogVisible: false,
             isSizeRecordDialogVisible: false,
             isMaterialDialogVisible: false,
-            orderNumberSearch: '',
-            shoeNumberSearch: '',
-            materialTypeSearch: '',
-            materialNameSearch: '',
-            materialSpecificationSearch: '',
-            materialSupplierSearch: '',
+            searchForm: {
+                orderNumberSearch: '',
+                shoeNumberSearch: '',
+                materialTypeSearch: '',
+                materialNameSearch: '',
+                materialSpecificationSearch: '',
+                materialSupplierSearch: '',
+                purchaseDivideOrderRIdSearch: '',
+            },
             materialTypeOptions: [],
             materialSupplierOptions: [],
             pageSize: 10,
@@ -129,6 +111,19 @@ export default {
         this.getTableData()
     },
     methods: {
+        openInboundDialog() {
+
+        },
+        openOutboundDialog() {
+
+        },
+        updateDialogVisible(newVal) {
+            this.isMaterialDialogVisible = newVal
+        },
+        handleSearch(values) {
+            this.searchForm = { ...values }
+            this.getMaterialTableData()
+        },
         async getAllMaterialTypes() {
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialtypes`)
             this.materialTypeOptions = response.data
@@ -141,12 +136,13 @@ export default {
             const params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
-                "materialType": this.materialTypeSearch,
-                "materialName": this.materialNameSearch,
-                "materialSpec": this.materialSpecificationSearch,
-                "supplier": this.materialSupplierSearch,
-                "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch,
+                "materialType": this.searchForm.materialTypeSearch,
+                "materialName": this.searchForm.materialNameSearch,
+                "materialSpec": this.searchForm.materialSpecificationSearch,
+                "supplier": this.searchForm.materialSupplierSearch,
+                "orderRId": this.searchForm.orderNumberSearch,
+                "shoeRId": this.searchForm.shoeNumberSearch,
+                "purchaseOrderRId": this.searchForm.purchaseDivideOrderRIdSearch,
                 "sortColumn": sortColumn,
                 "sortOrder": sortOrder
             }

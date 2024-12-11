@@ -70,7 +70,7 @@ export default {
         },
         openCraftSheet(row) {
             let url = ''
-            url = `${window.location.origin}/headofwarehouse/viewprocessheet/orderid=${row.orderId}`
+            url = `${window.location.origin}/processsheet/orderid=${row.orderId}`
             window.open(url, '_blank')
         },
         // downloadFirstMaterialSheet(row) {

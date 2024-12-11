@@ -2,19 +2,12 @@
     <el-row :gutter="20">
         <el-col :span="6" :offset="0">
             <el-button-group>
-                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">材料筛选</el-button>
+                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">搜索条件设置</el-button>
             </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getMaterialTableData()"
-                @clear="getMaterialTableData()" />
-        </el-col>
+        <MaterialSearchDialog :visible="isMaterialDialogVisible" :materialSupplierOptions="materialSupplierOptions"
+            :materialTypeOptions="materialTypeOptions" :searchForm="searchForm" @update-visible="updateDialogVisible"
+            @confirm="handleSearch" />
     </el-row>
     <el-row :gutter="20">
         <el-button v-if="isMultipleSelection" @click="openMultipleOutboundDialog">
@@ -199,14 +192,23 @@
 import axios from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
+import MaterialSearchDialog from './MaterialSearchDialog.vue';
 export default {
+    components: {
+        MaterialSearchDialog
+    },
     data() {
         return {
             isMultiOutboundDialogVisible: false,
-            materialTypeSearch: '',
-            materialNameSearch: '',
-            materialSpecificationSearch: '',
-            materialSupplierSearch: '',
+            searchForm: {
+                orderNumberSearch: '',
+                shoeNumberSearch: '',
+                materialTypeSearch: '',
+                materialNameSearch: '',
+                materialSpecificationSearch: '',
+                materialSupplierSearch: '',
+                purchaseDivideOrderRIdSearch: '',
+            },
             materialTypeOptions: [],
             materialSupplierOptions: [],
             outboundForm: {},
@@ -225,8 +227,6 @@ export default {
             },
             currentPage: 1,
             pageSize: 10,
-            orderNumberSearch: '',
-            shoeNumberSearch: '',
             materialTableData: [],
             isMaterialDialogVisible: false,
             materialDialogData: {},
@@ -309,6 +309,14 @@ export default {
         this.getMaterialTableData()
     },
     methods: {
+        updateDialogVisible(newVal) {
+            this.isMaterialDialogVisible = newVal
+
+        },
+        handleSearch(values) {
+            this.searchForm = {...values}
+            this.getMaterialTableData()
+        },
         handleCompositeAmountChange(newVal, oldVal, rowData) {
             console.log(newVal, oldVal, rowData)
             rowData.currentAmount = Number((Number(rowData.currentAmount) - newVal + oldVal).toFixed(5))
@@ -375,12 +383,13 @@ export default {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
                 "opType": 4,
-                "materialType": this.materialTypeSearch,
-                "materialName": this.materialNameSearch,
-                "materialSpec": this.materialSpecificationSearch,
-                "supplier": this.materialSupplierSearch,
-                "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch,
+                "materialType": this.searchForm.materialTypeSearch,
+                "materialName": this.searchForm.materialNameSearch,
+                "materialSpec": this.searchForm.materialSpecificationSearch,
+                "supplier": this.searchForm.materialSupplierSearch,
+                "orderRId": this.searchForm.orderNumberSearch,
+                "shoeRId": this.searchForm.shoeNumberSearch,
+                "purchaseDivideOrderRId": this.searchForm.purchaseDivideOrderRIdSearch,
                 "sortColumn": sortColumn,
                 "sortOrder": sortOrder
             }

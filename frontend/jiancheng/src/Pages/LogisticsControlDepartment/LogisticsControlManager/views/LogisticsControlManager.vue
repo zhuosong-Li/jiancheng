@@ -40,7 +40,7 @@
                         <el-menu-item index="9" @click="handleMenuClick(9)">
                             <span>个人信息</span>
                         </el-menu-item>
-                        <el-menu-item index="10" @click="logout">
+                        <el-menu-item index="20" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
                     </el-menu>
