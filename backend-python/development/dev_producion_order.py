@@ -1572,6 +1572,7 @@ def issue_production_order():
             random_string = randomIdGenerater(6)
             first_bom_rid = current_time_stamp + random_string + "F"
             second_bom_rid = current_time_stamp + random_string + "S"
+            craft_sheet_rid = current_time_stamp + random_string + "CS"
             first_bom = Bom(
                 order_shoe_type_id=order_shoe_type_id,
                 bom_rid=first_bom_rid,
@@ -1580,7 +1581,15 @@ def issue_production_order():
             )
             db.session.add(first_bom)
             db.session.flush()
+            craft_sheet = CraftSheet(
+                craft_sheet_rid=craft_sheet_rid,
+                order_shoe_id=order_shoe_id,
+                craft_sheet_status="1",
+            )
+            db.session.add(craft_sheet)
+            db.session.flush()
             first_bom_id = first_bom.bom_id
+            craft_sheet_id = craft_sheet.craft_sheet_id
             for item in production_instruction_items:
                 if item.order_shoe_type_id == order_shoe_type.order_shoe_type_id:
                     first_bom_item = BomItem(
@@ -1595,8 +1604,29 @@ def issue_production_order():
                         bom_item_add_type="0",
                         total_usage=0,
                         material_second_type=item.material_second_type,
+                        production_instruction_item_id=item.production_instruction_item_id,
                     )
                     db.session.add(first_bom_item)
+                    craft_sheet_item = CraftSheetItem(
+                        craft_sheet_id=craft_sheet_id,
+                        material_id=item.material_id,
+                        material_model=item.material_model,
+                        material_specification=item.material_specification,
+                        color=item.color,
+                        remark=item.remark,
+                        department_id=item.department_id,
+                        pairs=0,
+                        total_usage=0,
+                        unit_usage=0,
+                        material_type=item.material_type,
+                        material_second_type=item.material_second_type,
+                        order_shoe_type_id=item.order_shoe_type_id,
+                        craft_name=item.pre_craft_name,
+                        material_source='P',
+                        after_usage_symbol=0,
+                        production_instruction_item_id=item.production_instruction_item_id,
+                    )
+                    db.session.add(craft_sheet_item)
         db.session.flush()
         # create excel file
         insert_data = []

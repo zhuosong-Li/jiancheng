@@ -79,7 +79,8 @@ open_routes = [
     "/headmanager/financialstatus",
     "/headmanager/getordershoetimeline",
     "/devproductionorder/downloadproductioninstruction",
-    "/devproductionorder/downloadpicnotes"
+    "/devproductionorder/downloadpicnotes",
+    "/logistics/downloadassetzip"
 ]
 
 

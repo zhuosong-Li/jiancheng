@@ -268,24 +268,7 @@ def save_production_instruction():
         .OrderShoe
     )
     order_shoe_id = order_shoe.order_shoe_id
-    craft_sheet = CraftSheet(
-        craft_sheet_rid=craft_sheet_id,
-        order_shoe_id=order_shoe_id,
-        craft_sheet_status="1",
-        cut_die_staff = craft_sheet_detail.get("cutDie"),
-        reviewer = craft_sheet_detail.get("reviewer"),
-        production_remark = craft_sheet_detail.get("productionRemark"),
-        cutting_special_process = craft_sheet_detail.get("cuttingSpecialCraft"),
-        sewing_special_process = craft_sheet_detail.get("sewingSpecialCraft"),
-        molding_special_process = craft_sheet_detail.get("moldingSpecialCraft"),
-        post_processing_comment = craft_sheet_detail.get("postProcessing"),
-        oily_glue = craft_sheet_detail.get("oilyGlue"),
-        cut_die_img_path = craft_sheet_detail.get("cutDieImgPath"),
-        pic_note_img_path = craft_sheet_detail.get("picNoteImgPath")
-    )
-    db.session.add(craft_sheet)
-    db.session.flush()
-    craft_sheet_id = craft_sheet.craft_sheet_id
+    craft_sheet_id = db.session.query(CraftSheet).filter(CraftSheet.craft_sheet_id == craft_sheet_id).first().craft_sheet_id
     for data in upload_data:
         shoe_color = data.get("color")
         print(shoe_color)

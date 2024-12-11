@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, send_file
 from sqlalchemy.dialects.mysql import insert
 from sqlalchemy import or_
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,6 +9,11 @@ from itertools import groupby
 from operator import itemgetter
 from models import *
 from constants import SHOESIZERANGE
+from file_locations import *
+import os
+import zipfile
+from general_document.size_purchase_divide_order import generate_size_excel_file
+from general_document.purchase_divide_order import generate_excel_file
 
 assets_purchase_page_bp = Blueprint("assets_purchase_page_bp", __name__)
 
@@ -206,6 +211,7 @@ def new_purchase_order_save():
                         color=color,
                         remark=remark,
                         size_type=shoe_batch_type,
+                        craft_name=item["craftName"],
                     )
                     db.session.add(assets_item)
                 elif items[0]["materialCategory"] == 1:
@@ -218,6 +224,7 @@ def new_purchase_order_save():
                         color=color,
                         remark=remark,
                         size_type=shoe_batch_type,
+                        craft_name=item["craftName"],
                     )
                     for i in SHOESIZERANGE:
                         if i -34 < len(item["sizeInfo"]):
@@ -319,6 +326,7 @@ def get_assets_purchase_order_items():
                     "materialModel": assets_item.material_model,
                     "color": assets_item.color,
                     "unit": material.material_unit,
+                    "craftName": assets_item.craft_name,
                     "purchaseAmount": float(assets_item.purchase_amount),
                     "comment": assets_item.remark if assets_item.remark else "",
                     "orderId": order.order_id if order else None,
@@ -340,6 +348,7 @@ def get_assets_purchase_order_items():
                     "materialName": material.material_name,
                     "materialSpecification": assets_item.material_specification,
                     "color": assets_item.color,
+                    "craftName": assets_item.craft_name,
                     "unit": material.material_unit,
                     "comment": assets_item.remark if assets_item.remark else "",
                     "sizeInfo": [
@@ -539,6 +548,9 @@ def submit_purchase_order():
         }
     )
     db.session.flush()
+    purchase_order_rid = db.session.query(PurchaseOrder).filter(
+        PurchaseOrder.purchase_order_id == purchase_order_id
+    ).first().purchase_order_rid
     query = (
         db.session.query(
             PurchaseDivideOrder,
@@ -584,13 +596,14 @@ def submit_purchase_order():
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
                 order_id=purchase_order.order_id,
                 order_shoe_id=purchase_order.order_shoe_id,
+                craft_name=assets_item.craft_name,
             )
             db.session.add(material_storage)
         elif purchase_divide_order.purchase_divide_order_type == "S":
             quantity_list = [0 for _ in SHOESIZERANGE]
             for i, shoe_size in enumerate(SHOESIZERANGE):
-                quantity_list[i] = getattr(assets_item, f"size_{shoe_size}_purchase_amount")
-
+                quantity_list[i] = getattr(assets_item, f"size_{shoe_size}_purchase_amount", 0) or 0
+            print(quantity_list)
             material_total_quantity = sum(quantity_list)
             size_material_storage = SizeMaterialStorage(
                 material_id=material_id,
@@ -600,13 +613,164 @@ def submit_purchase_order():
                 size_material_specification=material_specification,
                 size_material_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
-                size_storage_type="E",
                 order_id=purchase_order.order_id,
                 order_shoe_id=purchase_order.order_shoe_id,
+                craft_name=assets_item.craft_name,
+                size_storage_type=assets_item.size_type,
             )
             for i, shoe_size in enumerate(SHOESIZERANGE):
                 setattr(size_material_storage, f"size_{shoe_size}_estimated_inbound_amount", quantity_list[i])
             db.session.add(size_material_storage)
+    purchase_divide_orders = (
+        db.session.query(
+            PurchaseDivideOrder,
+            PurchaseOrder,
+            AssetsPurchaseOrderItem,
+            Material,
+            Supplier,
+        )
+        .join(
+            PurchaseOrder,
+            PurchaseDivideOrder.purchase_order_id == PurchaseOrder.purchase_order_id,
+        )
+        .join(AssetsPurchaseOrderItem, AssetsPurchaseOrderItem.purchase_divide_order_id == PurchaseDivideOrder.purchase_divide_order_id)
+        .join(Material, AssetsPurchaseOrderItem.material_id == Material.material_id)
+        .join(Supplier, Material.material_supplier == Supplier.supplier_id)
+        .filter(PurchaseOrder.purchase_order_rid == purchase_order_rid)
+        .all()
+    )
+
+    # Dictionary to keep track of processed PurchaseDivideOrders
+    purchase_divide_order_dict = {}
+    size_purchase_divide_order_dict = {}
+    
+
+    # Iterate through the query results and group items by PurchaseDivideOrder
+    for (
+        purchase_divide_order,
+        purchase_order,
+        assets_item,
+        material,
+        supplier,
+    ) in purchase_divide_orders:
+        purchase_order_id = purchase_divide_order.purchase_divide_order_rid
+        print(purchase_order_id)
+        if not os.path.exists(
+            os.path.join(FILE_STORAGE_PATH, "单独采购订单", purchase_order_rid)
+        ):
+            os.makedirs(os.path.join(FILE_STORAGE_PATH, "单独采购订单", purchase_order_rid)) 
+        if purchase_divide_order.purchase_divide_order_type == "N":
+            if purchase_order_id not in purchase_divide_order_dict:
+                purchase_divide_order_dict[purchase_order_id] = {
+                    "供应商": supplier.supplier_name,
+                    "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "备注": purchase_divide_order.purchase_order_remark,
+                    "环保要求": purchase_divide_order.purchase_order_environmental_request,
+                    "发货地址": purchase_divide_order.shipment_address,
+                    "交货期限": purchase_divide_order.shipment_deadline,
+                    "订单信息": purchase_order_id,
+                    "seriesData": [],
+                }
+
+            # Append the current PurchaseOrderItem to the 'seriesData' list of the relevant order
+            purchase_divide_order_dict[purchase_order_id]["seriesData"].append(
+                {
+                    "物品名称": (
+                        material.material_name
+                        + " "
+                        + (assets_item.material_model if assets_item.material_model else "")
+                        + " "
+                        + (
+                            assets_item.material_specification
+                            if assets_item.material_specification
+                            else ""
+                        )
+                        + " "
+                        + (assets_item.color if assets_item.color else "")
+                    ),
+                    "数量": assets_item.purchase_amount,
+                    "单位": material.material_unit,
+                    "备注": assets_item.remark,
+                    "用途说明": "",
+                }
+            )
+        elif purchase_divide_order.purchase_divide_order_type == "S":
+            batch_info_type = db.session.query(BatchInfoType).filter(BatchInfoType.batch_info_type_name == assets_item.size_type).first()
+            shoe_size_list = []
+            for i in SHOESIZERANGE:
+                if getattr(batch_info_type, f"size_{i}_name") is not None:
+                    shoe_size_list.append({i:getattr(batch_info_type, f"size_{i}_name")})
+
+            if purchase_order_id not in size_purchase_divide_order_dict:
+                size_purchase_divide_order_dict[purchase_order_id] = {
+                    "供应商": supplier.supplier_name,
+                    "日期": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "备注": purchase_divide_order.purchase_order_remark,
+                    "环保要求": purchase_divide_order.purchase_order_environmental_request,
+                    "发货地址": purchase_divide_order.shipment_address,
+                    "交货期限": purchase_divide_order.shipment_deadline,
+                    "订单信息": purchase_order_id,
+                    "seriesData": [],
+                }
+
+            # Append the current PurchaseOrderItem to the 'seriesData' list of the relevant order
+            obj = {
+                "物品名称": (
+                    material.material_name
+                    + " "
+                    + (assets_item.material_model if assets_item.material_model else "")
+                    + " "
+                    + (
+                        assets_item.material_specification
+                        if assets_item.material_specification
+                        else ""
+                    )
+                    + " "
+                    + (assets_item.color if assets_item.color else "")
+                ),
+                "备注": assets_item.remark,
+            }
+            for size_dic in shoe_size_list:
+                for size, size_name in size_dic.items():
+                    obj[size_name] = getattr(assets_item, f"size_{size}_purchase_amount")
+            size_purchase_divide_order_dict[purchase_order_id]["seriesData"].append(obj)
+    generated_files = []
+    # Convert the dictionary to a list
+    template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单.xlsx")
+    size_template_path = os.path.join(FILE_STORAGE_PATH, "新标准采购订单尺码版.xlsx")
+    for purchase_order_id, data in purchase_divide_order_dict.items():
+        new_file_path = os.path.join(
+            FILE_STORAGE_PATH,
+            "单独采购订单",
+            purchase_order_rid,
+            purchase_order_id + "_" + data["供应商"] + ".xlsx",
+        )
+        generate_excel_file(template_path, new_file_path, data)
+        generated_files.append(new_file_path)
+    for purchase_order_id, data in size_purchase_divide_order_dict.items():
+        if not os.path.exists(
+            os.path.join(FILE_STORAGE_PATH, "单独采购订单", purchase_order_id)
+        ):
+            os.makedirs(os.path.join(FILE_STORAGE_PATH, "单独采购订单", purchase_order_id)) 
+        new_file_path = os.path.join(
+            FILE_STORAGE_PATH,
+            "单独采购订单",
+            purchase_order_rid,
+            purchase_order_id + "_" + data["供应商"] + ".xlsx",
+        )
+        generate_size_excel_file(size_template_path, new_file_path, data)
+        generated_files.append(new_file_path)
+    zip_file_path = os.path.join(
+        FILE_STORAGE_PATH,
+        "单独采购订单",
+        str(purchase_order_rid),
+        "独立采购订单.zip",
+    )
+    with zipfile.ZipFile(zip_file_path, "w") as zipf:
+        for file in generated_files:
+            filename = os.path.basename(file)
+            purchase_order_id = filename.split("_")[0]  # Get the part before "_供应商"
+            zipf.write(file, filename)  # Add the file to the zip
     db.session.commit()
     return jsonify({"status": "success"})
 
@@ -733,6 +897,7 @@ def edit_saved_purchase_order_items():
                         material_model=material_model,
                         color=color,
                         remark=remark,
+                        craft_name=item["craftName"],
                         size_type="N",
                     )
                     db.session.add(assets_item)
@@ -760,6 +925,7 @@ def edit_saved_purchase_order_items():
                         material_model=material_model,
                         color=color,
                         remark=remark,
+                        craft_name=item["craftName"],
                         size_type="E",
                     )
                     db.session.add(assets_item)
@@ -849,3 +1015,15 @@ def get_all_material_types():
         db.session.rollback()
         print(f"Error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@assets_purchase_page_bp.route("/logistics/downloadassetzip", methods=["GET"])
+def download_asset_zip():
+    purchase_order_rid = request.args.get("purchaseOrderRId")
+    zip_file_path = os.path.join(
+        FILE_STORAGE_PATH,
+        "单独采购订单",
+        purchase_order_rid,
+        "独立采购订单.zip",
+    )
+    new_file_name = f"{purchase_order_rid}_独立采购订单.zip"
+    return send_file(zip_file_path, as_attachment=True, download_name=new_file_name)

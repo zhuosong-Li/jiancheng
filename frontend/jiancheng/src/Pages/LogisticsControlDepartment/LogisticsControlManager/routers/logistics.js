@@ -30,7 +30,7 @@ export default [
     props: true,
     meta: {
       requiresAuth: true,
-      role: 9
+      role: [9, 8]
     }
   },
   {

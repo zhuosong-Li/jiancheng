@@ -45,6 +45,7 @@ class BomItem(db.Model):
     material_second_type = db.Column(db.String(10), nullable=True)
     craft_name = db.Column(db.String(200), nullable=True)
     pairs = db.Column(db.DECIMAL(10, 5), nullable=True)
+    production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<BomItem(bom_item_id={self.bom_item_id})>"
@@ -233,6 +234,7 @@ class MaterialStorage(db.Model):
 
     craft_name = db.Column(db.String(200), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
+    production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<MaterialStorage(material_storage_id={self.material_storage_id})>"
@@ -631,6 +633,7 @@ class AssetsPurchaseOrderItem(db.Model):
     size_45_purchase_amount = db.Column(db.Integer, nullable=True)
     size_46_purchase_amount = db.Column(db.Integer, nullable=True)
     size_type = db.Column(db.String(10), nullable=False, default="E")
+    craft_name = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"<AssetsPurchaseOrderItem(assets_purchase_order_item_id={self.assets_purchase_order_item_id})>"
@@ -823,7 +826,7 @@ class SizeMaterialStorage(db.Model):
     size_45_current_amount = db.Column(db.Integer, default=0)
     size_46_current_amount = db.Column(db.Integer, default=0)
     total_current_amount = db.Column(db.Integer, default=0)
-    size_storage_type = db.Column(db.String(1), nullable=False, default="E")
+    size_storage_type = db.Column(db.String(10), nullable=False, default="E")
     material_outsource_date = db.Column(db.Date, nullable=True)
     material_id = db.Column(
         db.BigInteger,
@@ -840,6 +843,7 @@ class SizeMaterialStorage(db.Model):
     material_storage_status = db.Column(db.SmallInteger, default=0)
     craft_name = db.Column(db.String(200), nullable=True)
     composite_unit_cost = db.Column(db.DECIMAL(10, 2))
+    production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
         return f"<SizeMaterialStorage {self.size_material_specification}>"
@@ -1121,6 +1125,7 @@ class ProductionInstructionItem(db.Model):
     material_type = db.Column(db.String(1), nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     material_second_type = db.Column(db.String(10), nullable=False)
+    pre_craft_name = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
         return f"<ProductionInstructionItem(production_instruction_item_id={self.production_instruction_item_id})>"
@@ -1163,5 +1168,6 @@ class CraftSheetItem(db.Model):
     unit_usage = db.Column(db.DECIMAL(10, 5), nullable=True)
     total_usage = db.Column(db.DECIMAL(10, 5), nullable=True)
     after_usage_symbol = db.Column(db.String(1), nullable=True)
+    production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
     def __repr__(self):
         return f"<CraftSheetItem(craft_sheet_item_id={self.craft_sheet_item_id})>"

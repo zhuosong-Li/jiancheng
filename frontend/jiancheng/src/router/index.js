@@ -232,30 +232,44 @@ const Logout = () => {
 
 router.beforeEach((to, from, next) => {
   const token = localStorage.getItem('token');
-  const userRole = parseInt(localStorage.getItem('role'));
+  const userRole = parseInt(localStorage.getItem('role'), 10); // Ensure the role is an integer
   console.log('token', token);
   console.log('userRole', userRole);
+
   // Check if the route requires authentication
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-      // If no token, redirect to login
-      if (!token) {
-        console.log('no token');
-          next({ name: 'login' });
-      } else {
-          console.log(to.meta.role === userRole);
-          // If the route has a role requirement, check the user's role
-          if (to.meta.role && to.meta.role !== userRole) {
-              Logout();
-              // If role doesn't match, redirect to login or home
-              next({ name: 'login' }); // or next({ name: 'Home' });
+  if (to.matched.some((record) => record.meta.requiresAuth)) {
+    // If no token, redirect to login
+    if (!token) {
+      console.log('no token');
+      next({ name: 'login' });
+    } else {
+      const allowedRoles = to.meta.role; // Retrieve the role(s) from meta
+      console.log('allowedRoles:', allowedRoles);
+
+      // If the route has a role requirement, check the user's role
+      if (allowedRoles) {
+        if (Array.isArray(allowedRoles)) {
+          // Check if user's role is in the allowed roles array
+          if (!allowedRoles.includes(userRole)) {
+            Logout();
+            next({ name: 'login' });
           } else {
-              // Token and role are valid, allow access
-              next();
+            next();
           }
+        } else if (allowedRoles !== userRole) {
+          // Handle the case where role is not an array
+          Logout();
+          next({ name: 'login' });
+        } else {
+          next();
+        }
+      } else {
+        next();
       }
+    }
   } else {
-      // If the route doesn't require authentication, proceed as normal
-      next();
+    // If the route doesn't require authentication, proceed as normal
+    next();
   }
 });
 
