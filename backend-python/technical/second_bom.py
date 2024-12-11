@@ -49,11 +49,8 @@ def get_order_second_bom():
             Bom, OrderShoeType.order_shoe_type_id == Bom.order_shoe_type_id
         )  # Assuming BOM is optional
         .outerjoin(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
-        .outerjoin(
-            PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id
-        ).filter(
-            Order.order_id == order_id
-        )
+        .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
+        .filter(Order.order_id == order_id)
         .all()
     )
 
@@ -107,8 +104,12 @@ def get_order_second_bom():
 
         # Check if this color already exists in typeInfos
         existing_entry = next(
-            (info for info in result_dict[shoe.shoe_rid]["typeInfos"] if info["color"] == color.color_name),
-            None
+            (
+                info
+                for info in result_dict[shoe.shoe_rid]["typeInfos"]
+                if info["color"] == color.color_name
+            ),
+            None,
         )
 
         # Prepare BOM and PurchaseOrder details
@@ -131,15 +132,13 @@ def get_order_second_bom():
                     "3": "等待用量填写",
                     "4": "用量填写已保存",
                     "5": "用量填写已提交",
-                    "6": "用量填写已下发"
+                    "6": "用量填写已下发",
                 }.get(bom.bom_status, "未填写")
             elif bom.bom_type == 1:
                 second_bom_id = bom.bom_rid
-                second_bom_status = {
-                    "1": "已保存",
-                    "2": "已提交",
-                    "3": "已下发"
-                }.get(bom.bom_status, "未填写")
+                second_bom_status = {"1": "已保存", "2": "已提交", "3": "已下发"}.get(
+                    bom.bom_status, "未填写"
+                )
 
         # Set PurchaseOrder details based on purchase_order_type
         if purchase_order:
@@ -148,50 +147,61 @@ def get_order_second_bom():
                 first_purchase_order_status = {
                     "1": "已保存",
                     "2": "已提交",
-                    "3": "已下发"
+                    "3": "已下发",
                 }.get(purchase_order.purchase_order_status, "未填写")
             elif purchase_order.purchase_order_type == "S":
                 second_purchase_order_id = purchase_order.purchase_order_rid
                 second_purchase_order_status = {
                     "1": "已保存",
                     "2": "已提交",
-                    "3": "已下发"
+                    "3": "已下发",
                 }.get(purchase_order.purchase_order_status, "未填写")
 
         # If the color entry already exists, update it with BOM details
         if existing_entry:
             print(existing_entry)
             # Update only if fields are not already filled to prevent overwriting
-            if first_bom_id and existing_entry.get("firstBomId") =='未填写':
+            if first_bom_id and existing_entry.get("firstBomId") == "未填写":
                 existing_entry["firstBomId"] = first_bom_id
                 existing_entry["firstBomStatus"] = first_bom_status
                 existing_entry["firstPurchaseOrderId"] = first_purchase_order_id
                 existing_entry["firstPurchaseOrderStatus"] = first_purchase_order_status
 
-            if second_bom_id and existing_entry.get("secondBomId") =='未填写':
+            if second_bom_id and existing_entry.get("secondBomId") == "未填写":
                 existing_entry["secondBomId"] = second_bom_id
                 existing_entry["secondBomStatus"] = second_bom_status
                 existing_entry["secondPurchaseOrderId"] = second_purchase_order_id
-                existing_entry["secondPurchaseOrderStatus"] = second_purchase_order_status
+                existing_entry["secondPurchaseOrderStatus"] = (
+                    second_purchase_order_status
+                )
         else:
             # If the color doesn't exist, create a new entry in typeInfos
-            result_dict[shoe.shoe_rid]["typeInfos"].append({
-                "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
-                "orderShoeRid": shoe.shoe_rid,
-                "color": color.color_name,
-                "image": (
-                    IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
-                    if shoe_type.shoe_image_url else None
-                ),
-                "firstBomId": first_bom_id if first_bom_id else "未填写",
-                "firstBomStatus": first_bom_status,
-                "firstPurchaseOrderId": first_purchase_order_id if first_purchase_order_id else "未填写",
-                "firstPurchaseOrderStatus": first_purchase_order_status,
-                "secondBomId": second_bom_id if second_bom_id else "未填写",
-                "secondBomStatus": second_bom_status,
-                "secondPurchaseOrderId": second_purchase_order_id if second_purchase_order_id else "未填写",
-                "secondPurchaseOrderStatus": second_purchase_order_status,
-            })
+            result_dict[shoe.shoe_rid]["typeInfos"].append(
+                {
+                    "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
+                    "orderShoeRid": shoe.shoe_rid,
+                    "color": color.color_name,
+                    "image": (
+                        IMAGE_STORAGE_PATH + shoe_type.shoe_image_url
+                        if shoe_type.shoe_image_url
+                        else None
+                    ),
+                    "firstBomId": first_bom_id if first_bom_id else "未填写",
+                    "firstBomStatus": first_bom_status,
+                    "firstPurchaseOrderId": (
+                        first_purchase_order_id if first_purchase_order_id else "未填写"
+                    ),
+                    "firstPurchaseOrderStatus": first_purchase_order_status,
+                    "secondBomId": second_bom_id if second_bom_id else "未填写",
+                    "secondBomStatus": second_bom_status,
+                    "secondPurchaseOrderId": (
+                        second_purchase_order_id
+                        if second_purchase_order_id
+                        else "未填写"
+                    ),
+                    "secondPurchaseOrderStatus": second_purchase_order_status,
+                }
+            )
 
         # Add the color to colorSet to prevent future duplicates
         result_dict[shoe.shoe_rid]["colorSet"].add(color.color_name)
@@ -205,13 +215,14 @@ def get_order_second_bom():
 
     return jsonify(result)
 
+
 @second_bom_bp.route("/secondbom/getcurrentbom", methods=["GET"])
 def get_current_bom():
     order_shoe_type_id = request.args.get("ordershoetypeid")
     bom = (
         db.session.query(Bom, OrderShoeType)
         .join(OrderShoeType, Bom.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
-        .filter(Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == '1')
+        .filter(Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == "1")
         .first()
     )
     bom_id = bom.Bom.bom_id
@@ -220,13 +231,14 @@ def get_current_bom():
     }
     return jsonify(result)
 
+
 @second_bom_bp.route("/secondbom/getcurrentbomitem", methods=["GET"])
 def get_current_bom_item():
     order_shoe_type_id = request.args.get("ordershoetypeid")
     bom = (
         db.session.query(Bom, OrderShoeType)
         .join(OrderShoeType, Bom.order_shoe_type_id == OrderShoeType.order_shoe_type_id)
-        .filter(Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == '1')
+        .filter(Bom.order_shoe_type_id == order_shoe_type_id, Bom.bom_type == "1")
         .first()
     )
     print(bom)
@@ -244,9 +256,11 @@ def get_current_bom_item():
         db.session.query(Order.order_id)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
-        .filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id).scalar()
+        .filter(OrderShoeType.order_shoe_type_id == order_shoe_type_id)
+        .scalar()
     )
     shoe_size_names = get_order_batch_type_helper(order_id)
+    print(shoe_size_names)
     result = []
     for row in bom_items:
         bom_item, material, material_type, department, supplier = row
@@ -260,7 +274,8 @@ def get_current_bom_item():
                 BomItem.material_id == material.material_id,
                 BomItem.material_model == bom_item.material_model,
                 BomItem.material_specification == bom_item.material_specification,
-            ).first()
+            )
+            .first()
         )
         if first_bom_item_record:
             first_bom_usage = first_bom_item_record.BomItem.unit_usage
@@ -289,7 +304,11 @@ def get_current_bom_item():
                 "useDepart": department.department_id if department else None,
                 "pairs": bom_item.pairs if bom_item.pairs else 0.00,
                 "craftName": bom_item.craft_name,
-                "unitUsage": bom_item.unit_usage if bom_item.unit_usage else 0.00 if material.material_category == 0 else None,
+                "unitUsage": (
+                    bom_item.unit_usage
+                    if bom_item.unit_usage
+                    else 0.00 if material.material_category == 0 else None
+                ),
                 "approvalUsage": bom_item.total_usage if bom_item.total_usage else 0.00,
                 "unit": material.material_unit,
                 "color": bom_item.bom_item_color,
@@ -299,7 +318,6 @@ def get_current_bom_item():
             }
         )
     return jsonify(result)
-
 
 
 @second_bom_bp.route("/secondbom/savebom", methods=["POST"])
@@ -329,15 +347,25 @@ def save_bom_usage():
                 unit_usage=bom_item["unitUsage"],
                 total_usage=bom_item["approvalUsage"],
                 department_id=bom_item["useDepart"],
-                material_model = bom_item["materialModel"] if bom_item["materialModel"] else "",
+                material_model=(
+                    bom_item["materialModel"] if bom_item["materialModel"] else ""
+                ),
                 remark=bom_item["comment"],
-                material_specification=bom_item["materialSpecification"] if bom_item["materialSpecification"] else "",
+                material_specification=(
+                    bom_item["materialSpecification"]
+                    if bom_item["materialSpecification"]
+                    else ""
+                ),
                 bom_item_add_type=1,
                 bom_item_color=bom_item["color"] if bom_item["color"] else None,
-                pairs = bom_item["pairs"] if bom_item["pairs"] else 0.00
+                pairs=bom_item["pairs"] if bom_item["pairs"] else 0.00,
             )
             for i in range(len(bom_item["sizeInfo"])):
-                setattr(bom_item_entity, f"size_{i}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
+                setattr(
+                    bom_item_entity,
+                    f"size_{i}_total_usage",
+                    bom_item["sizeInfo"][i]["approvalAmount"],
+                )
             db.session.add(bom_item_entity)
             db.session.flush()
             bom_item["bomItemId"] = bom_item_entity.bom_item_id
@@ -348,13 +376,23 @@ def save_bom_usage():
                 .first()
             )
             for i in range(len(bom_item["sizeInfo"])):
-                setattr(entity, f"size_{i}_total_usage", bom_item["sizeInfo"][i]["approvalAmount"])
+                setattr(
+                    entity,
+                    f"size_{i}_total_usage",
+                    bom_item["sizeInfo"][i]["approvalAmount"],
+                )
             entity.total_usage = bom_item["approvalUsage"]
             entity.unit_usage = bom_item["unitUsage"]
             entity.remark = bom_item["comment"] if bom_item["comment"] else ""
             entity.department_id = bom_item["useDepart"]
-            entity.material_model = bom_item["materialModel"] if bom_item["materialModel"] else None
-            entity.material_specification = bom_item["materialSpecification"] if bom_item["materialSpecification"] else None
+            entity.material_model = (
+                bom_item["materialModel"] if bom_item["materialModel"] else None
+            )
+            entity.material_specification = (
+                bom_item["materialSpecification"]
+                if bom_item["materialSpecification"]
+                else None
+            )
             entity.bom_item_color = bom_item["color"] if bom_item["color"] else None
             entity.bom_item_add_type = 1
             entity.pairs = bom_item["pairs"] if bom_item["pairs"] else 0.00
@@ -373,7 +411,11 @@ def get_bom_details():
         .join(OrderShoe, Bom.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Order, OrderShoe.order_id == Order.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_id,Bom.bom_type == 1)
+        .filter(
+            Order.order_rid == order_id,
+            Shoe.shoe_rid == order_shoe_id,
+            Bom.bom_type == 1,
+        )
         .first()
         .Bom.bom_id
     )
@@ -402,7 +444,8 @@ def get_bom_details():
                 BomItem.material_id == material.material_id,
                 BomItem.material_model == bom_item.material_model,
                 BomItem.material_specification == bom_item.material_specification,
-            ).first()
+            )
+            .first()
         )
         if first_bom_item_record:
             first_bom_usage = first_bom_item_record.BomItem.unit_usage
@@ -429,7 +472,11 @@ def get_bom_details():
                 "craftName": item.craft_name,
                 "firstBomUsage": first_bom_usage,
                 "pairs": item.pairs if item.pairs else 0.00,
-                "unitUsage": item.unit_usage if item.unit_usage else 0.00 if material.material_category == 0 else None,
+                "unitUsage": (
+                    item.unit_usage
+                    if item.unit_usage
+                    else 0.00 if material.material_category == 0 else None
+                ),
                 "approvalUsage": item.total_usage if item.total_usage else 0.00,
                 "unit": material.material_unit,
                 "color": item.bom_item_color,
@@ -442,11 +489,12 @@ def get_bom_details():
     print(fin_result)
     return jsonify(fin_result)
 
+
 @second_bom_bp.route("/secondbom/editbom", methods=["POST"])
 def edit_bom():
     bom_rid = request.json.get("bomId")
     bom_data = request.json.get("bomData")
-    bom_id = Bom.query.filter(Bom.bom_rid == bom_rid,Bom.bom_type == 1).first().bom_id
+    bom_id = Bom.query.filter(Bom.bom_rid == bom_rid, Bom.bom_type == 1).first().bom_id
     print(bom_data)
     for item in bom_data:
         material_id = (
@@ -459,16 +507,25 @@ def edit_bom():
             .first()
             .Material.material_id
         )
-        bom_item = db.session.query(BomItem).filter(BomItem.bom_item_id == item["bomItemId"]).first()
+        bom_item = (
+            db.session.query(BomItem)
+            .filter(BomItem.bom_item_id == item["bomItemId"])
+            .first()
+        )
         bom_item.material_id = material_id
         bom_item.unit_usage = item["unitUsage"]
         bom_item.total_usage = item["approvalUsage"]
         bom_item.pairs = item["pairs"]
         for i, size in enumerate(SHOESIZERANGE):
-            setattr(bom_item, f"size_{size}_total_usage", item["sizeInfo"][i]["approvalAmount"])
+            setattr(
+                bom_item,
+                f"size_{size}_total_usage",
+                item["sizeInfo"][i]["approvalAmount"],
+            )
         db.session.flush()
     db.session.commit()
     return jsonify({"status": "success"})
+
 
 @second_bom_bp.route("/secondbom/submitbom", methods=["POST"])
 def submit_bom():
@@ -486,8 +543,9 @@ def submit_bom():
     bom_id = bom.Bom.bom_id
     bom.Bom.bom_status = 2
     db.session.commit()
-    
+
     return jsonify({"status": "success"})
+
 
 @second_bom_bp.route("/secondbom/issueboms", methods=["POST"])
 def issue_boms():
@@ -517,7 +575,7 @@ def issue_boms():
             .first()
             .craft_sheet_id
         )
-        entities.OrderShoe.process_sheet_upload_status = '3'
+        entities.OrderShoe.process_sheet_upload_status = "3"
         current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
         random_string = randomIdGenerater(6)
         total_bom_rid = current_time_stamp + random_string + "TS"
@@ -568,15 +626,22 @@ def issue_boms():
                 .all()
             )
             for bom_item in bom_items:
-                print(bom_item.Material.material_name, bom_item.BomItem.material_model, bom_item.BomItem.material_specification, craft_sheet_id)
+                print(
+                    bom_item.Material.material_name,
+                    bom_item.BomItem.material_model,
+                    bom_item.BomItem.material_specification,
+                    craft_sheet_id,
+                )
                 craft_sheet_item = (
                     db.session.query(CraftSheetItem)
                     .filter(
                         CraftSheetItem.craft_sheet_id == craft_sheet_id,
                         CraftSheetItem.order_shoe_type_id == order_shoe_type_id,
                         CraftSheetItem.material_id == bom_item.Material.material_id,
-                        CraftSheetItem.material_model == bom_item.BomItem.material_model,
-                        CraftSheetItem.material_specification == bom_item.BomItem.material_specification,
+                        CraftSheetItem.material_model
+                        == bom_item.BomItem.material_model,
+                        CraftSheetItem.material_specification
+                        == bom_item.BomItem.material_specification,
                         CraftSheetItem.after_usage_symbol == 0,
                     )
                     .first()
@@ -619,7 +684,7 @@ def issue_boms():
                     bom_item.Supplier.supplier_name,
                     bom_item.BomItem.bom_item_color,
                 )
-                
+
                 # Update the dictionary: sum the total_usage and add other details
                 if key not in material_dict:
                     material_dict[key] = {
@@ -630,12 +695,20 @@ def issue_boms():
                         "颜色": bom_item.BomItem.bom_item_color,
                         "单位": bom_item.Material.material_unit,
                         "厂家名称": bom_item.Supplier.supplier_name,
-                        "单位用量": bom_item.BomItem.unit_usage if bom_item.BomItem.unit_usage else "",
+                        "单位用量": (
+                            bom_item.BomItem.unit_usage
+                            if bom_item.BomItem.unit_usage
+                            else ""
+                        ),
                         "核定用量": 0,  # Initialize "核定用量" for summing
-                        "使用工段": bom_item.Department.department_name if bom_item.Department else "",
+                        "使用工段": (
+                            bom_item.Department.department_name
+                            if bom_item.Department
+                            else ""
+                        ),
                         "备注": bom_item.BomItem.remark,
                     }
-                
+
                 # Update the total usage (核定用量)
                 material_dict[key]["核定用量"] += bom_item.BomItem.total_usage
         before_usage_craft_sheet_items = (
@@ -659,7 +732,9 @@ def issue_boms():
             )
             == False
         ):
-            os.mkdir(os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom"))
+            os.mkdir(
+                os.path.join(FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom")
+            )
 
         image_save_path = os.path.join(
             FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom", "shoe_image.jpg"
@@ -674,7 +749,7 @@ def issue_boms():
         )
         shoe_directory = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid)
 
-# Get the list of folders inside the directory
+        # Get the list of folders inside the directory
         folders = os.listdir(shoe_directory)
 
         # Filter out any non-folder entries (just in case)
@@ -683,13 +758,25 @@ def issue_boms():
         # Get the first folder in the directory
         if folders:
             first_folder = folders[0]
-            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, first_folder, "shoe_image.jpg")
+            image_path = os.path.join(
+                IMAGE_UPLOAD_PATH,
+                "shoe",
+                order_shoe_rid,
+                first_folder,
+                "shoe_image.jpg",
+            )
         else:
-            image_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg")
+            image_path = os.path.join(
+                IMAGE_UPLOAD_PATH, "shoe", order_shoe_rid, "shoe_image.jpg"
+            )
         generate_excel_file(
             FILE_STORAGE_PATH + "/BOM-V1.0-temp.xlsx",
             os.path.join(
-                FILE_STORAGE_PATH, order_rid, order_shoe_rid, "secondbom", "二次BOM表.xlsx"
+                FILE_STORAGE_PATH,
+                order_rid,
+                order_shoe_rid,
+                "secondbom",
+                "二次BOM表.xlsx",
             ),
             {
                 "order_id": order_rid,
@@ -757,6 +844,7 @@ def issue_boms():
     db.session.commit()
     return jsonify({"status": "success"})
 
+
 @second_bom_bp.route("/secondbom/download", methods=["GET"])
 def download_bom():
     order_shoe_rid = request.args.get("ordershoerid")
@@ -769,6 +857,6 @@ def download_bom():
         .first()
     )
     folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
-    file_path = os.path.join(folder_path,'secondbom', "二次BOM表.xlsx")
+    file_path = os.path.join(folder_path, "secondbom", "二次BOM表.xlsx")
     new_name = order_id + "-" + order_shoe_rid + "_二次BOM表.xlsx"
     return send_file(file_path, as_attachment=True, download_name=new_name)
