@@ -297,7 +297,7 @@
                             type="textarea"
                             v-model="craftSheetDetail.moldingSpecialCraft"
                             size="default"
-                            maxlength="150"
+                            maxlength="200"
                             autosize
                             show-word-limit
                         ></el-input>
@@ -426,6 +426,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -435,6 +437,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -589,6 +593,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -598,6 +604,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -751,6 +759,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -760,6 +770,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -913,6 +925,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -922,6 +936,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -1075,6 +1091,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -1084,6 +1102,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -1170,168 +1190,6 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
-                            <el-col :span="2" :offset="0"> 楦头： </el-col>
-                            <el-col :span="4" :offset="0">
-                                <el-button type="primary" size="default" @click="addMaterial(5)"
-                                    >添加楦头</el-button
-                                >
-                                <el-button
-                                    type="primary"
-                                    size="default"
-                                    @click="addMaterialByManual(5)"
-                                    >手动添加楦头</el-button
-                                >
-                            </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
-                            <el-col :span="23" :offset="0">
-                                <el-table
-                                    :data="getMaterialDataByType('lastMaterialData')"
-                                    border
-                                    style="width: 100%"
-                                >
-                                    <el-table-column type="index"></el-table-column>
-                                    <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialDetailType" label="材料二级类型">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.materialDetailType"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete
-                                                v-if="
-                                                    scope !== undefined &&
-                                                    scope.row.manualSymbol === 1
-                                                "
-                                                v-model="scope.row.supplierName"
-                                                size="default"
-                                                :fetch-suggestions="querySupplierNames"
-                                                placeholder="输入厂家名称"
-                                                @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                "
-                                            ></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialName" label="材料名称">
-                                        <template #default="scope">
-                                            <el-autocomplete
-                                                v-if="
-                                                    scope !== undefined &&
-                                                    scope.row.manualSymbol === 1
-                                                "
-                                                v-model="scope.row.materialName"
-                                                size="default"
-                                                :fetch-suggestions="queryMaterialNames"
-                                                placeholder="输入材料名称"
-                                                @select="
-                                                    handleMaterialNameSelect(scope.row, $event)
-                                                "
-                                            ></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialModel" label="材料型号">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.materialModel"
-                                                size="default"
-                                                :disabled="scope.row.materialSource === 'P'"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialSpecification" label="材料规格">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.materialSpecification"
-                                                size="default"
-                                                :disabled="scope.row.materialSource === 'P'"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialCraftName" label="工艺名称">
-                                        <template #default="scope">
-                                            <el-row :gutter="20">
-                                                <el-col :span="24" :offset="0">{{
-                                                    scope.row.materialCraftName
-                                                }}</el-col>
-                                            </el-row>
-                                            <el-row :gutter="20">
-                                                <el-col :span="24" :offset="0">
-                                                    <el-button
-                                                        type="primary"
-                                                        size="default"
-                                                        @click="openCraftDialog(scope.row)"
-                                                    >
-                                                        编辑工艺
-                                                    </el-button></el-col
-                                                >
-                                            </el-row>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="color" label="颜色">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.color"
-                                                size="default"
-                                                :disabled="scope.row.materialSource === 'P'"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="unit" label="单位">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-if="
-                                                    scope !== undefined &&
-                                                    scope.row.manualSymbol === 1
-                                                "
-                                                v-model="scope.row.unit"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="useDepart" label="使用工段">
-                                        <template #default="scope">
-                                            <el-select
-                                                v-model="scope.row.useDepart"
-                                                placeholder="请选择"
-                                                size="default"
-                                            >
-                                                <el-option
-                                                    v-for="item in departmentOptions"
-                                                    :key="item.value"
-                                                    :label="item.label"
-                                                    :value="item.value"
-                                                ></el-option>
-                                            </el-select>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="comment" label="备注">
-                                        <template #default="scope">
-                                            <el-input
-                                                type="textarea"
-                                                v-model="scope.row.comment"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column label="操作">
-                                        <template #default="scope">
-                                            <el-button
-                                                type="danger"
-                                                size="small"
-                                                :disabled="scope.row.materialSource === 'P'"
-                                                @click="deleteMaterial(scope.$index, 5)"
-                                                >删除</el-button
-                                            >
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 烫底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(6)"
@@ -1399,6 +1257,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialModel"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -1408,6 +1268,8 @@
                                         <template #default="scope">
                                             <el-input
                                                 v-model="scope.row.materialSpecification"
+                                                type="textarea"
+                                                autosize
                                                 size="default"
                                                 :disabled="scope.row.materialSource === 'P'"
                                             ></el-input>
@@ -1846,7 +1708,7 @@
                             type="textarea"
                             v-model="craftSheetDetail.moldingSpecialCraft"
                             size="default"
-                            maxlength="150"
+                            maxlength="200"
                             autosize
                             show-word-limit
                         ></el-input>
@@ -1901,10 +1763,12 @@
                     list-type="picture-card"
                     accept="image/*"
                     :auto-upload="false"
+                    @remove="handleFileRemove"
                     :data="cutDieImgData"
                 >
                 </el-upload>
                 <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+                <el-button type="primary" size="default" @click="pasteClipboardImage('main')">粘贴剪切板内容</el-button>
             </el-dialog>
             <el-dialog v-model="isUploadImageNoteDialogVisible" title="上传图片备注">
                 <el-upload
@@ -1920,9 +1784,13 @@
                     accept="image/*"
                     :auto-upload="false"
                     :data="picNoteImgData"
+                    @remove="handleFileRemovePicNote"
                 >
                 </el-upload>
                 <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
+                <el-button type="primary" size="default" @click="pasteClipboardImage('note')">粘贴剪切板内容</el-button>
+                
+                
             </el-dialog>
         </el-main>
     </el-container>
@@ -2035,16 +1903,10 @@ export default {
                 productionRemark: '大货产前小做每码5双',
                 cuttingSpecialCraft:
                     '7.5码用7码刀模/8.5码用8码刀模/9.5码用9码刀模/10.5码用10码刀模,其它码数不变',
-                sewingSpecialCraft: `车线针距：面料合缝1.5MM,PU里合缝1.5MM,布里合缝2-3MM,
-                    贴里布要服贴帮面，贴子根包头放到位.鞋口里要抓弧度贴。鞋口放保险丝。
-                    7.5码用7码鞋包/8.5码用8码鞋包/9.5码用9码鞋包/10.5码用10码鞋包,其它码数不变`,
-                moldingSpecialCraft: `所有后跟合缝的鞋款后帮定型机定过再夹包，所有后跟包脚13MM，组合底：80℃ TPR:90℃，PU:85℃ 冬季温度高5℃
-                    压合7秒13公斤
-                    8码后高70mm
-                    7.5码复7码底(内显7.外显7.5码)8.5码复8码底(内显8.外显8.5码)9.5码复9码底(内显9.外显9.5码半)10.5码复10码底(内显10.外显10.5码)其它码数不变`,
+                sewingSpecialCraft: `车线针距：面料合缝1.5MM,PU里合缝1.5MM,布里合缝2-3MM,贴里布要服贴帮面，贴子根包头放到位.鞋口里要抓弧度贴。鞋口放保险丝。7.5码用7码鞋包/8.5码用8码鞋包/9.5码用9码鞋包/10.5码用10码鞋包,其它码数不变`,
+                moldingSpecialCraft: `所有后跟合缝的鞋款后帮定型机定过再夹包，所有后跟包脚13MM，组合底：80℃ TPR:90℃，PU:85℃ 冬季温度高5℃ 压合7秒13公斤 8码后高70mm 7.5码复7码底(内显7.外显7.5码)8.5码复8码底(内显8.外显8.5码)9.5码复9码底(内显9.外显9.5码半)10.5码复10码底(内显10.外显10.5码)其它码数不变`,
                 postProcessing: '',
-                oilyGlue: `TPR底：894K处理剂，PU底：892R处理剂，EVA底：895E处理剂-使用时加15%E-750,
-                    橡胶底：①黑色用893R处理剂加3%粉1000ML加30克，②白色底用893S处理剂加2%粉1000ML加20克，PU革面：892R处理剂，尼龙布.绒皮：798P无色尼龙处理剂使用加15%E-750`,
+                oilyGlue: `TPR底：894K处理剂，PU底：892R处理剂，EVA底：895E处理剂-使用时加15%E-750, 橡胶底：①黑色用893R处理剂加3%粉1000ML加30克，②白色底用893S处理剂加2%粉1000ML加20克，PU革面：892R处理剂，尼龙布.绒皮：798P无色尼龙处理剂使用加15%E-750`,
                 cutDieImgPath: '',
                 picNoteImgPath: ''
             },
@@ -2059,6 +1921,10 @@ export default {
         this.getOrderInfo()
         this.getAllShoeListInfo()
         this.getAllDepartmentOptions()
+        document.addEventListener('paste', this.handlePaste)
+    },
+    beforeUnmounted() {
+        document.removeEventListener('paste', this.handlePaste)
     },
     computed: {
         uploadHeaders() {
@@ -2071,6 +1937,75 @@ export default {
         }
     },
     methods: {
+        async pasteClipboardImage(target) {
+            try {
+                // Access clipboard data
+                const clipboardItems = await navigator.clipboard.read();
+                for (const item of clipboardItems) {
+                    if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
+                        const blob = await item.getType(item.types[0]);
+                        const file = new File([blob], "pasted-image.png", { type: blob.type });
+
+                        if (target === "main") {
+                            this.addImageToFileList(file, "main");
+                        } else if (target === "note") {
+                            this.addImageToFileList(file, "note");
+                        }
+                        return;
+                    }
+                }
+                this.$message.error("剪贴板中没有图片！");
+            } catch (error) {
+                console.error("Failed to read clipboard:", error);
+                this.$message.error("无法从剪贴板读取图片！");
+            }
+        },
+        handlePaste(event) {
+            const items = (event.clipboardData || window.clipboardData).items;
+
+            for (const item of items) {
+                if (item.type.startsWith("image/")) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        if (this.isUploadImageDialogVisible) {
+                            this.addImageToFileList(file, "main");
+                        } else if (this.isUploadImageNoteDialogVisible) {
+                            this.addImageToFileList(file, "note");
+                        }
+                    }
+                }
+            }
+        },
+        addImageToFileList(file, target) {
+            const newFile = {
+                uid: Date.now(),
+                name: file.name || "pasted-image.png",
+                size: file.size,
+                type: file.type,
+                status: "ready",
+                url: URL.createObjectURL(file),
+                raw: file,
+            };
+
+            if (target === "main") {
+                this.fileList.push(newFile);
+                if (this.$refs.uploadImage) {
+                    this.$refs.uploadImage.uploadFiles = this.fileList;
+                }
+            } else if (target === "note") {
+                this.fileListPicNote.push(newFile);
+                if (this.$refs.uploadImageNote) {
+                    this.$refs.uploadImageNote.uploadFiles = this.fileListPicNote;
+                }
+            }
+        },
+        handleFileRemove(file, fileList) {
+            console.log("File removed:", file);
+            this.fileList = fileList; // Keep fileList in sync
+        },
+        handleFileRemovePicNote(file, fileList) {
+            this.fileListPicNote = fileList; // Sync file list for note upload
+        },
         isEditor() {
             return this.userRole == 5
         },
@@ -2508,8 +2443,17 @@ export default {
             this.newcraftSheetId = ''
             this.materialWholeData = []
             this.currentShoeId = row.inheritId
-            await this.getNewcraftSheetId()
-            await this.getMaterialOriginData(row)
+            await this.getCraftSheetData(row)
+            this.craftSheetDetail.productionRemark = '大货产前小做每码5双'
+            this.craftSheetDetail.cuttingSpecialCraft =
+                '7.5码用7码刀模/8.5码用8码刀模/9.5码用9码刀模/10.5码用10码刀模,其它码数不变'
+            this.craftSheetDetail.sewingSpecialCraft =
+                '车线针距：面料合缝1.5MM,PU里合缝1.5MM,布里合缝2-3MM,贴里布要服贴帮面，贴子根包头放到位.鞋口里要抓弧度贴。鞋口放保险丝。7.5码用7码鞋包/8.5码用8码鞋包/9.5码用9码鞋包/10.5码用10码鞋包,其它码数不变'
+            this.craftSheetDetail.moldingSpecialCraft =
+                '所有后跟合缝的鞋款后帮定型机定过再夹包，所有后跟包脚13MM，组合底：80℃ TPR:90℃，PU:85℃ 冬季温度高5℃ 压合7秒13公斤 8码后高70mm 7.5码复7码底(内显7.外显7.5码)8.5码复8码底(内显8.外显8.5码)9.5码复9码底(内显9.外显9.5码半)10.5码复10码底(内显10.外显10.5码)其它码数不变'
+            this.craftSheetDetail.postProcessing = ''
+            this.craftSheetDetail.oilyGlue =
+                'TPR底：894K处理剂，PU底：892R处理剂，EVA底：895E处理剂-使用时加15%E-750, 橡胶底：①黑色用893R处理剂加3%粉1000ML加30克，②白色底用893S处理剂加2%粉1000ML加20克，PU革面：892R处理剂，尼龙布.绒皮：798P无色尼龙处理剂使用加15%E-750'
             this.tabcolor = row.typeInfos.map((info) => info.color)
             this.activeTab = this.tabcolor[0]
             for (let i = 0; i < this.tabcolor.length; i++) {

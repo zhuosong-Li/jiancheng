@@ -70,8 +70,8 @@ def insert_series_data(ws, series_data, start_row=11):
     for i, row_data in enumerate(series_data):
         for col_index, (col, value) in enumerate(row_data.items()):
             column_map = {
-                "鞋型颜色": "A", "材料类型": "B","材料二级类型": "C", "材料名称":"E", "材料型号": "G", "材料规格": "I",
-                "颜色": "K", "单位": "L", "厂家名称": "M", "备注": "O"
+                "鞋型颜色": "A", "材料类型": "B","材料二级类型": "C", "材料名称":"G", "材料型号": "I", "材料规格": "K",
+                "颜色": "L", "单位": "M", "厂家名称": "E", "备注": "O"
             }
             column_letter = column_map.get(col)
             if column_letter:
