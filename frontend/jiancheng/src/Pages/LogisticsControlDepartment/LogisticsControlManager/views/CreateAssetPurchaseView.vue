@@ -268,9 +268,6 @@ export default {
                             )
                         }
                         ElMessage.success('保存成功')
-                        if (window.opener) {
-                        window.opener.location.reload();
-                        }
 
                         // Close the current page
                         window.close();

@@ -28,6 +28,9 @@
                         <el-menu-item index="5" @click="handleMenuClick(5)">
                             <span>出/入库历史</span>
                         </el-menu-item>
+                        <el-menu-item index="6" @click="handleMenuClick(6)">
+                            <span>独立采购</span>
+                        </el-menu-item>
                         <el-menu-item index="8" @click="logout">
                             <span>退出系统</span>
                         </el-menu-item>
@@ -55,6 +58,7 @@ import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
 import InboundView from '../components/InboundView.vue'
 import OutboundView from '../components/OutboundView.vue'
+import FixedAssetsConsumablesView from '@/Pages/LogisticsControlDepartment/LogisticsControlManager/components/FixedAssetsConsumablesView.vue'
 export default {
     components: {
         AllHeader,
@@ -65,7 +69,8 @@ export default {
         FileDownload,
         OrderProgress,
         InboundView,
-        OutboundView
+        OutboundView,
+        FixedAssetsConsumablesView
     },
     data() {
         return {
@@ -100,6 +105,9 @@ export default {
                     break
                 case 5:
                     this.currentComponent = 'InboundOutboundHistory'
+                    break
+                case 6:
+                    this.currentComponent = 'FixedAssetsConsumablesView'
                     break
             }
         }

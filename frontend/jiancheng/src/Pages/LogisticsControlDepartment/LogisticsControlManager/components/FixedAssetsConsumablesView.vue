@@ -21,20 +21,8 @@
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="6" :offset="0">
             <div style="display: flex; align-items: center; white-space: nowrap">
-                订单编号查询：<el-input
+                采购订单编号查询：<el-input
                     v-model="orderSearch"
-                    placeholder=""
-                    size="default"
-                    :suffix-icon="Search"
-                    clearable
-                    @input="tableWholeFilter"
-                ></el-input>
-            </div>
-        </el-col>
-        <el-col :span="6" :offset="0">
-            <div style="display: flex; align-items: center; white-space: nowrap">
-                耗材类型查询：<el-input
-                    v-model="assetsTypeSearch"
                     placeholder=""
                     size="default"
                     :suffix-icon="Search"
@@ -64,13 +52,38 @@
                 </el-select>
             </div>
         </el-col>
+        <el-col :span="6" :offset="0">
+            <div style="display: flex; align-items: center; white-space: nowrap">
+                订单号查询：
+                <el-input
+                    v-model="orderRIdSearch"
+                    placeholder=""
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @input="tableWholeFilter"
+                ></el-input>
+            </div>
+        </el-col>
+        <el-col :span="6" :offset="0">
+            <div style="display: flex; align-items: center; white-space: nowrap">
+                工厂型号查询：<el-input
+                    v-model="shoeRIdSearch"
+                    placeholder=""
+                    size="default"
+                    :suffix-icon="Search"
+                    clearable
+                    @input="tableWholeFilter"
+                ></el-input>
+            </div>
+        </el-col>
     </el-row>
 
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="24" :offset="0">
             <el-table
                 v-loading="datafinished"
-                :data="materialPurchaseFilterData"
+                :data="paginatedMaterialPurchaseData"
                 border
                 style="height: 450px"
                 ref="singleSelectTable"
@@ -82,14 +95,26 @@
                 <el-table-column prop="purchaseOrderType" label="采购类型"></el-table-column>
                 <el-table-column prop="orderRId" label="订单编号"></el-table-column>
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
-                <el-table-column label="操作">
+                <el-table-column label="操作" width="300">
                     <template #default="scope">
                         <el-button type="primary" @click="openPreviewDialog(scope.row)"
                             >查看</el-button
                         >
+                        <el-button type="success" @click="downloadZip(scope.row)"
+                            >下载采购订单压缩包</el-button
+                        >
                     </template>
                 </el-table-column>
             </el-table>
+            <el-pagination
+                background
+                :total="filteredMaterialPurchaseData.length"
+                :current-page="currentPage"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleSizeChange"
+                @current-change="handlePageChange"
+            ></el-pagination>
         </el-col>
     </el-row>
     <!-- TODO -->
@@ -288,17 +313,17 @@
                             <el-table-column prop="purchaseAmount" label="采购数量" />
                             <el-table-column prop="sizeType" label="分码类型"></el-table-column>
                             <el-table-column label="分码数量">
-                                    <el-table-column
-                                        v-for="size in dynamicSizes"
-                                        :key="size"
-                                        :label="size"
-                                        width="60"
-                                    >
-                                        <template #default="scope">
-                                            {{ scope.row[size] || 0 }}
-                                        </template>
-                                    </el-table-column>
+                                <el-table-column
+                                    v-for="size in dynamicSizes"
+                                    :key="size"
+                                    :label="size"
+                                    width="60"
+                                >
+                                    <template #default="scope">
+                                        {{ scope.row[size] || 0 }}
+                                    </template>
                                 </el-table-column>
+                            </el-table-column>
                             <el-table-column prop="comment" label="备注" />
                         </el-table>
                     </div>
@@ -488,11 +513,7 @@
                 <el-row :gutter="20" style="margin-top: 20px">
                     <el-col :span="24" :offset="0">
                         <div v-if="factoryFieldJudge(item.purchaseDivideOrderType)">
-                            <el-table
-                                :data="item.assetsItems"
-                                border
-                                height="500"
-                            >
+                            <el-table :data="item.assetsItems" border height="500">
                                 <el-table-column type="index" label="编号" />
                                 <el-table-column
                                     prop="materialType"
@@ -636,6 +657,8 @@ export default {
     },
     data() {
         return {
+            currentPage: 1,
+            pageSize: 10,
             currentPurchaseTab: 0,
             currentSizeData: 0,
             editVis: false,
@@ -667,9 +690,9 @@ export default {
             assetsTypeSearch: '',
             isPurchaseOrderFilter: '',
             isPurchaseOrderOptions: [
-                { value: 'O', label: '随订单采购' },
-                { value: 'S', label: '随鞋型采购' },
-                { value: 'G', label: '独立采购' }
+                { value: '随订单采购', label: '随订单采购' },
+                { value: '随订单鞋型采购', label: '随订单鞋型采购' },
+                { value: '独立采购', label: '独立采购' }
             ],
             assetTable: [],
             assetFilterTable: [],
@@ -682,8 +705,8 @@ export default {
             newAssetPurchaseData: [],
             factoryOptions: [],
             tabPlaneData: [],
-            currentPage: 1,
-            pageSize: 10,
+            orderRIdSearch: '',
+            shoeRIdSearch: '',
             addMaterialDialogField: {},
             addMaterialTemplate: {
                 materialTypeSearch: '',
@@ -698,14 +721,45 @@ export default {
     mounted() {
         this.getMaterialPurchaseData()
     },
-    methods: {
-        handleSizeChange(val) {
-            this.pageSize = val
-            this.getMaterialPurchaseData()
+    computed: {
+        // Filtered data based on search inputs
+        filteredMaterialPurchaseData() {
+            return this.materialPurchaseTestData.filter((item) => {
+                const orderSearchMatch = item.purchaseOrderRId
+                    ?.toString()
+                    .includes(this.orderSearch.trim())
+                const isPurchaseOrderMatch = this.isPurchaseOrderFilter
+                    ? item.purchaseOrderType === this.isPurchaseOrderFilter
+                    : true
+                const orderRIdMatch = this.orderRIdSearch.trim()
+                    ? item.orderRId && item.orderRId.toString().includes(this.orderRIdSearch.trim()) // Exclude nulls
+                    : true // Include all if filter is empty
+                const shoeRIdMatch = this.shoeRIdSearch.trim()
+                    ? item.shoeRId && item.shoeRId.toString().includes(this.shoeRIdSearch.trim()) // Exclude nulls
+                    : true // Include all if filter is empty
+
+                return orderSearchMatch && isPurchaseOrderMatch && orderRIdMatch && shoeRIdMatch
+            })
         },
-        handlePageChange(val) {
-            this.currentPage = val
-            this.getMaterialPurchaseData()
+
+        // Paginated data for the table
+        paginatedMaterialPurchaseData() {
+            const startIndex = (this.currentPage - 1) * this.pageSize
+            const endIndex = this.currentPage * this.pageSize
+            return this.filteredMaterialPurchaseData.slice(startIndex, endIndex)
+        }
+    },
+    methods: {
+        handleSizeChange(size) {
+            this.pageSize = size
+        },
+        // Handle pagination page change
+        handlePageChange(page) {
+            this.currentPage = page
+        },
+        // Filter table when search inputs change
+        tableWholeFilter() {
+            this.currentPage = 1 // Reset to first page when filters change
         },
         async getMaterialPurchaseData() {
             this.datafinished = true
@@ -1385,6 +1439,11 @@ export default {
                         message: '已取消删除'
                     })
                 })
+        },
+        async downloadZip(row) {
+            window.open(
+                `${this.$apiBaseUrl}/logistics/downloadassetzip?purchaseOrderRId=${row.purchaseOrderRId}`
+            )
         }
     }
 }

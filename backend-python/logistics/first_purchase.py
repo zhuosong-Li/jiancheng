@@ -665,6 +665,7 @@ def submit_purchase_divide_orders():
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
                 craft_name=craft_name,
+                purchase_order_item_id=purchase_order_item.purchase_order_item_id,
             )
             db.session.add(material_storage)
         elif purchase_divide_order.purchase_divide_order_type == "S":
@@ -686,6 +687,7 @@ def submit_purchase_divide_orders():
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
                 size_storage_type="E",
                 craft_name=craft_name,
+                purchase_order_item_id=purchase_order_item.purchase_order_item_id,
             )
             for size in SHOESIZERANGE:
                 setattr(

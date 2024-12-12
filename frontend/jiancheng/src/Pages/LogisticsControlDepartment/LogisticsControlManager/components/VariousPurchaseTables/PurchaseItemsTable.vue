@@ -1,5 +1,5 @@
 <template>
-    <el-select v-model="currentBatchInfoType" @change="changeBatchInfoType">
+    <el-select v-model="currentBatchInfoType" @change="changeBatchInfoType" placeholder="请选择鞋型尺码类型">
         <el-option
             v-for="item in batchInfoTypeList"
             :key="item.batchInfoTypeId"
@@ -52,7 +52,7 @@
         </el-table-column>
         <el-table-column prop="materialModel" label="材料型号">
             <template #default="scope">
-                <el-input v-model="scope.row.materialModel" clearable> </el-input>
+                <el-input v-model="scope.row.materialModel" clearable type="textarea"> </el-input>
             </template>
         </el-table-column>
         <el-table-column label="材料规格">
@@ -60,6 +60,17 @@
                 <el-input
                     v-model="scope.row.materialSpecification"
                     placeholder=""
+                    type="textarea"
+                    clearable
+                ></el-input>
+            </template>
+        </el-table-column>
+        <el-table-column label="工艺名称">
+            <template #default="scope">
+                <el-input
+                    v-model="scope.row.craftName"
+                    placeholder=""
+                    type="textarea"
                     clearable
                 ></el-input>
             </template>
@@ -82,6 +93,7 @@
                     v-if="scope.row.materialCategory == 0"
                     v-model="scope.row.purchaseAmount"
                     :min="0"
+                    :step="0.0001"
                     size="small"
                 />
                 <el-button
@@ -100,6 +112,7 @@
                     placeholder=""
                     size="default"
                     clearable
+                    type="textarea"
                 ></el-input>
             </template>
         </el-table-column>
@@ -221,6 +234,7 @@ export default {
                 materialModel: null,
                 color: '',
                 unit: '',
+                craftName: '',
                 purchaseAmount: 0,
                 comment: '',
                 sizeInfo: []
@@ -349,6 +363,11 @@ export default {
         },
         changeWarehouseName(row) {
             row.warehouseName = row.materialType.warehouseName
+            if (row.materialType.materialTypeName === '底材' || row.materialType.materialTypeName === '楦头' || row.materialType.materialTypeName === '刀模') {
+                row.materialCategory = 1
+            } else {
+                row.materialCategory = 0
+            }
         },
         handleMaterialSelectionChange(selection) {
             if (selection.length > 1) {
