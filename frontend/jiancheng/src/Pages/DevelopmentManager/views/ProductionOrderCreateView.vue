@@ -284,16 +284,6 @@
                             size="default"
                         ></el-input>
                     </el-descriptions-item>
-                    <el-descriptions-item label="烫底工艺">
-                        <el-input
-                            type="textarea"
-                            autosize
-                            maxlength="100"
-                            show-word-limit
-                            v-model="productionInstructionDetail.burnSoleCraft"
-                            size="default"
-                        ></el-input>
-                    </el-descriptions-item>
                     <el-descriptions-item label="工艺备注">
                         <el-input
                             type="textarea"
@@ -1012,6 +1002,155 @@
                                 </el-table>
                             </el-col>
                         </el-row>
+                        <el-row :gutter="20">
+                            <el-col :span="2" :offset="0"> 烫底： </el-col>
+                            <el-col :span="4" :offset="0">
+                                <el-button type="primary" size="default" @click="addMaterial(6)"
+                                    >添加烫底</el-button
+                                >
+                                <el-button
+                                    type="primary"
+                                    size="default"
+                                    @click="addMaterialByManual(6)"
+                                    >手动添加烫底</el-button
+                                >
+                            </el-col>
+                            <el-col :span="2" :offset="0">
+                                <el-button @click="syncMaterials(6)">{{
+                                    this.syncMaterialButtonText
+                                }}</el-button>
+                            </el-col>
+                        </el-row>
+                        <el-row :gutter="20">
+                            <el-col :span="23" :offset="0">
+                                <el-table
+                                    :data="getMaterialDataByType('hotsoleMaterialData')"
+                                    border
+                                    style="width: 100%"
+                                >
+                                    <el-table-column type="index"></el-table-column>
+                                    <el-table-column prop="materialType" label="材料类型" />
+                                    <el-table-column prop="materialDetailType" label="材料二级类型">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.materialDetailType"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="supplierName" label="厂家名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.supplierName"
+                                                size="default"
+                                                :fetch-suggestions="querySupplierNames"
+                                                placeholder="输入厂家名称"
+                                                @select="
+                                                    handleSupplierNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialName" label="材料名称">
+                                        <template #default="scope">
+                                            <el-autocomplete
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.materialName"
+                                                size="default"
+                                                :fetch-suggestions="queryMaterialNames"
+                                                placeholder="输入材料名称"
+                                                @select="
+                                                    handleMaterialNameSelect(scope.row, $event)
+                                                "
+                                            ></el-autocomplete>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialModel" label="材料型号">
+                                        <template #default="scope">
+                                            <el-input
+                                                type="textarea"
+                                                autosize
+                                                v-model="scope.row.materialModel"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="materialSpecification" label="材料规格">
+                                        <template #default="scope">
+                                            <el-input
+                                                type="textarea"
+                                                autosize
+                                                v-model="scope.row.materialSpecification
+                                                "
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="craftName" label="工艺名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                type="textarea"
+                                                autosize
+                                                v-model="scope.row.craftName"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="color" label="颜色">
+                                        <template #default="scope">
+                                            <el-input
+                                                v-model="scope.row.color"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="unit" label="单位">
+                                        <template #default="scope">
+                                            <el-select
+                                                v-if="
+                                                    scope !== undefined &&
+                                                    scope.row.manualSymbol === 1
+                                                "
+                                                v-model="scope.row.unit"
+                                            >
+                                                <el-option
+                                                    v-for="item in defaultUnitOptions"
+                                                    :key="item.value"
+                                                    :label="item.label"
+                                                    :value="item.value"
+                                                ></el-option>
+                                            </el-select>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="comment" label="备注">
+                                        <template #default="scope">
+                                            <el-input
+                                                type="textarea"
+                                                autosize
+                                                v-model="scope.row.comment"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column label="操作">
+                                        <template #default="scope">
+                                            <el-button
+                                                type="danger"
+                                                size="small"
+                                                @click="deleteMaterial(scope.$index, 6)"
+                                                >删除</el-button
+                                            >
+                                        </template>
+                                    </el-table-column>
+                                </el-table>
+                            </el-col>
+                        </el-row>
                     </el-tab-pane>
                 </el-tabs>
 
@@ -1269,6 +1408,16 @@
                                     />
                                 </el-col>
                             </el-row>
+                            <el-row :gutter="20">
+                                <el-col :span="2" :offset="0"> 烫底： </el-col>
+                            </el-row>
+                            <el-row :gutter="20">
+                                <el-col :span="23" :offset="0">
+                                    <MaterialDataTable
+                                        :tableData="getMaterialDataByType('hotsoleMaterialData')"
+                                    />
+                                </el-col>
+                            </el-row>
                         </el-tab-pane>
                     </el-tabs>
                 </div>
@@ -1315,16 +1464,6 @@
                     <el-descriptions-item label="楦型">
                         <el-input
                             v-model="productionInstructionDetail.lastType"
-                            size="default"
-                        ></el-input>
-                    </el-descriptions-item>
-                    <el-descriptions-item label="烫底工艺">
-                        <el-input
-                            type="textarea"
-                            autosize
-                            maxlength="100"
-                            show-word-limit
-                            v-model="productionInstructionDetail.burnSoleCraft"
                             size="default"
                         ></el-input>
                     </el-descriptions-item>
@@ -2014,127 +2153,6 @@
                             </el-col>
                         </el-row>
                         <el-row :gutter="20">
-                            <el-col :span="2" :offset="0"> 楦头： </el-col>
-                            <el-col :span="4" :offset="0">
-                                <el-button type="primary" size="default" @click="addMaterial(5)"
-                                    >添加楦头</el-button
-                                >
-                                <el-button
-                                    type="primary"
-                                    size="default"
-                                    @click="addMaterialByManual(5)"
-                                    >手动添加楦头</el-button
-                                >
-                            </el-col>
-                            <el-col :span="2" :offset="0">
-                                <el-button @click="syncMaterials(5)">{{
-                                    this.syncMaterialButtonText
-                                }}</el-button>
-                            </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
-                            <el-col :span="23" :offset="0">
-                                <el-table
-                                    :data="getMaterialDataByType('lastMaterialData')"
-                                    border
-                                    style="width: 100%"
-                                >
-                                    <el-table-column type="index"></el-table-column>
-                                    <el-table-column prop="materialType" label="材料类型" />
-                                    <el-table-column prop="materialDetailType" label="材料二级类型">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.materialDetailType"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="supplierName" label="厂家名称">
-                                        <template #default="scope">
-                                            <el-autocomplete
-                                                v-if="
-                                                    scope !== undefined &&
-                                                    scope.row.manualSymbol === 1
-                                                "
-                                                v-model="scope.row.supplierName"
-                                                size="default"
-                                                :fetch-suggestions="querySupplierNames"
-                                                placeholder="输入厂家名称"
-                                                @select="
-                                                    handleSupplierNameSelect(scope.row, $event)
-                                                "
-                                            ></el-autocomplete>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialName" label="材料名称">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.materialName"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialModel" label="材料型号">
-                                        <template #default="scope">
-                                            <el-input
-                                                type="textarea"
-                                                autosize
-                                                v-model="scope.row.materialModel"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="materialSpecification" label="材料规格">
-                                        <template #default="scope">
-                                            <el-input
-                                                type="textarea"
-                                                autosize
-                                                v-model="scope.row.materialSpecification"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="color" label="颜色">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.color"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column prop="unit" label="单位">
-                                        <template #default="scope">
-                                            <el-input
-                                                v-model="scope.row.unit"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-
-                                    <el-table-column prop="comment" label="备注">
-                                        <template #default="scope">
-                                            <el-input
-                                                type="textarea"
-                                                autosize
-                                                v-model="scope.row.comment"
-                                                size="default"
-                                            ></el-input>
-                                        </template>
-                                    </el-table-column>
-
-                                    <el-table-column label="操作">
-                                        <template #default="scope">
-                                            <el-button
-                                                type="danger"
-                                                size="small"
-                                                @click="deleteMaterial(scope.$index, 5)"
-                                                >删除</el-button
-                                            >
-                                        </template>
-                                    </el-table-column>
-                                </el-table>
-                            </el-col>
-                        </el-row>
-                        <el-row :gutter="20">
                             <el-col :span="2" :offset="0"> 烫底： </el-col>
                             <el-col :span="4" :offset="0">
                                 <el-button type="primary" size="default" @click="addMaterial(6)"
@@ -2210,6 +2228,16 @@
                                                 type="textarea"
                                                 autosize
                                                 v-model="scope.row.materialSpecification"
+                                                size="default"
+                                            ></el-input>
+                                        </template>
+                                    </el-table-column>
+                                    <el-table-column prop="craftName" label="工艺名称">
+                                        <template #default="scope">
+                                            <el-input
+                                                type="textarea"
+                                                autosize
+                                                v-model="scope.row.craftName"
                                                 size="default"
                                             ></el-input>
                                         </template>
@@ -2346,6 +2374,7 @@ export default {
                 materialName: '',
                 materialModel: '',
                 materialSpecification: '',
+                craftName: '',
                 color: '',
                 unit: '',
                 supplierName: '',
@@ -2478,6 +2507,16 @@ export default {
                         }
                     })
                     break
+                case 6:
+                    let hotsoleMaterialData = this.getMaterialDataByType('hotsoleMaterialData')
+                    this.materialWholeData.forEach((shoeTypeData) => {
+                        if (shoeTypeData.color !== this.activeTab) {
+                            shoeTypeData.hotsoleMaterialData = JSON.parse(
+                                JSON.stringify(hotsoleMaterialData)
+                            )
+                        }
+                    })
+                    break
             }
             ElMessage.success('复制成功')
         },
@@ -2587,6 +2626,24 @@ export default {
                         manualSymbol: 1
                     }
                     break
+                case 6:
+                    this.defaultManuallyAddedMaterial.materialType = '烫底'
+                    activeMaterialData.hotsoleMaterialData.push(this.defaultManuallyAddedMaterial)
+                    this.defaultManuallyAddedMaterial = {
+                        materialType: '',
+                        materialDetailType: '',
+                        materialName: '',
+                        materialModel: '',
+                        materialSpecification: '',
+                        craftName: '',
+                        color: '',
+                        unit: '',
+                        supplierName: '',
+                        comment: '',
+                        isPurchase: false,
+                        manualSymbol: 1
+                    }
+                    break
                 default:
                     break
             }
@@ -2618,6 +2675,11 @@ export default {
                 case 4:
                     this.currentCreateViewId = 4
                     this.materialTypeSearch = '底材'
+                    this.getMaterialFilterData()
+                    break
+                case 6:
+                    this.currentCreateViewId = 6
+                    this.materialTypeSearch = '烫底'
                     this.getMaterialFilterData()
                     break
                 default:
@@ -2666,6 +2728,9 @@ export default {
                     break
                 case 4:
                     activeMaterialData.midsoleMaterialData.push(this.materialSelectRow)
+                    break
+                case 6:
+                    activeMaterialData.hotsoleMaterialData.push(this.materialSelectRow)
                     break
                 default:
                     break
@@ -2729,7 +2794,8 @@ export default {
                     insideMaterialData: [],
                     accessoryMaterialData: [],
                     outsoleMaterialData: [],
-                    midsoleMaterialData: []
+                    midsoleMaterialData: [],
+                    hotsoleMaterialData: []
                 })
             }
             this.isProductionOrderCreateDialogVisible = true
@@ -2748,7 +2814,8 @@ export default {
                         insideMaterialData: [],
                         accessoryMaterialData: [],
                         outsoleMaterialData: [],
-                        midsoleMaterialData: []
+                        midsoleMaterialData: [],
+                        hotsoleMaterialData: []
                     }
                     this.materialWholeData.push(obj)
                 })
@@ -2970,6 +3037,9 @@ export default {
                     break
                 case 4:
                     activeMaterialData.midsoleMaterialData.splice(index, 1)
+                    break
+                case 6:
+                    activeMaterialData.hotsoleMaterialData.splice(index, 1)
                     break
                 default:
                     break

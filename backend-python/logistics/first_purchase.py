@@ -285,7 +285,6 @@ def get_shoe_bom_items():
             for name_obj in size_name_info
         }
 
-
         # If key already exists, accumulate the data; otherwise, initialize
         if key not in combined_items:
             combined_items[key] = {
@@ -311,7 +310,9 @@ def get_shoe_bom_items():
                 ),  # Deep copy to ensure independence
             }
         else:
-            combined_items[key]["approvalUsage"] += bom_item.total_usage if bom_item.total_usage else 0.00
+            combined_items[key]["approvalUsage"] += (
+                bom_item.total_usage if bom_item.total_usage else 0.00
+            )
 
         # Accumulate data for each size in sizeInfo
         for i in range(len(size_name_info)):
@@ -592,6 +593,13 @@ def submit_purchase_divide_orders():
         .filter(CraftSheet.order_shoe_id == order_shoe_id)
         .first()
     )
+    batch_info_type_name = (
+        db.session.query(BatchInfoType)
+        .join(Order, BatchInfoType.batch_info_type_id == Order.batch_info_type_id)
+        .filter(Order.order_id == order_id)
+        .first()
+        .batch_info_type_name
+    )
     materials_data = []
     query = (
         db.session.query(
@@ -656,7 +664,7 @@ def submit_purchase_divide_orders():
                 material_id=material_id,
                 estimated_inbound_amount=material_quantity,
                 actual_inbound_amount=0,
-                department_id = bom_item.department_id,
+                department_id=bom_item.department_id,
                 current_amount=0,
                 unit_price=0,
                 material_outsource_status="0",
@@ -665,7 +673,7 @@ def submit_purchase_divide_orders():
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
                 craft_name=craft_name,
-                purchase_order_item_id=purchase_order_item.purchase_order_item_id,
+                production_instruction_item_id=bom_item.production_instruction_item_id,
             )
             db.session.add(material_storage)
         elif purchase_divide_order.purchase_divide_order_type == "S":
@@ -681,13 +689,13 @@ def submit_purchase_divide_orders():
                 total_estimated_inbound_amount=material_quantity,
                 unit_price=0,
                 material_outsource_status="0",
-                department_id = bom_item.department_id,
+                department_id=bom_item.department_id,
                 size_material_specification=material_specification,
                 size_material_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
-                size_storage_type="E",
+                size_storage_type=batch_info_type_name,
                 craft_name=craft_name,
-                purchase_order_item_id=purchase_order_item.purchase_order_item_id,
+                production_instruction_item_id=bom_item.production_instruction_item_id,
             )
             for size in SHOESIZERANGE:
                 setattr(
@@ -786,6 +794,13 @@ def submit_purchase_divide_orders():
                 }
             )
         elif purchase_divide_order.purchase_divide_order_type == "S":
+            batch_info_type = db.session.query(BatchInfoType, Order).join(
+                Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
+            ).filter(Order.order_id == order_id).first()
+            shoe_size_list = []
+            for i in SHOESIZERANGE:
+                if getattr(batch_info_type.BatchInfoType, f"size_{i}_name") is not None:
+                    shoe_size_list.append({i:getattr(batch_info_type.BatchInfoType, f"size_{i}_name")})
             if purchase_order_id not in size_purchase_divide_order_dict:
                 size_purchase_divide_order_dict[purchase_order_id] = {
                     "供应商": supplier.supplier_name,
@@ -813,12 +828,11 @@ def submit_purchase_divide_orders():
                     + " "
                     + (bom_item.bom_item_color if bom_item.bom_item_color else "")
                 ),
-                "订单单位": material.material_unit,
                 "备注": bom_item.remark,
-                "用途说明": "",
             }
-            for size in SHOESIZERANGE:
-                obj[f"{size}"] = getattr(purchase_order_item, f"size_{size}_purchase_amount")
+            for size_dic in shoe_size_list:
+                for size, size_name in size_dic.items():
+                    obj[size_name] = getattr(purchase_order_item, f"size_{size}_purchase_amount")
             size_purchase_divide_order_dict[purchase_order_id]["seriesData"].append(obj)
     customer_name = (
         db.session.query(Order, Customer)
@@ -848,7 +862,7 @@ def submit_purchase_divide_orders():
     generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单.xlsx")
-    size_template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单尺码版.xlsx")
+    size_template_path = os.path.join(FILE_STORAGE_PATH, "新标准采购订单尺码版.xlsx")
     for purchase_order_id, data in purchase_divide_order_dict.items():
         new_file_path = os.path.join(
             FILE_STORAGE_PATH,

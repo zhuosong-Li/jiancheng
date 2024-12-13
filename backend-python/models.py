@@ -1139,7 +1139,7 @@ class CraftSheet(db.Model):
     production_remark = db.Column(db.String(50), nullable=True)
     cutting_special_process = db.Column(db.String(150), nullable=True)
     sewing_special_process = db.Column(db.String(150), nullable=True)
-    molding_special_process = db.Column(db.String(150), nullable=True)
+    molding_special_process = db.Column(db.String(200), nullable=True)
     post_processing_comment = db.Column(db.String(300), nullable=True)
     oily_glue = db.Column(db.String(300), nullable=True)
     cut_die_img_path = db.Column(db.String(100), nullable=True)

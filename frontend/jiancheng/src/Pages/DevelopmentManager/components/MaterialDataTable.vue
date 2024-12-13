@@ -11,6 +11,7 @@
         </el-table-column>
         <el-table-column prop="materialSpecification" label="材料规格">
         </el-table-column>
+        <el-table-column prop="craftName" label="工艺名称"></el-table-column>
         <el-table-column prop="color" label="颜色">
         </el-table-column>
         <el-table-column prop="unit" label="单位">

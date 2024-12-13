@@ -255,10 +255,9 @@ def get_order_shoe_info():
 def save_production_instruction():
     order_id = request.json.get("orderId")
     order_shoe_rid = request.json.get("orderShoeId")
-    craft_sheet_id = request.json.get("craftSheetId")
+    craft_sheet_rid = request.json.get("craftSheetId")
     upload_data = request.json.get("uploadData")
     craft_sheet_detail = request.json.get("craftSheetDetail")
-    print(order_id, order_shoe_rid, craft_sheet_id, upload_data, craft_sheet_detail)
     order_shoe = (
         db.session.query(Order, OrderShoe, Shoe)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
@@ -268,7 +267,29 @@ def save_production_instruction():
         .OrderShoe
     )
     order_shoe_id = order_shoe.order_shoe_id
-    craft_sheet_id = db.session.query(CraftSheet).filter(CraftSheet.craft_sheet_id == craft_sheet_id).first().craft_sheet_id
+    craft_sheet = (
+        db.session.query(CraftSheet)
+        .filter(CraftSheet.craft_sheet_rid == craft_sheet_rid)
+        .first()
+    )
+    craft_sheet_id = craft_sheet.craft_sheet_id
+    craft_sheet.cut_die_staff = craft_sheet_detail.get("cutDie")
+    craft_sheet.production_remark = craft_sheet_detail.get("productionRemark")
+    craft_sheet.cutting_special_process = craft_sheet_detail.get("cuttingSpecialCraft")
+    craft_sheet.sewing_special_process = craft_sheet_detail.get("sewingSpecialCraft")
+    craft_sheet.molding_special_process = craft_sheet_detail.get("moldingSpecialCraft")
+    craft_sheet.post_processing_comment = craft_sheet_detail.get("postProcessing")
+    craft_sheet.oily_glue = craft_sheet_detail.get("oilyGlue")
+    craft_sheet.cut_die_img_path = craft_sheet_detail.get("cutDieImgPath")
+    craft_sheet.pic_note_img_path = craft_sheet_detail.get("picNoteImgPath")
+    db.session.flush()
+    craft_sheet_items = (
+        db.session.query(CraftSheetItem)
+        .filter(CraftSheetItem.craft_sheet_id == craft_sheet_id)
+        .all()
+    )
+    for item in craft_sheet_items:
+        db.session.delete(item)
     for data in upload_data:
         shoe_color = data.get("color")
         print(shoe_color)
@@ -1145,6 +1166,12 @@ def get_origin_material_info():
             .filter(Material.material_id == item.material_id)
             .first()
         )
+        if item.craft_name != None:
+            material_craft_list = item.craft_name.split("@")
+            material_craft_name = ",".join(material_craft_list)
+        else:
+            material_craft_list = []
+            material_craft_name = ""
         # Map material type to the appropriate array in the dictionary
         material_data = {
             "materialId": item.material_id,
@@ -1158,8 +1185,8 @@ def get_origin_material_info():
             "comment": item.remark,
             "useDepart": item.department_id,
             "isPurchase": item.is_pre_purchase,
-            "materialCraftName": "",
-            "materialCraftNameList": [],
+            "materialCraftName": material_craft_name,
+            "materialCraftNameList": material_craft_list,
             "materialDetailType": item.material_second_type,
             "materialSource": "P",
             "productionInstructionItemId": item.production_instruction_item_id,
@@ -1364,7 +1391,7 @@ def edit_craft_sheet():
     craft_sheet.oily_glue = craft_sheet_detail.get("oilyGlue")
     craft_sheet.cut_die_img_path = craft_sheet_detail.get("cutDieImgPath")
     craft_sheet.pic_note_img_path = craft_sheet_detail.get("picNoteImgPath")
-    db.session.commit()
+    db.session.flush()
     craft_sheet_items = (
         db.session.query(CraftSheetItem)
         .filter(CraftSheetItem.craft_sheet_id == craft_sheet_id)

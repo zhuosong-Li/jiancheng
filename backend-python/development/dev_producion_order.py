@@ -784,6 +784,103 @@ def save_production_instruction():
                     material_second_type=material_data.get("materialDetailType", None),
                 )
                 db.session.add(production_instruction_item)
+        if len(data.get("hotsoleMaterialData")) > 0:
+            for material_data in data.get("hotsoleMaterialData"):
+                material_id = material_data.get("materialId", None)
+                if not material_id:
+                    is_material_exist = (
+                        db.session.query(Material, Supplier)
+                        .join(
+                            Supplier, Material.material_supplier == Supplier.supplier_id
+                        )
+                        .filter(
+                            Material.material_name == material_data.get("materialName"),
+                            Supplier.supplier_name == material_data.get("supplierName"),
+                        )
+                        .first()
+                    )
+                    if is_material_exist:
+                        material_id = is_material_exist.Material.material_id
+                    else:
+                        is_supplier_exist = (
+                            db.session.query(Supplier)
+                            .filter(
+                                Supplier.supplier_name
+                                == material_data.get("supplierName")
+                            )
+                            .first()
+                        )
+                        if is_supplier_exist:
+                            supplier_id = is_supplier_exist.supplier_id
+                        else:
+                            supplier = Supplier(
+                                supplier_name=material_data.get("supplierName")
+                            )
+                            db.session.add(supplier)
+                            db.session.flush()
+                            supplier_id = supplier.supplier_id
+                        material_type_id = (
+                            db.session.query(MaterialType)
+                            .filter(MaterialType.material_type_name == "烫底")
+                            .first()
+                            .material_type_id
+                        )
+                        material = Material(
+                            material_name=material_data.get("materialName"),
+                            material_supplier=supplier_id,
+                            material_unit=material_data.get("unit"),
+                            material_creation_date=datetime.datetime.now(),
+                            material_type_id=material_type_id,
+                            material_category=1,
+                        )
+                        db.session.add(material)
+                        db.session.flush()
+                        material_id = material.material_id
+                material_model = (
+                    material_data.get("materialModel")
+                    if material_data.get("materialModel")
+                    else None
+                )
+                material_spec = (
+                    material_data.get("materialSpecification")
+                    if material_data.get("materialSpecification")
+                    else None
+                )
+                material_color = (
+                    material_data.get("color") if material_data.get("color") else None
+                )
+                remark = (
+                    material_data.get("comment")
+                    if material_data.get("comment")
+                    else None
+                )
+                department_id = (
+                    material_data.get("useDepart")
+                    if material_data.get("useDepart")
+                    else None
+                )
+                is_pre_purchase = (
+                    material_data.get("isPurchase")
+                    if material_data.get("isPurchase")
+                    else None
+                )
+                material_type = "H"
+                order_shoe_type_id = order_shoe_type_id
+                production_instruction_item = ProductionInstructionItem(
+                    production_instruction_id=production_instruction_id,
+                    material_id=material_id,
+                    material_model=material_model,
+                    material_specification=material_spec,
+                    color=material_color,
+                    remark=remark,
+                    department_id=department_id,
+                    is_pre_purchase=is_pre_purchase if is_pre_purchase else False,
+                    material_type=material_type,
+                    order_shoe_type_id=order_shoe_type_id,
+                    pre_craft_name=material_data.get("craftName", None),
+                    material_second_type=material_data.get("materialDetailType", None),
+                )
+                db.session.add(production_instruction_item)
 
     print(order_id, order_shoe_rid, production_instruction_id, upload_data)
     order_shoe = (
@@ -860,6 +957,7 @@ def get_production_instruction():
                 "accessoryMaterialData": [],
                 "outsoleMaterialData": [],
                 "midsoleMaterialData": [],
+                "hotsoleMaterialData": [],
             }
         material = (
             db.session.query(Material, MaterialType, Supplier)
@@ -877,6 +975,7 @@ def get_production_instruction():
             "materialName": material.Material.material_name,
             "materialModel": item.material_model,
             "materialSpecification": item.material_specification,
+            "craftName": item.pre_craft_name,
             "color": item.color,
             "unit": material.Material.material_unit,
             "supplierName": material.Supplier.supplier_name,
@@ -896,6 +995,8 @@ def get_production_instruction():
             result_dict[color_name]["outsoleMaterialData"].append(material_data)
         elif item.material_type == "M":
             result_dict[color_name]["midsoleMaterialData"].append(material_data)
+        elif item.material_type == "H":
+            result_dict[color_name]["hotsoleMaterialData"].append(material_data)
 
     # Convert result dictionary to list for JSON response
     result = list(result_dict.values())
@@ -1476,6 +1577,103 @@ def edit_production_instruction():
                     material_second_type=material_data.get("materialDetailType", None),
                 )
                 db.session.add(production_instruction_item)
+        if len(data.get("hotsoleMaterialData")) > 0:
+            for material_data in data.get("hotsoleMaterialData"):
+                material_id = material_data.get("materialId", None)
+                if not material_id:
+                    is_material_exist = (
+                        db.session.query(Material, Supplier)
+                        .join(
+                            Supplier, Material.material_supplier == Supplier.supplier_id
+                        )
+                        .filter(
+                            Material.material_name == material_data.get("materialName"),
+                            Supplier.supplier_name == material_data.get("supplierName"),
+                        )
+                        .first()
+                    )
+                    if is_material_exist:
+                        material_id = is_material_exist.Material.material_id
+                    else:
+                        is_supplier_exist = (
+                            db.session.query(Supplier)
+                            .filter(
+                                Supplier.supplier_name
+                                == material_data.get("supplierName")
+                            )
+                            .first()
+                        )
+                        if is_supplier_exist:
+                            supplier_id = is_supplier_exist.supplier_id
+                        else:
+                            supplier = Supplier(
+                                supplier_name=material_data.get("supplierName")
+                            )
+                            db.session.add(supplier)
+                            db.session.flush()
+                            supplier_id = supplier.supplier_id
+                        material_type_id = (
+                            db.session.query(MaterialType)
+                            .filter(MaterialType.material_type_name == "烫底")
+                            .first()
+                            .material_type_id
+                        )
+                        material = Material(
+                            material_name=material_data.get("materialName"),
+                            material_supplier=supplier_id,
+                            material_unit=material_data.get("unit"),
+                            material_creation_date=datetime.datetime.now(),
+                            material_type_id=material_type_id,
+                            material_category=0,
+                        )
+                        db.session.add(material)
+                        db.session.flush()
+                        material_id = material.material_id
+                material_model = (
+                    material_data.get("materialModel")
+                    if material_data.get("materialModel")
+                    else None
+                )
+                material_spec = (
+                    material_data.get("materialSpecification")
+                    if material_data.get("materialSpecification")
+                    else None
+                )
+                material_color = (
+                    material_data.get("color") if material_data.get("color") else None
+                )
+                remark = (
+                    material_data.get("comment")
+                    if material_data.get("comment")
+                    else None
+                )
+                department_id = (
+                    material_data.get("useDepart")
+                    if material_data.get("useDepart")
+                    else None
+                )
+                is_pre_purchase = (
+                    material_data.get("isPurchase")
+                    if material_data.get("isPurchase")
+                    else None
+                )
+                material_type = "H"
+                order_shoe_type_id = order_shoe_type_id
+                production_instruction_item = ProductionInstructionItem(
+                    production_instruction_id=production_instruction_id,
+                    material_id=material_id,
+                    material_model=material_model,
+                    material_specification=material_spec,
+                    color=material_color,
+                    remark=remark,
+                    department_id=department_id,
+                    is_pre_purchase=is_pre_purchase if is_pre_purchase else False,
+                    material_type=material_type,
+                    pre_craft_name=material_data.get("craftName", None),
+                    order_shoe_type_id=order_shoe_type_id,
+                    material_second_type=material_data.get("materialDetailType", None),
+                )
+                db.session.add(production_instruction_item)
     db.session.commit()
     return jsonify({"message": "Production instruction updated successfully"}), 200
 
@@ -1566,6 +1764,13 @@ def issue_production_order():
             .filter(OrderShoeType.order_shoe_id == order_shoe_id)
             .all()
         )
+        craft_sheet = CraftSheet(
+                craft_sheet_rid=craft_sheet_rid,
+                order_shoe_id=order_shoe_id,
+                craft_sheet_status="1",
+            )
+        db.session.add(craft_sheet)
+        db.session.flush()
         for order_shoe_type in order_shoe_types:
             order_shoe_type_id = order_shoe_type.order_shoe_type_id
             current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
@@ -1580,13 +1785,6 @@ def issue_production_order():
                 bom_status=3,
             )
             db.session.add(first_bom)
-            db.session.flush()
-            craft_sheet = CraftSheet(
-                craft_sheet_rid=craft_sheet_rid,
-                order_shoe_id=order_shoe_id,
-                craft_sheet_status="1",
-            )
-            db.session.add(craft_sheet)
             db.session.flush()
             first_bom_id = first_bom.bom_id
             craft_sheet_id = craft_sheet.craft_sheet_id
