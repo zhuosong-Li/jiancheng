@@ -310,7 +310,8 @@ export default {
             console.log(this.newItemTemplate.sizeInfo)
         },
         async getBatchTypeList() {
-            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getshoebatchinfotype`, {})
+            const response = await axios.get(`${this.$apiBaseUrl}/shoe/getshoebatchinfotypelogistics`, {})
+            console.log(response.data)
             this.batchInfoTypeList = response.data
         },
         async querySupplierNames(queryString, callback) {
