@@ -5,12 +5,15 @@ from api_utility import to_camel, to_snake
 
 from app_config import app, db
 
+#TODO ADD RESTRAINTS
+
 batch_type_bp = Blueprint("batch_type_bp", __name__)
 TABLE_ATTRNAMES = BatchInfoType.__table__.columns.keys()
 TABLE_ATTRNAMES.remove("batch_info_type_usage")
 API_USED_ATTRS = TABLE_ATTRNAMES
 def get_order_batch_type_helper(order_id):
     # get batch info type (US, EU)
+    # order_id = 1
     shoe_size_locale = (
         db.session.query(BatchInfoType)
         .join(Order, BatchInfoType.batch_info_type_id == Order.batch_info_type_id)

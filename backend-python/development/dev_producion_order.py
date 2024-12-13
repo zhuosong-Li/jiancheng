@@ -1942,7 +1942,7 @@ def issue_production_order():
                 image_save_path,
             )
         except Exception:
-            return jsonify({"error": "Failed to issue production order"}), 500
+            return jsonify({"error": "EXCEL GENERATION FAILED"}), 500
         event_arr = []
         processor: EventProcessor = current_app.config["event_processor"]
         try:
@@ -1957,7 +1957,7 @@ def issue_production_order():
                 processor.processEvent(event)
                 event_arr.append(event)
         except Exception:
-            return jsonify({"error": "Failed to issue production order"}), 500
+            return jsonify({"error": "EVENT PROCESSOR FAILED"}), 500
         db.session.add_all(event_arr)
         db.session.flush()
     db.session.commit()

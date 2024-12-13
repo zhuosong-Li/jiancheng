@@ -120,23 +120,23 @@ def generate_size_excel_file(template_path, new_file_path, order_data):
     print(f"Workbook saved as {new_file_path}")
 
 
-template_path = "D:/catSupermarket/jiancheng/backend-python/general_document/新标准采购订单尺码版.xlsx"
-new_file_path = "D:/catSupermarket/jiancheng/backend-python/general_document/size_test.xlsx"
+# template_path = "D:/catSupermarket/jiancheng/backend-python/general_document/新标准采购订单尺码版.xlsx"
+# new_file_path = "D:/catSupermarket/jiancheng/backend-python/general_document/size_test.xlsx"
 
-order_data = {
-    "订单信息": "订单编号12345",
-    "供应商": "供应商A",
-    "日期": "2024-11-19",
-    "seriesData": [
-        {"物品名称": "商品2", "7": 10, "7.5": 20, "8": 30, "8.5": 40, "9": 50, "10": 60, "11": 70, "12":100,"13":150, "合计": 280, "备注": "无"},
-        {"物品名称": "商品2", "7": 10, "7.5": 20, "8": 30, "8.5": 40, "9": 50, "10": 60, "11": 70, "12":100,"13":150, "合计": 280, "备注": "无"},
-        # {"物品名称": "商品2", "35": 15, "36": 25, "37": 35, "38": 45, "39": 55, "40": 65, "41": 75, "合计": 315, "备注": "无"},
-    ],
-    "合计": 595,
-    "备注": "测试备注",
-    "环保要求": "符合环保标准",
-    "发货地址": "测试地址",
-    "交货期限": "2024-12-01",
-}
+# order_data = {
+#     "订单信息": "订单编号12345",
+#     "供应商": "供应商A",
+#     "日期": "2024-11-19",
+#     "seriesData": [
+#         {"物品名称": "商品2", "7": 10, "7.5": 20, "8": 30, "8.5": 40, "9": 50, "10": 60, "11": 70, "12":100,"13":150, "合计": 280, "备注": "无"},
+#         {"物品名称": "商品2", "7": 10, "7.5": 20, "8": 30, "8.5": 40, "9": 50, "10": 60, "11": 70, "12":100,"13":150, "合计": 280, "备注": "无"},
+#         # {"物品名称": "商品2", "35": 15, "36": 25, "37": 35, "38": 45, "39": 55, "40": 65, "41": 75, "合计": 315, "备注": "无"},
+#     ],
+#     "合计": 595,
+#     "备注": "测试备注",
+#     "环保要求": "符合环保标准",
+#     "发货地址": "测试地址",
+#     "交货期限": "2024-12-01",
+# }
 
-generate_size_excel_file(template_path, new_file_path, order_data)
+# generate_size_excel_file(template_path, new_file_path, order_data)

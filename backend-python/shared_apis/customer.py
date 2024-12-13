@@ -40,13 +40,14 @@ def get_customer_details():
 def get_customer_batch_info():
     result = []
     batch_info_type_attrs = BatchInfoType.__table__.columns.keys()
+    batch_info_type_attrs.remove("batch_info_type_usage")
     batch_info_attrs = PackagingInfo.__table__.columns.keys()
     customer_id = request.args.get("customerid")
     entities = (db.session.query(PackagingInfo)
                     .filter(PackagingInfo.customer_id == customer_id)
                     )
     
-    info_types = (db.session.query(BatchInfoType).all())
+    info_types = (db.session.query(BatchInfoType).filter_by(batch_info_type_usage = 0).all())
     for db_info_type in info_types:
         info_type_response = {}
         for attr in batch_info_type_attrs:

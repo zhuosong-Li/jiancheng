@@ -31,6 +31,9 @@
                         <el-menu-item index="7" @click="handleMenuClick(7)">
                             <span>供货商管理</span>
                         </el-menu-item>
+                        <el-menu-item index="10" @click="handleMenuClick(10)">
+                            <span>码段管理</span>
+                        </el-menu-item>
                         <el-menu-item index="8" @click="handleMenuClick(8)">
                             <span>订单查询</span>
                         </el-menu-item>
@@ -62,6 +65,7 @@ import WarehouseManagement from '../components/WarehouseManagementView.vue'
 import SupplierManagement from '../components/SupplierManagementView.vue'
 import OrderSearch from '../components/OrderSearch.vue'
 import PersonalInfo from '@/components/PersonalInfo.vue'
+import LogisticsBatchTypeManagement from '@/components/LogisticsBatchInfoTypeManagement.vue'
 import TestPage from '../components/TestPage.vue'
 import { UserFilled } from '@element-plus/icons-vue'
 export default {
@@ -76,7 +80,8 @@ export default {
         SupplierManagement,
         TestPage,
         OrderSearch,
-        PersonalInfo
+        PersonalInfo,
+        LogisticsBatchTypeManagement
 
     },
     data() {
@@ -126,7 +131,7 @@ export default {
                     this.currentComponent = 'PersonalInfo'
                     break
                 case 10:
-                    this.currentComponent = 'TestPage' 
+                    this.currentComponent = 'LogisticsBatchTypeManagement' 
             }
         },
         async logout() {
