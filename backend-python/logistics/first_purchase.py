@@ -903,7 +903,7 @@ def submit_purchase_divide_orders():
     processor: EventProcessor = current_app.config["event_processor"]
     try:
         event_arr = []
-        for operation_id in [50, 51, 52, 53]:
+        for operation_id in [50, 51]:
             event = Event(
                 staff_id=3,
                 handle_time=datetime.datetime.now(),
