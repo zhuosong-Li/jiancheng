@@ -115,7 +115,7 @@
                             <template #default="scope">
                                 <div v-if="scope.row.status === '未上传'">
                                     <el-button
-                                        v-if="isEditor"
+                                        v-if="isEditor()"
                                         type="primary"
                                         @click="openUploadDialog(scope.row)"
                                         >创建工艺单</el-button
@@ -124,13 +124,13 @@
                                 </div>
                                 <div v-else-if="scope.row.status === '已上传'">
                                     <el-button
-                                        v-if="isEditor"
+                                        v-if="isEditor()"
                                         type="primary"
                                         @click="openEditDialog(scope.row)"
                                         >编辑工艺单</el-button
                                     >
                                     <el-button
-                                        v-if="isEditor"
+                                        v-if="isEditor()"
                                         type="success"
                                         @click="openPreviewDialog(scope.row)"
                                         >预览工艺单</el-button
@@ -171,7 +171,7 @@
             <el-row :gutter="22" style="margin-top: 10px">
                 <el-col :span="6" :offset="20">
                     <el-button
-                        v-if="userRole === '5'"
+                        v-if="isEditor()"
                         type="primary"
                         size="default"
                         @click="openIssueDialog"
@@ -241,8 +241,9 @@
                 </div>
                 <template #footer>
                     <span>
+                        <span>{{userRole}}</span>
                         <el-button @click="isFinalBOM = false">取消</el-button>
-                        <el-button type="primary" @click="issueBOMs(selectedShoe)"
+                        <el-button v-if="isEditor()" type="primary" @click="issueBOMs(selectedShoe)"
                             >下发选定工艺单（生产指令单）</el-button
                         >
                     </span>
@@ -1803,6 +1804,7 @@ import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import MaterialDataTable from '../components/MaterialDataTable.vue'
 import axios from 'axios'
+import { useRoute } from 'vue-router'
 export default {
     components: {
         AllHeader,

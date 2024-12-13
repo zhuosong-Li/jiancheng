@@ -2,29 +2,22 @@
     <el-row :gutter="20">
         <el-col :span="6" :offset="0">
             <el-button-group>
-                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">材料筛选</el-button>
+                <el-button type="primary" size="default" @click="isMaterialDialogVisible = true">搜索条件设置</el-button>
             </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            订单号筛选：
-            <el-input v-model="orderNumberSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()" />
-        </el-col>
-        <el-col :span="4" :offset="2" style="white-space: nowrap;">
-            鞋型号筛选：
-            <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getMaterialTableData()"
-                @clear="getMaterialTableData()" />
-        </el-col>
+        <MaterialSearchDialog :visible="isMaterialDialogVisible" :materialSupplierOptions="materialSupplierOptions"
+            :materialTypeOptions="materialTypeOptions" :searchForm="searchForm" @update-visible="updateDialogVisible"
+            @confirm="handleSearch" />
     </el-row>
     <el-row :gutter="20">
         <el-button v-if="isMultipleSelection" @click="openMultipleOutboundDialog">
             出库
         </el-button>
-        <el-button v-if="isMultipleSelection" @click="openFinishOutboundDialog">
+        <!-- <el-button v-if="isMultipleSelection" @click="openFinishOutboundDialog">
             完成出库
-        </el-button>
+        </el-button> -->
         <el-button @click="toggleSelectionMode">
-            {{ isMultipleSelection ? "退出" : "多选出库材料" }}
+            {{ isMultipleSelection ? "退出" : "多选材料出库至同一订单鞋型" }}
         </el-button>
     </el-row>
     <el-row :gutter="20">
@@ -46,7 +39,15 @@
             <el-table-column prop="materialName" label="材料名称"></el-table-column>
             <el-table-column prop="materialModel" label="材料型号"></el-table-column>
             <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
-            <el-table-column prop="craftName" label="复合工艺"></el-table-column>
+            <el-table-column prop="craftName" label="复合工艺" width="120">
+                <template #default="scope">
+                    <el-tooltip effect="dark" :content="scope.row.craftName" placement="bottom">
+                        <span class="truncate-text">
+                            {{ scope.row.craftName }}
+                        </span>
+                    </el-tooltip>
+                </template>
+            </el-table-column>
             <el-table-column prop="colorName" label="颜色"></el-table-column>
             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
             <el-table-column prop="estimatedInboundAmount" label="材料应入库数量" :formatter="formatDecimal"></el-table-column>
@@ -67,33 +68,8 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="materialTableData.length" />
         </el-col>
     </el-row>
-    <el-dialog title="材料出库筛选" v-model="isMaterialDialogVisible" width="30%">
-        请选择材料类型：
-        <el-select v-model="materialTypeSearch" value-key="" placeholder="" clearable filterable
-            @change="getMaterialTableData()">
-            <el-option v-for="item in materialTypeOptions" :value="item" />
-        </el-select>
-        请选择材料名称：
-        <el-input v-model="materialNameSearch" placeholder="" clearable @keypress.enter="getMaterialTableData()"
-            @clear="getMaterialTableData()" />
-        请选择材料规格：
-        <el-input v-model="materialSpecificationSearch" placeholder="" clearable
-            @keypress.enter="getMaterialTableData()" @clear="getMaterialTableData()" />
-        请选择材料供应商：
-        <el-select v-model="materialSupplierSearch" value-key="" placeholder="" clearable filterable
-            @change="getMaterialTableData()">
-            <el-option v-for="item in materialSupplierOptions" :value="item" />
-        </el-select>
 
-        <template #footer>
-            <span>
-                <el-button @click="isMaterialDialogVisible = false">退出</el-button>
-                <el-button type="primary" @click="">筛选</el-button>
-            </span>
-        </template>
-    </el-dialog>
-
-    <el-dialog title="多选材料出库" v-model="isMultiMaterialDialogOpen" width="60%">
+    <el-dialog title="多选材料出库" v-model="isMultiMaterialDialogOpen" width="70%">
         <el-form :model="outboundForm" :rules="rules" ref="outboundForm">
             <el-form-item prop="timestamp" label="出库日期" :rules="rules">
                 <el-date-picker v-model="outboundForm.timestamp" type="datetime" placeholder="选择日期时间" style="width: 50%"
@@ -102,9 +78,9 @@
             <el-form-item prop="outboundType" label="出库类型">
                 <el-radio-group v-model="outboundForm.outboundType">
                     <el-radio :value="0">生产使用</el-radio>
-                    <el-radio :value="1">废料处理</el-radio>
-                    <el-radio :value="2">外包发货</el-radio>
                     <el-radio :value="3">外发复合</el-radio>
+                    <el-radio :value="2">外包发货</el-radio>
+                    <el-radio :value="1">废料处理</el-radio>
                 </el-radio-group>
             </el-form-item>
             <el-form-item prop="section" v-if="outboundForm.outboundType == 0" label="出库工段">
@@ -116,8 +92,7 @@
                 <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"></el-input>
             </el-form-item>
             <el-form-item prop="selectedOutsource" label="现有外包" v-if="outboundForm.outboundType == 2">
-                <el-table border stripe :data="outboundForm.outsourceInfo"
-                    style="width: 100%">
+                <el-table border stripe :data="outboundForm.outsourceInfo" style="width: 100%">
                     <el-table-column width="55">
                         <template #default="scope">
                             <el-radio v-model="outboundForm.selectedOutsource" :value="scope.row.outsourceInfoId" />
@@ -131,7 +106,8 @@
 
             <el-form-item prop="selectedCompositeSupplier" v-if="outboundForm.outboundType == 3" label="供应商">
                 <el-select v-model="outboundForm.selectedCompositeSupplier" clearable filterable>
-                    <el-option v-for="item in compositeSuppliersOptions" :value="item.supplierId" :label="item.supplierName" />
+                    <el-option v-for="item in compositeSuppliersOptions" :value="item.supplierId"
+                        :label="item.supplierName" />
                 </el-select>
             </el-form-item>
 
@@ -143,11 +119,11 @@
                     <el-table-column prop="materialName" label="材料名称" />
                     <el-table-column prop="colorName" label="颜色" />
                     <el-table-column prop="currentAmount" label="库存" />
-                    <el-table-column prop="materialUnit" label="单位" />
                     <el-table-column prop="outboundAmount" label="出库数量">
                         <template #default="scope">
                             <el-input-number size="small" v-model="scope.row.outboundAmount" :min="0" :precision="5"
                                 :step="0.00001"></el-input-number>
+                            <span>{{ ` ${scope.row.materialUnit}` }}</span>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -180,7 +156,7 @@
                 <el-table :data="outboundForm.sizeMaterials" style="width: 100%" border stripe>
                     <el-table-column prop="metaData.materialName" label="材料名称" />
                     <el-table-column prop="metaData.colorName" label="颜色" />
-                    <el-table-column prop="metaData.currentAmount" label="颜色" />
+                    <el-table-column prop="metaData.currentAmount" label="库存" />
                     <el-table-column prop="metaData.materialUnit" label="单位" />
                     <el-table-column label="出库数量">
                         <template #default="scope">
@@ -207,8 +183,8 @@
                     <el-table-column prop="currentQuantity" label="库存"></el-table-column>
                     <el-table-column label="出库数量">
                         <template #default="scope">
-                            <el-input-number v-model.number="scope.row.outboundAmount" type="number" :min="0" :max="Number(scope.row.currentQuantity)"
-                                @input="calculateSum()"></el-input-number>
+                            <el-input-number v-model.number="scope.row.outboundAmount" type="number" :min="0"
+                                :max="Number(scope.row.currentQuantity)" @input="calculateSum()"></el-input-number>
                         </template>
                     </el-table-column>
                 </el-table>
@@ -218,6 +194,48 @@
             <el-button type="primary" @click="isSizeMaterialStockOpen = false">
                 确认
             </el-button>
+        </template>
+    </el-dialog>
+
+    <el-dialog title="选择订单" v-model="isSelectOrderDialogOpen" width="50%">
+        <div v-if="currentOrderSelectRow.orderId === null && !currentOrderSelectRow.orderShoeId === null">
+            <el-input v-model="shoeSearch" placeholder="搜索订单号或工厂型号" class="mb-2" clearable></el-input>
+            <el-table :data="filteredShoes()" border stripe>
+                <el-table-column width="55">
+                    <template #default="scope">
+                        <el-radio :value="scope.row.orderShoeId" v-model="currentOrderSelectRow.orderShoeId">
+                        </el-radio>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="orderRId" label="订单号"></el-table-column>
+                <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
+            </el-table>
+            <el-pagination :current-page="currentShoePage" :page-size="shoePageSize" :total="activeOrderShoes.length"
+                @current-change="handleShoePageChange" layout="prev, pager, next"></el-pagination>
+        </div>
+        <div v-else-if="currentOrderSelectRow.orderShoeId === null">
+            <el-input v-model="shoeSearch" placeholder="搜索工厂型号" class="mb-2" clearable></el-input>
+            <el-table :data="filteredShoes(currentOrderSelectRow.orderId)" border stripe>
+                <el-table-column width="55">
+                    <template #default="scope">
+                        <el-radio :value="scope.row.orderShoeId" v-model="currentOrderSelectRow.orderShoeId">
+                        </el-radio>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="orderRId" label="订单号"></el-table-column>
+                <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
+            </el-table>
+            <el-pagination :current-page="currentShoePage" :page-size="shoePageSize" :total="activeOrderShoes.length"
+                @current-change="handleShoePageChange" layout="prev, pager, next"></el-pagination>
+        </div>
+        <div v-else>
+            <el-descriptions :column="2" border>
+                <el-descriptions-item label="订单号"> {{ currentOrderSelectRow.orderRId }}</el-descriptions-item>
+                <el-descriptions-item label="工厂型号"> {{ currentOrderSelectRow.shoeRId }}</el-descriptions-item>
+            </el-descriptions>
+        </div>
+        <template #footer>
+            <el-button @click="isSelectOrderDialogOpen = false">确定</el-button>
         </template>
     </el-dialog>
 
@@ -242,14 +260,23 @@
 import axios from 'axios';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { getShoeSizesName } from '@/Pages/utils/getShoeSizesName';
+import MaterialSearchDialog from './MaterialSearchDialog.vue';
 export default {
+    components: {
+        MaterialSearchDialog
+    },
     data() {
         return {
             isMultiOutboundDialogVisible: false,
-            materialTypeSearch: '',
-            materialNameSearch: '',
-            materialSpecificationSearch: '',
-            materialSupplierSearch: '',
+            searchForm: {
+                orderNumberSearch: '',
+                shoeNumberSearch: '',
+                materialTypeSearch: '',
+                materialNameSearch: '',
+                materialSpecificationSearch: '',
+                materialSupplierSearch: '',
+                purchaseDivideOrderRIdSearch: '',
+            },
             materialTypeOptions: [],
             materialSupplierOptions: [],
             outboundForm: {},
@@ -267,12 +294,10 @@ export default {
                 sizeMaterials: [],
                 compositeMaterials: [],
                 compositeSizeMaterials: [],
-                selectedCompositeSupplier: null
+                selectedCompositeSupplier: null,
             },
             currentPage: 1,
             pageSize: 10,
-            orderNumberSearch: '',
-            shoeNumberSearch: '',
             materialTableData: [],
             isMaterialDialogVisible: false,
             materialDialogData: {},
@@ -378,7 +403,13 @@ export default {
                 ]
             },
             selectedCompositeRows: [],
-            compositeSuppliersOptions: []
+            compositeSuppliersOptions: [],
+            activeOrderShoes: [],
+            currentShoePage: 1,
+            shoePageSize: 5,
+            shoeSearch: "",
+            currentOrderSelectRow: {},
+            isSelectOrderDialogOpen: false
         }
     },
     computed: {
@@ -391,10 +422,46 @@ export default {
     mounted() {
         this.getAllMaterialTypes()
         this.getAllSuppliers()
-        this.getAllCompositeSuppliers()
+        this.getAllCompositeSuppliers(),
+            this.getActiveOrderShoes()
         this.getMaterialTableData()
     },
     methods: {
+        filteredShoes(orderId = null) {
+            let filtered = []
+            if (orderId === null) {
+                filtered = this.activeOrderShoes.filter(shoe =>
+                    shoe.orderRId.includes(this.shoeSearch) ||
+                    shoe.shoeRId.includes(this.shoeSearch)
+                )
+            }
+            else {
+                filtered = this.activeOrderShoes.filter(shoe =>
+                    shoe.shoeRId.includes(this.shoeSearch)
+                );
+            }
+            const start = (this.currentShoePage - 1) * this.shoePageSize;
+            return filtered.slice(start, start + this.shoePageSize);
+        },
+        openSelectOrderDialog(row) {
+            this.currentOrderSelectRow = row
+            this.isSelectOrderDialogOpen = true
+        },
+        handleShoeSelection(selectedShoe) {
+            this.outboundForm.orderShoeId = selectedShoe.orderShoeId;
+        },
+        async getActiveOrderShoes() {
+            let response = await axios.get(`${this.$apiBaseUrl}/order/getactiveordershoes`)
+            this.activeOrderShoes = response.data
+        },
+        updateDialogVisible(newVal) {
+            this.isMaterialDialogVisible = newVal
+
+        },
+        handleSearch(values) {
+            this.searchForm = { ...values }
+            this.getMaterialTableData()
+        },
         handleCompositeAmountChange(newVal, oldVal, rowData) {
             console.log(newVal, oldVal, rowData)
             rowData.currentAmount = Number((Number(rowData.currentAmount) - newVal + oldVal).toFixed(5))
@@ -436,7 +503,7 @@ export default {
                     let tempObj = { "metaData": row, "quantityList": response.data }
                     tempObj.quantityList.forEach(element => element["outboundAmount"] = 0)
                     arr.push(tempObj)
-                    
+
                 } else {
                     row["outboundAmount"] = 0
                     this.outboundForm.materials.push(row)
@@ -476,12 +543,13 @@ export default {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
                 "opType": 2,
-                "materialType": this.materialTypeSearch,
-                "materialName": this.materialNameSearch,
-                "materialSpec": this.materialSpecificationSearch,
-                "supplier": this.materialSupplierSearch,
-                "orderRId": this.orderNumberSearch,
-                "shoeRId": this.shoeNumberSearch,
+                "materialType": this.searchForm.materialTypeSearch,
+                "materialName": this.searchForm.materialNameSearch,
+                "materialSpec": this.searchForm.materialSpecificationSearch,
+                "supplier": this.searchForm.materialSupplierSearch,
+                "orderRId": this.searchForm.orderNumberSearch,
+                "shoeRId": this.searchForm.shoeNumberSearch,
+                "purchaseDivideOrderRId": this.searchForm.purchaseDivideOrderRIdSearch,
                 "sortColumn": sortColumn,
                 "sortOrder": sortOrder
             }

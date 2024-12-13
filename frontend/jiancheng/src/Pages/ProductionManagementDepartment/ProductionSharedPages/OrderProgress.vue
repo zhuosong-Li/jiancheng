@@ -35,6 +35,16 @@
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
+        <!-- <el-button @click="toggleFilters">{{ showFilters ? 'Hide' : 'Show' }} Filters</el-button>
+        <el-collapse v-model="showFilters" class="filter-panel">
+            <div class="filters-container">
+                <el-row :gutter="20">
+                    <el-col :span="6" v-for="(filter, index) in filters" :key="index">
+                        <el-input v-model="filter.value" :placeholder="filter.label" />
+                    </el-col>
+                </el-row>
+            </div>
+        </el-collapse> -->
         <el-col :span="4" :offset="21" style="white-space: nowrap;">
             <el-button type="primary" v-if="role == 6 && isMultipleSelection" @click="openMultipleShoesDialog">
                 排产
@@ -62,12 +72,13 @@
                         </el-table>
                     </template>
                 </el-table-column>
-                <el-table-column prop="orderRId" label="订单号" sortable></el-table-column>
+                <el-table-column prop="customerName" label="客户号"></el-table-column>
+                <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="orderStartDate" label="开始日期" width="110" sortable></el-table-column>
                 <el-table-column prop="orderEndDate" label="出货日期" width="110" sortable></el-table-column>
-                <el-table-column prop="shoeRId" label="工厂型号" sortable></el-table-column>
-                <el-table-column prop="customerProductName" label="客户型号" sortable></el-table-column>
-                <el-table-column prop="status" label="状态" sortable></el-table-column>
+                <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
+                <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
+                <el-table-column prop="status" label="状态"></el-table-column>
                 <el-table-column prop="orderShoeTotal" label="鞋型数量"></el-table-column>
                 <el-table-column label="当前工段" header-align="center">
                     <el-table-column prop="currentTeam" label="车间"></el-table-column>
@@ -150,8 +161,8 @@
         </el-row>
         <el-row :gutter="20">
             <el-col :span="12" :offset="15">
-                <el-pagination @size-change="handleSizeChange" @current-change="handlePageChange"
-                    :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
+                <el-pagination @size-change="handleLogisticsSizeChange" @current-change="handleLogisticsPageChange"
+                    :current-page="logisticsCurrentPage" :page-sizes="[10, 20, 30, 40]" :page-size="logisticsPageSize"
                     layout="total, sizes, prev, pager, next, jumper" :total="logisticsRows" />
             </el-col>
         </el-row>
@@ -303,7 +314,9 @@
                             <el-table-column v-for="column in filteredColumns" :key="column.prop" :prop="column.prop"
                                 :label="column.label">
                                 <template v-slot="scope">
-                                    <el-input v-model="scope.row[column.prop]" :readonly="!(role == 6)" />
+                                    <el-input-number v-model="scope.row[column.prop]" v-if="role == 6" :min="0"
+                                        :step="1" />
+                                    <span v-if="role != 6"></span>
                                 </template>
                             </el-table-column>
                         </el-table>
@@ -339,11 +352,11 @@
                 <el-button @click="isScheduleDialogOpen = false">取消</el-button>
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
                 <el-button v-if="role == 6" type="primary" @click="modifyProductionSchedule">保存排期</el-button>
-                <!-- <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已保存排期') && role == 6"
+                <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已保存排期') && role == 6"
                     type="success" @click="startProduction">
                     下发排期
-                </el-button> -->
-                <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已排期') && role == 6"
+                </el-button>
+                <!-- <el-button v-if="(currentRow.status === '未排期' || currentRow.status === '已保存排期') && role == 6"
                     type="success" @click="startProduction" :disabled="currentRow.processSheetUploadStatus != 4">
                     <el-tooltip v-if="currentRow.processSheetUploadStatus != 4" effect="dark" content="工艺单未下发"
                         placement="bottom">
@@ -352,7 +365,7 @@
                     <span v-if="currentRow.processSheetUploadStatus == 4">
                         下发排期
                     </span>
-                </el-button>
+                </el-button> -->
             </span>
         </template>
     </el-dialog>
@@ -387,6 +400,12 @@ export default {
     },
     data() {
         return {
+            showFilters: false,
+            filters: [
+                { label: 'Name', value: '', key: 'name' },
+                { label: 'Age', value: '', key: 'age' },
+                // Add more filters here
+            ],
             isPriceReportDialogOpen: false,
             currentPriceReportTab: -1,
             reportPanes: [
@@ -550,6 +569,9 @@ export default {
         }
     },
     methods: {
+        toggleFilters() {
+      this.showFilters = !this.showFilters;
+    },
         async viewPriceReport(row) {
             try {
                 let teams = ["裁断", "针车预备", "针车", "成型"]
@@ -759,7 +781,7 @@ export default {
                     await this.modifyProductionSchedule()
                     const data = { "orderId": this.currentRow.orderId, "orderShoeId": this.currentRow.orderShoeId }
                     await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/startproduction`, data)
-                    ElMessage.success("操作成功。请前往生产管理页面查看该鞋型流程")
+                    ElMessage.success("操作成功")
                 }
                 catch (error) {
                     console.log(error)
@@ -858,27 +880,28 @@ export default {
             window.open(url, '_blank')
         },
         async openLogisticsDialog(rowData) {
+            this.currentRow = rowData
             this.logisticsCurrentPage = 1
-            await this.viewLogisticDetail(rowData)
+            await this.viewLogisticDetail()
             this.isMaterialLogisticVis = true
         },
-        async viewLogisticDetail(row) {
+        async viewLogisticDetail() {
             const params = {
                 "page": this.logisticsCurrentPage,
                 "pageSize": this.logisticsPageSize,
-                "orderRId": row.orderRId,
-                "shoeRId": row.shoeRId
+                "orderRId": this.currentRow.orderRId,
+                "shoeRId": this.currentRow.shoeRId
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.logisticsMaterialData = response.data.result
             this.logisticsRows = response.data.total
         },
-        async handleLogisticsPageChange(val) {
-            this.logisticsCurrentPage = val
+        async handleLogisticsSizeChange(val) {
+            this.logisticsPageSize = val
             await this.viewLogisticDetail()
         },
         async handleLogisticsPageChange(val) {
-            this.logisticsPageSize = val
+            this.logisticsCurrentPage = val
             await this.viewLogisticDetail()
         },
     }
@@ -901,5 +924,13 @@ export default {
 
 .is-readonly .el-input__suffix {
     display: none;
+}
+
+.filter-panel {
+    margin-bottom: 20px;
+}
+
+.filters-container {
+    padding: 10px;
 }
 </style>
