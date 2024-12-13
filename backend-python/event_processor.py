@@ -53,7 +53,7 @@ ORDERSHOESTATUSNAMELIST = [
     "裁断，批皮工价填报",
     "财务部审核",
     "生产副总审核",
-    "裁断开始",
+    "生产中",
     "裁断结束",
     "半成品中转入库",
     "半成品中转针车材料出库",
@@ -94,31 +94,31 @@ ORDERSHOESTATUSGRAPH = {
     15: {"outgoing": [16], "incoming": [14]},
     16: {"outgoing": [42], "incoming": [8, 15]},
     17: {"outgoing": [18], "incoming": [1]},
-    18: {"outgoing": [20, 23], "incoming": [17]},
+    18: {"outgoing": [20, 23, 27, 37], "incoming": [17]},
     19: {"outgoing": [], "incoming": []},
     20: {"outgoing": [22], "incoming": [18]},
     21: {"outgoing": [], "incoming": []},
     22: {"outgoing": [42], "incoming": [20]},
-    23: {"outgoing": [24], "incoming": [18]},
-    24: {"outgoing": [27, 30, 32], "incoming": [23]},
+    23: {"outgoing": [42], "incoming": [18]},
+    24: {"outgoing": [], "incoming": []},
     25: {"outgoing": [], "incoming": []},
     26: {"outgoing": [], "incoming": []},
-    27: {"outgoing": [29], "incoming": [24]},
+    27: {"outgoing": [29], "incoming": [18]},
     28: {"outgoing": [], "incoming": []},
     29: {"outgoing": [42], "incoming": [27]},
-    30: {"outgoing": [31], "incoming": [24]},
-    31: {"outgoing": [33], "incoming": [30]},
-    32: {"outgoing": [33], "incoming": [24]},
-    33: {"outgoing": [37, 40], "incoming": [31, 32]},
+    30: {"outgoing": [], "incoming": []},
+    31: {"outgoing": [], "incoming": []},
+    32: {"outgoing": [], "incoming": []},
+    33: {"outgoing": [], "incoming": []},
     34: {"outgoing": [], "incoming": []},
     35: {"outgoing": [], "incoming": []},
     36: {"outgoing": [], "incoming": []},
-    37: {"outgoing": [39], "incoming": [33]},
+    37: {"outgoing": [39], "incoming": [18]},
     38: {"outgoing": [], "incoming": []},
     39: {"outgoing": [42], "incoming": [37]},
-    40: {"outgoing": [41], "incoming": [33]},
-    41: {"outgoing": [42], "incoming": [40]},
-    42: {"outgoing": [], "incoming": [41, 22, 29, 39, 16]},
+    40: {"outgoing": [], "incoming": []},
+    41: {"outgoing": [], "incoming": []},
+    42: {"outgoing": [], "incoming": [22, 23, 29, 39]},
 }
 
 
@@ -353,26 +353,26 @@ class EventProcessor:
             )
         return result
 
-    def processOutsourceEvent(self, order_shoe_id, outsource_type):
-        """
-        outsource_type:
-            0: 针车，只有在裁断结束时能调用
-            1: 裁断+针车，只有在生产排期时能调用
-        """
-        if outsource_type == 0:
-            status_obj = (
-                db.session.query(OrderShoeStatus)
-                .filter_by(order_shoe_id=order_shoe_id, current_status=24)
-                .first()
-            )
-        elif outsource_type == 1:
-            status_obj = (
-                db.session.query(OrderShoeStatus)
-                .filter_by(order_shoe_id=order_shoe_id, current_status=17)
-                .first()
-            )
-        status_obj.current_status = 33
-        status_obj.current_status_value = 0
+    # def processOutsourceEvent(self, order_shoe_id, outsource_type):
+    #     """
+    #     outsource_type:
+    #         0: 针车，只有在裁断结束时能调用
+    #         1: 裁断+针车，只有在生产排期时能调用
+    #     """
+    #     if outsource_type == 0:
+    #         status_obj = (
+    #             db.session.query(OrderShoeStatus)
+    #             .filter_by(order_shoe_id=order_shoe_id, current_status=24)
+    #             .first()
+    #         )
+    #     elif outsource_type == 1:
+    #         status_obj = (
+    #             db.session.query(OrderShoeStatus)
+    #             .filter_by(order_shoe_id=order_shoe_id, current_status=17)
+    #             .first()
+    #         )
+    #     status_obj.current_status = 33
+    #     status_obj.current_status_value = 0
 
     def processEvent(self, event):
         if self.validateEvent(event):

@@ -122,18 +122,16 @@ def start_production():
         .group_by(OrderShoeType.order_shoe_type_id)
         .all()
     )
-    # 0：裁片，1：鞋包
     arr = []
     for row in order_shoe_type_ids:
         color_total_amount, id = row
-        for obj in [0, 1]:
-            semi_entity = SemifinishedShoeStorage(
-                order_shoe_type_id=id,
-                semifinished_status=0,
-                semifinished_object=obj,
-                semifinished_estimated_amount=color_total_amount
-            )
-            arr.append(semi_entity)
+        semi_entity = SemifinishedShoeStorage(
+            order_shoe_type_id=id,
+            semifinished_status=0,
+            semifinished_object=1,
+            semifinished_estimated_amount=color_total_amount
+        )
+        arr.append(semi_entity)
         finished_entity = FinishedShoeStorage(
             order_shoe_type_id=id,
             finished_status=0,
@@ -161,44 +159,36 @@ def start_production():
         )
         .all()
     )
-    print(production_amount)
     # 0：裁断，1：针车，2：成型
     # 只有针车，裁断+针车 的外包，一定有成型工价obj
-    skip_cutting, skip_sewing = True, True
     report_arr = []
     for row in production_amount:
         amount, team = row
         if team == 0 and amount != 0:
             report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="裁断", status=0)
             report_arr.append(report1)
-            skip_cutting = False
         if team == 1 and amount != 0:
             report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="针车预备", status=0)
             report2 = UnitPriceReport(order_shoe_id=order_shoe_id, team="针车", status=0)
             report_arr.append(report1)
             report_arr.append(report2)
-            skip_sewing = False
         if team == 2:
             report1 = UnitPriceReport(order_shoe_id=order_shoe_id, team="成型", status=0)
             report_arr.append(report1)
 
     db.session.add_all(report_arr)
-    # 裁断+针车外包，跳到针车结束。针车外包情况到半成品仓跳
     # pass to event processor
     processor: EventProcessor = current_app.config["event_processor"]
     try:
-        if skip_cutting and skip_sewing:
-            processor.processOutsourceEvent(order_shoe_id, 1)
-        else:
-            for operation in [72, 73, 74, 75]:
-                event = Event(
-                    staff_id=1,
-                    handle_time=datetime.now(),
-                    operation_id=operation,
-                    event_order_id=data["orderId"],
-                    event_order_shoe_id=data["orderShoeId"],
-                )
-                processor.processEvent(event)
+        for operation in [72, 73, 74, 75]:
+            event = Event(
+                staff_id=1,
+                handle_time=datetime.now(),
+                operation_id=operation,
+                event_order_id=data["orderId"],
+                event_order_shoe_id=data["orderShoeId"],
+            )
+            processor.processEvent(event)
     except Exception as e:
         print(e)
         return jsonify({"message": "failed"}), 400
