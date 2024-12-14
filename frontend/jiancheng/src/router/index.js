@@ -17,6 +17,7 @@ import HumanResourcesDepartment from '@/Pages/HumanResourcesDepartment/views/Hum
 import CompanyManager from '@/Pages/CompanyManger/views/CompanyManager.vue'
 import SemifinishedWarehouse from '@/Pages/TotalWarehouse/SemifinishedWarehouse/views/SemifinishedWarehouse.vue'
 import FinishedWarehouse from '@/Pages/TotalWarehouse/FinishedWarehouse/views/FinishedWarehouse.vue'
+import ProductionClerk from '@/Pages/ProductionManagementDepartment/ProductionClerk/views/ProductionClerk.vue'
 
 //引入子路由
 import LogisticsRoutes from '../Pages/LogisticsControlDepartment/LogisticsControlManager/routers/logistics'
@@ -32,6 +33,8 @@ import DevelopmentManagerRoutes from '@/Pages/DevelopmentManager/routers/Develop
 import TechnicalManagerRoutes from '../Pages/TechnologyDepartment/TechnicalManager/routers/technicalManager'
 import BusinessManagerRoutes from '../Pages/BusinessManager/routers/business'
 import OrderConfirmDetailRoutes from '../Pages/CompanyManger/routers/OrderConfirmDetail'
+import ProductionClerkRoutes from '../Pages/ProductionManagementDepartment/ProductionClerk/routers/productionClerk'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -206,6 +209,15 @@ const router = createRouter({
         role: 20
       }
     },
+    {
+      path :'/productionclerk',
+      name : 'productionclerk',
+      component: ProductionClerk,
+      meta:{
+        requiresAuth: true,
+        role: 22
+      }
+    },
     ...LogisticsRoutes,
     ...ProductionRoutes,
     ...TechenicalDepartmentClerkRoutes,
@@ -218,7 +230,8 @@ const router = createRouter({
     ...DevelopmentManagerRoutes,
     ...TechnicalManagerRoutes,
     ...BusinessManagerRoutes,
-    ...OrderConfirmDetailRoutes
+    ...OrderConfirmDetailRoutes,
+    ...ProductionClerkRoutes
   ]
 })
 import axios from 'axios'

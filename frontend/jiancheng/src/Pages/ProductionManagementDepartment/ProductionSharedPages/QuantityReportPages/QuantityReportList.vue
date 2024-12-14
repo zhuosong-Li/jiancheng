@@ -24,8 +24,8 @@
                         <el-descriptions-item label="客户型号">{{ orderInfo.customerProductName }}</el-descriptions-item>
                         <el-descriptions-item label="订单开始日期">{{ orderInfo.orderStartDate }}</el-descriptions-item>
                         <el-descriptions-item label="订单结束日期">{{ orderInfo.orderEndDate }}</el-descriptions-item>
-                        <el-descriptions-item label="工段开始日期">{{ orderInfo.cuttingStartDate }}</el-descriptions-item>
-                        <el-descriptions-item label="工段结束日期">{{ orderInfo.cuttingEndDate }}</el-descriptions-item>
+                        <!-- <el-descriptions-item label="工段开始日期">{{ orderInfo.cuttingStartDate }}</el-descriptions-item>
+                        <el-descriptions-item label="工段结束日期">{{ orderInfo.cuttingEndDate }}</el-descriptions-item> -->
                     </el-descriptions>
                 </el-col>
             </el-row>

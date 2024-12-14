@@ -37,6 +37,7 @@ from production.outsource import outsource_bp
 from production.production_status_nodes import production_status_nodes_bp
 from head_manager.head_manager_api import head_manager_bp
 from technical.process_sheet_review import process_sheet_review
+from production.production_lines import production_lines_bp
 
 def register_blueprints():
     app.register_blueprint(price_report_bp)
@@ -77,3 +78,4 @@ def register_blueprints():
     app.register_blueprint(head_manager_bp)
     app.register_blueprint(process_sheet_review)
     #app.register_blueprint(order_export_bp)
+    app.register_blueprint(production_lines_bp)
