@@ -74,6 +74,9 @@ export default {
                     this.currentComponent = 'SemiInboundOutbound'
                     break
                 case 2:
+                    this.currentComponent = 'OrderProgress'
+                    break
+                case 3:
                     this.currentComponent = 'SemifinishedInOutHistory'
                     break
             }

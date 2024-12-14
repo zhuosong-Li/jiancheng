@@ -11,18 +11,12 @@
             <el-input v-model="shoeNumberSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getTableData()"
                 @clear="getTableData" />
         </el-col>
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-select v-model="semifinishedSearch" placeholder="半成品类型" @change="getTableData" clearable>
-                <el-option v-for="item in ['裁片', '鞋包']" :key="item" :label="item" :value="item">
-                </el-option>
-            </el-select>
-        </el-col>
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
+        <!-- <el-col :span="4" :offset="0" style="white-space: nowrap;">
             <el-select v-model="statusSearch" placeholder="状态" @change="getTableData" clearable>
                 <el-option v-for="item in ['未完成入库', '已完成入库', '已完成出库']" :key="item" :label="item" :value="item">
                 </el-option>
             </el-select>
-        </el-col>
+        </el-col> -->
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
@@ -31,10 +25,9 @@
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
                 <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
                 <el-table-column prop="colorName" label="颜色"></el-table-column>
-                <el-table-column prop="inboundAmount" label="计划入库数量"></el-table-column>
+                <el-table-column prop="estimatedInboundAmount" label="计划入库数量"></el-table-column>
+                <el-table-column prop="actualInboundAmount" label="实际入库数量"></el-table-column>
                 <el-table-column prop="currentAmount" label="半成品库存"></el-table-column>
-                <el-table-column prop="object" label="半成品类型"></el-table-column>
-                <el-table-column prop="statusName" label="状态"></el-table-column>
                 <el-table-column label="操作" width="300">
                     <template #default="scope">
                         <el-button-group>
@@ -42,10 +35,10 @@
                                 @click="inboundSemifinished(scope.row)">入库</el-button>
                             <el-button type="success" size="small"
                                 @click="outboundSemifinished(scope.row)">出库</el-button>
-                            <el-button v-if="scope.row.statusName === '未完成入库'" type="warning" size="small"
+                            <!-- <el-button v-if="scope.row.statusName === '未完成入库'" type="warning" size="small"
                                 @click="finishInbound(scope.row)">完成入库</el-button>
                             <el-button v-if="scope.row.statusName === '已完成入库'" type="warning" size="small"
-                                @click="finishOutbound(scope.row)">完成出库</el-button>
+                                @click="finishOutbound(scope.row)">完成出库</el-button> -->
                         </el-button-group>
                     </template>
                 </el-table-column>
@@ -68,8 +61,8 @@
                         <el-date-picker v-model="inboundForm.inboundDate" type="datetime" placeholder="选择日期时间"
                             value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
                     </el-form-item>
-                    <el-form-item prop="actualInboundAmount" label="入库数量">
-                        <el-input-number v-model="inboundForm.actualInboundAmount" :min="0"></el-input-number>
+                    <el-form-item prop="inboundAmount" label="入库数量">
+                        <el-input-number v-model="inboundForm.inboundAmount" :min="0"></el-input-number>
                     </el-form-item>
                     <el-form-item prop="inboundType" label="入库类型">
                         <el-radio-group v-model="inboundForm.inboundType">
@@ -95,6 +88,10 @@
                             </template>
                         </el-table-column>
                     </el-table>
+                    <el-form-item prop="remark" label="备注">
+                        <el-input :maxlength="40" show-word-limit v-model="inboundForm.remark">
+                        </el-input>
+                    </el-form-item>
                 </el-form>
             </el-col>
         </el-row>
@@ -106,60 +103,50 @@
         </template>
     </el-dialog>
     <el-dialog title="半成品出库" v-model="semiOutboundDialogVisible" width="35%">
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-form :model="outboundForm" ref="outboundForm" :rules="outboundRules" label-position="right"
-                    label-width="100px">
-                    <el-form-item prop="outboundDate" label="出库时间">
-                        <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
-                            style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
-                    </el-form-item>
-                    <el-form-item prop="outboundType" label="出库类型">
-                        <el-radio-group v-model="outboundForm.outboundType">
-                            <el-radio :value="0">自产出库</el-radio>
-                            <el-radio :value="1">外包出库</el-radio>
-                        </el-radio-group>
-                    </el-form-item>
-                    <!-- <el-form-item v-if="outboundForm.outboundType == 0" label="出库至">
-                        <div v-if="currentRow.object === '裁片'">
-                            针车
-                        </div>
-                        <div v-else-if="currentRow.object === '鞋包'">
-                            成型
-                        </div>
-                    </el-form-item> -->
-                    <el-form-item prop="outboundAmount" label="出库数量">
-                        <el-input-number v-model="outboundForm.outboundAmount" :min="0"></el-input-number>
-                    </el-form-item>
-                    <el-form-item v-if="outboundForm.outboundType == 0" prop="receiver" label="领料人">
-                        <el-input v-model="outboundForm.receiver" placeholder="请输入领料人"
-                            :disabled="outboundForm.outboundType == 1"></el-input>
-                    </el-form-item>
-                    <el-table v-if="outboundForm.outboundType == 1" :data="outboundForm.outsourceInfo"
-                        style="width: 100%">
-                        <el-table-column width="55">
-                            <template #default="scope">
-                                <el-radio v-model="outboundForm.selectedOutsource" :value="scope.row.outsourceInfoId" />
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="outsourceFactory.value" label="工厂名称" />
-                        <el-table-column prop="outsourceAmount" label="外包数量" />
-                        <el-table-column prop="outsourceType" label="外包类型" />
-                        <el-table-column label="操作">
-                            <template #default="scope">
-                                <el-button :disabled="outboundForm.selectedOutsource !== scope.row.outsourceInfoId"
-                                    type="warning" size="small" @click="finishOutsourceOutbound(scope.row)">
-                                    完成外包出库
-                                </el-button>
-                            </template>
-                        </el-table-column>
-                    </el-table>
-                    <el-form-item v-if="outboundForm.outboundType == 1" label="发货地址">
-                        <el-input v-model="outboundForm.address" placeholder="请输入发货地址"></el-input>
-                    </el-form-item>
-                </el-form>
-            </el-col>
-        </el-row>
+        <el-form :model="outboundForm" ref="outboundForm" :rules="outboundRules" label-position="right"
+            label-width="100px">
+            <el-form-item prop="outboundDate" label="出库时间">
+                <el-date-picker v-model="outboundForm.outboundDate" type="datetime" placeholder="选择日期时间"
+                    style="width: 100%" value-format="YYYY-MM-DD HH:mm:ss" />
+            </el-form-item>
+            <el-form-item prop="outboundType" label="出库类型">
+                <el-radio-group v-model="outboundForm.outboundType">
+                    <el-radio :value="0">自产出库</el-radio>
+                    <el-radio :value="1">外包出库</el-radio>
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item prop="outboundAmount" label="出库数量">
+                <el-input-number v-model="outboundForm.outboundAmount" :min="0"></el-input-number>
+            </el-form-item>
+            <el-form-item v-if="outboundForm.outboundType == 0" prop="receiver" label="领料组号">
+                <el-select v-model="outboundForm.receiver">
+                    <el-option v-for="item in ['成型一组', '成型二组', '成型三组']" :label="item" :value="item">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-table v-if="outboundForm.outboundType == 1" :data="outboundForm.outsourceInfo" style="width: 100%">
+                <el-table-column width="55">
+                    <template #default="scope">
+                        <el-radio v-model="outboundForm.selectedOutsource" :value="scope.row.outsourceInfoId" />
+                    </template>
+                </el-table-column>
+                <el-table-column prop="outsourceFactory.value" label="工厂名称" />
+                <el-table-column prop="outsourceAmount" label="外包数量" />
+                <el-table-column prop="outsourceType" label="外包类型" />
+                <el-table-column label="操作">
+                    <template #default="scope">
+                        <el-button :disabled="outboundForm.selectedOutsource !== scope.row.outsourceInfoId"
+                            type="warning" size="small" @click="finishOutsourceOutbound(scope.row)">
+                            完成外包出库
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+            <el-form-item prop="remark" label="备注">
+                <el-input type="textarea" :maxlength="40" show-word-limit v-model="outboundForm.remark">
+                </el-input>
+            </el-form-item>
+        </el-form>
         <template #footer>
             <span>
                 <el-button @click="semiOutboundDialogVisible = false">返回</el-button>
@@ -178,20 +165,20 @@ export default {
                 selectedOutsource: null,
                 inboundDate: null,
                 inboundType: 0,
-                actualInboundAmount: 0,
-                outsourceInfo: []
+                inboundAmount: 0,
+                outsourceInfo: [],
+                remark: null,
             },
             currentPage: 1,
             pageSize: 10,
             outboundForm: {
                 outboundDate: null,
                 receiver: null,
-                deadlineDate: '',
-                address: null,
                 outboundAmount: 0,
                 outboundType: 0,
                 outsourceInfo: [],
-                selectedOutsource: null
+                selectedOutsource: null,
+                remark: null
             },
             semiInboundDialogVisible: false,
             semiOutboundDialogVisible: false,
@@ -200,13 +187,11 @@ export default {
             orderNumberSearch: '',
             shoeNumberSearch: '',
             currentRow: {},
-            semifinishedSearch: '',
-            statusSearch: '',
             rules: {
                 inboundDate: [
                     { required: true, message: '此项为必填项', trigger: 'change' },
                 ],
-                actualInboundAmount: [
+                inboundAmount: [
                     {
                         required: true,
                         validator: (rule, value, callback) => {
@@ -245,6 +230,7 @@ export default {
                 ],
                 receiver: [
                     {
+                        required: true,
                         validator: (rule, value, callback) => {
                             if (this.outboundForm.outboundType == 0 && !value) {
                                 callback(new Error('领料人名字为必填项'));
@@ -268,8 +254,7 @@ export default {
                 "pageSize": this.pageSize,
                 "orderRId": this.orderNumberSearch,
                 "shoeRId": this.shoeNumberSearch,
-                "opType": 1,
-                "semifinishedType": this.semifinishedSearch,
+                "showAll": 1,
                 "status": this.statusSearch
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getsemifinishedinoutoverview`, { params })
@@ -286,7 +271,8 @@ export default {
                         "outsourceInfoId": this.inboundForm.selectedOutsource,
                         "inboundDate": this.inboundForm.inboundDate,
                         "inboundType": this.inboundForm.inboundType,
-                        "amount": this.inboundForm.actualInboundAmount
+                        "amount": this.inboundForm.inboundAmount,
+                        "remark": this.inboundForm.remark
                     }
                     try {
                         await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/inboundsemifinished`, data)
@@ -327,7 +313,7 @@ export default {
                         "picker": this.outboundForm.receiver,
                         "outboundType": this.outboundForm.outboundType,
                         "outsourceInfoId": this.outboundForm.selectedOutsource,
-                        "outboundAddress": this.outboundForm.address
+                        "remark": this.outboundForm.remark
                     }
                     try {
                         await axios.patch(`${this.$apiBaseUrl}/warehouse/warehousemanager/outboundsemifinished`, data)

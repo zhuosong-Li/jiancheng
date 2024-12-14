@@ -15,10 +15,10 @@
         <el-table-column prop="orderRId" label="订单号"></el-table-column>
         <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
         <el-table-column prop="customerProductName" label="客人号"></el-table-column>
-        <el-table-column prop="inboundAmount" label="鞋型入库数量" :formatter="formatDecimal"></el-table-column>
-        <el-table-column prop="currentAmount" label="鞋型库存" :formatter="formatDecimal"></el-table-column>
-        <el-table-column prop="object" label="鞋型部件"></el-table-column>
-        <el-table-column prop="statusName" label="状态"></el-table-column>
+        <el-table-column prop="colorName" label="颜色"></el-table-column>
+        <el-table-column prop="estimatedInboundAmount" label="计划入库数量"></el-table-column>
+        <el-table-column prop="actualInboundAmount" label="实际入库数量"></el-table-column>
+        <el-table-column prop="currentAmount" label="鞋型库存"></el-table-column>
         <el-table-column label="操作" width="200">
             <template #default="scope">
                 <el-button type="primary" size="small" @click="viewRecords(scope.row)">入/出库记录</el-button>
@@ -32,17 +32,20 @@
                 layout="total, sizes, prev, pager, next, jumper" :total="totalRows" />
         </el-col>
     </el-row>
-    <el-dialog title="半成品入库/出库记录" v-model="isRecordDialogVisible" width="60%">
+    <el-dialog title="半成品入库/出库记录" v-model="isRecordDialogVisible" width="80%">
         <el-descriptions title="入库记录"></el-descriptions>
-        <el-table :data="recordData.inboundRecords" border stripe>
+        <el-table :data="recordData.inboundRecords" border stripe style="margin-bottom: 1ch;">
             <el-table-column label="自产/外包">
                 <template #default="scope">
                     {{ mapping[scope.row.productionType] }}
                 </template>
             </el-table-column>
-            <el-table-column prop="date" label="操作时间"></el-table-column>
-            <el-table-column prop="amount" label="操作数量"></el-table-column>
+            <el-table-column prop="shoeInboundRId" label="入库编号" width="170"></el-table-column>
+            <el-table-column prop="timestamp" label="操作时间"></el-table-column>
+            <el-table-column prop="amount" label="入库数量"></el-table-column>
+            <el-table-column prop="subsequentStock" label="入库后库存"></el-table-column>
             <el-table-column prop="source" label="来自"></el-table-column>
+            <el-table-column prop="remark" label="备注"></el-table-column>
         </el-table>
 
         <el-descriptions title="出库记录"></el-descriptions>
@@ -52,10 +55,17 @@
                     {{ mapping[scope.row.productionType] }}
                 </template>
             </el-table-column>
-            <el-table-column prop="date" label="操作时间"></el-table-column>
-            <el-table-column prop="amount" label="操作数量"></el-table-column>
-            <el-table-column prop="destination" label="出库至"></el-table-column>
-            <el-table-column prop="picker" label="领料人"></el-table-column>
+            <el-table-column prop="shoeOutboundRId" label="出库编号" width="170"></el-table-column>
+            <el-table-column prop="timestamp" label="操作时间"></el-table-column>
+            <el-table-column prop="amount" label="出库数量"></el-table-column>
+            <el-table-column prop="subsequentStock" label="出库后库存"></el-table-column>
+            <el-table-column label="出库至">
+                <template #default="scope">
+                    <spav v-if="scope.row.productionType == 0">{{ scope.row.picker }}</spav>
+                    <spav v-else>{{ scope.row.destination }}</spav>
+                </template>
+            </el-table-column>
+            <el-table-column prop="remark" label="备注"></el-table-column>
         </el-table>
     </el-dialog>
 </template>
@@ -81,9 +91,6 @@ export default {
         this.getTableData()
     },
     methods: {
-        formatDecimal(row, column, cellValue, index) {
-            return Number(cellValue).toFixed(2)
-        },
         handleSizeChange(val) {
             this.pageSize = val
             this.getTableData()
