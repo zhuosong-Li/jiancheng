@@ -58,7 +58,7 @@
             <el-table :data="orderTableData" stripe border style="height: 600px"
                 @selection-change="handleSelectionChange">
                 <el-table-column v-if="isMultipleSelection" type="selection" width="55" />
-                <el-table-column type="expand">
+                <el-table-column label="展开" type="expand">
                     <template #default="prop">
                         <el-table :data="prop.row.orderShoeTypeInfo">
                             <el-table-column prop="colorName" label="颜色"></el-table-column>
@@ -70,12 +70,12 @@
                         </el-table>
                     </template>
                 </el-table-column>
-                <el-table-column prop="customerName" label="客户号" width="80"></el-table-column>
+                <el-table-column prop="customerName" label="客户名称" width="80"></el-table-column>
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="orderStartDate" label="订单开始" width="110" sortable></el-table-column>
                 <el-table-column prop="orderEndDate" label="订单结束" width="110" sortable></el-table-column>
                 <el-table-column prop="shoeRId" label="工厂型号"></el-table-column>
-                <el-table-column prop="customerProductName" label="客户型号"></el-table-column>
+                <el-table-column prop="customerProductName" label="客户鞋型"></el-table-column>
                 <el-table-column prop="status" label="状态"></el-table-column>
                 <el-table-column prop="orderShoeTotal" label="鞋型数量"></el-table-column>
                 <el-table-column label="车间生产进度" header-align="center">
@@ -313,16 +313,16 @@
                             <el-table-column prop="materialType" label="材料类型"></el-table-column>
                             <el-table-column prop="materialName" label="材料名称"></el-table-column>
                             <el-table-column prop="colorName" label="颜色"></el-table-column>
-                            <el-table-column prop="estimatedInboundAmount" label="核定用量"></el-table-column>
-                            <el-table-column prop="actualInboundAmount" label="采购数量"></el-table-column>
                             <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
                             <el-table-column prop="supplierName" label="供应商名称"></el-table-column>
-                            <el-table-column prop="status" label="材料状态"></el-table-column>
+                            <el-table-column prop="estimatedInboundAmount" label="采购数量"></el-table-column>
+                            <el-table-column prop="actualInboundAmount" label="实际入库数量"></el-table-column>
+                            <el-table-column prop="currentAmount" label="库存"></el-table-column>
                         </el-table>
                     </el-col>
                 </el-row>
                 <el-row :gutter="20">
-                    <el-col :span="12" :offset="15">
+                    <el-col :span="12">
                         <el-pagination @size-change="handleLogisticsSizeChange"
                             @current-change="handleLogisticsPageChange" :current-page="logisticsCurrentPage"
                             :page-sizes="[10, 20, 30, 40]" :page-size="logisticsPageSize"
@@ -374,7 +374,12 @@ import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { shoeBatchInfoTableSpanMethod, getShoeSizesName } from '../utils';
 export default {
-    props: ["editable"],
+    props: {
+        editable: {
+            type: Boolean,
+            default: false
+        }
+    },
     components: {
         AllHeader
     },
@@ -556,6 +561,7 @@ export default {
         },
         openProdDetailDialog(row) {
             this.currentRow = row
+            this.logisticsCurrentPage = 1
             this.viewLogisticDetail()
             this.isProdDetailDialogOpen = true
         },
@@ -841,7 +847,6 @@ export default {
             window.open(url, '_blank')
         },
         async viewLogisticDetail() {
-            this.logisticsCurrentPage = 1
             const params = {
                 "page": this.logisticsCurrentPage,
                 "pageSize": this.logisticsPageSize,

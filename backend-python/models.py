@@ -1164,3 +1164,14 @@ class CraftSheetItem(db.Model):
     production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
     def __repr__(self):
         return f"<CraftSheetItem(craft_sheet_item_id={self.craft_sheet_item_id})>"
+    
+class ProductionLine(db.Model):
+    __tablename__ = "production_line"
+
+    production_line_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    production_line_name = db.Column(db.String(15), nullable=False)
+    production_team = db.Column(db.String(10), nullable=False)
+    is_deleted = db.Column(db.Boolean, nullable=False, default=0)
+
+    def __repr__(self):
+        return f"<ProductionLine(production_line_id={self.production_line_id})>"
