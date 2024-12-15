@@ -63,7 +63,7 @@
                 </el-button>
             </el-row>
             <el-dialog :title="`${orderInfo.shoeRId}数量单`" v-model="isReportDialogOpen" width="80%">
-                <QuantityReportTable :tableData="quantityTableData" :orderShoeId="props.orderShoeId"
+                <QuantityReportTable v-model:tableData="quantityTableData" :orderShoeId="props.orderShoeId"
                     :editable="editable" />
                 <template #footer>
                     <el-button @click="isReportDialogOpen = false">取消</el-button>
@@ -174,7 +174,10 @@ const openReportDialog = async (row, editableVal) => {
     let response = await axios.get(`${apiBaseUrl}/production/getquantityreportdetail`, { params })
     quantityTableData.value = []
     response.data.forEach(row => {
-        row["remainAmount"] = row["totalAmount"] - row["producedAmount"]
+        row["toDateAmount"] = 0
+        row.productionLinesAmount.forEach(amountObj => {
+            row["toDateAmount"] += amountObj.reportAmount
+        })
         quantityTableData.value.push(row)
     })
     isReportDialogOpen.value = true

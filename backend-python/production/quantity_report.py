@@ -73,9 +73,7 @@ def get_quantity_report_tasks():
         report_amount_table = (
             db.session.query(
                 OrderShoe.order_shoe_id,
-                func.sum(amount).label(
-                    "report_amount"
-                ),
+                func.sum(amount).label("report_amount"),
             )
             .join(
                 OrderShoeType,
@@ -114,8 +112,7 @@ def get_quantity_report_tasks():
                 production_amount_table,
                 production_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .filter(
-                OrderShoeStatus.current_status >= QUANTTIY_REPORT_REFERENCE[team])
+            .filter(OrderShoeStatus.current_status >= QUANTTIY_REPORT_REFERENCE[team])
         )
         queries.append(query)
     union_query = queries[0]
@@ -171,18 +168,26 @@ def create_quantity_report():
     db.session.add(report)
     db.session.flush()
     response = (
-        db.session.query(OrderShoeType.order_shoe_type_id)
+        db.session.query(
+            OrderShoeType.order_shoe_type_id, ProductionLine.production_line_id
+        )
         .join(
             OrderShoe,
             OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id,
         )
-        .filter(OrderShoeType.order_shoe_id == data["orderShoeId"])
+        .filter(
+            OrderShoeType.order_shoe_id == data["orderShoeId"],
+            ProductionLine.production_team == data["team"],
+        )
         .all()
     )
     result = []
-    for id_tuple in response:
+    for row in response:
+        order_shoe_type_id, production_line_id = row
         item = QuantityReportItem(
-            quantity_report_id=report.report_id, order_shoe_type_id=id_tuple[0]
+            quantity_report_id=report.report_id,
+            order_shoe_type_id=order_shoe_type_id,
+            production_line_id=production_line_id,
         )
         result.append(item)
     db.session.add_all(result)
@@ -195,11 +200,17 @@ def edit_quantity_report_detail():
     data = request.get_json()
     report_id = data["reportId"]
     detail_arr = data["data"]
-    for row in detail_arr:
-        entity = QuantityReportItem.query.filter_by(
-            quantity_report_id=report_id, order_shoe_type_id=row["orderShoeTypeId"]
-        ).first()
-        entity.report_amount = row["reportAmount"]
+    items_list = QuantityReportItem.query.filter_by(quantity_report_id=report_id).all()
+    amount_entries = {}
+    for item in detail_arr:
+        for amount_obj in item["productionLinesAmount"]:
+            key = (item["orderShoeTypeId"], amount_obj["productionLineId"])
+            amount_entries[key] = amount_obj["reportAmount"]
+    for row in items_list:
+        if (row.order_shoe_type_id, row.production_line_id) in amount_entries:
+            row.report_amount = amount_entries[
+                (row.order_shoe_type_id, row.production_line_id)
+            ]
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -255,18 +266,26 @@ def get_quantity_report_detail():
     mapping = {0: 0, 1: 1, 2: 1, 3: 2}
     response = (
         db.session.query(
-            OrderShoeType, OrderShoeProductionAmount, Color, QuantityReportItem
+            OrderShoeType,
+            OrderShoeProductionAmount,
+            Color,
+            QuantityReportItem,
+            ProductionLine,
         )
         .join(
             OrderShoeProductionAmount,
-            OrderShoeProductionAmount.order_shoe_type_id == OrderShoeType.order_shoe_type_id
+            OrderShoeProductionAmount.order_shoe_type_id
+            == OrderShoeType.order_shoe_type_id,
         )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
         .join(
             QuantityReportItem,
-            QuantityReportItem.order_shoe_type_id
-            == OrderShoeType.order_shoe_type_id,
+            QuantityReportItem.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+        )
+        .join(
+            ProductionLine,
+            QuantityReportItem.production_line_id == ProductionLine.production_line_id,
         )
         .filter(
             QuantityReportItem.quantity_report_id == report_id,
@@ -275,25 +294,42 @@ def get_quantity_report_detail():
         .all()
     )
     result = []
+    meta_data_mapping = {}
     for row in response:
-        order_shoe_type, production_amount, color, report_item = row
-        produced_amount = 0
-        if team == 0:
-            produced_amount = order_shoe_type.cutting_amount
-        elif team == 1:
-            produced_amount = order_shoe_type.pre_sewing_amount
-        elif team == 2:
-            produced_amount = order_shoe_type.sewing_amount
-        elif team == 3:
-            produced_amount = order_shoe_type.molding_amount
+        order_shoe_type, production_amount, color, report_item, production_line = row
         if production_amount.total_production_amount > 0:
-            obj = {
-                "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
-                "colorName": color.color_name,
-                "totalAmount": production_amount.total_production_amount,
-                "producedAmount": produced_amount,
-                "reportAmount": report_item.report_amount
-            }
-            result.append(obj)
+            produced_amount = 0
+            if team == 0:
+                produced_amount = order_shoe_type.cutting_amount
+            elif team == 1:
+                produced_amount = order_shoe_type.pre_sewing_amount
+            elif team == 2:
+                produced_amount = order_shoe_type.sewing_amount
+            elif team == 3:
+                produced_amount = order_shoe_type.molding_amount
+            if color.color_name not in meta_data_mapping:
+                meta_data_mapping[color.color_name] = {
+                    "orderShoeTypeId": order_shoe_type.order_shoe_type_id,
+                    "colorName": color.color_name,
+                    "totalAmount": production_amount.total_production_amount,
+                    "producedAmount": produced_amount,
+                    "productionLinesAmount": [
+                        {
+                            "reportAmount": report_item.report_amount,
+                            "productionLineId": production_line.production_line_id,
+                            "productionLineName": production_line.production_line_name,
+                        }
+                    ],
+                }
+            else:
+                meta_data_mapping[color.color_name]["productionLinesAmount"].append(
+                    {
+                        "reportAmount": report_item.report_amount,
+                        "productionLineId": production_line.production_line_id,
+                        "productionLineName": production_line.production_line_name,
+                    }
+                )
+    for _, value in meta_data_mapping.items():
+        result.append(value)
     print(result)
     return result
