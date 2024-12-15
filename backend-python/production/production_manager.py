@@ -237,14 +237,7 @@ PROGRESS_STATUS_MAPPING = {
     "未排期": [17],
     "已保存排期": [17],
     "生产前确认": [18],
-    "裁断中": [23],
-    "裁断结束": [23],
-    "预备开始": [30],
-    "预备结束": [31],
-    "针车中": [32],
-    "针车结束": [33],
-    "成型中": [40],
-    "成型结束": [41],
+    "生产中": [23],
     "生产结束": [42],
 }
 
@@ -291,12 +284,14 @@ def get_all_order_production_progress():
     query = (
         db.session.query(
             Order,
+            Customer,
             OrderShoe,
             Shoe,
             status_table.c.current_status_str,
             status_table.c.current_status_value_str,
             OrderShoeProductionInfo,
         )
+        .join(Customer, Customer.customer_id == Order.customer_id)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
         .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
         .join(status_table, status_table.c.order_shoe_id == OrderShoe.order_shoe_id)
@@ -344,6 +339,7 @@ def get_all_order_production_progress():
     for row in response:
         (
             order,
+            customer,
             order_shoe,
             shoe,
             current_status_str,
@@ -356,6 +352,7 @@ def get_all_order_production_progress():
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
+            "customerName": customer.customer_name,
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
             "customerProductName": order_shoe.customer_product_name,
@@ -922,47 +919,6 @@ def approve_quantity_report():
                 order_shoe_type.sewing_amount += report_item.report_amount
             elif report.team == "成型":
                 order_shoe_type.molding_amount += report_item.report_amount
-    db.session.flush()
-    if report.team == "针车预备":
-        response = (
-            db.session.query(
-                OrderShoeProductionAmount.total_production_amount,
-                OrderShoeType.pre_sewing_amount,
-            )
-            .join(
-                OrderShoeType,
-                OrderShoeType.order_shoe_type_id
-                == OrderShoeProductionAmount.order_shoe_type_id,
-            )
-            .filter(
-                OrderShoeType.order_shoe_id == data["orderShoeId"],
-                OrderShoeProductionAmount.production_team == 2,
-            )
-            .all()
-        )
-        flag = True
-        for row in response:
-            total_production_amount, pre_sewing_amount = row
-            if pre_sewing_amount < total_production_amount:
-                flag = False
-        if flag:
-            next_operation_ids = [98, 99, 100, 101]
-            event_arr = []
-            try:
-                processor: EventProcessor = current_app.config["event_processor"]
-                for operation_id in next_operation_ids:
-                    event = Event(
-                        staff_id=20,
-                        handle_time=datetime.now(),
-                        operation_id=operation_id,
-                        event_order_id=data["orderId"],
-                        event_order_shoe_id=data["orderShoeId"],
-                    )
-                    processor.processEvent(event)
-                    event_arr.append(event)
-            except Exception:
-                return jsonify({"message": "event processor error"}), 500
-            db.session.add_all(event_arr)
     db.session.commit()
     return jsonify({"message": "success"})
 

@@ -124,6 +124,8 @@ const handleSubmit = () => {
                         window.location.href = 'companymanager'
                     } else if (response.data.role === 21) {
                         window.location.href = 'businessmanager'
+                    } else if (response.data.role === 22) {
+                        window.location.href = 'productionclerk'
                     } else {
                         console.log('Invalid role!')
                     }

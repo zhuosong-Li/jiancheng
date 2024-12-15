@@ -5,13 +5,13 @@
     <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="4" :offset="0" style="white-space: nowrap;">
             订单号筛选：
-            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable
-                @keypress.enter="getlogisticsOrderData()" @clear="getlogisticsOrderData"/>
+            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getlogisticsOrderData()"
+                @clear="getlogisticsOrderData" />
         </el-col>
         <el-col :span="4" :offset="2" style="white-space: nowrap;">
             鞋型号筛选：
-            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable
-                @keypress.enter="getlogisticsOrderData()" @clear="getlogisticsOrderData"/>
+            <el-input v-model="shoeRIdSearch" placeholder="请输入鞋型号" clearable @keypress.enter="getlogisticsOrderData()"
+                @clear="getlogisticsOrderData" />
         </el-col>
     </el-row>
     <el-row :gutter="20" style="margin-top: 20px">
@@ -22,8 +22,7 @@
                 <el-table-column prop="orderEndDate" label="订单截止日期"></el-table-column>
                 <el-table-column label="物流信息">
                     <template #default="scope">
-                        <el-button type="primary" size="small"
-                            @click="openLogisticsDialog(scope.row)">查看</el-button>
+                        <el-button type="primary" size="small" @click="openLogisticsDialog(scope.row)">查看</el-button>
                     </template>
                 </el-table-column>
             </el-table></el-col>
@@ -42,18 +41,18 @@
                     <el-table-column prop="materialType" label="材料类型"></el-table-column>
                     <el-table-column prop="materialName" label="材料名称"></el-table-column>
                     <el-table-column prop="colorName" label="颜色"></el-table-column>
-                    <el-table-column prop="estimatedInboundAmount" label="核定用量"></el-table-column>
-                    <el-table-column prop="actualInboundAmount" label="采购数量"></el-table-column>
                     <el-table-column prop="materialUnit" label="材料单位"></el-table-column>
                     <el-table-column prop="supplierName" label="供应商名称"></el-table-column>
-                    <el-table-column prop="status" label="材料状态"></el-table-column>
+                    <el-table-column prop="estimatedInboundAmount" label="采购数量"></el-table-column>
+                    <el-table-column prop="actualInboundAmount" label="实际入库数量"></el-table-column>
+                    <el-table-column prop="currentAmount" label="库存"></el-table-column>
                 </el-table>
             </el-col>
         </el-row>
         <el-row :gutter="20">
             <el-col :span="12" :offset="15">
                 <el-pagination @size-change="handleLogisticsPageChange" @current-change="handleLogisticsPageChange"
-                    :current-page="currentPage" :page-sizes="[10, 20, 30, 40]" :page-size="pageSize"
+                    :current-page="currentLogisticsPage" :page-sizes="[10, 20, 30, 40]" :page-size="logisticsPageSize"
                     layout="total, sizes, prev, pager, next, jumper" :total="logisticsRows" />
             </el-col>
         </el-row>
@@ -83,8 +82,9 @@ export default {
             currentPage: 1,
             pageSize: 10,
             logisticsRows: 0,
-            logisticsCurrentPage: 1,
-            logisticsPageSize: 10
+            currentLogisticsPage: 1,
+            logisticsPageSize: 10,
+            currentRow: {},
         }
     },
     mounted() {
@@ -115,20 +115,21 @@ export default {
             this.viewLogisticDetail()
         },
         handleLogisticsPageChange(val) {
-            this.logisticsCurrentPage = val
+            this.currentLogisticsPage = val
             this.viewLogisticDetail()
         },
         openLogisticsDialog(rowData) {
-            this.logisticsCurrentPage = 1
-            this.viewLogisticDetail(rowData)
+            this.currentRow = rowData
+            this.currentLogisticsPage = 1
+            this.viewLogisticDetail()
             this.isMaterialLogisticVis = true
         },
-        async viewLogisticDetail(rowData) {
+        async viewLogisticDetail() {
             const params = {
-                "page": this.logisticsCurrentPage,
+                "page": this.currentLogisticsPage,
                 "pageSize": this.logisticsPageSize,
-                "orderRId": rowData.orderRId,
-                "shoeRId": rowData.shoeRId
+                "orderRId": this.currentRow.orderRId,
+                "shoeRId": this.currentRow.shoeRId
             }
             const response = await axios.get(`${this.$apiBaseUrl}/warehouse/warehousemanager/getallmaterialinfo`, { params })
             this.logisticsMaterialData = response.data.result

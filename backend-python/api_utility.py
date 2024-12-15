@@ -118,17 +118,7 @@ def status_converter(current_status_arr, current_status_value_arr):
     elif 18 in current_status_arr:
         status = "生产前确认"
     elif 23 in current_status_arr:
-        status = "裁断中"
-    elif 24 in current_status_arr:
-        status = "裁断结束"
-    elif 32 in current_status_arr:
-        status = "针车中"
-    elif 33 in current_status_arr:
-        status = "针车结束"
-    elif 40 in current_status_arr:
-        status = "成型中"
-    elif 41 in current_status_arr:
-        status = "成型结束"
+        status = "生产中"
     elif 42 in current_status_arr:
         status = "生产结束"
     return status

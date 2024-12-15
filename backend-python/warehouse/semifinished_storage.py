@@ -22,15 +22,13 @@ semifinished_storage_bp = Blueprint("semifinished_storage_bp", __name__)
 )
 def get_semifinished_in_out_overview():
     """
-    op_type: 0 means show all orders, 1 means show active orders
+    showAll: 0 means show all orders, 1 means show active orders
     """
     page = request.args.get("page", type=int)
     number = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
-    op_type = request.args.get("opType", default=0, type=int)
-    semifinished_type = request.args.get("semifinishedType")
-    status = request.args.get("status")
+    show_all = request.args.get("showAll", default=0, type=int)
 
     query = (
         db.session.query(
@@ -56,23 +54,9 @@ def get_semifinished_in_out_overview():
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
-    if op_type != 0:
-        query = query.filter(SemifinishedShoeStorage.semifinished_status != 2)
-    if semifinished_type and semifinished_type != "":
-        if semifinished_type == "裁片":
-            object = 0
-        else:
-            object = 1
-        query = query.filter(SemifinishedShoeStorage.semifinished_object == object)
-    if status and status != "":
-        if status == "未完成入库":
-            status_search = 0
-        elif status == "已完成入库":
-            status_search = 1
-        else:
-            status_search = 2
-        query = query.filter(
-            SemifinishedShoeStorage.semifinished_status == status_search
+    if show_all != 0:
+        query = query.join(OrderStatus, OrderStatus.order_id == Order.order_id).filter(
+            OrderStatus.order_current_status == IN_PRODUCTION_ORDER_NUMBER
         )
     count_result = query.distinct().count()
     response = query.distinct().limit(number).offset((page - 1) * number).all()
@@ -85,10 +69,6 @@ def get_semifinished_in_out_overview():
             status_name = "已完成入库"
         else:
             status_name = "已完成出库"
-        if storage_obj.semifinished_object == 0:
-            object = "裁片"
-        else:
-            object = "鞋包"
         obj = {
             "orderId": order.order_id,
             "orderRId": order.order_rid,
@@ -96,9 +76,9 @@ def get_semifinished_in_out_overview():
             "shoeRId": shoe.shoe_rid,
             "storageId": storage_obj.semifinished_shoe_id,
             "customerProductName": order_shoe.customer_product_name,
-            "inboundAmount": storage_obj.semifinished_estimated_amount,
+            "estimatedInboundAmount": storage_obj.semifinished_estimated_amount,
+            "actualInboundAmount": storage_obj.semifinished_actual_amount,
             "currentAmount": storage_obj.semifinished_amount,
-            "object": object,
             "statusName": status_name,
             "colorName": color.color_name,
         }
@@ -128,7 +108,7 @@ def handle_order_shoe_status(order_id, order_shoe_id, storage):
     else:
         query = query.filter(SemifinishedShoeStorage.semifinished_object == 1)
         next_operation_ids = [102, 103, 104, 105]
-    
+
     response = query.all()
     flag = True
     for row in response:
@@ -172,10 +152,8 @@ def inbound_semifinished():
         if outsource_info.outsource_status == 5:
             outsource_info.outsource_status = 6
 
+    storage.semifinished_actual_amount += int(data["amount"])
     storage.semifinished_amount += int(data["amount"])
-    if storage.semifinished_amount >= storage.semifinished_estimated_amount:
-        storage.semifinished_status = 1
-        handle_order_shoe_status(data["orderId"], data["orderShoeId"], storage)
     storage.semifinished_inbound_datetime = data["inboundDate"]
 
     record = ShoeInboundRecord(
@@ -183,6 +161,9 @@ def inbound_semifinished():
         inbound_datetime=data["inboundDate"],
         inbound_type=data["inboundType"],
         semifinished_shoe_storage_id=data["storageId"],
+        remark=data["remark"],
+        subsequent_stock=storage.semifinished_amount,
+        outsource_info_id=data["outsourceInfoId"]
     )
     db.session.add(record)
     db.session.flush()
@@ -282,14 +263,17 @@ def outbound_semifinished():
         if outsource_info.outsource_status == 2:
             outsource_info.outsource_status = 4
 
+    storage.semifinished_amount -= int(data["outboundAmount"])
+    record = ShoeOutboundRecord(
+        outbound_amount=int(data["outboundAmount"]),
+        outbound_datetime=data["outboundDate"],
+        outbound_type=data["outboundType"],
+        semifinished_shoe_storage_id=storage.semifinished_shoe_id,
+        subsequent_stock=storage.semifinished_amount,
+        remark=data["remark"]
+    )
     if data["outboundType"] == 0:
-        record = ShoeOutboundRecord(
-            outbound_amount=int(data["outboundAmount"]),
-            outbound_datetime=data["outboundDate"],
-            picker=data["picker"],
-            outbound_type=data["outboundType"],
-            semifinished_shoe_storage_id=storage.semifinished_shoe_id,
-        )
+        record.picker = data["picker"]
     elif data["outboundType"] == 1:
         if not data["outsourceInfoId"]:
             return jsonify({"message": "failed"}), 400
@@ -298,13 +282,7 @@ def outbound_semifinished():
             return jsonify({"message": "failed"}), 400
         if outsource_info.outsource_status == 2:
             outsource_info.outsource_status = 4
-        record = ShoeOutboundRecord(
-            outbound_amount=int(data["outboundAmount"]),
-            outbound_datetime=data["outboundDate"],
-            outbound_address=data["outboundAddress"],
-            outbound_type=data["outboundType"],
-            semifinished_shoe_storage_id=storage.semifinished_shoe_id,
-        )
+        record.outsource_info_id = outsource_info.outsource_info_id
     else:
         return jsonify({"message": "failed"}), 400
 
@@ -316,7 +294,6 @@ def outbound_semifinished():
         + str(record.shoe_outbound_record_id)
     )
     record.shoe_outbound_rid = rid
-    storage.semifinished_amount -= int(data["outboundAmount"])
     db.session.commit()
     return jsonify({"message": "success"})
 
@@ -351,9 +328,12 @@ def get_semifinished_in_out_bound_records():
         record, outsource_info = row
         obj = {
             "productionType": record.inbound_type,
-            "date": format_datetime(record.inbound_datetime),
+            "shoeInboundRId": record.shoe_inbound_rid,
+            "timestamp": format_datetime(record.inbound_datetime),
             "amount": record.inbound_amount,
-            "source": outsource_info.factory_name,
+            "subsequentStock": record.subsequent_stock,
+            "source": outsource_info.factory_name if outsource_info else None,
+            "remark": record.remark
         }
         result["inboundRecords"].append(obj)
 
@@ -361,12 +341,13 @@ def get_semifinished_in_out_bound_records():
         record, outsource_info = row
         obj = {
             "productionType": record.outbound_type,
-            "date": format_datetime(record.outbound_datetime),
+            "shoeOutboundRId": record.shoe_outbound_rid,
+            "timestamp": format_datetime(record.outbound_datetime),
             "amount": record.outbound_amount,
-            "destination": outsource_info.factory_name,
+            "subsequentStock": record.subsequent_stock,
+            "destination": outsource_info.factory_name if outsource_info else None,
             "picker": record.picker,
-            "department": record.outbound_department,
-            "address": record.outbound_address,
+            "remark": record.remark
         }
         result["outboundRecords"].append(obj)
     return result
