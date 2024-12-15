@@ -240,6 +240,11 @@
                     <el-row style="margin-top: 10px">
                         采购信息
                         <el-table :data="bomTestData" border>
+                            <el-table-column
+                                prop="materialProductionInstructionType"
+                                label="材料开发部标注类型"
+                                :formatter="translateProductionInstructionType"
+                            ></el-table-column>
                             <el-table-column prop="materialType" label="材料类型"></el-table-column>
                             <el-table-column prop="materialName" label="材料名称"></el-table-column>
                             <el-table-column prop="materialModel" label="材料型号" />
@@ -690,7 +695,45 @@ export default {
         this.getOrderInfo()
         this.getAllShoeListInfo()
     },
+    computed: {
+        processedBomTestData() {
+            const customOrder = ['S', 'I', 'A', 'O', 'M', 'H']
+            const typeMap = {
+                S: '面料',
+                I: '里料',
+                A: '辅料',
+                M: '中底',
+                O: '大底',
+                H: '烫底'
+            }
+
+            return this.bomTestData
+                .slice()
+                .sort((a, b) => {
+                    const orderA = customOrder.indexOf(a.productionInstructionType)
+                    const orderB = customOrder.indexOf(b.productionInstructionType)
+                    return orderA - orderB
+                })
+                .map((item) => ({
+                    ...item,
+                    materialProductionInstructionType:
+                        typeMap[item.productionInstructionType] || item.productionInstructionType
+                }))
+        }
+    },
     methods: {
+        translateProductionInstructionType(row) {
+            const typeMap = {
+                S: '面料',
+                I: '里料',
+                A: '辅料',
+                M: '中底',
+                O: '大底',
+                H: '烫底'
+            }
+            console.log(typeMap[row.materialProductionInstructionType])
+            return typeMap[row.materialProductionInstructionType] || row.materialProductionInstructionType
+        },
         toggleOrderInfo() {
             this.orderInfoVisible = !this.orderInfoVisible
         },

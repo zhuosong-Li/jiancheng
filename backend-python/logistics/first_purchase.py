@@ -166,16 +166,19 @@ def get_order_shoe_list():
 
         # If the color entry already exists, update it with BOM details
         if existing_entry:
+            print(existing_entry)
             # Update only if fields are not already filled to prevent overwriting
             if first_bom_id and existing_entry.get("firstBomId") == "未填写":
                 existing_entry["firstBomId"] = first_bom_id
                 existing_entry["firstBomStatus"] = first_bom_status
+            if first_purchase_order_id and existing_entry.get("firstPurchaseOrderId") == "未填写":
                 existing_entry["firstPurchaseOrderId"] = first_purchase_order_id
                 existing_entry["firstPurchaseOrderStatus"] = first_purchase_order_status
 
             if second_bom_id and existing_entry.get("secondBomId") == "未填写":
                 existing_entry["secondBomId"] = second_bom_id
                 existing_entry["secondBomStatus"] = second_bom_status
+            if second_purchase_order_id and existing_entry.get("secondPurchaseOrderId") == "未填写":
                 existing_entry["secondPurchaseOrderId"] = second_purchase_order_id
                 existing_entry["secondPurchaseOrderStatus"] = (
                     second_purchase_order_status
@@ -245,6 +248,7 @@ def get_shoe_bom_items():
             MaterialType,
             Supplier,
             PurchaseOrderItem,
+            ProductionInstructionItem,
         )
         .join(Bom, BomItem.bom_id == Bom.bom_id)
         .join(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
@@ -254,9 +258,18 @@ def get_shoe_bom_items():
         .outerjoin(
             PurchaseOrderItem, PurchaseOrderItem.bom_item_id == BomItem.bom_item_id
         )
-        .filter(TotalBom.total_bom_rid == bom_rid)
+        .outerjoin(
+            ProductionInstructionItem,
+            ProductionInstructionItem.production_instruction_item_id
+            == BomItem.production_instruction_item_id,
+        )
+        .filter(
+            TotalBom.total_bom_rid == bom_rid,
+            ProductionInstructionItem.material_type.in_(["S", "I", "O", "M", "H"]),
+        )
         .all()
     )
+    print(entities)
 
     # Dictionary to combine duplicated items
     combined_items = {}
@@ -268,12 +281,14 @@ def get_shoe_bom_items():
             material_type,
             supplier,
             purchase_order_item,
+            production_instruction_item,
         ) = entity
 
         # Create a unique key for each item based on essential attributes
         key = (
             material_type.material_type_name,
             material.material_name,
+            bom_item.material_model,
             bom_item.material_specification,
             bom_item.bom_item_color if bom_item.bom_item_color else "",
             supplier.supplier_name,
@@ -290,6 +305,7 @@ def get_shoe_bom_items():
             combined_items[key] = {
                 "bomItemId": bom_item.bom_item_id,
                 "materialType": material_type.material_type_name,
+                "materialProductionInstructionType": production_instruction_item.material_type,
                 "materialName": material.material_name,
                 "materialModel": bom_item.material_model,
                 "materialSpecification": bom_item.material_specification,
@@ -715,6 +731,7 @@ def submit_purchase_divide_orders():
             PurchaseOrderItem,
             PurchaseOrder,
             BomItem,
+            ProductionInstructionItem,
             Material,
             Supplier,
         )
@@ -728,6 +745,11 @@ def submit_purchase_divide_orders():
             PurchaseDivideOrder.purchase_order_id == PurchaseOrder.purchase_order_id,
         )
         .join(BomItem, PurchaseOrderItem.bom_item_id == BomItem.bom_item_id)
+        .join(
+            ProductionInstructionItem,
+            ProductionInstructionItem.production_instruction_item_id
+            == BomItem.production_instruction_item_id,
+        )
         .join(Material, BomItem.material_id == Material.material_id)
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
         .filter(PurchaseOrder.purchase_order_rid == purchase_order_id)
@@ -753,6 +775,7 @@ def submit_purchase_divide_orders():
         purchase_order_item,
         purchase_order,
         bom_item,
+        production_instruction_item,
         material,
         supplier,
     ) in purchase_divide_orders:
@@ -794,13 +817,20 @@ def submit_purchase_divide_orders():
                 }
             )
         elif purchase_divide_order.purchase_divide_order_type == "S":
-            batch_info_type = db.session.query(BatchInfoType, Order).join(
-                Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
-            ).filter(Order.order_id == order_id).first()
+            batch_info_type = (
+                db.session.query(BatchInfoType, Order)
+                .join(
+                    Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
+                )
+                .filter(Order.order_id == order_id)
+                .first()
+            )
             shoe_size_list = []
             for i in SHOESIZERANGE:
                 if getattr(batch_info_type.BatchInfoType, f"size_{i}_name") is not None:
-                    shoe_size_list.append({i:getattr(batch_info_type.BatchInfoType, f"size_{i}_name")})
+                    shoe_size_list.append(
+                        {i: getattr(batch_info_type.BatchInfoType, f"size_{i}_name")}
+                    )
             if purchase_order_id not in size_purchase_divide_order_dict:
                 size_purchase_divide_order_dict[purchase_order_id] = {
                     "供应商": supplier.supplier_name,
@@ -832,7 +862,9 @@ def submit_purchase_divide_orders():
             }
             for size_dic in shoe_size_list:
                 for size, size_name in size_dic.items():
-                    obj[size_name] = getattr(purchase_order_item, f"size_{size}_purchase_amount")
+                    obj[size_name] = getattr(
+                        purchase_order_item, f"size_{size}_purchase_amount"
+                    )
             size_purchase_divide_order_dict[purchase_order_id]["seriesData"].append(obj)
     customer_name = (
         db.session.query(Order, Customer)
