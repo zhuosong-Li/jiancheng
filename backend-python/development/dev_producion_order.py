@@ -1764,6 +1764,9 @@ def issue_production_order():
             .filter(OrderShoeType.order_shoe_id == order_shoe_id)
             .all()
         )
+        random_string = randomIdGenerater(6)    
+        current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
+        craft_sheet_rid = current_time_stamp + random_string + "CS"
         craft_sheet = CraftSheet(
                 craft_sheet_rid=craft_sheet_rid,
                 order_shoe_id=order_shoe_id,
@@ -1773,11 +1776,8 @@ def issue_production_order():
         db.session.flush()
         for order_shoe_type in order_shoe_types:
             order_shoe_type_id = order_shoe_type.order_shoe_type_id
-            current_time_stamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S%f")[:-5]
-            random_string = randomIdGenerater(6)
             first_bom_rid = current_time_stamp + random_string + "F"
             second_bom_rid = current_time_stamp + random_string + "S"
-            craft_sheet_rid = current_time_stamp + random_string + "CS"
             first_bom = Bom(
                 order_shoe_type_id=order_shoe_type_id,
                 bom_rid=first_bom_rid,

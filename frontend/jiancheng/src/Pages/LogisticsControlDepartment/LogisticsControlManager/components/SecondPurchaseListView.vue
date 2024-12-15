@@ -43,11 +43,11 @@ export default {
   methods: {
     async getAllData() {
       const res = await axios.get(
-        `${this.$apiBaseUrl}/logistics/task?taskstatus=0&shoestatus=13`
+        `${this.$apiBaseUrl}/logistics/task?taskstatus=0&shoestatus=7`
       )
       this.textData = res.data
       const res2 = await axios.get(
-        `${this.$apiBaseUrl}/logistics/task?taskstatus=1&shoestatus=13`
+        `${this.$apiBaseUrl}/logistics/task?taskstatus=1&shoestatus=7`
       )
       this.textData2 = res2.data
       this.datafinished = true

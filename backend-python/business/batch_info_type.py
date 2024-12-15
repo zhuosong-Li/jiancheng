@@ -32,7 +32,7 @@ def get_order_batch_type_helper(order_id):
 
 @batch_type_bp.route("/batchtype/getallbatchtypesbusiness", methods=["GET"])
 def get_all_batch_types_business():
-    entities = db.session.query(BatchInfoType).filter_by(batch_info_type_usage = 0).all()
+    entities = db.session.query(BatchInfoType).filter_by(batch_info_type_usage == 0).all()
     response_list = []
     attr_names = API_USED_ATTRS
 
@@ -77,7 +77,7 @@ def delete_batch_type_business():
 
 @batch_type_bp.route("/batchtype/getallbatchtypeslogistics")
 def get_batch_type_logistics():
-    entities = db.session.query(BatchInfoType).filter_by(batch_info_type_usage = 1).all()
+    entities = db.session.query(BatchInfoType).filter_by(batch_info_type_usage == 1).all()
     response_list = []
     attr_names = API_USED_ATTRS
 

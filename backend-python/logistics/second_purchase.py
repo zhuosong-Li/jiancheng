@@ -1,22 +1,25 @@
-from flask import Blueprint, jsonify, request, send_file, current_app
-from sqlalchemy.dialects.mysql import insert
+import copy
 import datetime
-from app_config import app, db
-from models import *
-from api_utility import randomIdGenerater
-from event_processor import EventProcessor
-from file_locations import IMAGE_STORAGE_PATH, FILE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+import os
+import zipfile
 from itertools import groupby
 from operator import itemgetter
-import zipfile
-import os
-from general_document.purchase_divide_order import generate_excel_file
-from general_document.size_purchase_divide_order import generate_size_excel_file
-from general_document.material_statistics import generate_material_statistics_file
+
+from api_utility import randomIdGenerater
+from app_config import app, db
 from business.batch_info_type import get_order_batch_type_helper
 from constants import SHOESIZERANGE
+from event_processor import EventProcessor
+from file_locations import FILE_STORAGE_PATH, IMAGE_STORAGE_PATH, IMAGE_UPLOAD_PATH
+from flask import Blueprint, jsonify, request, send_file, current_app
+from general_document.material_statistics import generate_material_statistics_file
+from general_document.purchase_divide_order import generate_excel_file
+from general_document.size_purchase_divide_order import generate_size_excel_file
+from models import *
+from sqlalchemy.dialects.mysql import insert
+from sqlalchemy import and_
 
-second_purchase_bp = Blueprint("second_purchase_bp", __name__)
+second_purchase_bp = Blueprint("second_purrchase_bp", __name__)
 
 
 @second_purchase_bp.route("/secondpurchase/getordershoelist", methods=["GET"])
@@ -46,12 +49,13 @@ def get_order_shoe_list():
             Bom, TotalBom.total_bom_id == Bom.total_bom_id
         )  # Assuming BOM is optional
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
-        .filter(Order.order_id == order_id)
+        .filter(
+            and_(
+                Order.order_id == order_id,
+            )
+        )
         .all()
     )
-
-    for row in entities:
-        print(row)
 
     # Initialize the result list
     result_dict = {}
@@ -69,6 +73,7 @@ def get_order_shoe_list():
             total_bom,
             purchase_order,
         ) = entity
+        print(bom.bom_rid, purchase_order.purchase_order_rid)
         status_string = ""
         statuses = (
             db.session.query(OrderShoeStatus, OrderShoeStatusReference)
@@ -83,19 +88,21 @@ def get_order_shoe_list():
             status_string = (
                 status_string + status.OrderShoeStatusReference.status_name + " "
             )
-        if purchase_order and purchase_order.purchase_order_type == "S":
-            if purchase_order.purchase_order_status == "1":
-                current_status = "已保存"
-            elif purchase_order.purchase_order_status == "2":
-                current_status = "已提交"
+        if purchase_order:
+            if purchase_order.purchase_order_type == "S":
+                if purchase_order.purchase_order_status == "1":
+                    current_status = "已保存"
+                elif purchase_order.purchase_order_status == "2":
+                    current_status = "已提交"
+                elif purchase_order.purchase_order_status == "3":
+                    current_status = "已下发"
+                else:
+                    current_status = "未填写"
+            else:
+                # If there are no 'S' type orders, treat as 未填写
+                current_status = "未填写"
         else:
             current_status = "未填写"
-        total_bom_id = (
-            total_bom.total_bom_rid
-            if total_bom and total_bom.total_bom_rid.find("TS")
-            else "未填写"
-        )
-        print(total_bom_id)
         # Grouping by shoe_rid (inheritId) to avoid duplicate shoes
         # Initialize the result dictionary for the shoe if not already present
         if shoe.shoe_rid not in result_dict:
@@ -104,9 +111,9 @@ def get_order_shoe_list():
                 "orderShoeId": order_shoe.order_shoe_id,
                 "inheritId": shoe.shoe_rid,
                 "currentStatus": current_status,
-                "totalBomId": total_bom_id,
+                "totalBomId": total_bom.total_bom_rid if total_bom else "未填写",
                 "purchaseOrderId": (
-                    purchase_order.purchase_order_rid if purchase_order else "未填写"
+                    purchase_order.purchase_order_rid if purchase_order.purchase_order_type == 'S' else "未填写"
                 ),
                 "status": status_string,
                 "customerId": order_shoe.customer_product_name,
@@ -115,7 +122,9 @@ def get_order_shoe_list():
                 "typeInfos": [],  # Initialize list for type info (colors, etc.)
                 "colorSet": set(),  # Initialize set to track colors and prevent duplicate entries
             }
-
+        if purchase_order.purchase_order_type == 'S':
+            result_dict[shoe.shoe_rid]["purchaseOrderId"] = purchase_order.purchase_order_rid
+            result_dict[shoe.shoe_rid]["currentStatus"] = current_status
         # Check if this color already exists in typeInfos
         existing_entry = next(
             (
@@ -138,6 +147,7 @@ def get_order_shoe_list():
 
         # Set BOM details based on bom_type
         if bom:
+            print(bom)
             if bom.bom_type == 0:
                 first_bom_id = bom.bom_rid
                 first_bom_status = {
@@ -178,12 +188,14 @@ def get_order_shoe_list():
             if first_bom_id and existing_entry.get("firstBomId") == "未填写":
                 existing_entry["firstBomId"] = first_bom_id
                 existing_entry["firstBomStatus"] = first_bom_status
+            if first_purchase_order_id and existing_entry.get("firstPurchaseOrderId") == "未填写":
                 existing_entry["firstPurchaseOrderId"] = first_purchase_order_id
                 existing_entry["firstPurchaseOrderStatus"] = first_purchase_order_status
 
             if second_bom_id and existing_entry.get("secondBomId") == "未填写":
                 existing_entry["secondBomId"] = second_bom_id
                 existing_entry["secondBomStatus"] = second_bom_status
+            if second_purchase_order_id and existing_entry.get("secondPurchaseOrderId") == "未填写":
                 existing_entry["secondPurchaseOrderId"] = second_purchase_order_id
                 existing_entry["secondPurchaseOrderStatus"] = (
                     second_purchase_order_status
@@ -239,16 +251,12 @@ def get_new_purchase_order_id():
     return jsonify({"purchaseOrderId": purchase_order_id})
 
 
-import copy
-
-
 @second_purchase_bp.route("/secondpurchase/getshoebomitems", methods=["GET"])
 def get_shoe_bom_items():
     bom_rid = request.args.get("bomrid")
     order_id = request.args.get("orderid")
     # get shoe size names
     size_name_info = get_order_batch_type_helper(order_id)
-
     # Query all Bom items under the given TotalBom, based on the bom_rid
     entities = (
         db.session.query(
@@ -257,6 +265,7 @@ def get_shoe_bom_items():
             MaterialType,
             Supplier,
             PurchaseOrderItem,
+            ProductionInstructionItem,
         )
         .join(Bom, BomItem.bom_id == Bom.bom_id)
         .join(TotalBom, Bom.total_bom_id == TotalBom.total_bom_id)
@@ -266,9 +275,18 @@ def get_shoe_bom_items():
         .outerjoin(
             PurchaseOrderItem, PurchaseOrderItem.bom_item_id == BomItem.bom_item_id
         )
-        .filter(TotalBom.total_bom_rid == bom_rid)
+        .outerjoin(
+            ProductionInstructionItem,
+            ProductionInstructionItem.production_instruction_item_id
+            == BomItem.production_instruction_item_id,
+        )
+        .filter(
+            TotalBom.total_bom_rid == bom_rid,
+            ProductionInstructionItem.material_type.in_(["A"]),
+        )
         .all()
     )
+    print(entities)
 
     # Dictionary to combine duplicated items
     combined_items = {}
@@ -280,12 +298,14 @@ def get_shoe_bom_items():
             material_type,
             supplier,
             purchase_order_item,
+            production_instruction_item,
         ) = entity
 
         # Create a unique key for each item based on essential attributes
         key = (
             material_type.material_type_name,
             material.material_name,
+            bom_item.material_model,
             bom_item.material_specification,
             bom_item.bom_item_color if bom_item.bom_item_color else "",
             supplier.supplier_name,
@@ -302,6 +322,7 @@ def get_shoe_bom_items():
             combined_items[key] = {
                 "bomItemId": bom_item.bom_item_id,
                 "materialType": material_type.material_type_name,
+                "materialProductionInstructionType": production_instruction_item.material_type,
                 "materialName": material.material_name,
                 "materialModel": bom_item.material_model,
                 "materialSpecification": bom_item.material_specification,
@@ -321,6 +342,10 @@ def get_shoe_bom_items():
                     size_info_template
                 ),  # Deep copy to ensure independence
             }
+        else:
+            combined_items[key]["approvalUsage"] += (
+                bom_item.total_usage if bom_item.total_usage else 0.00
+            )
 
         # Accumulate data for each size in sizeInfo
         for i in range(len(size_name_info)):
@@ -336,6 +361,7 @@ def get_shoe_bom_items():
             )
             approval_amount = approval_amount if approval_amount is not None else 0.00
             purchase_amount = purchase_amount if purchase_amount is not None else 0.00
+
             combined_items[key]["sizeInfo"][f"{size_name_info[i]['label']}"][
                 "approvalAmount"
             ] += approval_amount
@@ -381,7 +407,6 @@ def save_purchase():
         purchase_order_status="1",
     )
     db.session.add(purchase_order)
-    db.session.flush()
     purchase_order_id = (
         db.session.query(PurchaseOrder)
         .filter(PurchaseOrder.purchase_order_rid == purchase_order_rid)
@@ -416,7 +441,6 @@ def save_purchase():
             shipment_deadline="请在7-10日内交货",
         )
         db.session.add(purchase_divide_order)
-        db.session.flush()
         purchase_divide_order_id = (
             db.session.query(PurchaseDivideOrder)
             .filter(
@@ -581,9 +605,7 @@ def save_purchase_divide_orders():
     return jsonify({"status": "success"})
 
 
-@second_purchase_bp.route(
-    "/secondpurchase/submitpurchasedivideorders", methods=["POST"]
-)
+@second_purchase_bp.route("/secondpurchase/submitpurchasedivideorders", methods=["POST"])
 def submit_purchase_divide_orders():
     purchase_order_id = request.json.get("purchaseOrderId")
     order_info = (
@@ -599,6 +621,18 @@ def submit_purchase_divide_orders():
     order_shoe_id = order_info.OrderShoe.order_shoe_id
     order_rid = order_info.Order.order_rid
     order_shoe_rid = order_info.Shoe.shoe_rid
+    is_craft_existed = (
+        db.session.query(CraftSheet)
+        .filter(CraftSheet.order_shoe_id == order_shoe_id)
+        .first()
+    )
+    batch_info_type_name = (
+        db.session.query(BatchInfoType)
+        .join(Order, BatchInfoType.batch_info_type_id == Order.batch_info_type_id)
+        .filter(Order.order_id == order_id)
+        .first()
+        .batch_info_type_name
+    )
     materials_data = []
     query = (
         db.session.query(
@@ -648,24 +682,31 @@ def submit_purchase_divide_orders():
 
         material_id = bom_item.material_id
         material_quantity = purchase_order_item.purchase_amount
-        material_specification = (bom_item.material_specification,)
+        material_specification = bom_item.material_specification
         material_model = bom_item.material_model
         color = bom_item.bom_item_color
         remark = bom_item.remark
         size_type = bom_item.size_type
+        if is_craft_existed:
+            craft_name = bom_item.craft_name
+        else:
+            craft_name = ""
         if purchase_divide_order.purchase_divide_order_type == "N":
             material_storage = MaterialStorage(
                 order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 estimated_inbound_amount=material_quantity,
                 actual_inbound_amount=0,
+                department_id=bom_item.department_id,
                 current_amount=0,
                 unit_price=0,
                 material_outsource_status="0",
-                material_specification=material_specification,
                 material_model=material_model,
+                material_specification=material_specification,
                 material_storage_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
+                craft_name=craft_name,
+                production_instruction_item_id=bom_item.production_instruction_item_id,
             )
             db.session.add(material_storage)
         elif purchase_divide_order.purchase_divide_order_type == "S":
@@ -674,16 +715,20 @@ def submit_purchase_divide_orders():
                 quantity_map[f"size_{size}_quantity"] = getattr(
                     purchase_order_item, f"size_{size}_purchase_amount"
                 )
+
             size_material_storage = SizeMaterialStorage(
                 order_shoe_id=order_shoe_id,
                 material_id=material_id,
                 total_estimated_inbound_amount=material_quantity,
                 unit_price=0,
                 material_outsource_status="0",
+                department_id=bom_item.department_id,
                 size_material_specification=material_specification,
                 size_material_color=color,
                 purchase_divide_order_id=purchase_divide_order.purchase_divide_order_id,
-                size_storage_type="E",
+                size_storage_type=batch_info_type_name,
+                craft_name=craft_name,
+                production_instruction_item_id=bom_item.production_instruction_item_id,
             )
             for size in SHOESIZERANGE:
                 setattr(
@@ -703,6 +748,7 @@ def submit_purchase_divide_orders():
             PurchaseOrderItem,
             PurchaseOrder,
             BomItem,
+            ProductionInstructionItem,
             Material,
             Supplier,
         )
@@ -716,6 +762,11 @@ def submit_purchase_divide_orders():
             PurchaseDivideOrder.purchase_order_id == PurchaseOrder.purchase_order_id,
         )
         .join(BomItem, PurchaseOrderItem.bom_item_id == BomItem.bom_item_id)
+        .join(
+            ProductionInstructionItem,
+            ProductionInstructionItem.production_instruction_item_id
+            == BomItem.production_instruction_item_id,
+        )
         .join(Material, BomItem.material_id == Material.material_id)
         .join(Supplier, Material.material_supplier == Supplier.supplier_id)
         .filter(PurchaseOrder.purchase_order_rid == purchase_order_id)
@@ -741,10 +792,12 @@ def submit_purchase_divide_orders():
         purchase_order_item,
         purchase_order,
         bom_item,
+        production_instruction_item,
         material,
         supplier,
     ) in purchase_divide_orders:
         purchase_order_id = purchase_divide_order.purchase_divide_order_rid
+        print(purchase_order_id)
         if purchase_divide_order.purchase_divide_order_type == "N":
             if purchase_order_id not in purchase_divide_order_dict:
                 purchase_divide_order_dict[purchase_order_id] = {
@@ -781,6 +834,20 @@ def submit_purchase_divide_orders():
                 }
             )
         elif purchase_divide_order.purchase_divide_order_type == "S":
+            batch_info_type = (
+                db.session.query(BatchInfoType, Order)
+                .join(
+                    Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
+                )
+                .filter(Order.order_id == order_id)
+                .first()
+            )
+            shoe_size_list = []
+            for i in SHOESIZERANGE:
+                if getattr(batch_info_type.BatchInfoType, f"size_{i}_name") is not None:
+                    shoe_size_list.append(
+                        {i: getattr(batch_info_type.BatchInfoType, f"size_{i}_name")}
+                    )
             if purchase_order_id not in size_purchase_divide_order_dict:
                 size_purchase_divide_order_dict[purchase_order_id] = {
                     "供应商": supplier.supplier_name,
@@ -808,14 +875,13 @@ def submit_purchase_divide_orders():
                     + " "
                     + (bom_item.bom_item_color if bom_item.bom_item_color else "")
                 ),
-                "单位": material.material_unit,
                 "备注": bom_item.remark,
-                "用途说明": "",
             }
-            for size in SHOESIZERANGE:
-                obj[f"{size}"] = getattr(
-                    purchase_order_item, f"size_{size}_purchase_amount"
-                )
+            for size_dic in shoe_size_list:
+                for size, size_name in size_dic.items():
+                    obj[size_name] = getattr(
+                        purchase_order_item, f"size_{size}_purchase_amount"
+                    )
             size_purchase_divide_order_dict[purchase_order_id]["seriesData"].append(obj)
     customer_name = (
         db.session.query(Order, Customer)
@@ -845,7 +911,7 @@ def submit_purchase_divide_orders():
     generated_files = []
     # Convert the dictionary to a list
     template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单.xlsx")
-    size_template_path = os.path.join(FILE_STORAGE_PATH, "标准采购订单尺码版.xlsx")
+    size_template_path = os.path.join(FILE_STORAGE_PATH, "新标准采购订单尺码版.xlsx")
     for purchase_order_id, data in purchase_divide_order_dict.items():
         new_file_path = os.path.join(
             FILE_STORAGE_PATH,
@@ -875,7 +941,6 @@ def submit_purchase_divide_orders():
         "purchase_order",
         "二次采购订单.zip",
     )
-
     with zipfile.ZipFile(zip_file_path, "w") as zipf:
         for file in generated_files:
             # Extract purchase_order_id from the filename and check if it ends with 'F'
@@ -885,11 +950,11 @@ def submit_purchase_divide_orders():
                 zipf.write(file, filename)  # Add the file to the zip
 
     processor: EventProcessor = current_app.config["event_processor"]
-    event_arr = []
     try:
-        for operation_id in [64, 65, 66, 67]:
+        event_arr = []
+        for operation_id in [52, 53]:
             event = Event(
-                staff_id=1,
+                staff_id=3,
                 handle_time=datetime.datetime.now(),
                 operation_id=operation_id,
                 event_order_id=order_id,

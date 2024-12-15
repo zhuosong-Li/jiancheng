@@ -13,6 +13,12 @@
                 </div>
                 <div class="aside-menu" style="width: 100%; margin-top: 50px;">
                     <el-menu default-active="1" class="el-menu-vertical-demo">
+                        <el-menu-item index="9" @click="handleMenuClick(9)">
+                            <span>任务看板</span>
+                        </el-menu-item>
+                        <el-menu-item index="10" @click="handleMenuClick(10)">
+                            <span>二次（总仓）采购订单创建</span>
+                        </el-menu-item>
                         <el-menu-item index="1" @click="handleMenuClick(1)">
                             <span>材料待入库</span>
                         </el-menu-item>
@@ -63,6 +69,7 @@ import InboundView from '../components/InboundView.vue'
 import OutboundView from '../components/OutboundView.vue'
 import FixedAssetsConsumablesView from '@/Pages/LogisticsControlDepartment/LogisticsControlManager/components/FixedAssetsConsumablesView.vue'
 import LogisticsBatchTypeManagement from '@/components/LogisticsBatchInfoTypeManagement.vue'
+import SecondPurchaseListView from '@/Pages/LogisticsControlDepartment/LogisticsControlManager/components/SecondPurchaseListView.vue'
 
 export default {
     components: {
@@ -76,7 +83,8 @@ export default {
         InboundView,
         OutboundView,
         FixedAssetsConsumablesView,
-        LogisticsBatchTypeManagement
+        LogisticsBatchTypeManagement,
+        SecondPurchaseListView
     },
     data() {
         return {
@@ -97,6 +105,12 @@ export default {
         },
         handleMenuClick(index){
             switch(index) {
+                case 9:
+                    this.currentComponent = 'Dashboard'
+                    break
+                case 10:
+                    this.currentComponent = 'SecondPurchaseListView'
+                    break
                 case 1:
                     this.currentComponent = 'InboundView'
                     break
