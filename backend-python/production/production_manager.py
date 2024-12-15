@@ -900,25 +900,25 @@ def approve_quantity_report():
     report.status = 2
     report.rejection_reason = None
     response = (
-        db.session.query(QuantityReportItem, OrderShoeType)
+        db.session.query(func.sum(QuantityReportItem.report_amount), OrderShoeType)
         .join(
             OrderShoeType,
             QuantityReportItem.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
         )
         .filter(QuantityReportItem.quantity_report_id == data["reportId"])
+        .group_by(QuantityReportItem.quantity_report_id, QuantityReportItem.order_shoe_type_id)
         .all()
     )
     for row in response:
-        report_item, order_shoe_type = row
-        if report_item.report_amount:
-            if report.team == "裁断":
-                order_shoe_type.cutting_amount += report_item.report_amount
-            elif report.team == "针车预备":
-                order_shoe_type.pre_sewing_amount += report_item.report_amount
-            elif report.team == "针车":
-                order_shoe_type.sewing_amount += report_item.report_amount
-            elif report.team == "成型":
-                order_shoe_type.molding_amount += report_item.report_amount
+        team_amount, order_shoe_type = row
+        if report.team == "裁断":
+            order_shoe_type.cutting_amount += team_amount
+        elif report.team == "针车预备":
+            order_shoe_type.pre_sewing_amount += team_amount
+        elif report.team == "针车":
+            order_shoe_type.sewing_amount += team_amount
+        elif report.team == "成型":
+            order_shoe_type.molding_amount += team_amount
     db.session.commit()
     return jsonify({"message": "success"})
 
