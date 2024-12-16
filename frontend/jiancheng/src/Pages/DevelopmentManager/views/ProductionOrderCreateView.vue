@@ -1172,13 +1172,23 @@
                 <el-table :data="pastShoeInfoTable" border>
                     <el-table-column type="expand">
                         <template #default="scope">
-                            <el-table :data="scope.row.shoeColors" border>
+                            <el-table ref="orderShoeTypeTable" :data="scope.row.shoeColors" border @selection-change="handleShoeTypeSelectionChange">
+                                <el-table-column type="selection"></el-table-column>
                                 <el-table-column prop="color" label="颜色"></el-table-column>
+                                <el-table-column label="鞋图">
+                                    <template #default="scope">
+                                        <el-image
+                                            style="width: 100px; height: 50px"
+                                            :src="scope.row.shoeImageUrl"
+                                        />
+                                    </template>
+                                </el-table-column>
                                 <el-table-column label="操作">
                                     <template #default="scope">
                                         <el-button
                                             type="primary"
                                             size="default"
+                                            @click="openLoadMaterialDialogByColor(scope.row)"
                                             >查看材料</el-button
                                         >
                                     </template>
@@ -1191,24 +1201,43 @@
                 </el-table>
                 <template #footer>
                 <span>
-                    <el-button @click="">取消</el-button>
-                    <el-button type="primary" @click="">确认加载</el-button>
+                    <el-button @click="isLoadMaterialDialogVisible = false;selectShoeTypeRow = {}">取消</el-button>
+                    <el-button type="primary" @click="addPastMaterialToCurrent">确认加载</el-button>
                 </span>
                 </template>
             </el-dialog>
             <el-dialog
-                :title="`过往订单材料一览 {{ pastShoeId }}`"
-                v-model="isPastShoeMaterialDialogVisible"
-                width="50%">
-                <span></span>
+                title="过往订单材料查看"
+                v-model="isPastShoeMaterialDetailDialogVisible"
+                width="80%">
+                <el-descriptions title="鞋型基本信息" border column="2">
+                    <el-descriptions-item label="鞋图" rowspan="2" align="center">
+                        <el-image
+                            style="width: 150px; height: 75px"
+                            :src="pastShoeDescription.shoeImageUrl"
+                        />
+                    </el-descriptions-item>
+                    <el-descriptions-item label="工厂型号" align="center">{{ pastShoeDescription.shoeId }}</el-descriptions-item>
+                    <el-descriptions-item label="颜色" align="center">{{ pastShoeDescription.color }}</el-descriptions-item>
+                </el-descriptions>
+                <el-table :data="pastMaterialData" border>
+                    <el-table-column prop="materialType" label="材料类型"></el-table-column>
+                    <el-table-column prop="materialDetailType" label="材料二级类型"></el-table-column>
+                    <el-table-column prop="supplierName" label="厂家名称"></el-table-column>
+                    <el-table-column prop="materialName" label="材料名称"></el-table-column>
+                    <el-table-column prop="materialModel" label="材料型号"></el-table-column>
+                    <el-table-column prop="materialSpecification" label="材料规格"></el-table-column>
+                    <el-table-column prop="craftName" label="工艺名称"></el-table-column>
+                    <el-table-column prop="color" label="颜色"></el-table-column>
+                    <el-table-column prop="unit" label="单位"></el-table-column>
+                    <el-table-column prop="comment" label="备注"></el-table-column>
+                </el-table>
                 <template #footer>
                 <span>
-                    <el-button @click="isPastShoeMaterialDialogVisible = false">Cancel</el-button>
-                    <el-button type="primary" @click="">OK</el-button>
+                    <el-button type="primary" @click="isPastShoeMaterialDetailDialogVisible = false">确认</el-button>
                 </span>
                 </template>
             </el-dialog>
-            
             
             <el-dialog title="添加新材料" v-model="newMaterialVis" width="50%">
                 <el-row :gutter="20">
@@ -1478,6 +1507,9 @@
                         ></el-input>
                     </el-descriptions-item>
                 </el-descriptions>
+                <el-row :gutter="20">
+                    <el-col :span="12" :offset="0"><el-button type="primary" size="default" @click="openLoadMaterialDialog">加载过往订单</el-button></el-col>
+                </el-row>
                 <el-tabs v-model="activeTab">
                     <!-- Generate tabs from backend-provided tabcolor array -->
                     <el-tab-pane
@@ -2327,6 +2359,7 @@ export default {
             materialSearch: '',
             factorySearch: '',
             isEditDialogVisible: false,
+            isPastShoeMaterialDetailDialogVisible: false,
             isProductionOrderCreateDialogVisible: false,
             isPastShoeMaterialDialogVisible: false,
             isPreviewDialogVisible: false,
@@ -2335,6 +2368,7 @@ export default {
             currentShoeId: '',
             currentColor: '',
             currentShoeImageUrl: '',
+            pastMaterialData: [],
             fileList: [],
             isUploadImageDialogVisible: false,
             createEditSymbol: 0,
@@ -2368,6 +2402,11 @@ export default {
             orderProduceInfo: [],
             pastShoeInfoTable: [],
             newProductionInstructionId: '',
+            pastShoeDescription: {
+                shoeId: '',
+                color: '',
+                shoeImageUrl: ''
+            },
             defaultManuallyAddedMaterial: {
                 materialType: '',
                 materialDetailType: '',
@@ -2398,7 +2437,11 @@ export default {
                 { value: '个', label: '个' },
                 { value: '双', label: '双' },
                 { value: '条', label: '条' }
-            ]
+            ],
+            selectShoeTypeRow: {
+                shoeTypeId: '',
+                color: ''
+            },
         }
     },
     async mounted() {
@@ -2454,6 +2497,12 @@ export default {
                 `${this.$apiBaseUrl}/devproductionorder/getnewproductioninstructionid`
             )
             this.newProductionInstructionId = response.data.productionInstructionId
+        },
+        async getPastMaterialData(row) {
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/devproductionorder/getpastmaterialdata?shoetypeid=${row.shoeTypeId}`
+            )
+            this.pastMaterialData = response.data
         },
         syncMaterials(materialTypeNumber) {
             switch (materialTypeNumber) {
@@ -2519,6 +2568,26 @@ export default {
                     break
             }
             ElMessage.success('复制成功')
+        },
+        async addPastMaterialToCurrent() {
+            console.log(this.selectShoeTypeRow[0].shoeTypeId)
+            const response = await axios.get(
+                `${this.$apiBaseUrl}/devproductionorder/getformatpastmaterialdata`,
+                {
+                    params: {
+                        shoeTypeId: this.selectShoeTypeRow[0].shoeTypeId,
+                    }
+                }
+            )
+            const pastMaterialData = response.data
+            console.log(this.materialWholeData)
+            this.materialWholeData[0].surfaceMaterialData = pastMaterialData.surfaceMaterialData
+            this.materialWholeData[0].insideMaterialData = pastMaterialData.insideMaterialData
+            this.materialWholeData[0].accessoryMaterialData = pastMaterialData.accessoryMaterialData
+            this.materialWholeData[0].outsoleMaterialData = pastMaterialData.outsoleMaterialData
+            this.materialWholeData[0].midsoleMaterialData = pastMaterialData.midsoleMaterialData
+            this.materialWholeData[0].hotsoleMaterialData = pastMaterialData.hotsoleMaterialData
+
         },
         addMaterialByManual(typeSymbol) {
             const preActiveMaterialData = this.materialWholeData.find(
@@ -2835,6 +2904,13 @@ export default {
             this.pastShoeInfoTable = response.data
             console.log(this.pastShoeInfoTable)
         },
+        async openLoadMaterialDialogByColor(row) {
+            this.pastShoeDescription.shoeId = row.shoeId
+            this.pastShoeDescription.color = row.color
+            this.pastShoeDescription.shoeImageUrl = row.shoeImageUrl
+            await this.getPastMaterialData(row)
+            this.isPastShoeMaterialDetailDialogVisible = true
+        },
         getMaterialDataByType(type) {
             const activeData = this.materialWholeData.find((item) => item.color === this.activeTab)
             if (activeData) {
@@ -2995,6 +3071,20 @@ export default {
                         message: '已取消下发'
                     })
                 })
+        },
+        handleShoeTypeSelectionChange(selection) {
+            if (selection.length > 1) {
+                // Ensure only one row is selected
+                this.$refs.orderShoeTypeTable.clearSelection()
+                this.$refs.orderShoeTypeTable.toggleRowSelection(
+                    selection[selection.length - 1],
+                    true
+                )
+            } else {
+                this.selectShoeTypeRow = selection
+                console.log(this.selectShoeTypeRow)
+            }
+            
         },
         handleMaterialSelectionChange(selection) {
             if (selection.length > 1) {
