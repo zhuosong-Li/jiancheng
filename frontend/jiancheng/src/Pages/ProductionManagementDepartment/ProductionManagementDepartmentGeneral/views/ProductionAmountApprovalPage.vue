@@ -66,21 +66,15 @@
         </el-main>
     </el-container>
     <el-dialog title="数量审批界面" v-model="isAmountApprovalVis" width="50%">
-        <el-row :gutter="20">
-            <el-col :span="24" :offset="0">
-                <el-table :data="shoeBatchAmountData" border stripe>
-                    <el-table-column prop="colorName" label="颜色"></el-table-column>、
-                    <el-table-column prop="reportAmount" label="当日生产数量"></el-table-column>
-                    <el-table-column prop="producedAmount" label="累计生产数量"></el-table-column>
-                    <el-table-column prop="totalAmount" label="目标数量"></el-table-column>
-                </el-table>
-            </el-col>
-        </el-row>
+        <QuantityReportTable v-model:tableData="quantityReportData" :orderShoeId="$props.orderShoeId"
+            :editable="false" />
         <template #footer>
             <span>
                 <el-button @click="isAmountApprovalVis = false">返回</el-button>
-                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="danger" @click="openRefusalDialog">驳回请求</el-button>
-                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="primary" @click="openConfirmDialog">审批通过</el-button>
+                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="danger"
+                    @click="openRefusalDialog">驳回请求</el-button>
+                <el-button v-if="this.currentRow.reportStatus === '未审批'" type="primary"
+                    @click="openConfirmDialog">审批通过</el-button>
             </span>
         </template>
     </el-dialog>
@@ -105,10 +99,12 @@
 import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { ElMessage } from 'element-plus';
+import QuantityReportTable from '../../ProductionSharedPages/QuantityReportPages/QuantityReportTable.vue';
 export default {
     props: ['orderShoeId', 'orderId'],
     components: {
-        AllHeader
+        AllHeader,
+        QuantityReportTable
     },
     data() {
         return {
@@ -122,7 +118,7 @@ export default {
             departSelect: '',
             amountListData: [],
             currentRow: {},
-            shoeBatchAmountData: [],
+            quantityReportData: [],
             orderInfo: {},
         }
     },
@@ -132,7 +128,7 @@ export default {
     },
     methods: {
         async getOrderInfo() {
-            let params = {"orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId}
+            let params = { "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getorderinfo`, { params })
             this.orderInfo = response.data
         },
@@ -173,14 +169,21 @@ export default {
             else if (rowData.team == "成型")
                 teamId = 3
             this.currentRow = rowData
-            let params = { reportId: rowData.reportId, team: teamId}
+            let params = { reportId: rowData.reportId, team: teamId }
             let response = await axios.get(`${this.$apiBaseUrl}/production/getquantityreportdetail`, { params })
-            this.shoeBatchAmountData = response.data
+            this.quantityReportData = []
+            response.data.forEach(row => {
+                row["toDateAmount"] = 0
+                row.productionLinesAmount.forEach(amountObj => {
+                    row["toDateAmount"] += amountObj.reportAmount
+                })
+                this.quantityReportData.push(row)
+            })
             this.isAmountApprovalVis = true
         },
         async openConfirmDialog() {
             try {
-                const data = { "reportId": this.currentRow.reportId, "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId}
+                const data = { "reportId": this.currentRow.reportId, "orderId": this.$props.orderId, "orderShoeId": this.$props.orderShoeId }
                 console.log(data)
                 await axios.patch(`${this.$apiBaseUrl}/production/productionmanager/approvequantityreport`, data)
                 ElMessage({

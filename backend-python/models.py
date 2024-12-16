@@ -118,6 +118,7 @@ class QuantityReportItem(db.Model):
     quantity_report_id = db.Column(db.BigInteger, nullable=False)
     order_shoe_type_id = db.Column(db.BigInteger, nullable=False)
     report_amount = db.Column(db.Integer, default=0)
+    production_line_id = db.Column(db.Integer)
 
     def __repr__(self):
         return f"<QuantityReportItem(report_id={self.quantity_report_item_id}>"

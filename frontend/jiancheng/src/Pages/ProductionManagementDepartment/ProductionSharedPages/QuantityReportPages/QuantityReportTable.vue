@@ -1,25 +1,28 @@
 <template>
-    <el-table :data="props.tableData" border :style="{ marginBottom: '20px' }">
-        <el-table-column prop="colorName" label="颜色"></el-table-column>
-        <el-table-column label="生产数量">
-            <template #default="scope">
-                <el-input v-model="scope.row.reportAmount" style="width: 100px" type="number" min="0"
-                    :max="scope.row.remainAmount" @blur="() => checkValue(scope.row)" :readonly="!props.editable"/>
+    <el-table :data="tableData" border :style="{ marginBottom: '20px' }" default-expand-all>
+        <el-table-column type="expand">
+            <template #default="meta">
+                <el-table :data="meta.row.productionLinesAmount">
+                    <el-table-column prop="productionLineName" label="线号"></el-table-column>
+                    <el-table-column label="生产数量">
+                        <template #default="scope">
+                            <el-input-number v-if="props.editable" v-model="scope.row.reportAmount" :min="0"
+                                :max="scope.row.remainAmount" />
+                            <span v-else>{{ scope.row.reportAmount }}</span>
+                        </template>
+                    </el-table-column>
+                </el-table>
             </template>
         </el-table-column>
-        <el-table-column prop="remainAmount" label="目前剩余数量" />
+        <el-table-column prop="colorName" label="颜色"></el-table-column>
+        <el-table-column prop="toDateAmount" label="上报数量" />
+        <el-table-column prop="producedAmount" label="已审批数量" />
+        <el-table-column prop="totalAmount" label="目标数量" />
     </el-table>
 </template>
 
 <script setup>
-const props = defineProps(['tableData', 'orderShoeId', 'editable'])
-
-const checkValue = (row) => {
-    if (row.amount < 0) {
-        row.amount = 0
-    } else if (row.remainAmount < 0) {
-        row.amount = Number(row.amount) + row.remainAmount
-    }
-}
-
+import { defineModel } from 'vue';
+const props = defineProps(['orderShoeId', 'editable'])
+const tableData = defineModel('tableData')
 </script>
