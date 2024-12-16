@@ -1,49 +1,13 @@
 <template>
     <el-row :gutter="20" style="margin-top: 20px">
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-input v-model="orderRIdSearch" placeholder="请输入订单号" clearable @keypress.enter="getOrderDataTable"
-                @clear="getOrderDataTable" />
+        <el-col :span="2">
+            <el-button-group>
+                <el-button type="primary" size="default" @click="isSearchDialogVisible = true">搜索设置</el-button>
+            </el-button-group>
         </el-col>
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-input v-model="shoeRIdSearch" placeholder="请输入公司型号" clearable @keypress.enter="getOrderDataTable"
-                @clear="getOrderDataTable" />
-        </el-col>
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-input v-model="customerProductNameSearch" placeholder="请输入客户型号" clearable
-                @keypress.enter="getOrderDataTable" @clear="getOrderDataTable" />
-        </el-col>
-        <el-col :span="4" :offset="0" style="white-space: nowrap;">
-            <el-date-picker v-model="orderDateRangeSearch" type="daterange" range-separator="至"
-                start-placeholder="订单开始日期" end-placeholder="订单结束日期" @change="getOrderDataTable"
-                @clear="getOrderDataTable" value-format="YYYY-MM-DD" clearable>
-            </el-date-picker>
-        </el-col>
-        <el-col :span="4" :offset="4" style="white-space: nowrap;">
-            <el-select v-model="statusNodeSearch" placeholder="状态点查询" clearable @change="getOrderDataTable"
-                @clear="getOrderDataTable">
-                <el-option v-for="item in [
-                    '未排期',
-                    '已保存排期',
-                    '生产前确认',
-                    '生产中',
-                    '生产结束',
-                ]" :key="item" :label="item" :value="item">
-                </el-option>
-            </el-select>
-        </el-col>
-    </el-row>
-    <el-row :gutter="20" style="margin-top: 20px">
-        <!-- <el-button @click="toggleFilters">{{ showFilters ? 'Hide' : 'Show' }} Filters</el-button>
-        <el-collapse v-model="showFilters" class="filter-panel">
-            <div class="filters-container">
-                <el-row :gutter="20">
-                    <el-col :span="6" v-for="(filter, index) in filters" :key="index">
-                        <el-input v-model="filter.value" :placeholder="filter.label" />
-                    </el-col>
-                </el-row>
-            </div>
-        </el-collapse> -->
-        <el-col :span="4" :offset="21" style="white-space: nowrap;">
+        <OrderProgressSearchDialog :visible="isSearchDialogVisible" :customerNameOptions="customerNameOptions"
+            :searchForm="searchForm" @update-visible="updateDialogVisible" @confirm="handleSearch" />
+        <el-col :span="2" style="white-space: nowrap;">
             <el-button type="primary" v-if="role == 6 && isMultipleSelection" @click="openMultipleShoesDialog">
                 排产
             </el-button>
@@ -71,6 +35,7 @@
                     </template>
                 </el-table-column>
                 <el-table-column prop="customerName" label="客户名称" width="80"></el-table-column>
+                <el-table-column prop="customerBrand" label="客户商标" width="80"></el-table-column>
                 <el-table-column prop="orderRId" label="订单号"></el-table-column>
                 <el-table-column prop="orderStartDate" label="订单开始" width="110" sortable></el-table-column>
                 <el-table-column prop="orderEndDate" label="订单结束" width="110" sortable></el-table-column>
@@ -79,10 +44,10 @@
                 <el-table-column prop="status" label="状态"></el-table-column>
                 <el-table-column prop="orderShoeTotal" label="鞋型数量"></el-table-column>
                 <el-table-column label="车间生产进度" header-align="center">
-                    <el-table-column prop="cuttingTotalAmount" label="裁断"></el-table-column>
-                    <el-table-column prop="preSewingTotalAmount" label="预备"></el-table-column>
-                    <el-table-column prop="sewingTotalAmount" label="针车"></el-table-column>
-                    <el-table-column prop="moldingTotalAmount" label="成型"></el-table-column>
+                    <el-table-column prop="totalCuttingAmount" label="裁断"></el-table-column>
+                    <el-table-column prop="totalPreSewingAmount" label="预备"></el-table-column>
+                    <el-table-column prop="totalSewingAmount" label="针车"></el-table-column>
+                    <el-table-column prop="totalMoldingAmount" label="成型"></el-table-column>
                 </el-table-column>
                 <el-table-column label="生产信息">
                     <template #default="scope">
@@ -373,6 +338,7 @@ import AllHeader from '@/components/AllHeader.vue'
 import axios from 'axios'
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { shoeBatchInfoTableSpanMethod, getShoeSizesName } from '../utils';
+import OrderProgressSearchDialog from './OrderProgressSearchDialog.vue';
 export default {
     props: {
         editable: {
@@ -381,10 +347,23 @@ export default {
         }
     },
     components: {
-        AllHeader
+        AllHeader,
+        OrderProgressSearchDialog
     },
     data() {
         return {
+            isSearchDialogVisible: false,
+            customerNameOptions: [],
+            searchForm: {
+                orderDateRangeSearch: null,
+                orderRIdSearch: null,
+                shoeRIdSearch: null,
+                customerProductNameSearch: null,
+                statusNodeSearch: null,
+                customerNameSearch: null,
+                customerBrandSearch: null,
+                sortCondition: null
+            },
             currentProdDetailTab: "1",
             isProdDetailDialogOpen: false,
             showFilters: false,
@@ -414,12 +393,8 @@ export default {
                 }
             ],
             role: localStorage.getItem('role'),
-            orderDateRangeSearch: "",
+
             getShoeSizesName,
-            orderRIdSearch: '',
-            shoeRIdSearch: '',
-            customerProductNameSearch: '',
-            statusNodeSearch: '',
             currentPage: 1,
             pageSize: 10,
             orderTotalRows: 0,
@@ -556,6 +531,13 @@ export default {
         }
     },
     methods: {
+        updateDialogVisible(newVal) {
+            this.isSearchDialogVisible = newVal
+        },
+        handleSearch(values) {
+            this.searchForm = { ...values }
+            this.getOrderDataTable()
+        },
         toggleFilters() {
             this.showFilters = !this.showFilters;
         },
@@ -820,26 +802,26 @@ export default {
         },
         async getOrderDataTable() {
             let startDate = null, endDate = null
-            if (this.orderDateRangeSearch) {
-                startDate = this.orderDateRangeSearch[0]
-                endDate = this.orderDateRangeSearch[1]
+            if (this.searchForm.orderDateRangeSearch) {
+                startDate = this.searchForm.orderDateRangeSearch[0]
+                endDate = this.searchForm.orderDateRangeSearch[1]
             }
             let params = {
                 "page": this.currentPage,
                 "pageSize": this.pageSize,
-                "orderRId": this.orderRIdSearch,
-                "shoeRId": this.shoeRIdSearch,
-                "customerProductName": this.customerProductNameSearch,
-                "statusNode": this.statusNodeSearch,
+                "orderRId": this.searchForm.orderRIdSearch,
+                "shoeRId": this.searchForm.shoeRIdSearch,
+                "customerProductName": this.searchForm.customerProductNameSearch,
+                "statusNode": this.searchForm.statusNodeSearch,
+                "customerName": this.searchForm.customerNameSearch,
+                "customerBrand": this.searchForm.customerBrandSearch,
                 "orderStartDate": startDate,
-                "orderEndDate": endDate
+                "orderEndDate": endDate,
+                "sortCondition": this.searchForm.sortCondition
             }
             let response = await axios.get(`${this.$apiBaseUrl}/production/productionmanager/getallorderproductionprogress`, { params })
             this.orderTableData = response.data.result
             this.orderTotalRows = response.data.totalLength
-            // this.orderTableData.forEach(row => {
-            //     row.productionPeriod = row.productionEndDate ? `${row.productionStartDate} 至 ${row.productionEndDate}` : '尚无日期'
-            // })
         },
         openCraftSheet() {
             let url = ''

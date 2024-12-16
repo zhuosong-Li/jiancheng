@@ -80,7 +80,7 @@
 					<el-option v-for="item in ['裁断+针车', '针车']" :key="item" :label="item" :value="item">
 					</el-option>
 				</el-select>
-				<span v-if="this.readOnly">{{ outsourceForm.outsourceType.join(", ") }}</span>
+				<span v-if="this.readOnly">{{ outsourceForm.outsourceType }}</span>
 			</el-form-item>
 			<el-form-item label="外包厂家" prop="outsourceFactory">
 				<template #default="scope">
