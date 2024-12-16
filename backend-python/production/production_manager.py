@@ -254,9 +254,14 @@ def get_all_order_production_progress():
     status_node = request.args.get("statusNode")
     start_date_search = request.args.get("orderStartDate")
     end_date_search = request.args.get("orderEndDate")
+    customer_name = request.args.get("customerName")
+    customer_brand = request.args.get("customerBrand")
+    sort_condition = request.args.get("sortCondition")
     # check order status >= 生产流程
     stmt = select(OrderStatus.order_id).where(OrderStatus.order_current_status >= 9)
     order_ids = db.session.execute(stmt).scalars().all()
+
+    # order shoe status
     status_table = (
         db.session.query(
             OrderShoe.order_shoe_id,
@@ -279,8 +284,35 @@ def get_all_order_production_progress():
             status_table = status_table.filter(
                 OrderShoeStatus.current_status_value == 1
             )
-
     status_table = status_table.subquery()
+
+    # order shoe amount
+    order_shoe_info = (
+        db.session.query(
+            OrderShoe.order_shoe_id,
+            func.sum(OrderShoeBatchInfo.total_amount).label("order_shoe_amount"),
+        )
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(
+            OrderShoeBatchInfo,
+            OrderShoeBatchInfo.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
+        )
+        .group_by(OrderShoe.order_shoe_id)
+        .subquery()
+    )
+
+    team_production_amount = (
+        db.session.query(
+            OrderShoe.order_shoe_id,
+            func.sum(OrderShoeType.cutting_amount).label("total_cutting_amount"),
+            func.sum(OrderShoeType.pre_sewing_amount).label("total_pre_sewing_amount"),
+            func.sum(OrderShoeType.sewing_amount).label("total_sewing_amount"),
+            func.sum(OrderShoeType.molding_amount).label("total_molding_amount"),
+        )
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .group_by(OrderShoe.order_shoe_id)
+        .subquery()
+    )
     query = (
         db.session.query(
             Order,
@@ -290,6 +322,11 @@ def get_all_order_production_progress():
             status_table.c.current_status_str,
             status_table.c.current_status_value_str,
             OrderShoeProductionInfo,
+            team_production_amount.c.total_cutting_amount,
+            team_production_amount.c.total_pre_sewing_amount,
+            team_production_amount.c.total_sewing_amount,
+            team_production_amount.c.total_molding_amount,
+            order_shoe_info.c.order_shoe_amount,
         )
         .join(Customer, Customer.customer_id == Order.customer_id)
         .join(OrderShoe, Order.order_id == OrderShoe.order_id)
@@ -299,8 +336,13 @@ def get_all_order_production_progress():
             OrderShoeProductionInfo,
             OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
         )
+        .join(
+            team_production_amount, team_production_amount.c.order_shoe_id == OrderShoe.order_shoe_id
+        )
+        .join(
+            order_shoe_info, order_shoe_info.c.order_shoe_id == OrderShoe.order_shoe_id
+        )
         .filter(Order.order_id.in_(order_ids))
-        .order_by(asc(Order.end_date))
     )
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
@@ -332,6 +374,21 @@ def get_all_order_production_progress():
                 ),
             ),
         )
+    if customer_name and customer_name != "":
+        query = query.filter(Customer.customer_name.ilike(f"%{customer_name}%"))
+    if customer_brand and customer_brand != "":
+        query = query.filter(Customer.customer_brand.ilike(f"%{customer_brand}%"))
+    # sort condition
+    if sort_condition == "最新":
+        query = query.order_by(desc(Order.start_date))
+    elif sort_condition == "最旧":
+        query = query.order_by(asc(Order.start_date))
+    elif sort_condition == "周期最长":
+        query = query.order_by(desc(Order.end_date - Order.start_date))
+    elif sort_condition == "数量最多":
+        query = query.order_by(desc(order_shoe_info.c.order_shoe_amount))
+    else:
+        query = query.order_by(asc(Order.end_date))
     count_result = query.distinct().count()
     response = query.distinct().limit(number).offset((page - 1) * number).all()
     res = []
@@ -345,6 +402,11 @@ def get_all_order_production_progress():
             current_status_str,
             current_status_value_str,
             production_info,
+            total_cutting_amount,
+            total_pre_sewing_amount,
+            total_sewing_amount,
+            total_molding_amount,
+            order_shoe_amount,
         ) = row
         status_arr = [int(item) for item in current_status_str.split(",")]
         status_value_arr = [int(item) for item in current_status_value_str.split(",")]
@@ -353,6 +415,7 @@ def get_all_order_production_progress():
             "orderId": order.order_id,
             "orderRId": order.order_rid,
             "customerName": customer.customer_name,
+            "customerBrand": customer.customer_brand,
             "orderShoeId": order_shoe.order_shoe_id,
             "shoeRId": shoe.shoe_rid,
             "customerProductName": order_shoe.customer_product_name,
@@ -371,10 +434,11 @@ def get_all_order_production_progress():
             "moldingStartDate": format_date(production_info.molding_start_date),
             "moldingEndDate": format_date(production_info.molding_end_date),
             "orderShoeTypeInfo": [],
-            "cuttingTotalAmount": 0,
-            "preSewingTotalAmount": 0,
-            "sewingTotalAmount": 0,
-            "moldingTotalAmount": 0,
+            "totalCuttingAmount": total_cutting_amount,
+            "totalPreSewingAmount": total_pre_sewing_amount,
+            "totalSewingAmount": total_sewing_amount,
+            "totalMoldingAmount": total_molding_amount,
+            "orderShoeTotal": order_shoe_amount,
             "isMaterialArrived": production_info.is_material_arrived,
         }
         res.append(obj)
@@ -395,9 +459,7 @@ def get_all_order_production_progress():
             .group_by(OrderShoeType.order_shoe_type_id)
             .all()
         )
-        order_shoe_total = 0
         for order_shoe_type, color, color_amount in order_shoe_type_info:
-            order_shoe_total += color_amount
             order_shoe_data["orderShoeTypeInfo"].append(
                 {
                     "colorName": color.color_name,
@@ -408,11 +470,6 @@ def get_all_order_production_progress():
                     "moldingAmount": order_shoe_type.molding_amount,
                 }
             )
-            order_shoe_data["cuttingTotalAmount"] += order_shoe_type.cutting_amount
-            order_shoe_data["preSewingTotalAmount"] += order_shoe_type.pre_sewing_amount
-            order_shoe_data["sewingTotalAmount"] += order_shoe_type.sewing_amount
-            order_shoe_data["moldingTotalAmount"] += order_shoe_type.molding_amount
-            order_shoe_data["orderShoeTotal"] = order_shoe_total
     return {"result": res, "totalLength": count_result}
 
 
@@ -906,7 +963,9 @@ def approve_quantity_report():
             QuantityReportItem.order_shoe_type_id == OrderShoeType.order_shoe_type_id,
         )
         .filter(QuantityReportItem.quantity_report_id == data["reportId"])
-        .group_by(QuantityReportItem.quantity_report_id, QuantityReportItem.order_shoe_type_id)
+        .group_by(
+            QuantityReportItem.quantity_report_id, QuantityReportItem.order_shoe_type_id
+        )
         .all()
     )
     for row in response:
@@ -1076,11 +1135,11 @@ def approve_price_report():
     report.rejection_reason = None
     if flag:
         processor: EventProcessor = current_app.config["event_processor"]
-        if report.team == '裁断':
+        if report.team == "裁断":
             operation_arr = [82, 83]
-        elif report.team == '针车' or report.team == '预备':
+        elif report.team == "针车" or report.team == "预备":
             operation_arr = [96, 97]
-        elif report.team == '成型':
+        elif report.team == "成型":
             operation_arr = [116, 117]
         else:
             return jsonify({"message": "Cannot change current status"}), 403

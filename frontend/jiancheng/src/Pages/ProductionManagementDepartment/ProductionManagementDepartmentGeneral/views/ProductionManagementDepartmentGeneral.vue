@@ -27,6 +27,9 @@
             <el-menu-item index="2" @click="handleMenuClick(2)">
               <span>订单生产明细</span>
             </el-menu-item>
+            <el-menu-item index="9" @click="handleMenuClick(9)">
+              <span>生产报表</span>
+            </el-menu-item>
             <el-menu-item index="3" @click="handleMenuClick(3)">
               <span>物料信息</span>
             </el-menu-item>
@@ -71,6 +74,7 @@ import { ref } from 'vue'
 import axios from 'axios'
 import { logout } from '@/Pages/utils/logOut'
 import OutsourceFactoryInfo from '../components/OutsourceFactoryInfo.vue'
+import ProductionReport from '../components/ProductionReport.vue'
 
 export default {
   components: {
@@ -84,7 +88,8 @@ export default {
     ApprovalPage,
     ProductionManagement,
     OrderProgress,
-    OutsourceFactoryInfo
+    OutsourceFactoryInfo,
+    ProductionReport,
   },
   data() {
     return {
@@ -119,6 +124,9 @@ export default {
           break
         case 7:
           this.currentComponent = 'OutsourceFactoryInfo'
+          break
+        case 9:
+          this.currentComponent = 'ProductionReport'
           break
       }
     },
