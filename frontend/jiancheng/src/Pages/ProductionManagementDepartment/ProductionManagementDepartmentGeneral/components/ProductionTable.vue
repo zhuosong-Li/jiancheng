@@ -1,6 +1,6 @@
 <template>
     <el-table :data="data" style="width: 100%" v-loading="loading" element-loading-text="Loading..." border default-expand-all>
-        <el-table-column type="expand" width="55">
+        <el-table-column type="expand" width="55" v-if="reportType === 'productionAmount'">
             <template #default="meta">
                 <el-table :data="meta.row.productionLines" border stripe style="width: 100%">
                     <el-table-column width="55"></el-table-column>
@@ -9,8 +9,9 @@
                 </el-table>
             </template>
         </el-table-column>
-        <el-table-column align="center" prop="team" label="车间"></el-table-column>
-        <el-table-column align="center" prop="totalAmount" label="车间产量"></el-table-column>
+        <el-table-column align="center" :prop="productionTeamProp" :label="productionTeamLabel"></el-table-column>
+        <el-table-column align="center" prop="outsourceStatus" label="状态" v-if="reportType === 'outsourceAmount'"></el-table-column>
+        <el-table-column align="center" :prop="productionTotalAmountProp" label="产量"></el-table-column>
     </el-table>
 </template>
 
@@ -35,40 +36,39 @@ export default {
         },
         reportType: {
             type: String,
-            required: true, // 'productionAmount', 'monthly', 'yearly'
+            required: true,
         },
     },
     setup(props) {
-        const previousStockLabel = computed(() => {
-            if (props.reportType === 'productionAmount') return '昨天库存';
-            if (props.reportType === 'monthly') return "Previous Month's Stock";
-            if (props.reportType === 'yearly') return "Previous Year's Stock";
-            return 'Previous Stock';
-        });
 
         const productionAmountLabel = computed(() => {
             if (props.reportType === 'productionAmount') return '日期范围产量';
-            if (props.reportType === 'monthly') return "This Month's Production Amount";
-            if (props.reportType === 'yearly') return "This Year's Production Amount";
             return 'Production Amount';
         });
 
-        const todayStockLabel = computed(() => {
-            if (props.reportType === 'productionAmount') return 'Today Stock';
-            if (props.reportType === 'monthly') return "This Month's Stock";
-            if (props.reportType === 'yearly') return "This Year's Stock";
-            return 'Stock';
+        const productionTeamLabel = computed(() => {
+            if (props.reportType === 'productionAmount') return '车间';
+            if (props.reportType === 'outsourceAmount') return '外包工厂';
+            return 'Production Amount';
         });
 
-        const getSummaries = (SummaryMethodProps) => {
-            console.log(SummaryMethodProps)
-        }
+        const productionTeamProp = computed(() => {
+            if (props.reportType === 'productionAmount') return 'team';
+            if (props.reportType === 'outsourceAmount') return 'outsourceFactory';
+            return 'Production Amount';
+        });
+
+        const productionTotalAmountProp = computed(() => {
+            if (props.reportType === 'productionAmount') return 'totalAmount';
+            if (props.reportType === 'outsourceAmount') return 'outsourceAmount';
+            return 'Production Amount';
+        });
 
         return {
-            previousStockLabel,
             productionAmountLabel,
-            todayStockLabel,
-            getSummaries
+            productionTeamLabel,
+            productionTeamProp,
+            productionTotalAmountProp,
         };
     },
 };

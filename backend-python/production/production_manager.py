@@ -337,7 +337,8 @@ def get_all_order_production_progress():
             OrderShoeProductionInfo.order_shoe_id == OrderShoe.order_shoe_id,
         )
         .join(
-            team_production_amount, team_production_amount.c.order_shoe_id == OrderShoe.order_shoe_id
+            team_production_amount,
+            team_production_amount.c.order_shoe_id == OrderShoe.order_shoe_id,
         )
         .join(
             order_shoe_info, order_shoe_info.c.order_shoe_id == OrderShoe.order_shoe_id
@@ -371,6 +372,10 @@ def get_all_order_production_progress():
                 and_(
                     Order.end_date >= start_date_search,
                     Order.end_date <= end_date_search,
+                ),
+                and_(
+                    Order.start_date <= start_date_search,
+                    Order.end_date >= end_date_search,
                 ),
             ),
         )
@@ -1214,6 +1219,8 @@ def reject_price_report():
 def download_batch_info():
     order_id = request.args.get("orderId")
     order_shoe_id = request.args.get("orderShoeId")
+    shoe_rid = request.args.get("shoeRId")
+    order_rid = request.args.get("orderRId")
     result = {}
 
     temp1 = get_order_info_helper(order_id, order_shoe_id)
@@ -1222,14 +1229,63 @@ def download_batch_info():
     result["customer_brand"] = temp1["customerBrand"]
     result["customer_product_name"] = temp1["customerProductName"]
 
-    temp2 = get_order_shoe_batch_info_helper(order_shoe_id)
+    # temp2 = get_order_shoe_batch_info_helper(order_shoe_id)
+    # result["batch_info"] = temp2
+    
+    temp2 = []
+    response = (
+        db.session.query(
+            BatchInfoType,
+            PackagingInfo,
+            OrderShoeBatchInfo.packaging_info_quantity,
+            Color
+        )
+        .join(
+            Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
+        )
+        .join(OrderShoe, OrderShoe.order_id == Order.order_id)
+        .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
+        .join(OrderShoeBatchInfo, OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id)
+        .join(PackagingInfo, PackagingInfo.packaging_info_id == OrderShoeBatchInfo.packaging_info_id)
+        .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
+        .join(Color, Color.color_id == ShoeType.color_id)
+        .filter(Order.order_id == order_id, OrderShoe.order_shoe_id == order_shoe_id)
+        .all()
+    )
+
+    # track which column is all zero
+    column_amount_mapping = {}
+    for shoe_size in SHOESIZERANGE:
+        column_amount_mapping[shoe_size] = False
+
+    for row in response:
+        batch_info_type, packaging_info, packaging_info_quantity, color = row
+        obj = {
+            "total_quantity_ratio": packaging_info.total_quantity_ratio,
+            "packaging_info_quantity": packaging_info_quantity,
+            "color_name": color.color_name,
+            "packaging_info_name": packaging_info.packaging_info_name
+        }
+        for shoe_size in SHOESIZERANGE:
+            number = getattr(packaging_info, f"size_{shoe_size}_ratio")
+            if number > 0:
+                column_amount_mapping[shoe_size] = True
+            obj[f"size_{shoe_size}_ratio"] = number
+        temp2.append(obj)
+    
+    # for row in temp2:
+    #     for shoe_size in SHOESIZERANGE:
+    #         if column_amount_mapping[shoe_size] == False:
+    #             del row[f"size_{shoe_size}_ratio"]
+            
     result["batch_info"] = temp2
+    result["column_amount_mapping"] = column_amount_mapping
 
     temp3 = get_order_batch_type_helper(order_id)
     result["shoe_size_names"] = temp3
 
     template_path = os.path.join("./general_document", "装箱配码模板.xlsx")
     new_file_path = os.path.join("./general_document", "装箱配码.xlsx")
-    new_name = f"鞋型{order_shoe_id}_装箱配码.xlsx"
+    new_name = f"订单{order_rid}-{shoe_rid}_装箱配码.xlsx"
     generate_excel_file(template_path, new_file_path, result)
     return send_file(new_file_path, as_attachment=True, download_name=new_name)

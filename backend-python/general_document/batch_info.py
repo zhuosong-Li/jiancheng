@@ -2,7 +2,7 @@ import shutil
 from openpyxl import load_workbook, Workbook
 from openpyxl.utils import get_column_letter, column_index_from_string
 
-
+COLUMNS = 0
 # Function to load the Excel template and prepare for modification
 def load_template(template_path, new_file_path):
     # Copy the template to a new file
@@ -35,26 +35,47 @@ def insert_row_with_format(ws, row_to_copy, new_row_idx):
 
 
 # Function to insert series data starting from row 6
-def insert_series_data(wb: Workbook, series_data, start_row=6):
+def insert_series_data(wb: Workbook, series_data, column_amount_mapping, start_row=6):
+    global COLUMNS
     ws = wb.active
     # un-merge cell
-    ws.unmerge_cells('A8:U8')
-    ws.unmerge_cells('A9:U9')
-    for i, val in enumerate(series_data):           
+    ws.unmerge_cells("A7:F7")
+    ws.unmerge_cells("A8:F8")
+    for i, val in enumerate(series_data):
         new_row = i + start_row
         if i > 0:
             insert_row_with_format(ws, start_row, new_row)
-        ws[f"F{new_row}"] = val["colorName"]
-        ws[f"G{new_row}"] = val["pairAmount"]
-        column_name = "H"
+        ws[f"D{new_row}"] = val["color_name"]
+        ws[f"E{new_row}"] = val["packaging_info_name"]
+        column_name = "F"
         for j in range(34, 47):
-            ws[f"{column_name}{new_row}"] = val[f"size{j}Amount"]
+            if column_amount_mapping[j]:
+                ws[f"{column_name}{new_row}"] = val[f"size_{j}_ratio"]
+                cell = ws["F6"]
+                if i == 0:
+                    source_width = ws.column_dimensions["F"].width
+                    ws.column_dimensions[column_name].width = source_width
+                    column_index = column_index_from_string(column_name)
+                    new_cell = ws.cell(row=start_row, column=column_index)
+                    if cell.has_style:
+                        new_cell.border = cell.border.copy()
+                        new_cell.alignment = cell.alignment.copy()
+                column_name = get_next_column_name(column_name)
+        val["packaging_total_quantity"] = val["total_quantity_ratio"] * val["packaging_info_quantity"]
+        for name in ["total_quantity_ratio", "packaging_info_quantity", "packaging_total_quantity"]:
+            # insert total_quantity_ratio and packaging_info_quantity
+            ws[f"{column_name}{new_row}"] = val[name]
+            column_index = column_index_from_string(column_name)
+            new_cell = ws.cell(row=start_row, column=column_index)
+            if cell.has_style:
+                new_cell.border = cell.border.copy()
+                new_cell.alignment = cell.alignment.copy()
             column_name = get_next_column_name(column_name)
-        ws[f"U{new_row}"] = val["batchName"]
-
     # merge cells
-    ws.merge_cells(f'A{6+len(series_data) + 1}:U{6+len(series_data) + 1}')
-    ws.merge_cells(f'A{6+len(series_data) + 2}:U{6+len(series_data) + 2}')
+    target_column = get_column_letter(COLUMNS)
+    ws.merge_cells(f"A{6+len(series_data)}:{target_column}{6+len(series_data)}")
+    ws.merge_cells(f"A{6+len(series_data) + 1}:{target_column}{6+len(series_data) + 1}")
+
 
 # Function to save the workbook after modification
 def save_workbook(wb, new_file_path):
@@ -63,39 +84,64 @@ def save_workbook(wb, new_file_path):
 
 # Main function to generate the Excel file
 def generate_excel_file(template_path, new_file_path, data: dict):
+    global COLUMNS
     print(f"Generating Excel file")
     # Load template
     wb = load_template(template_path, new_file_path)
 
+    # calculate how many columns
+    length = 0
+    for _, value in data["column_amount_mapping"].items():
+        if value:
+            length += 1
+    COLUMNS = 5 + length + 3
+
     table_data = data["batch_info"]
-    insert_series_data(wb, table_data)
+    insert_series_data(wb, table_data, data["column_amount_mapping"])
 
     ws = wb.active
     # insert meta data
-    brand = '商标：' + data["customer_brand"]
-    ws['U4'] = brand
-    ws.column_dimensions['U'].width = len(brand) + 10
+    brand = "商标：" + data["customer_brand"]
+    ws["E4"] = brand
+    ws.column_dimensions["E"].width = len(brand) + 10
 
     ws.merge_cells(f"A6:A{6+len(table_data)-1}")
     ws["A6"] = data["order_rid"]
 
+    ws.merge_cells(f"B6:B{6+len(table_data)-1}")
+    ws["B6"] = data["shoe_rid"]
+
     ws.merge_cells(f"C6:C{6+len(table_data)-1}")
-    ws["C6"] = data["shoe_rid"]
+    ws["C6"] = data["customer_product_name"]
 
-    ws.merge_cells(f"E6:E{6+len(table_data)-1}")
-    ws["E6"] = data["customer_product_name"]
-
-    column_name = "H"
+    column_name = "F"
+    f5_cell = ws["F5"]
     for i in range(0, len(data["shoe_size_names"])):
-        ws[f"{column_name}{5}"] = data["shoe_size_names"][i]["label"]
+        if data["column_amount_mapping"][i+34]:
+            ws[f"{column_name}{5}"] = data["shoe_size_names"][i]["label"]
+            column_index = column_index_from_string(column_name)
+            new_cell = ws.cell(row=5, column=column_index)
+            if f5_cell.has_style:
+                new_cell.border = f5_cell.border.copy()
+                new_cell.alignment = f5_cell.alignment.copy()
+            column_name = get_next_column_name(column_name)
+
+    for name in ["对/件", "件数", "双数"]:
+        ws[f"{column_name}{5}"] = name
+        column_index = column_index_from_string(column_name)
+        new_cell = ws.cell(row=5, column=column_index)
+        if f5_cell.has_style:
+            new_cell.border = f5_cell.border.copy()
+            new_cell.alignment = f5_cell.alignment.copy()
         column_name = get_next_column_name(column_name)
 
-    # sum up the shoes
-    ws[f"G{6+len(table_data)}"] = f"=SUM(G6:G{6+len(table_data)-1})"
-    column_name = "H"
-    for _ in range(0, len(data["shoe_size_names"])):
-        ws[f"{column_name}{6+len(table_data)}"] = f"=SUM({column_name}6:{column_name}{6+len(table_data)-1})"
-        column_name = get_next_column_name(column_name)
+    target_column = get_column_letter(COLUMNS)
+    ws.merge_cells(f"A1:{target_column}1")
+    ws.merge_cells(f"A2:{target_column}2")
+
+    target_column = get_column_letter(COLUMNS)
+    ws.merge_cells(f"F4:{target_column}4")
+
     # Save the workbook
     save_workbook(wb, new_file_path)
     print(f"Workbook saved as {new_file_path}")

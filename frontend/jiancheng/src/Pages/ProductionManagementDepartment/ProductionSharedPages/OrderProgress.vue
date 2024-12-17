@@ -309,7 +309,7 @@
                 <el-button type="primary" @click="downloadBatchInfo">下载配码</el-button>
             </el-tab-pane>
             <el-tab-pane name="4" label="包装资料">
-                <el-button type="primary" size="small" @click="downloadPackagingInfo(scope.row)">
+                <el-button type="primary" size="small" @click="downloadPackagingInfo">
                     下载
                 </el-button>
             </el-tab-pane>
@@ -797,7 +797,7 @@ export default {
         },
         downloadBatchInfo() {
             window.open(
-                `${this.$apiBaseUrl}/production/downloadbatchinfo?orderId=${this.currentRow.orderId}&orderShoeId=${this.currentRow.orderShoeId}`
+                `${this.$apiBaseUrl}/production/downloadbatchinfo?orderId=${this.currentRow.orderId}&orderShoeId=${this.currentRow.orderShoeId}&orderRId=${this.currentRow.orderRId}&shoeRId=${this.currentRow.shoeRId}`
             )
         },
         async getOrderDataTable() {
