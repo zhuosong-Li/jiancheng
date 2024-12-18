@@ -49,6 +49,7 @@ def get_order_shoe_list():
         )  # Assuming BOM is optional
         .outerjoin(PurchaseOrder, PurchaseOrder.bom_id == TotalBom.total_bom_id)
         .filter(Order.order_id == order_id)
+        .filter(TotalBom.total_bom_rid.like("%TF"))
         .all()
     )
 
