@@ -782,40 +782,6 @@ def outbound_material():
 
 
 @material_storage_bp.route(
-    "/warehouse/warehousemanager/checkoutboundoptions", methods=["GET"]
-)
-def check_outbound_options():
-    """
-    1: 自产出库
-    2: 废料处理
-    3: 外包出库
-    """
-    order_shoe_id = request.args.get("orderShoeId")
-    status_list = (
-        db.session.query(OrderShoeStatus)
-        .filter(OrderShoeStatus.order_shoe_id == order_shoe_id)
-        .all()
-    )
-    result = {1: False, 2: True, 3: False}
-    for status_obj in status_list:
-        if status_obj.current_status in [
-            23,
-            32,
-            40,
-        ] and status_obj.current_status_value in [0, 1]:
-            result[1] = True
-            break
-        elif status_obj.current_status in [
-            17,
-            24,
-            33,
-            41,
-        ] and status_obj.current_status_value in [0, 1]:
-            result[3] = True
-    return result
-
-
-@material_storage_bp.route(
     "/warehouse/warehousemanager/outboundsizematerial", methods=["PATCH"]
 )
 def outbound_size_material():

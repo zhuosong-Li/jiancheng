@@ -43,6 +43,7 @@
                         <el-table-column prop="team" label="工段"></el-table-column>
                         <el-table-column prop="startDate" label="生产起始日期"></el-table-column>
                         <el-table-column prop="endDate" label="生产结束日期"></el-table-column>
+                        <el-table-column prop="reportAmount" label="上报数量"></el-table-column>
                         <el-table-column prop="reportStatus" label="状态"></el-table-column>
                         <el-table-column label="操作">
                             <template #default="scope">

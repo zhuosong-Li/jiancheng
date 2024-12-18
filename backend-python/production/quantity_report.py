@@ -2,7 +2,7 @@ from datetime import datetime
 
 from api_utility import format_date
 from app_config import db
-from constants import END_OF_PRODUCTION_NUMBER, QUANTTIY_REPORT_REFERENCE
+from constants import END_OF_PRODUCTION_NUMBER
 from flask import Blueprint, jsonify, request
 from models import *
 from sqlalchemy import func, literal
@@ -112,7 +112,6 @@ def get_quantity_report_tasks():
                 production_amount_table,
                 production_amount_table.c.order_shoe_id == OrderShoe.order_shoe_id,
             )
-            .filter(OrderShoeStatus.current_status >= QUANTTIY_REPORT_REFERENCE[team])
         )
         queries.append(query)
     union_query = queries[0]
@@ -200,17 +199,21 @@ def edit_quantity_report_detail():
     data = request.get_json()
     report_id = data["reportId"]
     detail_arr = data["data"]
+    report = QuantityReport.query.filter_by(report_id=report_id).first()
     items_list = QuantityReportItem.query.filter_by(quantity_report_id=report_id).all()
     amount_entries = {}
     for item in detail_arr:
         for amount_obj in item["productionLinesAmount"]:
             key = (item["orderShoeTypeId"], amount_obj["productionLineId"])
             amount_entries[key] = amount_obj["reportAmount"]
+    total_report_amount = 0
     for row in items_list:
         if (row.order_shoe_type_id, row.production_line_id) in amount_entries:
             row.report_amount = amount_entries[
                 (row.order_shoe_type_id, row.production_line_id)
             ]
+            total_report_amount += row.report_amount
+    report.total_report_amount = total_report_amount
     db.session.commit()
     return jsonify({"message": "success"})
 
