@@ -2,7 +2,7 @@ from datetime import datetime
 
 from api_utility import format_date, outsource_status_converter
 from app_config import db
-from constants import END_OF_PRODUCTION_NUMBER, QUANTTIY_REPORT_REFERENCE
+from constants import END_OF_PRODUCTION_NUMBER
 from flask import Blueprint, jsonify, request
 from models import *
 from sqlalchemy import func, or_, cast, Integer, and_, select, asc, desc
@@ -38,7 +38,6 @@ def get_self_production_summary():
         )
         .group_by(ProductionLine.production_line_id)
     )
-    print(response)
     temp = {
         "裁断": {"totalAmount": 0, "productionLines": []},
         "针车预备": {"totalAmount": 0, "productionLines": []},
@@ -62,7 +61,6 @@ def get_self_production_summary():
             "productionLines": value["productionLines"],
         }
         result.append(obj)
-    print(result)
     return result
 
 

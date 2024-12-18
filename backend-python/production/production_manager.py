@@ -7,7 +7,7 @@ from constants import *
 from event_processor import EventProcessor
 from flask import Blueprint, current_app, jsonify, request, send_file, Response
 from models import *
-from sqlalchemy import func, or_, cast, Integer, and_, select, asc, desc
+from sqlalchemy import func, or_, cast, Integer, and_, select, asc, desc, case
 from sqlalchemy.dialects.mysql import insert
 from constants import OUTSOURCE_STATUS_MAPPING
 from general_document.batch_info import generate_excel_file
@@ -806,25 +806,79 @@ def get_all_quantity_reports_overview():
     page_size = request.args.get("pageSize", type=int)
     order_rid = request.args.get("orderRId")
     shoe_rid = request.args.get("shoeRId")
-    today = datetime.now()
-    yesterday = today - timedelta(days=1)
-    yesterday_date = yesterday.date()
+    approval_status = request.args.get("approvalStatus", None)
     yesterday_production_table = (
         db.session.query(
-            OrderShoe,
-            QuantityReport.team,
-            func.sum(QuantityReportItem.report_amount).label("amount"),
+            OrderShoe.order_shoe_id,
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            QuantityReport.team == "裁断",
+                            QuantityReport.total_report_amount,
+                        )
+                    )
+                ),
+                0,
+            ).label("cutting_production"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            QuantityReport.team == "针车预备",
+                            QuantityReport.total_report_amount,
+                        )
+                    )
+                ),
+                0,
+            ).label("pre_sewing_production"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            QuantityReport.team == "针车",
+                            QuantityReport.total_report_amount,
+                        )
+                    )
+                ),
+                0,
+            ).label("sewing_production"),
+            func.coalesce(
+                func.sum(
+                    case(
+                        (
+                            QuantityReport.team == "成型",
+                            QuantityReport.total_report_amount,
+                        )
+                    )
+                ),
+                0,
+            ).label("molding_production"),
         )
-        .join(QuantityReport, QuantityReport.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(
-            QuantityReportItem,
-            QuantityReportItem.quantity_report_id == QuantityReport.report_id,
+        .outerjoin(
+            QuantityReport,
+            and_(
+                OrderShoe.order_shoe_id == QuantityReport.order_shoe_id,
+                QuantityReport.creation_date
+                == func.curdate() - func.interval(1, "day"),
+            ),
         )
-        .filter(
-            QuantityReport.creation_date == yesterday_date,
-            QuantityReport.status.in_([1, 2]),
+        .group_by(OrderShoe.order_shoe_id)
+        .subquery()
+    )
+    submitted_report_table = (
+        db.session.query(
+            OrderShoe.order_shoe_id,
+            func.coalesce(func.sum(case((QuantityReport.status == 1, 1))), None).label(
+                "unapproved_reports_count"
+            ),
         )
-        .group_by(OrderShoe.order_shoe_id, QuantityReport.team)
+        .outerjoin(
+            QuantityReport,
+            (OrderShoe.order_shoe_id == QuantityReport.order_shoe_id)
+            & (QuantityReport.status == 1),
+        )
+        .group_by(OrderShoe.order_shoe_id)
         .subquery()
     )
     query = (
@@ -832,55 +886,65 @@ def get_all_quantity_reports_overview():
             Order,
             OrderShoe,
             Shoe,
-            yesterday_production_table.c.team,
-            yesterday_production_table.c.amount,
+            yesterday_production_table.c.cutting_production,
+            yesterday_production_table.c.pre_sewing_production,
+            yesterday_production_table.c.sewing_production,
+            yesterday_production_table.c.molding_production,
+            submitted_report_table.c.unapproved_reports_count,
         )
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
-        .join(OrderShoeStatus, OrderShoeStatus.order_shoe_id == OrderShoe.order_shoe_id)
         .join(Shoe, Shoe.shoe_id == OrderShoe.shoe_id)
-        .outerjoin(
+        .join(
             yesterday_production_table,
             OrderShoe.order_shoe_id == yesterday_production_table.c.order_shoe_id,
         )
-        .filter(
-            OrderShoeStatus.current_status.in_([23, 30, 32, 40]),
+        .join(
+            submitted_report_table,
+            OrderShoe.order_shoe_id == submitted_report_table.c.order_shoe_id,
         )
+        .join(OrderStatus, OrderStatus.order_id == Order.order_id)
+        .filter(OrderStatus.order_current_status >= IN_PRODUCTION_ORDER_NUMBER)
     )
 
     if order_rid and order_rid != "":
         query = query.filter(Order.order_rid.ilike(f"%{order_rid}%"))
     if shoe_rid and shoe_rid != "":
         query = query.filter(Shoe.shoe_rid.ilike(f"%{shoe_rid}%"))
+    if approval_status == "未审批":
+        query = query.filter(submitted_report_table.c.unapproved_reports_count > 0)
+    elif approval_status == "已审批":
+        query = query.filter(submitted_report_table.c.unapproved_reports_count == 0)
     count_result = query.distinct().count()
     response = query.distinct().limit(page_size).offset((page - 1) * page_size).all()
     result = []
-    amount_map = {}
     for row in response:
-        order, order_shoe, shoe, team, amount = row
-        if order_shoe.order_shoe_id not in amount_map:
-            obj = {
-                "orderId": order.order_id,
-                "orderRId": order.order_rid,
-                "orderStartDate": format_date(order.start_date),
-                "orderEndDate": format_date(order.end_date),
-                "orderShoeId": order_shoe.order_shoe_id,
-                "shoeRId": shoe.shoe_rid,
-                "customerProductName": order_shoe.customer_product_name,
-                "cuttingAmount": 0,
-                "preSewingAmount": 0,
-                "sewingAmount": 0,
-                "moldingAmount": 0,
-            }
-            amount_map[order_shoe.order_shoe_id] = obj
-            result.append(obj)
-        if team == "裁断":
-            amount_map[order_shoe.order_shoe_id]["cuttingAmount"] = amount
-        elif team == "针车预备":
-            amount_map[order_shoe.order_shoe_id]["preSewingAmount"] = amount
-        elif team == "针车":
-            amount_map[order_shoe.order_shoe_id]["sewingAmount"] = amount
-        elif team == "成型":
-            amount_map[order_shoe.order_shoe_id]["moldingAmount"] = amount
+        (
+            order,
+            order_shoe,
+            shoe,
+            cutting_production,
+            pre_sewing_production,
+            sewing_production,
+            molding_production,
+            unapproved_reports_count,
+        ) = row
+        if not unapproved_reports_count:
+            unapproved_reports_count = '无'
+        obj = {
+            "orderId": order.order_id,
+            "orderRId": order.order_rid,
+            "orderStartDate": format_date(order.start_date),
+            "orderEndDate": format_date(order.end_date),
+            "orderShoeId": order_shoe.order_shoe_id,
+            "shoeRId": shoe.shoe_rid,
+            "customerProductName": order_shoe.customer_product_name,
+            "cuttingAmount": cutting_production,
+            "preSewingAmount": pre_sewing_production,
+            "sewingAmount": sewing_production,
+            "moldingAmount": molding_production,
+            "unapprovedReports": unapproved_reports_count,
+        }
+        result.append(obj)
     return {"result": result, "totalLength": count_result}
 
 
@@ -947,6 +1011,7 @@ def get_submitted_quantity_reports():
             "startDate": format_date(start_date),
             "endDate": format_date(end_date),
             "team": report.team,
+            "reportAmount": report.total_report_amount,
             "reportStatus": report_status,
         }
         result.append(obj)
@@ -1231,22 +1296,26 @@ def download_batch_info():
 
     # temp2 = get_order_shoe_batch_info_helper(order_shoe_id)
     # result["batch_info"] = temp2
-    
+
     temp2 = []
     response = (
         db.session.query(
             BatchInfoType,
             PackagingInfo,
             OrderShoeBatchInfo.packaging_info_quantity,
-            Color
+            Color,
         )
-        .join(
-            Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
-        )
+        .join(Order, Order.batch_info_type_id == BatchInfoType.batch_info_type_id)
         .join(OrderShoe, OrderShoe.order_id == Order.order_id)
         .join(OrderShoeType, OrderShoeType.order_shoe_id == OrderShoe.order_shoe_id)
-        .join(OrderShoeBatchInfo, OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id)
-        .join(PackagingInfo, PackagingInfo.packaging_info_id == OrderShoeBatchInfo.packaging_info_id)
+        .join(
+            OrderShoeBatchInfo,
+            OrderShoeType.order_shoe_type_id == OrderShoeBatchInfo.order_shoe_type_id,
+        )
+        .join(
+            PackagingInfo,
+            PackagingInfo.packaging_info_id == OrderShoeBatchInfo.packaging_info_id,
+        )
         .join(ShoeType, ShoeType.shoe_type_id == OrderShoeType.shoe_type_id)
         .join(Color, Color.color_id == ShoeType.color_id)
         .filter(Order.order_id == order_id, OrderShoe.order_shoe_id == order_shoe_id)
@@ -1264,7 +1333,7 @@ def download_batch_info():
             "total_quantity_ratio": packaging_info.total_quantity_ratio,
             "packaging_info_quantity": packaging_info_quantity,
             "color_name": color.color_name,
-            "packaging_info_name": packaging_info.packaging_info_name
+            "packaging_info_name": packaging_info.packaging_info_name,
         }
         for shoe_size in SHOESIZERANGE:
             number = getattr(packaging_info, f"size_{shoe_size}_ratio")
@@ -1272,12 +1341,12 @@ def download_batch_info():
                 column_amount_mapping[shoe_size] = True
             obj[f"size_{shoe_size}_ratio"] = number
         temp2.append(obj)
-    
+
     # for row in temp2:
     #     for shoe_size in SHOESIZERANGE:
     #         if column_amount_mapping[shoe_size] == False:
     #             del row[f"size_{shoe_size}_ratio"]
-            
+
     result["batch_info"] = temp2
     result["column_amount_mapping"] = column_amount_mapping
 
