@@ -80,7 +80,8 @@ open_routes = [
     "/headmanager/getordershoetimeline",
     "/devproductionorder/downloadproductioninstruction",
     "/devproductionorder/downloadpicnotes",
-    "/logistics/downloadassetzip"
+    "/logistics/downloadassetzip",
+    "/craftsheet/downloadcraftsheet"
 ]
 
 

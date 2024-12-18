@@ -154,7 +154,7 @@
                                 <div v-if="scope.row.status === '已审核并下发'">
                                     <el-button
                                         type="success"
-                                        @click="downloadProductionInstruction(scope.row)"
+                                        @click="downloadCraftSheet(scope.row)"
                                         >下载工艺单EXCEL</el-button
                                     >
                                     <el-button
@@ -241,7 +241,7 @@
                 </div>
                 <template #footer>
                     <span>
-                        <span>{{userRole}}</span>
+                        <span>{{ userRole }}</span>
                         <el-button @click="isFinalBOM = false">取消</el-button>
                         <el-button v-if="isEditor()" type="primary" @click="issueBOMs(selectedShoe)"
                             >下发选定工艺单（生产指令单）</el-button
@@ -332,6 +332,9 @@
                 >
                 <el-button type="primary" size="default" @click="openPicNoteDialog"
                     >打开工艺单图片备注上传页面</el-button
+                >
+                <el-button type="primary" size="default" @click="openCraftSheetDialog"
+                    >打开工艺单备注上传页面</el-button
                 >
 
                 <template #footer>
@@ -1744,6 +1747,9 @@
                 <el-button type="primary" size="default" @click="openPicNoteDialog"
                     >打开工艺单图片备注上传页面</el-button
                 >
+                <el-button type="primary" size="default" @click="openCraftSheetDialog"
+                    >打开工艺单备注上传页面</el-button
+                >
                 <template #footer>
                     <span>
                         <el-button @click="isEditDialogVisible = false">取消</el-button>
@@ -1769,7 +1775,9 @@
                 >
                 </el-upload>
                 <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
-                <el-button type="primary" size="default" @click="pasteClipboardImage('main')">粘贴剪切板内容</el-button>
+                <el-button type="primary" size="default" @click="pasteClipboardImage('main')"
+                    >粘贴剪切板内容</el-button
+                >
             </el-dialog>
             <el-dialog v-model="isUploadImageNoteDialogVisible" title="上传图片备注">
                 <el-upload
@@ -1789,9 +1797,9 @@
                 >
                 </el-upload>
                 <div slot="tip" class="el-upload__tip">只能上传图片文件</div>
-                <el-button type="primary" size="default" @click="pasteClipboardImage('note')">粘贴剪切板内容</el-button>
-                
-                
+                <el-button type="primary" size="default" @click="pasteClipboardImage('note')"
+                    >粘贴剪切板内容</el-button
+                >
             </el-dialog>
             <el-dialog v-model="isUploadProcessSheetVisable" title="上传工艺单EXCEL">
                 <el-upload
@@ -1801,13 +1809,17 @@
                     :on-success="handleUploadSuccessProcessSheet"
                     :on-error="handleUploadError"
                     :headers="uploadHeaders"
+                    :limit="1"
                     :before-upload="beforeUpload"
                     :file-list="fileListProcessSheet"
-                    list-type="picture-card"
                     accept=".xls,.xlsx"
                     :auto-upload="false"
+                    :data="craftSheetData"
                     @remove="handleFileRemoveProcessSheet"
                 >
+                <template #trigger>
+                    <el-button type="primary">选择文件</el-button>
+                </template>
                 </el-upload>
                 <div slot="tip" class="el-upload__tip">只能上传EXCEL文件</div>
             </el-dialog>
@@ -1862,6 +1874,7 @@ export default {
             currentShoeImageUrl: '',
             fileList: [],
             fileListPicNote: [],
+            fileListProcessSheet: [],
             isUploadImageDialogVisible: false,
             createEditSymbol: 0,
             sizeData: [],
@@ -1899,6 +1912,11 @@ export default {
                 craftSheetId: ''
             },
             picNoteImgData: {
+                orderId: '',
+                orderShoeId: '',
+                craftSheetId: ''
+            },
+            craftSheetData: {
                 orderId: '',
                 orderShoeId: '',
                 craftSheetId: ''
@@ -1961,37 +1979,37 @@ export default {
         async pasteClipboardImage(target) {
             try {
                 // Access clipboard data
-                const clipboardItems = await navigator.clipboard.read();
+                const clipboardItems = await navigator.clipboard.read()
                 for (const item of clipboardItems) {
                     if (item.types.includes('image/png') || item.types.includes('image/jpeg')) {
-                        const blob = await item.getType(item.types[0]);
-                        const file = new File([blob], "pasted-image.png", { type: blob.type });
+                        const blob = await item.getType(item.types[0])
+                        const file = new File([blob], 'pasted-image.png', { type: blob.type })
 
-                        if (target === "main") {
-                            this.addImageToFileList(file, "main");
-                        } else if (target === "note") {
-                            this.addImageToFileList(file, "note");
+                        if (target === 'main') {
+                            this.addImageToFileList(file, 'main')
+                        } else if (target === 'note') {
+                            this.addImageToFileList(file, 'note')
                         }
-                        return;
+                        return
                     }
                 }
-                this.$message.error("剪贴板中没有图片！");
+                this.$message.error('剪贴板中没有图片！')
             } catch (error) {
-                console.error("Failed to read clipboard:", error);
-                this.$message.error("无法从剪贴板读取图片！");
+                console.error('Failed to read clipboard:', error)
+                this.$message.error('无法从剪贴板读取图片！')
             }
         },
         handlePaste(event) {
-            const items = (event.clipboardData || window.clipboardData).items;
+            const items = (event.clipboardData || window.clipboardData).items
 
             for (const item of items) {
-                if (item.type.startsWith("image/")) {
-                    const file = item.getAsFile();
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile()
                     if (file) {
                         if (this.isUploadImageDialogVisible) {
-                            this.addImageToFileList(file, "main");
+                            this.addImageToFileList(file, 'main')
                         } else if (this.isUploadImageNoteDialogVisible) {
-                            this.addImageToFileList(file, "note");
+                            this.addImageToFileList(file, 'note')
                         }
                     }
                 }
@@ -2000,32 +2018,35 @@ export default {
         addImageToFileList(file, target) {
             const newFile = {
                 uid: Date.now(),
-                name: file.name || "pasted-image.png",
+                name: file.name || 'pasted-image.png',
                 size: file.size,
                 type: file.type,
-                status: "ready",
+                status: 'ready',
                 url: URL.createObjectURL(file),
-                raw: file,
-            };
+                raw: file
+            }
 
-            if (target === "main") {
-                this.fileList.push(newFile);
+            if (target === 'main') {
+                this.fileList.push(newFile)
                 if (this.$refs.uploadImage) {
-                    this.$refs.uploadImage.uploadFiles = this.fileList;
+                    this.$refs.uploadImage.uploadFiles = this.fileList
                 }
-            } else if (target === "note") {
-                this.fileListPicNote.push(newFile);
+            } else if (target === 'note') {
+                this.fileListPicNote.push(newFile)
                 if (this.$refs.uploadImageNote) {
-                    this.$refs.uploadImageNote.uploadFiles = this.fileListPicNote;
+                    this.$refs.uploadImageNote.uploadFiles = this.fileListPicNote
                 }
             }
         },
         handleFileRemove(file, fileList) {
-            console.log("File removed:", file);
-            this.fileList = fileList; // Keep fileList in sync
+            console.log('File removed:', file)
+            this.fileList = fileList // Keep fileList in sync
+        },
+        handleFileRemoveProcessSheet(file, fileList) {
+            this.fileListProcessSheet = fileList // Sync file list for process sheet upload
         },
         handleFileRemovePicNote(file, fileList) {
-            this.fileListPicNote = fileList; // Sync file list for note upload
+            this.fileListPicNote = fileList // Sync file list for note upload
         },
         isEditor() {
             return this.userRole == 5
@@ -2448,6 +2469,12 @@ export default {
             this.activeTab = this.tabcolor[0]
             this.isPreviewDialogVisible = true
         },
+        openCraftSheetDialog() {
+            this.craftSheetData.orderId = this.orderData.orderId
+            this.craftSheetData.orderShoeId = this.currentShoeId
+            this.craftSheetData.craftSheetId = this.newcraftSheetId
+            this.isUploadProcessSheetVisable = true
+        },
         openUniversalMaterialCraftDialog() {
             this.isUniversalMaterialCraftVisDialog = true
         },
@@ -2541,6 +2568,7 @@ export default {
                 // save images
                 this.uploadCutDieImg()
                 this.uploadPicNote()
+                this.uploadProcessSheet()
                 await axios.post(`${this.$apiBaseUrl}/craftsheet/editcraftsheet`, {
                     orderId: this.orderData.orderId,
                     craftSheetId: this.newcraftSheetId,
@@ -2574,6 +2602,8 @@ export default {
                 // save images
                 this.uploadCutDieImg()
                 this.uploadPicNote()
+                this.uploadProcessSheet()
+
                 ElMessage.success('保存成功')
             } catch (error) {
                 console.log(error)
@@ -2639,6 +2669,14 @@ export default {
         },
         handleUploadError() {
             this.$message.error('上传失败')
+        },
+        handleUploadSuccessProcessSheet(response, file, fileList) {
+            this.$message({
+                message: '上传成功',
+                type: 'success'
+            })
+            fileList = []
+            this.isUploadProcessSheetVisable = false
         },
         async issueBOMs(selectedShoe) {
             if (selectedShoe.length == 0) {
@@ -2747,6 +2785,11 @@ export default {
                 this.$refs.uploadImageNote.submit()
             }
         },
+        uploadProcessSheet() {
+            if (this.$refs.uploadProcessSheet) {
+                this.$refs.uploadProcessSheet.submit()
+            }
+        },
         async queryMaterialNames(queryString, callback) {
             if (queryString.trim()) {
                 await axios
@@ -2818,9 +2861,9 @@ export default {
             }
             this.isCraftDialogVisible = false
         },
-        downloadProductionInstruction(row) {
+        downloadCraftSheet(row) {
             window.open(
-                `${this.$apiBaseUrl}/devproductionorder/downloadproductioninstruction?orderid=${this.orderData.orderId}&ordershoerid=${row.inheritId}`
+                `${this.$apiBaseUrl}/craftsheet/downloadcraftsheet?orderid=${this.orderData.orderId}&ordershoeid=${row.inheritId}`
             )
         },
         downloadProductionInstructionImage(row) {
