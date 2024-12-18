@@ -54,6 +54,7 @@ def get_order_shoe_list():
                 Order.order_id == order_id,
             )
         )
+        .filter(TotalBom.total_bom_rid.like("%TF"))
         .all()
     )
 

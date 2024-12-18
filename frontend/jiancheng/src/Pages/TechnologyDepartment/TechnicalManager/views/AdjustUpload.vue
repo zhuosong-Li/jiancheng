@@ -1793,6 +1793,24 @@
                 
                 
             </el-dialog>
+            <el-dialog v-model="isUploadProcessSheetVisable" title="上传工艺单EXCEL">
+                <el-upload
+                    ref="uploadProcessSheet"
+                    class="upload-image"
+                    :action="`${this.$apiBaseUrl}/craftsheet/uploadprocesssheet`"
+                    :on-success="handleUploadSuccessProcessSheet"
+                    :on-error="handleUploadError"
+                    :headers="uploadHeaders"
+                    :before-upload="beforeUpload"
+                    :file-list="fileListProcessSheet"
+                    list-type="picture-card"
+                    accept=".xls,.xlsx"
+                    :auto-upload="false"
+                    @remove="handleFileRemoveProcessSheet"
+                >
+                </el-upload>
+                <div slot="tip" class="el-upload__tip">只能上传EXCEL文件</div>
+            </el-dialog>
         </el-main>
     </el-container>
 </template>
@@ -1831,6 +1849,7 @@ export default {
             materialTypeSearch: '',
             materialSearch: '',
             factorySearch: '',
+            isUploadProcessSheetVisable: false,
             isUniversalMaterialCraftVisDialog: false,
             isEditDialogVisible: false,
             isProductionOrderCreateDialogVisible: false,
