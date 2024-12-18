@@ -137,6 +137,7 @@ class QuantityReport(db.Model):
     submission_date = db.Column(db.Date, nullable=True)
     status = db.Column(db.SmallInteger, nullable=True)
     rejection_reason = db.Column(db.String(40))
+    total_report_amount = db.Column(db.Integer, default=0)
 
     def __repr__(self):
         return f"<QuantityReport(report_id={self.report_id})>"
