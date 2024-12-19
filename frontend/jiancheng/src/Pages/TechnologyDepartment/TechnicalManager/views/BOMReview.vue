@@ -104,7 +104,13 @@
                                         @click="downloadProductionInstructionImage(scope.row)"
                                         >下载备注图片</el-button
                                     > -->
+                                    <el-button
+                                        type="success"
+                                        @click="downloadCraftSheet(scope.row)"
+                                        >下载工艺单EXCEL</el-button
+                                    >
                                         </div>
+                                        
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -567,6 +573,11 @@ export default {
                         message: '已取消下发'
                     })
                 })
+        },
+        downloadCraftSheet(row) {
+            window.open(
+                `${this.$apiBaseUrl}/craftsheet/downloadcraftsheet?orderid=${this.orderData.orderId}&ordershoeid=${row.inheritId}`
+            )
         },
     }
 }

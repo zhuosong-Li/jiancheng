@@ -2238,25 +2238,21 @@ def upload_pic_note_img():
     return jsonify({"filePath": online_path}), 200
 
 
-@process_sheet_upload_bp.route("/devproductionorder/download", methods=["GET"])
-def download_production_order():
-    order_shoe_rid = request.args.get("ordershoerid")
-    order_id = request.args.get("orderid")
-    print(order_shoe_rid)
-    print(order_id)
-    order_shoe = (
-        db.session.query(Order, OrderShoe, Shoe)
-        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
-        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
-        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
-        .first()
-    )
-    if order_shoe.OrderShoe.production_order_upload_status == "0":
-        return jsonify({"error": "Production order not uploaded yet"}), 500
-    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid)
-    file_path = os.path.join(folder_path, "投产指令单.xlsx")
-    new_name = order_id + "-" + order_shoe_rid + "_投产指令单.xlsx"
-    return send_file(file_path, as_attachment=True, download_name=new_name)
+@process_sheet_upload_bp.route("/craftsheet/uploadprocesssheet", methods=["POST"])
+def upload_process_sheet():
+    order_id = request.form.get("orderId")
+    order_shoe_rid = request.form.get("orderShoeId")
+    craft_sheet_rid = request.form.get("craftSheetId")
+    file = request.files["file"]
+    file_name = file.filename
+    new_file_ext = file_name.split(".")[-1]
+    new_file_name = order_id + "_" + order_shoe_rid + "_工艺单." + new_file_ext
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid, "工艺单")
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    file_path = os.path.join(folder_path, new_file_name)
+    file.save(file_path)
+    return jsonify({"filePath": file_path}), 200
 
 
 @process_sheet_upload_bp.route("/craftsheet/issue", methods=["POST"])
@@ -2552,6 +2548,45 @@ def get_auto_finished_supplier_name():
     else:
         return jsonify([]), 200
 
+@process_sheet_upload_bp.route(
+    "/craftsheet/downloadcraftsheet", methods=["GET"]
+)
+def download_craft_sheet():
+    # Get parameters from request
+    order_id = request.args.get("orderid")
+    order_shoe_rid = request.args.get("ordershoeid")
+    print(order_id, order_shoe_rid)
+
+    # Query the database for the order and shoe details
+    order_shoe = (
+        db.session.query(Order, OrderShoe, Shoe)
+        .join(OrderShoe, Order.order_id == OrderShoe.order_id)
+        .join(Shoe, OrderShoe.shoe_id == Shoe.shoe_id)
+        .filter(Order.order_rid == order_id, Shoe.shoe_rid == order_shoe_rid)
+        .first()
+    )
+
+    # Define folder and potential file paths
+    folder_path = os.path.join(FILE_STORAGE_PATH, order_id, order_shoe_rid, "工艺单")
+    file_name_prefix = f"{order_id}_{order_shoe_rid}_工艺单"
+    possible_files = [f"{file_name_prefix}.xlsx", f"{file_name_prefix}.xls"]
+
+    # Check which file exists
+    file_path = None
+    for file_name in possible_files:
+        candidate_path = os.path.join(folder_path, file_name)
+        if os.path.exists(candidate_path):
+            file_path = candidate_path
+            break
+
+    if file_path is None:
+        return {"error": "File not found"}, 404
+
+    # Define the downloadable file name
+    new_name = f"{order_id}-{order_shoe_rid}_工艺单.xlsx"
+
+    # Send the file
+    return send_file(file_path, as_attachment=True, download_name=new_name)
 
 @process_sheet_upload_bp.route(
     "/devproductionorder/downloadproductioninstruction", methods=["GET"]

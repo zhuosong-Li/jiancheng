@@ -553,23 +553,23 @@ export default {
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             await this.getBOMDetails(row)
             if (this.orderProduceInfo[0]) {
-                
+                console.log(this.orderProduceInfo[0])
                 this.bomTestData.forEach((item) => {
                     if (item.materialCategory === 1) {
                         let totalApprovalAmount = 0
-                        let sizeName = 34
-                        item.sizeInfo.forEach((sizeRow) => {
-                            
-                            let sizeKey = `size${sizeName}Amount`
-                            console.log(sizeKey)
-                            if (this.orderProduceInfo[0][sizeKey] !== undefined) {
-                                sizeRow.approvalAmount = this.orderProduceInfo[0][sizeKey]
-                                totalApprovalAmount += this.orderProduceInfo[0][sizeKey]
-                                console.log(sizeRow.approvalAmount)
-                            }
-                            sizeName = sizeName + 1
-                        })
 
+                        item.sizeInfo.forEach((sizeRow) => {
+                            let sizeKey = sizeRow.size
+                            let trueKey = this.shoeSizeColumns.find(
+                                (column) => column.label === sizeKey
+                            ).prop
+                            if (this.orderProduceInfo[0][trueKey] !== undefined) {
+                                sizeRow.approvalAmount = this.orderProduceInfo[0][trueKey]
+                                console.log(sizeRow.approvalAmount)
+                                totalApprovalAmount += this.orderProduceInfo[0][trueKey]
+                            }
+                        })
+                        console.log(totalApprovalAmount)
                         // Update the approvalUsage with the total approval amount
                         item.approvalUsage = totalApprovalAmount
                     }
@@ -610,20 +610,23 @@ export default {
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             loadingInstance.close()
             if (this.orderProduceInfo[0]) {
-                this.bomTestData.forEach((item) => {
+                console.log(this.orderProduceInfo[0])
+                this.editBomData.forEach((item) => {
                     if (item.materialCategory === 1) {
                         let totalApprovalAmount = 0
-                        let sizeName = 34
-                        item.sizeInfo.forEach((sizeRow) => {
-                            
-                            let sizeKey = `size${sizeName}Amount`
-                            if (this.orderProduceInfo[0][sizeKey] !== undefined) {
-                                sizeRow.approvalAmount = this.orderProduceInfo[0][sizeKey]
-                                totalApprovalAmount += this.orderProduceInfo[0][sizeKey]
-                            }
-                            sizeName += 1
-                        })
 
+                        item.sizeInfo.forEach((sizeRow) => {
+                            let sizeKey = sizeRow.size
+                            let trueKey = this.shoeSizeColumns.find(
+                                (column) => column.label === sizeKey
+                            ).prop
+                            if (this.orderProduceInfo[0][trueKey] !== undefined) {
+                                sizeRow.approvalAmount = this.orderProduceInfo[0][trueKey]
+                                console.log(sizeRow.approvalAmount)
+                                totalApprovalAmount += this.orderProduceInfo[0][trueKey]
+                            }
+                        })
+                        console.log(totalApprovalAmount)
                         // Update the approvalUsage with the total approval amount
                         item.approvalUsage = totalApprovalAmount
                     }
@@ -638,6 +641,29 @@ export default {
         async openPreviewDialog(row) {
             await this.getOrderShoeBatchInfo(this.orderData.orderId, row.orderShoeRid, row.color)
             await this.getBOMDetails(row)
+            if (this.orderProduceInfo[0]) {
+                console.log(this.orderProduceInfo[0])
+                this.bomTestData.forEach((item) => {
+                    if (item.materialCategory === 1) {
+                        let totalApprovalAmount = 0
+
+                        item.sizeInfo.forEach((sizeRow) => {
+                            let sizeKey = sizeRow.size
+                            let trueKey = this.shoeSizeColumns.find(
+                                (column) => column.label === sizeKey
+                            ).prop
+                            if (this.orderProduceInfo[0][trueKey] !== undefined) {
+                                sizeRow.approvalAmount = this.orderProduceInfo[0][trueKey]
+                                console.log(sizeRow.approvalAmount)
+                                totalApprovalAmount += this.orderProduceInfo[0][trueKey]
+                            }
+                        })
+                        console.log(totalApprovalAmount)
+                        // Update the approvalUsage with the total approval amount
+                        item.approvalUsage = totalApprovalAmount
+                    }
+                })
+            }
             this.previewBomId = row.firstBomId
             this.createEditSymbol = 1
             this.updateKey += 1
