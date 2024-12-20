@@ -748,6 +748,10 @@ class Staff(db.Model):
     department_id = db.Column(
         db.Integer,
     )
+    staff_status = db.Column(db.SmallInteger, nullable=False, default=0)
+    id_number = db.Column(db.String(18), nullable=True)
+    phone_number = db.Column(db.String(20), nullable=True)
+    birth_date = db.Column(db.Date, nullable=True)
 
     def __repr__(self):
         return f"<Staff(staff_id={self.staff_id})>"

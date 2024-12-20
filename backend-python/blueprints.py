@@ -27,6 +27,7 @@ from warehouse.finished_storage import finished_storage_bp
 from shared_apis.message import message_bp
 from login.login import login_bp
 from human_resources.user_manage import user_manage_bp
+from human_resources.staff_manage import staff_manage_bp
 from shared_apis.user import user_bp
 from logistics.first_purchase import first_purchase_bp
 from logistics.second_purchase import second_purchase_bp
@@ -62,6 +63,7 @@ def register_blueprints():
     app.register_blueprint(dev_producion_order_bp)
     app.register_blueprint(login_bp)
     app.register_blueprint(user_manage_bp)
+    app.register_blueprint(staff_manage_bp)
     app.register_blueprint(user_bp)
     app.register_blueprint(first_purchase_bp)
     app.register_blueprint(second_purchase_bp)
