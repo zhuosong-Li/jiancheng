@@ -31,20 +31,31 @@ from models import (
     TotalBom,
     PackagingInfo,
     BatchInfoType,
+    Staff,
 )
 
 order_bp = Blueprint("order_bp", __name__)
+#订单初始状态
 ORDER_CREATION_STATUS = 6
+#订单开发部状态
 ORDER_IN_PROD_STATUS = 9
+#包装信息状态
 PACKAGING_SPECS_UPLOADED = "2"
+#业务部经理角色码
 BUSINESS_MANAGER_ROLE = 4
+#业务部职员角色码
 BUSINESS_CLERK_ROLE = 21
 
+#鞋型初始状态（投产指令单创建）
 DEV_ORDER_SHOE_STATUS = 0
+#开发一部经理角色码
 FIRST_DEV_DEPARTMENT_MANAGER = 7
+#开发二部经理角色码
 SECOND_DEV_DEPARTMENT_MANAGER = 22
+#开发三部经理角色码
 THIRD_DEV_DEPARTMENT_MANAGER = 23
-DEV_DEPARTMENT_MANAGER_MAPPING = {7: "设计一部", 22: "设计二部", 23: "设计三部"}
+# TODO 开发部门经理映射（之后要修改为int值，与departmentid绑定）
+DEV_DEPARTMENT_MANAGER_MAPPING = {7: "开发一部", 22: "开发二部", 23: "开发三部"}
 
 
 @order_bp.route("/ordershoe/getordershoebyorder", methods=["GET"])
@@ -68,6 +79,7 @@ def get_dev_orders():
     #     return jsonify({"error": "not a manager"}), 401
 
     shoe_department = current_department_name
+    print("department" + shoe_department)
     status_val = DEV_ORDER_SHOE_STATUS
     t_s = time.time()
     print("ORDERSHOESTATUS GET REQUEST WITH STATUS OF")
@@ -257,12 +269,14 @@ def get_order_info_business():
             Customer,
             OrderStatus,
             BatchInfoType,
+            Staff,
         )
         .filter(Order.order_id == order_id)
         .join(Customer, Order.customer_id == Customer.customer_id)
         .join(
             BatchInfoType, Order.batch_info_type_id == BatchInfoType.batch_info_type_id
         )
+        .join(Staff, Order.salesman_id == Staff.staff_id)
         .outerjoin(OrderStatus, OrderStatus.order_id == Order.order_id)
         .first()
     )
@@ -288,6 +302,7 @@ def get_order_info_business():
         "orderCid": entity.Order.order_cid,
         "batchInfoTypeName": entity.BatchInfoType.batch_info_type_name,
         "batchInfoType": batch_info_type_response,
+        "orderStaffName": entity.Staff.staff_name,
         "dateInfo": formatted_start_date + " —— " + formatted_end_date,
         "customerInfo": "客人编号:"
         + entity.Customer.customer_name

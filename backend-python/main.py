@@ -19,7 +19,7 @@ def main():
     register_blueprints()
     # Run the Flask app
     app.run(
-        host="0.0.0.0", port=8000, debug=True
+        host="0.0.0.0", port=8000, debug=True, threaded=True
     )  # Set debug as per your development needs
 
 
