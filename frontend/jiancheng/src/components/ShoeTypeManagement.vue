@@ -11,7 +11,7 @@
     </el-row>
     <el-row :gutter="20">
         <el-col :span="24" :offset="0">
-            <el-table :data="shoeTableData" style="width: 100%" stripe border height="580">
+            <el-table :data="shoeTableData" style="width: 100%" stripe border height="580" :key="tableDataKey">
                 <el-table-column type="expand">
                     <template #default="props">
                         <el-table :data="props.row.shoeTypeData" border :row-key="(row) => {
@@ -23,7 +23,7 @@
                             </el-table-column>
                             <el-table-column prop="shoeImageUrl" label="鞋型图片" align="center">
                                 <template #default="scope">
-                                    <el-image :src="scope.row.shoeImageUrl" style="width: 150px; height: 100px" />
+                                    <el-image :src="getUniqueImageUrl(scope.row.shoeImageUrl)" style="width: 150px; height: 100px" loading="eager" />
                                 </template>
                             </el-table-column>
                             <el-table-column label="操作">
@@ -86,7 +86,11 @@
                 <el-input v-model="orderForm.shoeDesigner"></el-input>
             </el-form-item>
             <el-form-item label="设计部门">
-                <el-input v-model="orderForm.shoeDepartmentId"></el-input>
+                <el-select v-model="orderForm.shoeDepartmentId" placeholder="请选择设计部门">
+                    <el-option label="开发一部" value="开发一部"></el-option>
+                    <el-option label="开发二部" value="开发二部"></el-option>
+                    <el-option label="开发三部" value="开发三部"></el-option>
+                </el-select>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -124,7 +128,11 @@
                 <el-input v-model="orderForm.shoeDesigner" :disabled="this.userRole == 21 ? true : false"></el-input>
             </el-form-item>
             <el-form-item label="设计部门">
-                <el-input v-model="orderForm.shoeDepartmentId" :disabled="this.userRole == 21 ? true : false"></el-input>
+                <el-select v-model="orderForm.shoeDepartmentId" :disabled="this.userRole == 21 ? true : false">
+                    <el-option label="开发一部" value="开发一部"></el-option>
+                    <el-option label="开发二部" value="开发二部"></el-option>
+                    <el-option label="开发三部" value="开发三部"></el-option>
+                </el-select>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -176,6 +184,7 @@ export default {
                 colorNameIT: '',
                 colorNameSP: ''
             },
+            tableDataKey: 0,
             reUploadImageDialogVis: false,
             editShoeDialogVis: false,
             addShoeDialogVis: false,
@@ -202,6 +211,9 @@ export default {
         }
     },
     methods: {
+        getUniqueImageUrl(imageUrl) {
+            return `${imageUrl}?timestamp=${new Date().getTime()}`;
+        },
         async getAllColors() {
             const response = await axios.get(`${this.$apiBaseUrl}/general/allcolors`)
             this.colorOptions = response.data
@@ -237,15 +249,19 @@ export default {
             this.currentShoeColor = row.colorName
             this.currentShoeColorId = row.colorId
         },
-        handleUploadSuccess() {
+        async handleUploadSuccess() {
             this.$message({
                 message: '上传成功',
                 type: 'success'
             })
             this.reUploadImageDialogVis = false
-            this.getAllShoes()
+            this.fileList = []
+            await this.getAllShoes()
+            this.$forceUpdate();
+            this.tableDataKey++
         },
         handleUploadError() {
+            this.fileList = []
             this.$message.error('上传失败')
         },
         handleUploadExceed() {

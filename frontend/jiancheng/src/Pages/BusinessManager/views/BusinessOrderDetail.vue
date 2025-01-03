@@ -62,6 +62,9 @@
                                     >查看</el-button
                                 >
                             </el-descriptions-item>
+                            <el-descriptions-item label="订单业务员" align="center">
+                                {{ orderData.orderStaffName }}
+                            </el-descriptions-item>
                             <el-descriptions-item label="财务信息操作" align="center">
 
                                 <el-button
