@@ -63,7 +63,6 @@ def get_all_shoes_new():
                               .all())
         shoe_type_list = []
         for shoe_type in shoe_type_entities:
-            print(shoe_type)
             shoe_type_response_data = dict()
             for attr in SHOETYPE_TABLE_ATTRNAMES:
                 shoe_type_response_data[to_camel(attr)] = getattr(shoe_type.ShoeType, attr)
@@ -75,9 +74,7 @@ def get_all_shoes_new():
                 shoe_type_response_data['shoeImageUrl'] = None
             shoe_type_list.append(shoe_type_response_data)
         shoe_response_data['shoeTypeData'] = shoe_type_list
-        print(shoe_response_data)
         result_data.append(shoe_response_data)
-    print(result_data)
     return jsonify(result_data), 200
 
 

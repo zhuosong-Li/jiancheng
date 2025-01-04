@@ -9,7 +9,6 @@ shoe_manage_bp = Blueprint("shoe_manage_bp", __name__)
 
 @shoe_manage_bp.route("/shoemanage/uploadshoeimage", methods=["POST"])
 def upload_shoe_image():
-    print(request.form)
     shoe_rid = request.form.get("shoeRid")
     shoe_id = request.form.get('shoeId')
     shoe_color_name = request.form.get("shoeColorName")
@@ -22,6 +21,7 @@ def upload_shoe_image():
         return jsonify({"error": "No selected file"}), 500
 
     folder_path = os.path.join(IMAGE_UPLOAD_PATH, "shoe", shoe_rid, shoe_color_name)
+    print("shoe image stored should be in")
     print(folder_path)
     if os.path.exists(folder_path) == False:
         os.makedirs(folder_path)
@@ -36,7 +36,6 @@ def upload_shoe_image():
         .filter(Color.color_id == shoe_color_id)
         .first()
     )
-    print(shoe_type)
     db_path = os.path.join("shoe", shoe_rid, shoe_color_name, "shoe_image.jpg")
     shoe_type.ShoeType.shoe_image_url = db_path
     db.session.commit()
@@ -93,7 +92,6 @@ def edit_shoe_type():
 
 @shoe_manage_bp.route("/shoemanage/addshoetype", methods=["POST"])
 def add_shoe_type():
-    print(request.json.get('ShoeId'))
     color_ids = request.json.get("colorId")
     shoe_id = request.json.get("shoeId")
     existing_color = []
@@ -120,7 +118,6 @@ def add_shoe_type():
 
 @shoe_manage_bp.route("/shoemanage/deleteshoetype", methods=["POST"])
 def delete_shoe_type():
-    print(request.json)
     shoe_type_id = request.json.get("shoeTypeId")
     shoe_id = request.json.get("shoeId")
     existing_shoe = (db.session.query(Shoe).filter_by(shoe_id = shoe_id).first())

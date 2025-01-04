@@ -333,7 +333,7 @@ class PackagingInfo(db.Model):
     __tablename__ = "packaging_info"
 
     customer_id = db.Column(db.Integer, nullable=False)
-    packaging_info_name = db.Column(db.String(10), nullable=False, unique=True)
+    packaging_info_name = db.Column(db.String(15), nullable=False, unique=True)
     packaging_info_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     batch_info_type_id = db.Column(db.Integer, nullable=False)
     packaging_info_locale = db.Column(db.String(10), nullable=False)
