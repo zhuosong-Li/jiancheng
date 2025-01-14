@@ -120,17 +120,13 @@
                     </div>
                     <!-- 外发复合的form item -->
                     <div v-else-if="group.outboundType == 3">
-                        <el-form-item prop="selectedCompositeSupplierDisplay" label="供应商">
+                        <el-form-item prop="selectedCompositeSupplier" label="供应商">
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <el-autocomplete v-model="group.selectedCompositeSupplierDisplay"
-                                    :fetch-suggestions="fetchCompositeSupplierSuggestions" clearable
-                                    @select="(item) => handleCompositeSupplierSelect(item, group)">
-                                    <template #default="{ item }">
-                                        <div>{{ item.supplierName }}</div>
-                                    </template>
-                                </el-autocomplete>
-                                <el-button
-                                    @click="addNewCompositeSupplier(group.selectedCompositeSupplierDisplay)">添加厂家</el-button>
+                                <el-select v-model="group.selectedCompositeSupplier" placeholder="请输入供应商"
+                                    style="width: 240px">
+                                    <el-option v-for="item in compositeSuppliersOptions" :label="item.supplierName"
+                                        :value="item.supplierId"></el-option>
+                                </el-select>
                             </div>
                         </el-form-item>
                     </div>
@@ -415,7 +411,6 @@ export default {
                 selectedOutsourceFactory: '',
                 materials: [],
                 selectedCompositeSupplier: null,
-                selectedCompositeSupplierDisplay: '',
             },
             currentPage: 1,
             pageSize: 10,
@@ -489,12 +484,12 @@ export default {
                         trigger: "change",
                     },
                 ],
-                selectedCompositeSupplierDisplay: [
+                selectedCompositeSupplier: [
                     {
                         required: true,
                         validator: (rule, value, callback) => {
                             const relatedIndex = this.outboundForm.groupedSelectedRows.findIndex(
-                                (group) => group.selectedCompositeSupplierDisplay === value
+                                (group) => group.selectedCompositeSupplier === value
                             );
                             if ([2, 3].includes(this.outboundForm.groupedSelectedRows[relatedIndex].outboundType) && !value) {
                                 callback(new Error('此项为必填项'));
@@ -550,29 +545,6 @@ export default {
             return this.outboundForm.groupedSelectedRows.map(group => {
                 group.timestamp = source_group.timestamp
             })
-        },
-        async addNewCompositeSupplier(supplierName) {
-            try {
-                await axios.post(`${this.$apiBaseUrl}/logistics/addcompositesupplier`, { supplierName })
-                this.$message.success("添加成功")
-                this.getAllCompositeSuppliers()
-            }
-            catch (error) {
-                console.log(error)
-                this.$message.error(error.response.data.message)
-            }
-        },
-        handleCompositeSupplierSelect(item, group) {
-            group.selectedCompositeSupplier = item.supplierId
-            group.selectedCompositeSupplierDisplay = item.supplierName
-        },
-        fetchCompositeSupplierSuggestions(queryString, callback) {
-            const results = queryString
-                ? this.compositeSuppliersOptions.filter((item) =>
-                    item.supplierName.toLowerCase().includes(queryString.toLowerCase())
-                )
-                : this.compositeSuppliersOptions;
-            callback(results);
         },
         findCompositeSupplierName(supplierId) {
             let supplier = this.compositeSuppliersOptions.find(supplier => supplier.supplierId == supplierId)
@@ -706,7 +678,6 @@ export default {
             this.getMaterialTableData()
         },
         handleCompositeAmountChange(newVal, oldVal, rowData) {
-            rowData.currentAmount = Number((Number(rowData.currentAmount) - newVal + oldVal).toFixed(5))
             rowData.outboundQuantity = Number((Number(rowData.outboundQuantity) - oldVal + newVal).toFixed(5))
         },
         handleCompositeSelectionChange(selection) {

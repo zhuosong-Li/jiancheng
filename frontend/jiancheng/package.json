@@ -28,6 +28,7 @@
     "vue-cal": "^4.8.1",
     "vue-flow": "^0.3.0",
     "vue-router": "^4.3.0",
+    "vue3-print-nb": "^0.1.4",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
