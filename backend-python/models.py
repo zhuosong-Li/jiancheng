@@ -224,7 +224,7 @@ class MaterialStorage(db.Model):
         default=0,
     )
     current_amount = db.Column(db.DECIMAL(10, 5), default=0, nullable=False)
-    unit_price = db.Column(db.DECIMAL(10, 2), nullable=False, default=0.00)
+    unit_price = db.Column(db.DECIMAL(10, 3), nullable=False, default=0.00)
     material_specification = db.Column(db.String(40), default='', nullable=True)
     material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
@@ -235,7 +235,7 @@ class MaterialStorage(db.Model):
     department_id = db.Column(db.Integer)
 
     craft_name = db.Column(db.String(200), nullable=True)
-    composite_unit_cost = db.Column(db.DECIMAL(10, 2), default=0.00)
+    composite_unit_cost = db.Column(db.DECIMAL(10, 3), default=0.00)
     production_instruction_item_id = db.Column(db.BigInteger, nullable=True)
 
     def __repr__(self):
@@ -385,8 +385,8 @@ class OrderShoeBatchInfo(db.Model):
     order_shoe_type_id = db.Column(
         db.BigInteger,
     )
-    price_per_pair = db.Column(db.DECIMAL(10, 2), nullable=True)
-    total_price = db.Column(db.DECIMAL(10, 2), nullable=True)
+    price_per_pair = db.Column(db.DECIMAL(10, 3), nullable=True)
+    total_price = db.Column(db.DECIMAL(10, 3), nullable=True)
     currency_type = db.Column(db.String(3), nullable=True)
 
     def __repr__(self):
@@ -464,7 +464,7 @@ class OutsourceInfo(db.Model):
     rejection_reason = db.Column(db.String(50), nullable=True)
     order_shoe_id = db.Column(db.BigInteger)
     outbound_counter = db.Column(db.SmallInteger, default=0)
-    total_cost = db.Column(db.Numeric(10, 2), nullable=True)
+    total_cost = db.Column(db.Numeric(10, 3), nullable=True)
 
 
 class OutsourceCostDetail(db.Model):
@@ -474,8 +474,8 @@ class OutsourceCostDetail(db.Model):
         db.Integer, primary_key=True, autoincrement=True, nullable=False
     )
     item_name = db.Column(db.String(50), nullable=True)
-    item_cost = db.Column(db.Numeric(10, 2), default=0)
-    item_total_cost = db.Column(db.Numeric(10, 2), default=0)
+    item_cost = db.Column(db.Numeric(10, 3), default=0)
+    item_total_cost = db.Column(db.Numeric(10, 3), default=0)
     outsource_info_id = db.Column(db.Integer, nullable=False)
     remark = db.Column(db.String(50), nullable=True)
 
@@ -711,9 +711,9 @@ class ShoeInboundRecord(db.Model):
     shoe_inbound_record_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     shoe_inbound_rid = db.Column(db.String(60), nullable=True)
     inbound_amount = db.Column(db.Integer, nullable=True)
-    inbound_revenue = db.Column(db.DECIMAL(10, 2), nullable=True)
+    inbound_revenue = db.Column(db.DECIMAL(10, 3), nullable=True)
     subsequent_stock = db.Column(db.Integer, nullable=True)
-    subsequent_revenue = db.Column(db.DECIMAL(10, 2), nullable=True)
+    subsequent_revenue = db.Column(db.DECIMAL(10, 3), nullable=True)
     inbound_datetime = db.Column(db.DateTime, nullable=False)
     inbound_type = db.Column(db.SmallInteger, nullable=False, default=0, comment="0: 自产\n1: 外包")
     semifinished_shoe_storage_id = db.Column(db.BigInteger, nullable=True)
@@ -727,9 +727,9 @@ class ShoeOutboundRecord(db.Model):
     shoe_outbound_record_id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
     shoe_outbound_rid = db.Column(db.String(60), nullable=True)
     outbound_amount = db.Column(db.Integer, nullable=True)
-    outbound_revenue = db.Column(db.DECIMAL(10, 2), nullable=True)
+    outbound_revenue = db.Column(db.DECIMAL(10, 3), nullable=True)
     subsequent_stock = db.Column(db.Integer, nullable=True)
-    subsequent_revenue = db.Column(db.DECIMAL(10, 2), nullable=True)
+    subsequent_revenue = db.Column(db.DECIMAL(10, 3), nullable=True)
     outbound_datetime = db.Column(db.DateTime, nullable=False)
     outbound_type = db.Column(db.SmallInteger, nullable=False, default=0)
     picker = db.Column(db.String(15), nullable=True)
@@ -835,7 +835,7 @@ class SizeMaterialStorage(db.Model):
     size_material_color = db.Column(db.String(40), default='', nullable=True)
     order_id = db.Column(db.BigInteger)
     order_shoe_id = db.Column(db.BigInteger)
-    unit_price = db.Column(db.Numeric(10, 2), nullable=True, default=0.00)
+    unit_price = db.Column(db.Numeric(10, 3), nullable=True, default=0.00)
     purchase_divide_order_id = db.Column(db.BigInteger)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
@@ -863,7 +863,7 @@ class UnitPriceReportDetail(db.Model):
         nullable=False,
     )
     procedure_name = db.Column(db.String(50), nullable=False)
-    price = db.Column(db.DECIMAL(10, 2), nullable=False)
+    price = db.Column(db.DECIMAL(10, 3), nullable=False)
     note = db.Column(db.String(100), nullable=True)
 
     def __repr__(self):
@@ -882,7 +882,7 @@ class UnitPriceReport(db.Model):
     team = db.Column(db.String(10), nullable=True)
     status = db.Column(db.SmallInteger, nullable=False)
     rejection_reason = db.Column(db.String(40), nullable=True)
-    price_sum = db.Column(db.DECIMAL(10, 2), default=0)
+    price_sum = db.Column(db.DECIMAL(10, 3), default=0)
 
     def __repr__(self):
         return f"<UnitPriceReport(report_id={self.report_id})>"
@@ -1077,7 +1077,7 @@ class OrderShoeType(db.Model):
     pre_sewing_amount = db.Column(db.Integer, default=0)
     sewing_amount = db.Column(db.Integer, default=0)
     molding_amount = db.Column(db.Integer, default=0)
-    unit_price = db.Column(db.DECIMAL(10, 2), default=0)
+    unit_price = db.Column(db.DECIMAL(10, 3), default=0)
     customer_color_name = db.Column(db.String(10), default="")
     currency_type = db.Column(db.String(4), nullable=True, default="")
 
