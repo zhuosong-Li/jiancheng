@@ -9,6 +9,7 @@ import App from './App.vue'
 import router from './router'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import axios from 'axios'
+import print from 'vue3-print-nb'
 
 const app = createApp(App)
 fetch('/frontend_config.json')
@@ -39,6 +40,7 @@ fetch('/frontend_config.json')
         app.use(createPinia())
         app.use(router)
         app.use(ElementPlus, { locale: zhCn })
+        app.use(print)
         app.mount('#app')
     })
 

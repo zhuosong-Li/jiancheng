@@ -24,14 +24,15 @@
     </el-row>
 
     <el-dialog title="入库单详情" v-model="dialogVisible" width="80%">
-        <div :id="`inboundRecipt`" style="padding:10px;background-color:#fff;">
+        <!-- <div :id="`inboundRecipt`" ref="inboundReceipt" style="padding:10px;background-color:#fff;">
             <el-card>
                 <h2 style="text-align: center; margin-bottom: 10px">{{ `健诚鞋业入库单${currentRow.inboundRId}` }}</h2>
                 <el-descriptions :column="4" border>
                     <el-descriptions-item label="采购订单号">{{ currentRow.purchaseDivideOrderRId }}</el-descriptions-item>
                     <el-descriptions-item label="供应商">{{ recordData.items[0].supplierName }}</el-descriptions-item>
                     <el-descriptions-item label="入库时间">{{ currentRow.timestamp }}</el-descriptions-item>
-                    <el-descriptions-item label="入库方式">{{ determineInboundName(currentRow.inboundType)}}</el-descriptions-item>
+                    <el-descriptions-item label="入库方式">{{
+                        determineInboundName(currentRow.inboundType) }}</el-descriptions-item>
                 </el-descriptions>
                 <el-table v-if="currentRow.purchaseDivideOrderType === 'S'" :data="recordData.items" border>
                     <el-table-column prop="materialName" label="材料名称"></el-table-column>
@@ -76,12 +77,79 @@
                     <el-table-column prop="remark" label="备注">
                     </el-table-column>
                 </el-table>
+                <template #footer>
+                    <el-descriptions :column="4" border>
+                        <el-descriptions-item label="总价">{{ recordData.items.reduce((acc, cur) => acc + Number(cur.inboundQuantity) * Number(cur.unitPrice), 0).toFixed(2) }}</el-descriptions-item>
+                    </el-descriptions>
+                </template>
             </el-card>
+        </div> -->
+        <div id="printView" style="padding-left: 20px; padding-right: 20px;color:black; font-family: SimSun;">
+            <h2 style="text-align: center;">健诚鞋业入库单</h2>
+            <div style="display: flex; justify-content: flex-end; padding: 5px;">
+                <span style="font-weight: bolder;font-size: 16px;">
+                    单据编号：{{ currentRow.inboundRId }}
+                </span>
+            </div>
+            <table class="table" border="0pm" cellspacing="0" align="left" width="100%"
+                style="font-size: 16px;margin-bottom: 10px; table-layout:fixed;word-wrap:break-word;word-break:break-all">
+                <tr>
+                    <td style="padding:5px; width: 300px;" align="left">采购订单号:{{ currentRow.purchaseDivideOrderRId }}</td>
+                    <td style="padding:5px; width: 150px;" align="left">供应商:{{ recordData.items[0].supplierName }}</td>
+                    <td style="padding:5px; width: 300px;" align="left">入库时间:{{ currentRow.timestamp }}</td>
+                    <td style="padding:5px; width: 150px;" align="left">入库方式:{{ determineInboundName(currentRow.inboundType) }}</td>
+                </tr>
+            </table>
+            <table class="yk-table" border="1pm" cellspacing="0" align="center" width="100%"
+                style="font-size: 16px; table-layout:fixed;word-wrap:break-word;word-break:break-all">
+                <tr>
+                    <th width="55">序号</th>
+                    <th>材料名</th>
+                    <th>型号</th>
+                    <th>规格</th>
+                    <th width="80">颜色</th>
+                    <th width="55">单位</th>
+                    <th>订单号</th>
+                    <th v-if="currentRow.purchaseDivideOrderType === 'S'" width="55"
+                        v-for="(column, index) in recordData.shoeSizeColumns" :key="index">{{ column.label }}</th>
+                    <th v-else width="100">数量</th>
+                    <th v-if="currentRow.inboundType != 2" width="100">单价</th>
+                    <th v-if="currentRow.inboundType == 2" width="100">复合单价</th>
+                    <th width="100">总价</th>
+                    <th>备注</th>
+                </tr>
+                <tr v-for="(item, index) in recordData.items" :key="index" align="center">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ item.materialName }}</td>
+                    <td>{{ item.materialModel }}</td>
+                    <td>{{ item.materialSpecification }}</td>
+                    <td>{{ item.colorName }}</td>
+                    <td>{{ item.materialUnit }}</td>
+                    <td>{{ currentRow.orderRId }}</td>
+                    <td v-if="currentRow.purchaseDivideOrderType === 'S'"
+                        v-for="(column, index) in recordData.shoeSizeColumns" :key="index">{{ item[column.prop] }}
+                    </td>
+                    <td v-else>{{ item.inboundQuantity }}</td>
+                    <td v-if="currentRow.inboundType != 2">{{ item.unitPrice }}</td>
+                    <td v-if="currentRow.inboundType == 2">{{ item.compositeUnitCost }}</td>
+                    <td>{{ calculateTotalPrice(item) }}</td>
+                    <td>{{ item.remark }}</td>
+                </tr>
+            </table>
+            <div style="margin-top: 20px; font-size: 16px; font-weight: bold;">
+                <div style="display: flex;">
+                    <span style="padding-right: 10px;">合计数量: <span style="text-decoration: underline;">{{
+                            calculateInboundTotal() }}</span></span>
+                    <span style="padding-right: 10px;">合计金额: <span style="text-decoration: underline;">{{
+                            calculateTotalPriceSum() }}</span></span>
+                </div>
+            </div>
         </div>
         <template #footer>
             <el-button type="primary" @click="dialogVisible = false">返回</el-button>
+            <el-button type="primary" v-print="'#printView'">打印</el-button>
             <el-button type="primary"
-                @click="downloadPDF(`健诚鞋业入库单${currentRow.inboundRId}`, `inboundRecipt`)">下载PDF</el-button>
+                @click="downloadPDF(`健诚鞋业入库单${currentRow.inboundRId}`, `printView`)">下载PDF</el-button>
         </template>
     </el-dialog>
 </template>
@@ -89,9 +157,30 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus';
 import htmlToPdf from '@/Pages/utils/htmlToPdf';
+import print from 'vue3-print-nb'
 export default {
+    directives: {
+        print
+    },
     data() {
         return {
+            printLoading: true,
+            printObj: {
+                id: 'printView', // 需要打印的区域id
+                preview: true, // 打印预览
+                previewTitle: '打印预览',
+                popTitle: 'good print',
+                extraHead: '<meta http-equiv="Content-Language"content="zh-cn"/>',
+                beforeOpenCallback(vue) {
+                    console.log('打开之前')
+                },
+                openCallback(vue) {
+                    console.log('执行了打印')
+                },
+                closeCallback(vue) {
+                    console.log('关闭了打印工具')
+                }
+            },
             currentPage: 1,
             pageSize: 10,
             tableData: [],
@@ -105,6 +194,20 @@ export default {
         this.getInboundRecordsTable()
     },
     methods: {
+        calculateInboundTotal() {
+            // Calculate the total inbound quantity
+            const number = this.recordData.items.reduce((total, item) => {
+                return total + (Number(item.inboundQuantity) || 0);
+            }, 0);
+            return Number(number).toFixed(2);
+        },
+        calculateTotalPriceSum() {
+            // Calculate the total price
+            const total = this.recordData.items.reduce((total, item) => {
+                return total + (Number(this.calculateTotalPrice(item)) || 0);
+            }, 0);
+            return Number(total).toFixed(2);
+        },
         calculateTotalPrice(row) {
             let result = 0
             if (this.currentRow.inboundType != 2) {
@@ -187,3 +290,28 @@ export default {
     }
 }
 </script>
+<style media="print">
+@page {
+    size: auto;
+    margin: 3mm;
+}
+
+html {
+    background-color: #ffffff;
+    margin: 0px;
+}
+
+body {
+    border: solid 1px #ffffff;
+}
+</style>
+
+<style lang="scss" scoped>
+@media print {
+    #printView {
+        display: block;
+        width: 100%;
+        overflow: hidden;
+    }
+}
+</style>
