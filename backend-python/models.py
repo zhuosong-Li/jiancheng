@@ -1198,6 +1198,7 @@ class TotalPurchaseOrder(db.Model):
     total_purchase_order_environmental_request = db.Column(db.String(100), nullable=True)
     shipment_address = db.Column(db.String(100), nullable=True)
     shipment_deadline = db.Column(db.String(100), nullable=True)
+    total_purchase_order_rid = db.Column(db.String(60), nullable=False)
 
     def __repr__(self):
         return f"<TotalPurchaseOrder(total_purchase_order_id={self.total_purchase_order_id})>"
