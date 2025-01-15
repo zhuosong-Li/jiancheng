@@ -33,7 +33,7 @@
     </el-row>
 
     <el-dialog title="出库单详情" v-model="dialogVisible" width="80%">
-        <div :id="`outboundRecipt`" style="padding:10px;background-color:#fff;">
+        <!-- <div :id="`outboundRecipt`" style="padding:10px;background-color:#fff;">
             <el-card>
                 <h2 style="text-align: center; margin-bottom: 10px">{{ `健诚鞋业出库单${currentRow.outboundRId}` }}</h2>
                 <el-descriptions :column="4" border>
@@ -85,11 +85,110 @@
                     </el-descriptions>
                 </template>
             </el-card>
+        </div> -->
+        <div id="printView" style="padding-left: 20px; padding-right: 20px;color:black; font-family: SimSun;">
+            <h2 style="text-align: center;">健诚鞋业出库单</h2>
+            <div style="display: flex; justify-content: flex-end; padding: 5px;">
+                <span style="font-weight: bolder;font-size: 16px;">
+                    单据编号：{{ currentRow.outboundRId }}
+                </span>
+            </div>
+            <table class="table" border="0pm" cellspacing="0" align="left" width="100%"
+                style="font-size: 16px;margin-bottom: 10px; table-layout:fixed;word-wrap:break-word;word-break:break-all">
+                <tr>
+                    <td style="padding:5px;" align="left">订单号:{{ currentRow.orderRId }}</td>
+                    <td style="padding:5px;" align="left">工厂型号:{{ currentRow.shoeRId }}</td>
+                    <td style="padding:5px;" align="left">出库时间:{{ currentRow.timestamp }}</td>
+                    <td style="padding:5px;" align="left">出库方式:{{ determineOutboundType(currentRow.outboundType) }}</td>
+                </tr>
+            </table>
+            <table v-if="recordData['material'].length > 0" class="yk-table" border="1pm" cellspacing="0" align="center" width="100%"
+                style="font-size: 16px; table-layout:fixed;word-wrap:break-word;word-break:break-all">
+                <tr>
+                    <th width="55">序号</th>
+                    <th>材料名</th>
+                    <th>型号</th>
+                    <th>规格</th>
+                    <th width="80">颜色</th>
+                    <th width="55">单位</th>
+                    <th width="100">数量</th>
+                    <th>备注</th>
+                </tr>
+                <tr v-for="(item, index) in recordData['material']" :key="index" align="center">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ item.materialName }}</td>
+                    <td>{{ item.materialModel }}</td>
+                    <td>{{ item.materialSpecification }}</td>
+                    <td>{{ item.colorName }}</td>
+                    <td>{{ item.materialUnit }}</td>
+                    <td>{{ item.outboundQuantity }}</td>
+                    <td>{{ item.remark }}</td>
+                </tr>
+            </table>
+            <table v-if="recordData['sizeMaterial'].length > 0" class="yk-table" border="1pm" cellspacing="0" align="center" width="100%"
+                style="font-size: 16px; table-layout:fixed;word-wrap:break-word;word-break:break-all">
+                <tr>
+                    <th width="55">序号</th>
+                    <th>材料名</th>
+                    <th>型号</th>
+                    <th>规格</th>
+                    <th width="80">颜色</th>
+                    <th width="55">单位</th>
+                    <th width="55" v-for="column in recordData.shoeSizeColumns" :key="column.prop">{{ column.label }}</th>
+                    <th>备注</th>
+                </tr>
+                <tr v-for="(item, index) in recordData['sizeMaterial']" :key="index" align="center">
+                    <td>{{ index + 1 }}</td>
+                    <td>{{ item.materialName }}</td>
+                    <td>{{ item.materialModel }}</td>
+                    <td>{{ item.materialSpecification }}</td>
+                    <td>{{ item.colorName }}</td>
+                    <td>{{ item.materialUnit }}</td>
+                    <td v-for="column in recordData.shoeSizeColumns" :key="column.prop">{{ item[column.prop] }}</td>
+                    <td>{{ item.remark }}</td>
+                </tr>
+            </table>
+            <div style="margin-top: 20px; font-size: 16px; font-weight: bold;">
+                <div v-if="currentRow.outboundType == 0" style="display: flex;">
+                    <span style="padding-right: 10px;">合计数量: <span style="text-decoration: underline;">{{
+                            calculateInboundTotal() }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">出库至: <span style="text-decoration: underline;">{{
+                            currentRow.outboundDepartment }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">领料人: <span style="text-decoration: underline;">{{
+                            currentRow.picker }}</span>
+                    </span>
+                </div>
+                <div v-else-if="currentRow.outboundType == 2" style="display: flex;">
+                    <span style="padding-right: 10px;">合计数量: <span style="text-decoration: underline;">{{
+                            calculateInboundTotal() }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">外包工厂: <span style="text-decoration: underline;">{{
+                            currentRow.outsourceFactoryName }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">出库地址: <span style="text-decoration: underline;">{{
+                            currentRow.outboundAddress }}</span>
+                    </span>
+                </div>
+                <div v-else-if="currentRow.outboundType == 3" style="display: flex;">
+                    <span style="padding-right: 10px;">合计数量: <span style="text-decoration: underline;">{{
+                            calculateInboundTotal() }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">复合工厂: <span style="text-decoration: underline;">{{
+                            currentRow.compositeSupplierName }}</span>
+                    </span>
+                    <span style="padding-right: 10px;">出库地址: <span style="text-decoration: underline;">{{
+                            currentRow.outboundAddress }}</span>
+                    </span>
+                </div>
+            </div>
         </div>
         <template #footer>
             <el-button type="primary" @click="dialogVisible = false">返回</el-button>
+            <el-button type="primary" v-print="'#printView'">打印</el-button>
             <el-button type="primary"
-                @click="downloadPDF(`健诚鞋业出库单${currentRow.outboundRId}`, `outboundRecipt`)">下载PDF</el-button>
+                @click="downloadPDF(`健诚鞋业出库单${currentRow.outboundRId}`, `printView`)">下载PDF</el-button>
         </template>
     </el-dialog>
 </template>
@@ -113,6 +212,13 @@ export default {
         this.getOutboundRecordsTable()
     },
     methods: {
+        calculateInboundTotal() {
+            // Calculate the total inbound quantity
+            const number = this.recordData.material.reduce((total, item) => {
+                return total + (Number(item.outboundQuantity) || 0);
+            }, 0);
+            return Number(number).toFixed(2);
+        },
         determineDestination(row, type) {
             if (type == 0) {
                 return row.outboundDepartment
@@ -177,6 +283,12 @@ export default {
             console.log(row)
             try {
                 let params = { "outboundBatchId": row.outboundBatchId, "orderId": row.orderId }
+                if (this.currentRow.outboundRId.startsWith("N")) {
+                    params["materialCategory"] = 0
+                }
+                else {
+                    params["materialCategory"] = 1
+                }
                 let response = await axios.get(`${this.$apiBaseUrl}/warehouse/getoutboundrecordbybatchid`, { params })
                 this.recordData["material"] = response.data.material
                 this.recordData["sizeMaterial"] = response.data.sizeMaterial
