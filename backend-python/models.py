@@ -229,7 +229,7 @@ class MaterialStorage(db.Model):
     material_outsource_status = db.Column(db.SmallInteger, default=0, nullable=False)
     material_outsource_outbound_date = db.Column(db.Date)
     material_storage_color = db.Column(db.String(40), default='', nullable=True)
-    purchase_divide_order_id = db.Column(db.BigInteger)
+    total_purchase_order_id = db.Column(db.BigInteger, nullable=False)
     material_estimated_arrival_date = db.Column(db.Date)
     material_storage_status = db.Column(db.SmallInteger, default=0)
     department_id = db.Column(db.Integer)
